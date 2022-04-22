@@ -1,16 +1,13 @@
 import datetime
 import shutil
 
+from Neo4JConnector import Neo4JConnector
 from SheetsCell import SheetsCell
 from SheetsWrapper import SheetsWrapper
 
 
 if __name__ == '__main__':
-    branches = {
-        'aim': 'aim',
-        'tei': 'test',
-        'prd': 'master'
-    }
+    connector = Neo4JConnector("bolt://localhost:7687", "neo4jPython", "python")
 
     temp_dir_path = 'C:\\temp'
 

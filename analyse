@@ -1,2 +1,13 @@
+pip install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib
+pip install neo4j
+
 overzicht sheet maken
 configuratie sheet maken > bevat params zoals is de rapporteringsservice bezig, errors en parameters van rapporten
+Loop die elke nacht rond 23u lokale tijd begint:
+- gaat in map kijken naar alle rapporten die er in staan
+- haalt parameters op
+- kijkt wanneer laatst uitgevoerd en of het rapport al moet gerund worden
+
+Elk rapport heeft een Overzicht sheet met omschrijving, uitleg
+Eventueel ook een historiek sheet dat een telling opvolgt
+Sheets met resultaten, evt. met toeters en bellen (hyperlinks, filters, rijen vastzetten, permanent kolom voor opmerkingen)
