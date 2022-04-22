@@ -19,12 +19,10 @@ if __name__ == '__main__':
                  datasource='Neo4J')
 
     # query that fetches uuids of results
-    result_query = "MATCH (pk:Asset)-[:Bevestiging]-(e:Asset {typeURI:'https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Netwerkelement'}) " \
-        "WHERE pk.typeURI IN ['https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Netwerkpoort', 'https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Netwerkkaart'] AND NOT EXISTS((e)-[:HoortBij]->()) " \ 
-        "WITH collect(pk) as poortenkaarten " \
-        "MATCH (a:Asset) " \
-        "WHERE a.typeURI CONTAINS 'onderdeel' AND NOT EXISTS((a)-[:HoortBij]->()) AND NOT a IN poortenkaarten " \
-        "RETURN a.uuid, a.typeURI"
-
-    # nodes + info
+    result_query = """MATCH (pk:Asset)-[:Bevestiging]-(e:Asset {typeURI:'https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Netwerkelement'})-[:HoortBij]->(l:Asset) 
+WHERE pk.typeURI IN ['https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Netwerkpoort', 'https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Netwerkkaart'] AND pk.isActief AND e.isActief AND l.isActief 
+WITH collect(pk) as poortofkaart  
+MATCH (a:Asset) 
+WHERE a.typeURI CONTAINS 'onderdeel' AND NOT EXISTS((a)-[:HoortBij]->(:Asset {isActief:TRUE})) AND NOT a IN poortofkaart AND a.isActief
+RETURN a.uuid, a.typeURI"""
 

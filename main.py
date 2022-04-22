@@ -32,5 +32,3 @@ if __name__ == '__main__':
                                       start_cell='A1',
                                       data=lines_to_write)
 
-    for branch in branches:
-        shutil.rmtree(temp_dir_path + '\\' + branch)
