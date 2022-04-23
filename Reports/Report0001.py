@@ -1,16 +1,4 @@
-class Report:
-    def __init__(self, name: str = '', title: str = '', spreadsheet_id: str = '', datasource: str = ''):
-        self.summary_sheet_id = '1s_oro-4tJy_1R1G99TTPnL4-5ACR4BD-R1XWFvFuviQ'
-        self.name = name
-        self.title = title
-        self.spreadsheet_id = spreadsheet_id
-        self.datasource = datasource
-
-
-class DQReport(Report):
-    def __init__(self, name: str = '', title: str = '', spreadsheet_id: str = '', datasource: str = ''):
-        Report.__init__(self, name=name, title=title, spreadsheet_id=spreadsheet_id, datasource=datasource)
-
+from DQReport import DQReport
 
 if __name__ == '__main__':
     r = DQReport(name='report0001',
@@ -25,4 +13,8 @@ WITH collect(pk) as poortofkaart
 MATCH (a:Asset) 
 WHERE a.typeURI CONTAINS 'onderdeel' AND NOT EXISTS((a)-[:HoortBij]->(:Asset {isActief:TRUE})) AND NOT a IN poortofkaart AND a.isActief
 RETURN a.uuid, a.typeURI"""
+    
+    r.result_query = result_query
+    r.run_report()
+    
 

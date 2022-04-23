@@ -58,7 +58,8 @@ class SheetsWrapper:
                 values=data)
         ).execute()
 
-    def find_first_empty_row_from_starting_cell(self, spreadsheet_id: str, sheet_name: str, start_cell: str, step_size: int = 1000) -> str:
+    def find_first_empty_row_from_starting_cell(self, spreadsheet_id: str, sheet_name: str, start_cell: str,
+                                                step_size: int = 1000) -> str:
         start_sheetscell = SheetsCell(start_cell)
         total_nonempty_rows = 0
 
@@ -76,7 +77,6 @@ class SheetsWrapper:
         start_sheetscell = SheetsCell(start_cell)
         start_sheetscell.update_row_by_adding_number(total_nonempty_rows)
         return start_sheetscell.cell
-
 
     def _number_of_nonempty_rows_in_data(self, data: list) -> int:
         if len(data) == 0 or len(data[0]) == 0:
@@ -131,3 +131,15 @@ class SheetsWrapper:
             raise ValueError(f'{sheetrange} is not a valid range')
 
 
+class SingleSheetsWrapper:
+    sheets_wrapper: SheetsWrapper | bool = None
+
+    @classmethod
+    def init(cls, service_cred_path: str = '', readonly_scope: None | bool = None):
+        cls.sheets_wrapper = SheetsWrapper(service_cred_path, readonly_scope)
+
+    @classmethod
+    def get_wrapper(cls) -> SheetsWrapper:
+        if cls.sheets_wrapper is None:
+            raise RuntimeError('Run the init method of this class first')
+        return cls.sheets_wrapper
