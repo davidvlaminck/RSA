@@ -18,6 +18,18 @@ class SheetsWrapper:
         if readonly_scope is None:
             raise ValueError('set readonly_scope to True or False')
 
+    def create_sheet(self, spreadsheet_id: str, sheet_name: str, sheet_index: int):
+        credentials = self.authenticate()
+        service = build('sheets', 'v4', credentials=credentials)
+
+        service.spreadsheets().batchUpdate(
+            spreadsheetId=spreadsheet_id,
+            body={'requests':
+                      [{'addSheet':
+                            {'properties':
+                                 {'title': sheet_name,
+                                  'index': sheet_index}}}]}).execute()
+
     def write_data_to_sheet(self, spreadsheet_id: str, sheet_name: str, start_cell: str, data: list):
         credentials = self.authenticate()
         cell_range = self.calculate_cell_range_by_data(SheetsCell(start_cell), data)

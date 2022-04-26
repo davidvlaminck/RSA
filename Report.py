@@ -5,3 +5,4 @@ class Report:
         self.title = title
         self.spreadsheet_id = spreadsheet_id
         self.datasource = datasource
+        self.result_query = ''
