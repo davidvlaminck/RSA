@@ -34,7 +34,8 @@ class DQReport(Report):
 
         # clear data by
         # get row range from headerrow
-        # get first non empty by getting first n rows 200 - 1000 - 5000 - 2500 (* 5)
+        # get first empty by getting first n rows 200 - 1000 - 5000 - 2500 (* 5)
+        # fill data with empty rows until the first empty row
 
         sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='ResultaatNieuw', start_cell='A1', data=result)
 
