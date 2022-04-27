@@ -14,6 +14,10 @@ class SheetsCell:
         self.cell = cell
 
     @property
+    def row(self):
+        return int(self._row)
+
+    @property
     def cell(self):
         return self._column_str + str(self._row)
 
@@ -58,6 +62,9 @@ class SheetsCell:
 
     def copy(self):
         return copy.copy(self)
+
+    def set_row(self, row: int):
+        self._row = row
 
     def update_row_by_adding_number(self, row_update: int):
         self._row += row_update

@@ -30,6 +30,16 @@ class SheetsWrapper:
                                  {'title': sheet_name,
                                   'index': sheet_index}}}]}).execute()
 
+    def get_sheets_in_spreadsheet(self, spreadsheet_id: str):
+        credentials = self.authenticate()
+        service = build('sheets', 'v4', credentials=credentials)
+        spreadsheet = service.spreadsheets().get(spreadsheetId=spreadsheet_id).execute()
+        sheets = spreadsheet.get('sheets')
+        sheets_dict = {}
+        for sheet in sheets:
+            sheets_dict[sheet['properties']['title']] = sheet['properties']
+        return sheets_dict
+
     def write_data_to_sheet(self, spreadsheet_id: str, sheet_name: str, start_cell: str, data: list):
         credentials = self.authenticate()
         cell_range = self.calculate_cell_range_by_data(SheetsCell(start_cell), data)
@@ -70,25 +80,92 @@ class SheetsWrapper:
                 values=data)
         ).execute()
 
-    def find_first_empty_row_from_starting_cell(self, spreadsheet_id: str, sheet_name: str, start_cell: str,
-                                                step_size: int = 1000) -> str:
+    def find_first_empty_row_from_starting_cell_exp(self, spreadsheet_id: str, sheet_name: str, start_cell: str,
+                                                step_factor: int = 5, step_start: int = 200) -> str:
         start_sheetscell = SheetsCell(start_cell)
         total_nonempty_rows = 0
+        step_size = step_start
+
+        sheets = self.get_sheets_in_spreadsheet(spreadsheet_id=spreadsheet_id)
+        grid_props = sheets[sheet_name]['gridProperties']
+        max_row = grid_props['rowCount']
 
         while True:
             end_sheetscell = start_sheetscell.copy()
-            end_sheetscell.update_row_by_adding_number(step_size - 1)
+            end_sheetscell.update_row_by_adding_number(step_size)
             data = self.read_data_from_sheet(spreadsheet_id, sheet_name, start_sheetscell.cell + ':' + end_sheetscell.cell)
             nonempty_rows = self._number_of_nonempty_rows_in_data(data)
             total_nonempty_rows += nonempty_rows
-            if nonempty_rows == 0:
+            if nonempty_rows == 0 or total_nonempty_rows > max_row:
                 break
+            step_size += step_size * step_factor
             start_sheetscell.update_row_by_adding_number(step_size)
             end_sheetscell.update_row_by_adding_number(step_size)
+            if end_sheetscell.row > max_row:
+                end_sheetscell.set_row(max_row)
+
 
         start_sheetscell = SheetsCell(start_cell)
         start_sheetscell.update_row_by_adding_number(total_nonempty_rows)
         return start_sheetscell.cell
+
+    # use max row and limit by step size, to grow exp
+
+    def find_first_empty_row_from_starting_cell(self, spreadsheet_id: str, sheet_name: str, start_cell: str,
+                                                step_factor: int = 4, step_start: int = 1000) -> int:
+        sheets = self.get_sheets_in_spreadsheet(spreadsheet_id=spreadsheet_id)
+        grid_props = sheets[sheet_name]['gridProperties']
+        max_row = grid_props['rowCount']
+
+        start_sheetscell = SheetsCell(start_cell)
+        total_nonempty_rows = 0
+        step_size = step_start
+
+        if max_row <= step_start:
+            end_sheetscell = start_sheetscell.copy()
+            end_sheetscell.set_row(max_row)
+            data = self.read_data_from_sheet(spreadsheet_id, sheet_name, start_sheetscell.cell + ':' + end_sheetscell.cell)
+            nonempty_rows = self._number_of_nonempty_rows_in_data(data)
+            return start_sheetscell.row + nonempty_rows
+
+        end_sheetscell = start_sheetscell.copy()
+        end_sheetscell.update_row_by_adding_number(step_size)
+        while True:
+            if end_sheetscell.row > max_row:
+                end_sheetscell.set_row(max_row)
+            data = self.read_data_from_sheet(spreadsheet_id, sheet_name, start_sheetscell.cell + ':' + end_sheetscell.cell)
+            nonempty_rows = self._number_of_nonempty_rows_in_data(data)
+            total_nonempty_rows += nonempty_rows
+            if nonempty_rows == 0 or end_sheetscell.row >= max_row:
+                break
+            start_sheetscell.update_row_by_adding_number(step_size+1)
+            step_size += step_size * step_factor
+            end_sheetscell.update_row_by_adding_number(step_size)
+
+        start_sheetscell = SheetsCell(start_cell)
+        start_sheetscell.update_row_by_adding_number(total_nonempty_rows)
+        return start_sheetscell.row
+
+
+    # def find_first_empty_row_from_starting_cell(self, spreadsheet_id: str, sheet_name: str, start_cell: str,
+    #                                             step_size: int = 1000) -> str:
+    #     start_sheetscell = SheetsCell(start_cell)
+    #     total_nonempty_rows = 0
+    #
+    #     while True:
+    #         end_sheetscell = start_sheetscell.copy()
+    #         end_sheetscell.update_row_by_adding_number(step_size - 1)
+    #         data = self.read_data_from_sheet(spreadsheet_id, sheet_name, start_sheetscell.cell + ':' + end_sheetscell.cell)
+    #         nonempty_rows = self._number_of_nonempty_rows_in_data(data)
+    #         total_nonempty_rows += nonempty_rows
+    #         if nonempty_rows == 0:
+    #             break
+    #         start_sheetscell.update_row_by_adding_number(step_size)
+    #         end_sheetscell.update_row_by_adding_number(step_size)
+    #
+    #     start_sheetscell = SheetsCell(start_cell)
+    #     start_sheetscell.update_row_by_adding_number(total_nonempty_rows)
+    #     return start_sheetscell.cell
 
     def _number_of_nonempty_rows_in_data(self, data: list) -> int:
         if len(data) == 0 or len(data[0]) == 0:

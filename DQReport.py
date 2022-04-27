@@ -10,7 +10,7 @@ class DQReport(Report):
     def run_report(self):
         sheets_wrapper = SingleSheetsWrapper.get_wrapper()
 
-        sheets_wrapper.create_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='ResultaatNieuw')
+        empty_row_nr = sheets_wrapper.find_first_empty_row_from_starting_cell(spreadsheet_id = self.spreadsheet_id, sheet_name='Resultaat', start_cell='A1')
 
         result = []
         if self.datasource == 'Neo4J':
@@ -20,25 +20,21 @@ class DQReport(Report):
                 result_keys = query_result.keys()
                 result_data = query_result.data()
 
-                headerrow = []
+            headerrow = []
+            for key in result_keys:
+                header = key.split('.')[1]
+                headerrow.append(header)
+            result.append(headerrow)
+
+            for data in result_data:
+                row = []
                 for key in result_keys:
-                    header = key.split('.')[1]
-                    headerrow.append(header)
-                result.append(headerrow)
+                    row.append(data[key])
+                result.append(row)
 
-                for data in result_data:
-                    row = []
-                    for key in result_keys:
-                        row.append(data[key])
-                    result.append(row)
+            # add empty rows to clear existing data
+            empty_row = [''] * len(result_keys)
+            while len(result) < empty_row_nr:
+                result.append(empty_row)
 
-        # clear data by
-        # get row range from headerrow
-        # get first empty by getting first n rows 200 - 1000 - 5000 - 2500 (* 5)
-        # fill data with empty rows until the first empty row
-
-        sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='ResultaatNieuw', start_cell='A1', data=result)
-
-
-
-        print('init of a sheetswrapper succeeded')
+        sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='Resultaat', start_cell='A1', data=result)
