@@ -5,8 +5,8 @@ from SheetsWrapper import SingleSheetsWrapper
 
 
 class DQReport(Report):
-    def __init__(self, name: str = '', title: str = '', spreadsheet_id: str = '', datasource: str = ''):
-        Report.__init__(self, name=name, title=title, spreadsheet_id=spreadsheet_id, datasource=datasource)
+    def __init__(self, name: str = '', title: str = '', spreadsheet_id: str = '', datasource: str = '', add_filter: bool = True):
+        Report.__init__(self, name=name, title=title, spreadsheet_id=spreadsheet_id, datasource=datasource, add_filter=add_filter)
 
     def run_report(self, startcell: str ='A1'):
         sheets_wrapper = SingleSheetsWrapper.get_wrapper()
@@ -48,12 +48,13 @@ class DQReport(Report):
 
             # bells and whistles
             # filter
-            sheets_wrapper.clear_filter(self.spreadsheet_id, 'Resultaat')
-            start_sheetcell = SheetsCell(startcell)
-            end_sheetcell = start_sheetcell.copy()
-            end_sheetcell.update_row_by_adding_number(empty_row_nr-2)
-            end_sheetcell.update_column_by_adding_number(len(result_keys))
-            sheets_wrapper.create_basic_filter(self.spreadsheet_id, 'Resultaat', f'{start_sheetcell.cell}:{end_sheetcell.cell}')
+            if self.add_filter:
+                sheets_wrapper.clear_filter(self.spreadsheet_id, 'Resultaat')
+                start_sheetcell = SheetsCell(startcell)
+                end_sheetcell = start_sheetcell.copy()
+                end_sheetcell.update_row_by_adding_number(empty_row_nr-2)
+                end_sheetcell.update_column_by_adding_number(len(result_keys))
+                sheets_wrapper.create_basic_filter(self.spreadsheet_id, 'Resultaat', f'{start_sheetcell.cell}:{end_sheetcell.cell}')
 
             # hyperlink
 
