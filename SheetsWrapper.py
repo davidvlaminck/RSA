@@ -18,17 +18,31 @@ class SheetsWrapper:
         if readonly_scope is None:
             raise ValueError('set readonly_scope to True or False')
 
-    def create_sheet(self, spreadsheet_id: str, sheet_name: str, sheet_index: int):
+    def create_sheet(self, spreadsheet_id: str, sheet_name: str):
         credentials = self.authenticate()
         service = build('sheets', 'v4', credentials=credentials)
 
+        sheets = self.get_sheets_in_spreadsheet(spreadsheet_id)
+
         service.spreadsheets().batchUpdate(
             spreadsheetId=spreadsheet_id,
-            body={'requests':
-                      [{'addSheet':
-                            {'properties':
-                                 {'title': sheet_name,
-                                  'index': sheet_index}}}]}).execute()
+            body={'requests': [
+                {'addSheet':
+                     {'properties':
+                          {'title': sheet_name}}}]}).execute()
+
+    def delete_sheet(self, spreadsheet_id: str, sheet_name: str):
+        credentials = self.authenticate()
+        service = build('sheets', 'v4', credentials=credentials)
+
+        sheets = self.get_sheets_in_spreadsheet(spreadsheet_id)
+
+        service.spreadsheets().batchUpdate(
+            spreadsheetId=spreadsheet_id,
+            body={'requests': [
+                {'deleteSheet':
+                     {'sheetId': sheets[sheet_name]['sheetId']
+                      }}]}).execute()
 
     def clear_filter(self, spreadsheet_id: str, sheet_name: str):
         credentials = self.authenticate()
@@ -201,6 +215,104 @@ class SheetsWrapper:
             return [rows, columns]
         except:
             raise ValueError(f'{sheetrange} is not a valid range')
+
+    def add_hyperlink_column(self, spreadsheet_id: str = '', sheet_name: str = '', start_cell: str = '',
+                             link_type: str = 'onderdeel', column_data: list = None):
+        if len(column_data) == 0:
+            return
+
+        credentials = self.authenticate()
+        service = build('sheets', 'v4', credentials=credentials)
+
+        sheets = self.get_sheets_in_spreadsheet(spreadsheet_id)
+        start = SheetsCell(start_cell)
+        end = start.copy()
+        end.update_row_by_adding_number(len(column_data) - 1)
+
+        # url = "https://apps.mow.vlaanderen.be/eminfra/installaties/{uuid}",
+        # url = "https://apps.mow.vlaanderen.be/awvinfra/ui/asset/onderdeel/{uuid}/detail/attributen"
+
+        sheet_values = []
+        for row in column_data:
+            url = ''
+            if link_type == 'onderdeel':
+                url = 'https://apps.mow.vlaanderen.be/awvinfra/ui/otl-assets/installatie/{uuid}/detail/attributen'
+            elif link_type == 'installatie':
+                url = 'https://apps.mow.vlaanderen.be/eminfra/installaties/{uuid}'
+            url = url.replace('{uuid}', row)
+            sheet_values.append({
+                "values": {
+                    "userEnteredValue": {
+                        "formulaValue": f'=HYPERLINK("{url}"; "{row}")'}}})
+
+        service.spreadsheets().batchUpdate(
+            spreadsheetId=spreadsheet_id,
+            body=dict(requests=[{'updateCells': {
+                "fields": 'userEnteredValue.formulaValue',
+                "start": {
+                    "sheetId": sheets[sheet_name]['sheetId'],
+                    "rowIndex": start.row - 1,
+                    "columnIndex": start._column_int - 1
+                },
+                "rows": [sheet_values]
+            }}])).execute()
+
+    def insert_empty_rows(self, spreadsheet_id, sheet_name, start_cell, number_of_rows: int):
+        credentials = self.authenticate()
+        service = build('sheets', 'v4', credentials=credentials)
+
+        sheets = self.get_sheets_in_spreadsheet(spreadsheet_id)
+        startsheetscell = SheetsCell(start_cell)
+
+        service.spreadsheets().batchUpdate(
+            spreadsheetId=spreadsheet_id,
+            body=dict(requests=[{
+                "insertDimension": {
+                    "range": {
+                        "sheetId": sheets[sheet_name]['sheetId'],
+                        "dimension": "ROWS",
+                        "startIndex": startsheetscell.row - 1,
+                        "endIndex": startsheetscell.row + number_of_rows - 1
+                    },
+                    "inheritFromBefore": False
+                }
+            }])).execute()
+
+    def freeze_top_rows(self, spreadsheet_id, sheet_name, rows: int):
+        credentials = self.authenticate()
+        service = build('sheets', 'v4', credentials=credentials)
+
+        sheets = self.get_sheets_in_spreadsheet(spreadsheet_id)
+        service.spreadsheets().batchUpdate(
+            spreadsheetId=spreadsheet_id,
+            body=dict(requests=[{
+                "updateSheetProperties": {
+                    "properties": {
+                        "sheetId": sheets[sheet_name]['sheetId'],
+                        "gridProperties": {
+                            "frozenRowCount": rows
+                        }
+                    },
+                    "fields": "gridProperties.frozenRowCount"
+                }
+            }])).execute()
+
+    def rename_sheet(self, spreadsheet_id, sheet_name, new_sheet_name):
+        credentials = self.authenticate()
+        service = build('sheets', 'v4', credentials=credentials)
+
+        sheets = self.get_sheets_in_spreadsheet(spreadsheet_id)
+        service.spreadsheets().batchUpdate(
+            spreadsheetId=spreadsheet_id,
+            body=dict(requests=[{
+                "updateSheetProperties": {
+                    "properties": {
+                        "sheetId": sheets[sheet_name]['sheetId'],
+                        "title": new_sheet_name
+                    },
+                    "fields": "title"
+                }
+            }])).execute()
 
 
 class SingleSheetsWrapper:
