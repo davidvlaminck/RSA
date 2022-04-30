@@ -128,6 +128,14 @@ class SheetsWrapper:
                 values=data)
         ).execute()
 
+    def find_first_nonempty_row_from_starting_cell(self, spreadsheet_id, sheet_name, start_cell):
+        start_sheetscell = SheetsCell(start_cell)
+        column_cell_content = []
+        while column_cell_content == []:
+            column_cell_content = self.read_data_from_sheet(spreadsheet_id, sheet_name, start_sheetscell.cell + ':' + start_sheetscell.cell)
+            start_sheetscell.update_row_by_adding_number(1)
+        return start_sheetscell.row
+
     # use max row and limit by step size, to grow exp
     def find_first_empty_row_from_starting_cell(self, spreadsheet_id: str, sheet_name: str, start_cell: str,
                                                 step_factor: int = 4, step_start: int = 1000) -> int:
@@ -313,6 +321,8 @@ class SheetsWrapper:
                     "fields": "title"
                 }
             }])).execute()
+
+
 
 
 class SingleSheetsWrapper:

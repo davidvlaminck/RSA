@@ -9,15 +9,41 @@ from SheetsWrapper import SingleSheetsWrapper
 
 
 class DQReport(Report):
-    def __init__(self, name: str = '', title: str = '', spreadsheet_id: str = '', datasource: str = '', add_filter: bool = True):
+    def __init__(self, name: str = '', title: str = '', spreadsheet_id: str = '', datasource: str = '', add_filter: bool = True, persistent_column: str = ''):
         Report.__init__(self, name=name, title=title, spreadsheet_id=spreadsheet_id, datasource=datasource, add_filter=add_filter)
         self.last_data_update = ''
         self.now = ''
+        self.persistent_column = persistent_column
+        self.persistent_dict = {}
 
     def run_report(self, startcell: str = 'A1'):
         sheets_wrapper = SingleSheetsWrapper.get_wrapper()
         start_sheetcell = SheetsCell(startcell)
 
+        # persistent column
+        if self.persistent_column != '':
+            # find first non empty row
+            first_cell = SheetsCell(self.persistent_column + '1')
+            first_nonempty_row = sheets_wrapper.find_first_nonempty_row_from_starting_cell(spreadsheet_id=self.spreadsheet_id,
+                                                                                           sheet_name='Resultaat',
+                                                                                           start_cell=first_cell.cell)
+            sheets = sheets_wrapper.get_sheets_in_spreadsheet(spreadsheet_id=self.spreadsheet_id)
+            grid_props = sheets['Resultaat']['gridProperties']
+            max_row = grid_props['rowCount']
+
+            ids = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self.spreadsheet_id,
+                                                      sheet_name='Resultaat',
+                                                      sheetrange='A' + str(first_nonempty_row) + ':A' + str(max_row))
+            persisent_column_data = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self.spreadsheet_id,
+                                                                        sheet_name='Resultaat',
+                                                                        sheetrange=self.persistent_column + str(first_nonempty_row) + ':' + self.persistent_column + str(max_row))
+            self.persistent_dict = {}
+            combined_list = zip(ids, persisent_column_data)
+            for id, persistent_item in combined_list:
+                if id != [] and id[0] != '' and persistent_item != [] and persistent_item[0] != '':
+                    self.persistent_dict[id[0]] = persistent_item[0]
+
+        # create a new sheet
         sheets_wrapper.rename_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='Resultaat', new_sheet_name='ResultaatDeleteMe')
         sheets_wrapper.create_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='Resultaat')
         sheets_wrapper.delete_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='ResultaatDeleteMe')
@@ -50,21 +76,23 @@ class DQReport(Report):
             for key in result_keys:
                 header = key.split('.')[1]
                 headerrow.append(header)
+            if self.persistent_column != '':
+                headerrow.append('opmerkingen (persistent)')
             result.append(headerrow)
 
             for data in result_data:
                 row = []
                 for key in result_keys:
                     row.append(data[key])
+                if self.persistent_column != '':
+                    if row[0] in self.persistent_dict:
+                        row.append(self.persistent_dict[row[0]])
+                    else:
+                        row.append('')
                 result.append(row)
 
-            # add empty rows to clear existing data
-            empty_row_nr = sheets_wrapper.find_first_empty_row_from_starting_cell(spreadsheet_id=self.spreadsheet_id,
-                                                                                  sheet_name='Resultaat',
-                                                                                  start_cell=start_sheetcell.cell)
             empty_row = [''] * len(result_keys)
-            while len(result) + start_sheetcell.row <= empty_row_nr:
-                result.append(empty_row)
+            result.append(empty_row)
 
             # write data to Resultaat sheet
             sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.spreadsheet_id,
@@ -77,8 +105,8 @@ class DQReport(Report):
             if self.add_filter:
                 sheets_wrapper.clear_filter(self.spreadsheet_id, 'Resultaat')
                 end_sheetcell = start_sheetcell.copy()
-                end_sheetcell.row = empty_row_nr - 1
                 end_sheetcell.update_column_by_adding_number(len(result_keys))
+                end_sheetcell.update_row_by_adding_number(len(result))
                 sheets_wrapper.create_basic_filter(self.spreadsheet_id, 'Resultaat',
                                                    f'{start_sheetcell.cell}:{end_sheetcell.cell}')
 
@@ -96,7 +124,7 @@ class DQReport(Report):
                                                 link_type='onderdeel',
                                                 column_data=first_column)
 
-            # persist the last column
+
 
             # historiek
             last_data_update = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='Historiek',
