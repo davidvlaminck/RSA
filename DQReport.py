@@ -81,7 +81,7 @@ class DQReport(Report):
                 header = key.split('.')[1]
                 headerrow.append(header)
             if self.persistent_column != '':
-                headerrow.append('opmerkingen (persistent)')
+                headerrow.append('opmerkingen (blijvend)')
             result.append(headerrow)
 
             for data in result_data:
@@ -119,10 +119,30 @@ class DQReport(Report):
                                            sheet_name='Resultaat',
                                            rows=start_sheetcell.row)
 
+            # shorten typeURI
+            type_key = next((k for k in result_keys if 'typeURI' in k), None)
+            if type_key is not None:
+                typeIndex = result_keys.index(type_key)
+                new_type_result = []
+                for data in result_data:
+                    text = data[type_key].replace('https://wegenenverkeer.data.vlaanderen.be/ns/', '')
+                    link = data[type_key]
+                    formula = f'=HYPERLINK("{link}"; "{text}")'
+                    new_type_result.append(formula)
+                typeUri_sheetcell = start_sheetcell.copy()
+                typeUri_sheetcell.update_column_by_adding_number(typeIndex)
+                typeUri_sheetcell.update_row_by_adding_number(1)
+                sheets_wrapper.write_formulae_cells(spreadsheet_id=self.spreadsheet_id,
+                                                    sheet_name='Resultaat',
+                                                    start_cell=typeUri_sheetcell.cell,
+                                                    formulae=new_type_result)
+
             # make columns fit to the data
+            sheets_wrapper.automatic_resize_columns(spreadsheet_id=self.spreadsheet_id,
+                                                    sheet_name='Resultaat',
+                                                    number_of_columns=len(result_keys))
 
-
-            # hyperlink
+            # hyperlink the first column
             start_sheetcell.update_row_by_adding_number(1)
             first_column = list(map(lambda x: x[0], result[1:]))
             sheets_wrapper.add_hyperlink_column(spreadsheet_id=self.spreadsheet_id,
@@ -138,7 +158,7 @@ class DQReport(Report):
                 sheets_wrapper.insert_empty_rows(spreadsheet_id=self.spreadsheet_id, sheet_name='Historiek', start_cell='A2',
                                                  number_of_rows=1)
             sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='Historiek', start_cell='A2',
-                                               data=[[self.now, self.last_data_update, len([1, 2, 3])]])
+                                               data=[[self.now, self.last_data_update, len(result)]])
 
             # summary sheet
             summary_links = sheets_wrapper.read_celldata_from_sheet(spreadsheet_id=self.summary_sheet_id, sheet_name='Overzicht',

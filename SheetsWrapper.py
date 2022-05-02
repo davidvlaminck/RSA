@@ -119,6 +119,8 @@ class SheetsWrapper:
         ).execute()
         return result.get('values', [])
 
+
+
     def clear_cells_within_range(self, spreadsheet_id: str, sheet_name: str, sheetrange: str):
         credentials = self.authenticate()
 
@@ -138,12 +140,14 @@ class SheetsWrapper:
                 values=data)
         ).execute()
 
-    def find_first_nonempty_row_from_starting_cell(self, spreadsheet_id, sheet_name, start_cell):
+    def find_first_nonempty_row_from_starting_cell(self, spreadsheet_id, sheet_name, start_cell, max_rows:int = 10):
         start_sheetscell = SheetsCell(start_cell)
         column_cell_content = []
-        while column_cell_content == []:
+        while column_cell_content == [] and start_sheetscell.row < max_rows:
             column_cell_content = self.read_data_from_sheet(spreadsheet_id, sheet_name, start_sheetscell.cell + ':' + start_sheetscell.cell)
             start_sheetscell.update_row_by_adding_number(1)
+        if column_cell_content == []:
+            return start_sheetscell.row
         return start_sheetscell.row
 
     # use max row and limit by step size, to grow exp
@@ -234,10 +238,54 @@ class SheetsWrapper:
         except:
             raise ValueError(f'{sheetrange} is not a valid range')
 
+    def automatic_resize_columns(self, spreadsheet_id: str = '', sheet_name: str = '', number_of_columns: int = 1):
 
-    def get_hyperlink_from_cell(self, spreadsheet_id, sheet_name, cell):
-        pass
+        credentials = self.authenticate()
+        service = build('sheets', 'v4', credentials=credentials)
 
+        sheets = self.get_sheets_in_spreadsheet(spreadsheet_id)
+
+        service.spreadsheets().batchUpdate(
+            spreadsheetId=spreadsheet_id,
+            body=dict(requests=[{'autoResizeDimensions': {
+                "dimensions": {
+                    "sheetId": sheets[sheet_name]['sheetId'],
+                    "dimension": "COLUMNS",
+                    "startIndex": 0,
+                    "endIndex": number_of_columns
+                }
+            }}])).execute()
+
+    def write_formulae_cells(self, spreadsheet_id: str = '', sheet_name: str = '', start_cell: str = '', formulae: list = None):
+        if len(formulae) == 0:
+            return
+
+        credentials = self.authenticate()
+        service = build('sheets', 'v4', credentials=credentials)
+
+        sheets = self.get_sheets_in_spreadsheet(spreadsheet_id)
+        start = SheetsCell(start_cell)
+        end = start.copy()
+        end.update_row_by_adding_number(len(formulae) - 1)
+
+        sheet_values = []
+        for formula in formulae:
+            sheet_values.append({
+                "values": {
+                    "userEnteredValue": {
+                        "formulaValue": formula}}})
+
+        service.spreadsheets().batchUpdate(
+            spreadsheetId=spreadsheet_id,
+            body=dict(requests=[{'updateCells': {
+                "fields": 'userEnteredValue.formulaValue',
+                "start": {
+                    "sheetId": sheets[sheet_name]['sheetId'],
+                    "rowIndex": start.row - 1,
+                    "columnIndex": start._column_int - 1
+                },
+                "rows": [sheet_values]
+            }}])).execute()
 
     def add_hyperlink_column(self, spreadsheet_id: str = '', sheet_name: str = '', start_cell: str = '',
                              link_type: str = 'onderdeel', column_data: list = None):
