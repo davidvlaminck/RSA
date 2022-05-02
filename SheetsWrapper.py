@@ -101,12 +101,22 @@ class SheetsWrapper:
                 values=data)
         ).execute()
 
+    def read_celldata_from_sheet(self, spreadsheet_id: str, sheet_name: str, sheetrange: str):
+        credentials = self.authenticate()
+        service = build('sheets', 'v4', credentials=credentials)
+        result = service.spreadsheets().get(
+            spreadsheetId=spreadsheet_id,
+            ranges=[sheet_name + '!' + sheetrange], includeGridData=True
+        ).execute()
+        return result['sheets'][0]['data'][0]
+
     def read_data_from_sheet(self, spreadsheet_id: str, sheet_name: str, sheetrange: str):
         credentials = self.authenticate()
         service = build('sheets', 'v4', credentials=credentials)
         result = service.spreadsheets().values().get(
             spreadsheetId=spreadsheet_id,
-            range=sheet_name + '!' + sheetrange).execute()
+            range=sheet_name + '!' + sheetrange
+        ).execute()
         return result.get('values', [])
 
     def clear_cells_within_range(self, spreadsheet_id: str, sheet_name: str, sheetrange: str):
@@ -224,6 +234,11 @@ class SheetsWrapper:
         except:
             raise ValueError(f'{sheetrange} is not a valid range')
 
+
+    def get_hyperlink_from_cell(self, spreadsheet_id, sheet_name, cell):
+        pass
+
+
     def add_hyperlink_column(self, spreadsheet_id: str = '', sheet_name: str = '', start_cell: str = '',
                              link_type: str = 'onderdeel', column_data: list = None):
         if len(column_data) == 0:
@@ -321,8 +336,6 @@ class SheetsWrapper:
                     "fields": "title"
                 }
             }])).execute()
-
-
 
 
 class SingleSheetsWrapper:

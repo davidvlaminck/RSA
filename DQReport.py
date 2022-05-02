@@ -9,7 +9,8 @@ from SheetsWrapper import SingleSheetsWrapper
 
 
 class DQReport(Report):
-    def __init__(self, name: str = '', title: str = '', spreadsheet_id: str = '', datasource: str = '', add_filter: bool = True, persistent_column: str = ''):
+    def __init__(self, name: str = '', title: str = '', spreadsheet_id: str = '', datasource: str = '', add_filter: bool = True,
+                 persistent_column: str = ''):
         Report.__init__(self, name=name, title=title, spreadsheet_id=spreadsheet_id, datasource=datasource, add_filter=add_filter)
         self.last_data_update = ''
         self.now = ''
@@ -36,7 +37,9 @@ class DQReport(Report):
                                                       sheetrange='A' + str(first_nonempty_row) + ':A' + str(max_row))
             persisent_column_data = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self.spreadsheet_id,
                                                                         sheet_name='Resultaat',
-                                                                        sheetrange=self.persistent_column + str(first_nonempty_row) + ':' + self.persistent_column + str(max_row))
+                                                                        sheetrange=self.persistent_column + str(
+                                                                            first_nonempty_row) + ':' + self.persistent_column + str(
+                                                                            max_row))
             self.persistent_dict = {}
             combined_list = zip(ids, persisent_column_data)
             for id, persistent_item in combined_list:
@@ -44,7 +47,8 @@ class DQReport(Report):
                     self.persistent_dict[id[0]] = persistent_item[0]
 
         # create a new sheet
-        sheets_wrapper.rename_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='Resultaat', new_sheet_name='ResultaatDeleteMe')
+        sheets_wrapper.rename_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='Resultaat',
+                                    new_sheet_name='ResultaatDeleteMe')
         sheets_wrapper.create_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='Resultaat')
         sheets_wrapper.delete_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='ResultaatDeleteMe')
 
@@ -115,6 +119,9 @@ class DQReport(Report):
                                            sheet_name='Resultaat',
                                            rows=start_sheetcell.row)
 
+            # make columns fit to the data
+
+
             # hyperlink
             start_sheetcell.update_row_by_adding_number(1)
             first_column = list(map(lambda x: x[0], result[1:]))
@@ -123,8 +130,6 @@ class DQReport(Report):
                                                 start_cell=start_sheetcell.cell,
                                                 link_type='onderdeel',
                                                 column_data=first_column)
-
-
 
             # historiek
             last_data_update = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='Historiek',
@@ -136,3 +141,18 @@ class DQReport(Report):
                                                data=[[self.now, self.last_data_update, len([1, 2, 3])]])
 
             # summary sheet
+            summary_links = sheets_wrapper.read_celldata_from_sheet(spreadsheet_id=self.summary_sheet_id, sheet_name='Overzicht',
+                                                                    sheetrange='B4:B')
+            rowFound = summary_links['startRow']
+            for i, summary_link in enumerate(summary_links['rowData']):
+                if 'values' not in summary_link:
+                    continue
+                if 'hyperlink' not in summary_link['values'][0]:
+                    continue
+                if self.spreadsheet_id in summary_link['values'][0]['hyperlink']:
+                    rowFound += i
+                    break
+            sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.summary_sheet_id,
+                                               sheet_name='Overzicht',
+                                               start_cell='C' + str(rowFound + 1),
+                                               data=[[self.last_data_update]])
