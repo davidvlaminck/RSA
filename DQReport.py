@@ -1,3 +1,5 @@
+import logging
+import time
 from datetime import datetime
 
 from neo4j.time import DateTime
@@ -71,10 +73,14 @@ class DQReport(Report):
         result = []
         if self.datasource == 'Neo4J':
             connector = SingleNeo4JConnector.get_connector()
+            start = time.time()
             with connector.driver.session() as session:
                 query_result = session.run(self.result_query)
                 result_keys = query_result.keys()
                 result_data = query_result.data()
+            end = time.time()
+            query_time = round(end - start, 2)
+            logging.info(f'fetched query result for {self.name} in {query_time} seconds.')
 
             headerrow = []
             for key in result_keys:
@@ -152,13 +158,17 @@ class DQReport(Report):
                                                 column_data=first_column)
 
             # historiek
-            last_data_update = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='Historiek',
-                                                                   sheetrange='B2:B2')[0][0]
+            historiek_data = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self.spreadsheet_id,
+                                                                 sheet_name='Historiek',
+                                                                 sheetrange='B2:B2')
+            last_data_update = None
+            if len(historiek_data) > 0:
+                last_data_update = historiek_data[0][0]
             if last_data_update != self.last_data_update:
                 sheets_wrapper.insert_empty_rows(spreadsheet_id=self.spreadsheet_id, sheet_name='Historiek', start_cell='A2',
                                                  number_of_rows=1)
             sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='Historiek', start_cell='A2',
-                                               data=[[self.now, self.last_data_update, len(result)]])
+                                               data=[[self.now, self.last_data_update, len(result_data)]])
 
             # summary sheet
             summary_links = sheets_wrapper.read_celldata_from_sheet(spreadsheet_id=self.summary_sheet_id, sheet_name='Overzicht',
