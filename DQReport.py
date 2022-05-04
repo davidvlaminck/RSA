@@ -20,6 +20,8 @@ class DQReport(Report):
         self.persistent_dict = {}
 
     def run_report(self, startcell: str = 'A1'):
+        logging.info(f'start running report {self.name}: {self.title}')
+
         sheets_wrapper = SingleSheetsWrapper.get_wrapper()
         start_sheetcell = SheetsCell(startcell)
 
@@ -186,3 +188,5 @@ class DQReport(Report):
                                                sheet_name='Overzicht',
                                                start_cell='C' + str(rowFound + 1),
                                                data=[[self.last_data_update]])
+
+        logging.info(f'finished report {self.name}')
