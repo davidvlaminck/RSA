@@ -14,13 +14,11 @@ if __name__ == '__main__':
                  persistent_column='C')
 
     # query that fetches uuids of results
-    result_query = """MATCH (a:Camera {isActief:TRUE}) 
-    WITH a.naam AS naam, COUNT(a.naam) AS aantal
-    WHERE aantal > 1
-    WITH collect(naam) AS namen
-    MATCH (b:Camera {isActief:TRUE})
-    WHERE b.naam IN namen
-    RETURN b.uuid, b.naam"""
+    result_query = """MATCH (a:Camera {isActief:TRUE})
+WITH a.naam AS naam, COUNT(a.naam) AS aantal
+WHERE aantal > 1
+MATCH (b:Camera {isActief:TRUE naam:naam})
+RETURN b.uuid, b.naam"""
 
     r.result_query = result_query
     r.run_report()
