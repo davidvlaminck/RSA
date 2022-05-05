@@ -86,7 +86,10 @@ class DQReport(Report):
 
             headerrow = []
             for key in result_keys:
-                header = key.split('.')[1]
+                if '.' in key:
+                    header = key.split('.')[1]
+                else:
+                    header = key
                 headerrow.append(header)
             if self.persistent_column != '':
                 headerrow.append('opmerkingen (blijvend)')
@@ -133,10 +136,14 @@ class DQReport(Report):
                 typeIndex = result_keys.index(type_key)
                 new_type_result = []
                 for data in result_data:
-                    text = data[type_key].replace('https://wegenenverkeer.data.vlaanderen.be/ns/', '')
-                    link = data[type_key]
-                    formula = f'=HYPERLINK("{link}"; "{text}")'
-                    new_type_result.append(formula)
+                    if data[type_key] is not None and data[type_key] != '':
+                        text = data[type_key].replace('https://wegenenverkeer.data.vlaanderen.be/ns/', '')\
+                            .replace('https://lgc.data.wegenenverkeer.be/ns/', '')
+                        link = data[type_key]
+                        formula = f'=HYPERLINK("{link}"; "{text}")'
+                        new_type_result.append(formula)
+                    else:
+                        new_type_result.append('')
                 typeUri_sheetcell = start_sheetcell.copy()
                 typeUri_sheetcell.update_column_by_adding_number(typeIndex)
                 typeUri_sheetcell.update_row_by_adding_number(1)
@@ -169,6 +176,7 @@ class DQReport(Report):
             if last_data_update != self.last_data_update:
                 sheets_wrapper.insert_empty_rows(spreadsheet_id=self.spreadsheet_id, sheet_name='Historiek', start_cell='A2',
                                                  number_of_rows=1)
+            result_data = self.clean(result_data)
             sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='Historiek', start_cell='A2',
                                                data=[[self.now, self.last_data_update, len(result_data)]])
 
@@ -190,3 +198,17 @@ class DQReport(Report):
                                                data=[[self.last_data_update]])
 
         logging.info(f'finished report {self.name}')
+
+    def clean(cls, result_data):
+        new_result_data = []
+        for data in result_data:
+            if isinstance(data, list):
+                rowdata = list(filter(lambda x: x is not None and x != '', data))
+                if len(rowdata) > 0:
+                    new_result_data.append(rowdata)
+            else:
+                if data is not None and data != '':
+                    new_result_data.append(data)
+        return new_result_data
+
+

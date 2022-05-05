@@ -305,16 +305,21 @@ class SheetsWrapper:
 
         sheet_values = []
         for row in column_data:
-            url = ''
-            if link_type == 'onderdeel':
-                url = 'https://apps.mow.vlaanderen.be/awvinfra/ui/otl-assets/installatie/{uuid}/detail/attributen'
-            elif link_type == 'installatie':
-                url = 'https://apps.mow.vlaanderen.be/eminfra/installaties/{uuid}'
-            url = url.replace('{uuid}', row)
-            sheet_values.append({
-                "values": {
-                    "userEnteredValue": {
-                        "formulaValue": f'=HYPERLINK("{url}"; "{row}")'}}})
+            if row is not None and row != '':
+                url = ''
+                if link_type == 'onderdeel':
+                    url = 'https://apps.mow.vlaanderen.be/awvinfra/ui/otl-assets/installatie/{uuid}/detail/attributen'
+                elif link_type == 'installatie':
+                    url = 'https://apps.mow.vlaanderen.be/eminfra/installaties/{uuid}'
+                url = url.replace('{uuid}', row)
+                sheet_values.append({
+                    "values": {
+                        "userEnteredValue": {
+                            "formulaValue": f'=HYPERLINK("{url}"; "{row}")'}}})
+            else:
+                sheet_values.append({
+                    "values": {
+                        "userEnteredValue": None}})
 
         service.spreadsheets().batchUpdate(
             spreadsheetId=spreadsheet_id,
