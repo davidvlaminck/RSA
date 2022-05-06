@@ -143,7 +143,11 @@ class DQReport(Report):
                         formula = f'=HYPERLINK("{link}"; "{text}")'
                         new_type_result.append(formula)
                     else:
-                        new_type_result.append('')
+                        for col in data.values():
+                            if col is not None:
+                                new_type_result.append('')
+                                break
+
                 typeUri_sheetcell = start_sheetcell.copy()
                 typeUri_sheetcell.update_column_by_adding_number(typeIndex)
                 typeUri_sheetcell.update_row_by_adding_number(1)
@@ -163,7 +167,7 @@ class DQReport(Report):
             sheets_wrapper.add_hyperlink_column(spreadsheet_id=self.spreadsheet_id,
                                                 sheet_name='Resultaat',
                                                 start_cell=start_sheetcell.cell,
-                                                link_type='onderdeel',
+                                                link_type='awvinfra',
                                                 column_data=first_column)
 
             # historiek

@@ -288,7 +288,7 @@ class SheetsWrapper:
             }}])).execute()
 
     def add_hyperlink_column(self, spreadsheet_id: str = '', sheet_name: str = '', start_cell: str = '',
-                             link_type: str = 'onderdeel', column_data: list = None):
+                             link_type: str = 'awvinfra', column_data: list = None):
         if len(column_data) == 0:
             return
 
@@ -300,16 +300,13 @@ class SheetsWrapper:
         end = start.copy()
         end.update_row_by_adding_number(len(column_data) - 1)
 
-        # url = "https://apps.mow.vlaanderen.be/eminfra/installaties/{uuid}",
-        # url = "https://apps.mow.vlaanderen.be/awvinfra/ui/asset/onderdeel/{uuid}/detail/attributen"
-
         sheet_values = []
         for row in column_data:
             if row is not None and row != '':
                 url = ''
-                if link_type == 'onderdeel':
+                if link_type == 'awvinfra':
                     url = 'https://apps.mow.vlaanderen.be/awvinfra/ui/otl-assets/installatie/{uuid}/detail/attributen'
-                elif link_type == 'installatie':
+                elif link_type == 'eminfra':
                     url = 'https://apps.mow.vlaanderen.be/eminfra/installaties/{uuid}'
                 url = url.replace('{uuid}', row)
                 sheet_values.append({
