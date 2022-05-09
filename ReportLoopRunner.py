@@ -4,9 +4,8 @@ import os
 # same for Neo4JConnector and other connectors
 # then run reports that use the Single.. version of the class to get the initialized version
 import logging
-import threading
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from os.path import exists
 
 from Neo4JConnector import SingleNeo4JConnector
@@ -38,13 +37,13 @@ class ReportLoopRunner:
 
         while True:
             if started_running_date is None or started_running_date != (datetime.utcnow()).date():
+                # start running reports at midnight
                 logging.info(f'{datetime.now()}: let\'s run the reports now')
                 started_running_date = (datetime.utcnow()).date()
                 for report_location in self.reports:
                     try:
                         o = open(report_location)
                         r = o.read()
-                        exist = exists(report_location)
                         exec(r)
                     except Exception as ex:
                         logging.exception(ex)
