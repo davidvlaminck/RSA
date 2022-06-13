@@ -1,4 +1,5 @@
 import json
+import socket
 from pathlib import Path
 
 from google.oauth2.credentials import Credentials
@@ -14,6 +15,8 @@ class SheetsWrapper:
             raise NotImplementedError('only access with service account is supported')
         self.service_cred_path = service_cred_path
         self.credentials: None | Credentials = None
+
+        socket.setdefaulttimeout(180)
 
         if readonly_scope is None:
             raise ValueError('set readonly_scope to True or False')

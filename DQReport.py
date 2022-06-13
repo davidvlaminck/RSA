@@ -12,8 +12,8 @@ from SheetsWrapper import SingleSheetsWrapper
 
 class DQReport(Report):
     def __init__(self, name: str = '', title: str = '', spreadsheet_id: str = '', datasource: str = '', add_filter: bool = True,
-                 persistent_column: str = ''):
-        Report.__init__(self, name=name, title=title, spreadsheet_id=spreadsheet_id, datasource=datasource, add_filter=add_filter)
+                 persistent_column: str = '', frequency: int = 1):
+        Report.__init__(self, name=name, title=title, spreadsheet_id=spreadsheet_id, datasource=datasource, add_filter=add_filter, frequency=frequency)
         self.last_data_update = ''
         self.now = ''
         self.persistent_column = persistent_column
@@ -24,6 +24,10 @@ class DQReport(Report):
 
         sheets_wrapper = SingleSheetsWrapper.get_wrapper()
         start_sheetcell = SheetsCell(startcell)
+
+        # TODO
+        # determine to run or not, based on frequency
+        # use summary sheet and self.frequence in days
 
         # persistent column
         if self.persistent_column != '':
@@ -95,6 +99,8 @@ class DQReport(Report):
                 headerrow.append('opmerkingen (blijvend)')
             result.append(headerrow)
 
+            result_data = self.clean(result_data)
+
             for data in result_data:
                 row = []
                 for key in result_keys:
@@ -121,7 +127,7 @@ class DQReport(Report):
                 sheets_wrapper.clear_filter(self.spreadsheet_id, 'Resultaat')
                 end_sheetcell = start_sheetcell.copy()
                 end_sheetcell.update_column_by_adding_number(len(result_keys))
-                end_sheetcell.update_row_by_adding_number(len(result))
+                end_sheetcell.update_row_by_adding_number(len(result)-1)
                 sheets_wrapper.create_basic_filter(self.spreadsheet_id, 'Resultaat',
                                                    f'{start_sheetcell.cell}:{end_sheetcell.cell}')
 
@@ -180,7 +186,7 @@ class DQReport(Report):
             if last_data_update != self.last_data_update:
                 sheets_wrapper.insert_empty_rows(spreadsheet_id=self.spreadsheet_id, sheet_name='Historiek', start_cell='A2',
                                                  number_of_rows=1)
-            result_data = self.clean(result_data)
+
             sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='Historiek', start_cell='A2',
                                                data=[[self.now, self.last_data_update, len(result_data)]])
 
@@ -203,13 +209,30 @@ class DQReport(Report):
 
         logging.info(f'finished report {self.name}')
 
-    def clean(cls, result_data):
+    @staticmethod
+    def clean(result_data):
+        """Removes the empty rows in the results"""
         new_result_data = []
+
         for data in result_data:
             if isinstance(data, list):
-                rowdata = list(filter(lambda x: x is not None and x != '', data))
-                if len(rowdata) > 0:
-                    new_result_data.append(rowdata)
+                all_none = True
+                for column in data:
+                    if column is not None or column != '':
+                        all_none = False
+                        break
+                if all_none:
+                    continue
+                new_result_data.append(data)
+            elif isinstance(data, dict):
+                all_none = True
+                for column in data.values():
+                    if column is not None and column != '':
+                        all_none = False
+                        break
+                if all_none:
+                    continue
+                new_result_data.append(data)
             else:
                 if data is not None and data != '':
                     new_result_data.append(data)
