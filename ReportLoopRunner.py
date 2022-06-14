@@ -26,11 +26,8 @@ class ReportLoopRunner:
                                  readonly_scope=False)
         SingleNeo4JConnector.init("bolt://localhost:7687", "neo4jPython", "python")
 
-        self.reports = []
+        self.reports = None
         self.dir_path = os.path.abspath(os.path.join(os.sep, ROOT_DIR, 'Reports'))
-        for file in os.listdir(self.dir_path):
-            if file.endswith('.py'):
-                self.reports.append(os.path.join(self.dir_path, file))
 
     def run(self):
         started_running_date = None
@@ -40,6 +37,13 @@ class ReportLoopRunner:
                 # start running reports at midnight
                 logging.info(f'{datetime.now()}: let\'s run the reports now')
                 started_running_date = (datetime.utcnow()).date()
+
+                # detect reports in Reports directory
+                self.reports = []
+                for file in os.listdir(self.dir_path):
+                    if file.endswith('.py'):
+                        self.reports.append(os.path.join(self.dir_path, file))
+
                 for report_location in self.reports:
                     try:
                         o = open(report_location)
