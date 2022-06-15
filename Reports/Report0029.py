@@ -10,7 +10,7 @@ if __name__ == '__main__':
 
     r = DQReport(name='report0029',
                  title='IP elementen hebben HoortBij relatie met een Netwerkelement',
-                 spreadsheet_id='1wn05XDV1PkyVdGgDEO3yUU0Jqf3t6asGH0SyGXQQWS8',
+                 spreadsheet_id='1VJmqHesEfOaZzYD8rZdZUNeKUoCBKMetgltL74bX9jk',
                  datasource='Neo4J',
                  persistent_column='C')
 
