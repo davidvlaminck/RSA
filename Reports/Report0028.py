@@ -7,9 +7,9 @@ r = DQReport(name='report0028',
              persistent_column='G')
 
 # query that fetches uuids of results
-result_query = """OPTIONAL MATCH (n:Netwerkelement {isActief:TRUE})-[h:HoortBij]->(i:installatie {isActief:TRUE})
-WHERE (NOT n.merk IN ['NOKIA', 'Ciena'] AND (h IS NULL OR (NOT(i:IP) AND i.typeURI CONTAINS 'lgc')))
-RETURN n.uuid, n.naam, n.merk, i.uuid as installatie_uuid, i.naampad as installatie_naampad, i.typeURI"""
+result_query = """MATCH (n:Netwerkelement {isActief:TRUE})
+WHERE NOT n.merk IN ['NOKIA', 'Ciena'] AND NOT EXISTS ((n)-[:HoortBij]->(:IP {isActief:TRUE}))
+RETURN n.uuid, n.naam, n.merk"""
 
 r.result_query = result_query
 r.run_report()

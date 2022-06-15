@@ -8,16 +8,16 @@ if __name__ == '__main__':
                              readonly_scope=False)
     SingleNeo4JConnector.init("bolt://localhost:7687", "neo4jPython", "python")
 
-    r = DQReport(name='report0029',
-                 title='IP elementen hebben HoortBij relatie met een Netwerkelement',
-                 spreadsheet_id='1VJmqHesEfOaZzYD8rZdZUNeKUoCBKMetgltL74bX9jk',
+    r = DQReport(name='report0030',
+                 title='Netwerkelementen hebben een (afgeleide) locatie',
+                 spreadsheet_id='1ZAZ8chzMbLEyGd-cbZM6S7Uw4aNOrBmAE1KWnbyvdK4',
                  datasource='Neo4J',
                  persistent_column='C')
 
     # query that fetches uuids of results
-    result_query = """MATCH (c:Camera {isActief:TRUE})
-WHERE NOT EXISTS((c)-[:HeeftBetrokkene {rol:'toezichter'}]->(:Agent))
-RETURN c.uuid, c.naam"""
+    result_query = """MATCH (n:Netwerkelement {isActief:TRUE})
+WHERE n.geometry IS NULL
+RETURN n.uuid, n.naam"""
 
     r.result_query = result_query
     r.run_report()

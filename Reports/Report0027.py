@@ -7,9 +7,11 @@ r = DQReport(name='report0027',
              persistent_column='E')
 
 # query that fetches uuids of results
-result_query = """OPTIONAL MATCH (o:onderdeel {isActief:TRUE})-[r:HeeftBetrokkene {rol:'toezichter'}]->(a:Agent)
-WHERE NOT EXISTS ((o)-[]-(:Asset {isActief:TRUE})) AND (o.geometry = '' OR o.geometry IS NULL)
-RETURN o.uuid, o.naam, o.typeURI, a.naam AS toezichter"""
+result_query = """MATCH (o:onderdeel {isActief:TRUE})
+WHERE NOT EXISTS ((o)--(:Asset {isActief:TRUE})) AND (o.geometry = '' OR o.geometry IS NULL)
+WITH o
+OPTIONAL MATCH (o:onderdeel {isActief:TRUE})-[r:HeeftBetrokkene {rol:'toezichter'}]->(a:Agent)
+RETURN o.uuid, o.naam, o.typeURI, a.naam as toezichter"""
 
 r.result_query = result_query
 r.run_report()
