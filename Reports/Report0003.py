@@ -8,7 +8,7 @@ r = DQReport(name='report0003',
              persistent_column='C')
 
 # query that fetches uuids of results
-result_query = """MATCH (a:Asset :Verkeersregelaar {isActief:TRUE}) 
+result_query = """MATCH (a:Verkeersregelaar {isActief:TRUE}) 
 WHERE NOT EXISTS ((a)-[:Bevestiging]-(:Wegkantkast {isActief:TRUE}))
 RETURN a.uuid, a.naam"""
 

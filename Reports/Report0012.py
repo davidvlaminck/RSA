@@ -7,6 +7,7 @@ r = DQReport(name='report0012',
              datasource='Neo4J',
              persistent_column='G')
 
+# TODO recheck query
 # query that fetches uuids of results
 result_query = """OPTIONAL MATCH (c:Camera {isActief:TRUE})-[:HoortBij]->(i:installatie {isActief:TRUE})
 WHERE c IS NOT NULL AND NOT EXISTS((c)-[:Bevestiging]-()) AND NOT i.naampad CONTAINS "TUNNEL" AND NOT i.naampad CONTAINS "Tunnel"

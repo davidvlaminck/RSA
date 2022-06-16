@@ -8,8 +8,8 @@ r = DQReport(name='report0023',
              persistent_column='C')
 
 # query that fetches uuids of results
-result_query = """OPTIONAL MATCH (c:Camera)-[h:HeeftBetrokkene {rol:'toezichter'}]->()
-WHERE c IS NOT NULL AND h IS NULL
+result_query = """MATCH (c:Camera {isActief:TRUE})
+WHERE NOT EXISTS ((c)-[:HeeftBetrokkene {rol:'toezichter'}]->(:Agent))
 RETURN c.uuid, c.naam"""
 
 r.result_query = result_query
