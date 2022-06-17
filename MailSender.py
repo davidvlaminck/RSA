@@ -25,14 +25,13 @@ class MailSender:
     def send_all_mails(self):
         sorted_mail_content = {}
         server = smtplib.SMTP('smtp.vlaanderen.be')
-        server.set_debuglevel(1)
+        # server.set_debuglevel(1)
 
         for mailcontent in self.mails:
             sorted_mail_content.setdefault(mailcontent.receiver, []).append(mailcontent)
 
         for receiver, mails in sorted_mail_content.items():
             # combine content
-            receivers = [receiver]
             sender = 'david.vlaminck@mow.vlaanderen.be'
 
             html = '<html><head><style>' \
