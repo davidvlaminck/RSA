@@ -1,6 +1,7 @@
 import smtplib
-from collections import defaultdict
 from dataclasses import dataclass
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 
 @dataclass
@@ -33,17 +34,28 @@ class MailSender:
             # combine content
             receivers = [receiver]
             sender = 'david.vlaminck@mow.vlaanderen.be'
-            msglines = ['From: Rapporteringsservice Assets <david.vlaminck@mow.vlaanderen.be>', f'To: {receiver}',
-                        'Subject: Rapporteringsservice Assets overzicht',
-                        'U ontvangt hierbij een samenvatting van de rapporten die door Rapporteringsservice Assets werd uitgevoerd.',
-                        '']
+
+            html = '<html><head><style>' \
+                   'table, th, td { border: 1px solid black; border-collapse: collapse; text-align: left }' \
+                   'th, td { padding: 5px; }' \
+                   '</style></head><body>' \
+                   '<p>U ontvangt hierbij een samenvatting van de rapporten die door Rapporteringsservice Assets werd uitgevoerd.<p>' \
+                   '<table><tr><th>Rapport Link</th><th>Aantal</th><th>Data van</th></tr>'
+
             for mail_content in mails:
-                msglines.append(f'<a href="{mail_content.hyperlink}">{mail_content.report_name}</a> heeft '
-                                f'{str(mail_content.count)} records op basis van de data van {mail_content.latest_sync}')
+                html += f'<tr><td><a href="{mail_content.hyperlink}">{mail_content.report_name}</a></td>' \
+                        f'<td>{str(mail_content.count)}</td><td>{mail_content.latest_sync}</td>'
 
-            msg = '\r\n'.join(msglines)
+            html += '</table></body></html>'
+            email_message = MIMEMultipart()
+            email_message['From'] = f'Rapporteringsservice Assets <{sender}>'
+            email_message['To'] = receiver
+            email_message['Subject'] = f'Rapporteringsservice Assets overzicht'
 
-            server.sendmail(sender, receivers, msg)
+            email_message.attach(MIMEText(html, "html"))
+            msg = email_message.as_string()
+
+            server.sendmail(sender, receiver, msg)
 
         server.quit()
 
