@@ -1,6 +1,6 @@
 import logging
 import time
-from datetime import datetime
+from datetime import datetime, date, timedelta
 
 from neo4j.time import DateTime
 
@@ -14,7 +14,8 @@ from SheetsWrapper import SingleSheetsWrapper
 class DQReport(Report):
     def __init__(self, name: str = '', title: str = '', spreadsheet_id: str = '', datasource: str = '', add_filter: bool = True,
                  persistent_column: str = '', frequency: int = 1):
-        Report.__init__(self, name=name, title=title, spreadsheet_id=spreadsheet_id, datasource=datasource, add_filter=add_filter, frequency=frequency)
+        Report.__init__(self, name=name, title=title, spreadsheet_id=spreadsheet_id, datasource=datasource, add_filter=add_filter,
+                        frequency=frequency)
         self.last_data_update = ''
         self.now = ''
         self.persistent_column = persistent_column
@@ -30,13 +31,7 @@ class DQReport(Report):
         # determine to run or not, based on frequency
         # use summary sheet and self.frequence in days
 
-        # test mails
-        sender.add_mail(receiver='david.vlaminck@mow.vlaanderen.be', report_name=self.title, spreadsheet_id=self.spreadsheet_id,
-                        count=50, latest_sync='2020-01-01 22:22:22')
-        sender.add_mail(receiver='david.vlaminck@mow.vlaanderen.be', report_name=self.title, spreadsheet_id=self.spreadsheet_id,
-                        count=100, latest_sync='2020-01-01 22:22:22')
-        sender.add_mail(receiver='davidvlaminck85@gmail.com', report_name=self.title, spreadsheet_id=self.spreadsheet_id,
-                        count=50, latest_sync='2020-01-01 22:22:22')
+        self.send_mails(sender=sender, named_range=[[]], previous_result=-1, result=2)
 
         # persistent column
         if self.persistent_column != '':
@@ -136,7 +131,7 @@ class DQReport(Report):
                 sheets_wrapper.clear_filter(self.spreadsheet_id, 'Resultaat')
                 end_sheetcell = start_sheetcell.copy()
                 end_sheetcell.update_column_by_adding_number(len(result_keys))
-                end_sheetcell.update_row_by_adding_number(len(result)-1)
+                end_sheetcell.update_row_by_adding_number(len(result) - 1)
                 sheets_wrapper.create_basic_filter(self.spreadsheet_id, 'Resultaat',
                                                    f'{start_sheetcell.cell}:{end_sheetcell.cell}')
 
@@ -152,7 +147,7 @@ class DQReport(Report):
                 new_type_result = []
                 for data in result_data:
                     if data[type_key] is not None and data[type_key] != '':
-                        text = data[type_key].replace('https://wegenenverkeer.data.vlaanderen.be/ns/', '')\
+                        text = data[type_key].replace('https://wegenenverkeer.data.vlaanderen.be/ns/', '') \
                             .replace('https://lgc.data.wegenenverkeer.be/ns/', '')
                         link = data[type_key]
                         formula = f'=HYPERLINK("{link}"; "{text}")'
@@ -247,4 +242,41 @@ class DQReport(Report):
                     new_result_data.append(data)
         return new_result_data
 
+    def send_mails(self, sender: MailSender, named_range: [list], previous_result: int, result: int, latest_data_sync: str = ''):
+        if len(named_range) == 0:
+            return
 
+        for line in named_range:
+
+            if line is None or len(line) == 0 or line[0] == '' or line[0] is None:
+                continue
+            if line[1] == 'Wijziging':
+                if previous_result == result:
+                    continue
+                sender.add_mail(receiver=line[0], report_name=self.title, spreadsheet_id=self.spreadsheet_id,
+                                count=result, latest_sync=latest_data_sync)
+                continue
+            elif line[1] == 'Dagelijks':
+                if line[2] == '' or line[2] is None:
+                    sender.add_mail(receiver=line[0], report_name=self.title, spreadsheet_id=self.spreadsheet_id,
+                                    count=result, latest_sync=latest_data_sync)
+                    continue
+                dt = datetime.strptime(line[2], '%Y-%m-%d %H:%M:%S')
+                diff = date.today() - dt.date()
+                if diff >= timedelta(days=1):
+                    sender.add_mail(receiver=line[0], report_name=self.title, spreadsheet_id=self.spreadsheet_id,
+                                    count=result, latest_sync=latest_data_sync)
+                    continue
+
+
+
+
+
+            # test mails
+            # sender.add_mail(receiver='david.vlaminck@mow.vlaanderen.be', report_name=self.title, spreadsheet_id=self.spreadsheet_id,
+            #                 count=50, latest_sync='2020-01-01 22:22:22')
+            # sender.add_mail(receiver='david.vlaminck@mow.vlaanderen.be', report_name=self.title, spreadsheet_id=self.spreadsheet_id,
+            #                 count=100, latest_sync='2020-01-01 22:22:22')
+            # sender.add_mail(receiver='davidvlaminck85@gmail.com', report_name=self.title, spreadsheet_id=self.spreadsheet_id,
+            #                 count=50, latest_sync='2020-01-01 22:22:22')
+            pass
