@@ -1,3 +1,5 @@
+import importlib
+import importlib.util
 import os
 
 # initialize a SheetsWrapper through SingleSheetsWrapper
@@ -8,6 +10,7 @@ import time
 from datetime import datetime
 from os.path import exists
 
+from MailSender import MailSender
 from Neo4JConnector import SingleNeo4JConnector
 from SheetsWrapper import SingleSheetsWrapper
 
@@ -28,6 +31,7 @@ class ReportLoopRunner:
 
         self.reports = None
         self.dir_path = os.path.abspath(os.path.join(os.sep, ROOT_DIR, 'Reports'))
+        self.mail_sender = MailSender()
 
     def run(self):
         started_running_date = None
@@ -41,20 +45,35 @@ class ReportLoopRunner:
                 # detect reports in Reports directory
                 self.reports = []
                 for file in os.listdir(self.dir_path):
-                    if file.endswith('.py'):
-                        self.reports.append(os.path.join(self.dir_path, file))
+                    if file.endswith('0016.py'):
+                        self.reports.append(file.replace('.py', ''))
 
-                for report_location in self.reports:
+                for report_name in self.reports:
                     try:
-                        o = open(report_location)
-                        r = o.read()
-                        exec(r)
+                        report_instance = self.dynamic_create_instance_from_name(report_name)
+                        report_instance.init_report()
+                        report_instance.run_report(sender=self.mail_sender)
                     except Exception as ex:
                         logging.exception(ex)
                 logging.info(f'{datetime.now()}: done running the reports')
+
+                self.mail_sender.send_all_mails()
             else:
                 logging.info(f'{datetime.now()}: not yet the right time to run reports.')
                 time.sleep(60)
+
+    @staticmethod
+    def dynamic_create_instance_from_name(report_name):
+        try:
+            module_spec = importlib.util.find_spec(f'Reports.{report_name}')
+            module = importlib.util.module_from_spec(module_spec)
+            module_spec.loader.exec_module(module)
+            class_ = getattr(module, report_name)
+            instance = class_()
+            return instance
+        except ModuleNotFoundError as exc:
+            print(exc.msg)
+            pass
 
 
 

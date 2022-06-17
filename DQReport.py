@@ -4,6 +4,7 @@ from datetime import datetime
 
 from neo4j.time import DateTime
 
+from MailSender import MailSender
 from Neo4JConnector import SingleNeo4JConnector
 from Report import Report
 from SheetsCell import SheetsCell
@@ -19,7 +20,7 @@ class DQReport(Report):
         self.persistent_column = persistent_column
         self.persistent_dict = {}
 
-    def run_report(self, startcell: str = 'A1'):
+    def run_report(self, startcell: str = 'A1', sender: MailSender = None):
         logging.info(f'start running report {self.name}: {self.title}')
 
         sheets_wrapper = SingleSheetsWrapper.get_wrapper()
@@ -28,6 +29,14 @@ class DQReport(Report):
         # TODO
         # determine to run or not, based on frequency
         # use summary sheet and self.frequence in days
+
+        # test mails
+        sender.add_mail(receiver='david.vlaminck@mow.vlaanderen.be', report_name=self.title, spreadsheet_id=self.spreadsheet_id,
+                        count=50, latest_sync='2020-01-01 22:22:22')
+        sender.add_mail(receiver='david.vlaminck@mow.vlaanderen.be', report_name=self.title, spreadsheet_id=self.spreadsheet_id,
+                        count=100, latest_sync='2020-01-01 22:22:22')
+        sender.add_mail(receiver='davidvlaminck85@gmail.com', report_name=self.title, spreadsheet_id=self.spreadsheet_id,
+                        count=50, latest_sync='2020-01-01 22:22:22')
 
         # persistent column
         if self.persistent_column != '':
