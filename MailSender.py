@@ -17,8 +17,8 @@ class MailContent:
 
 class MailSender:
     def __init__(self):
-        socks.setdefaultproxy(socks.SOCKS5, 'proxy.vlaanderen.be', 8080)
-        socks.wrapmodule(smtplib)
+        # socks.setdefaultproxy(socks.SOCKS5, 'proxy.vlaanderen.be', 8080)
+        # socks.wrapmodule(smtplib)
         self.mails: [MailContent] = []
 
     def add_mail(self, receiver: str, report_name: str, spreadsheet_id: str, count: int, latest_sync: str):

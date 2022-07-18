@@ -8,7 +8,7 @@ from MailSender import MailSender
 from Neo4JConnector import SingleNeo4JConnector
 from Report import Report
 from SheetsCell import SheetsCell
-from SheetsWrapper import SingleSheetsWrapper
+from SheetsWrapper import SingleSheetsWrapper, SheetsWrapper
 
 
 class DQReport(Report):
@@ -35,7 +35,7 @@ class DQReport(Report):
         # use named range to fetch ppl to send mails to
         mail_receivers = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='Overzicht',
                                                              sheetrange='emails')
-        self.send_mails(sender=sender, named_range=mail_receivers, previous_result=-1, result=2)
+        previous_result, latest_data_sync = self.get_historiek_record_info(sheets_wrapper)
 
         # persistent column
         if self.persistent_column != '':
@@ -215,6 +215,9 @@ class DQReport(Report):
                                                start_cell='C' + str(rowFound + 1),
                                                data=[[self.last_data_update]])
 
+            self.send_mails(sender=sender, named_range=mail_receivers, previous_result=previous_result, result=len(result_data),
+                            latest_data_sync=latest_data_sync)
+
         logging.info(f'finished report {self.name}')
 
     @staticmethod
@@ -272,6 +275,13 @@ class DQReport(Report):
                                     count=result, latest_sync=latest_data_sync)
                     continue
 
+            elif line[1] == 'Wekelijks':
+                NotImplementedError("not yet implemented")
+            elif line[1] == 'Maandelijks':
+                NotImplementedError("not yet implemented")
+            elif line[1] == 'Jaarlijks':
+                NotImplementedError("not yet implemented")
+
             # test mails
             # sender.add_mail(receiver='david.vlaminck@mow.vlaanderen.be', report_name=self.title, spreadsheet_id=self.spreadsheet_id,
             #                 count=50, latest_sync='2020-01-01 22:22:22')
@@ -280,3 +290,14 @@ class DQReport(Report):
             # sender.add_mail(receiver='davidvlaminck85@gmail.com', report_name=self.title, spreadsheet_id=self.spreadsheet_id,
             #                 count=50, latest_sync='2020-01-01 22:22:22')
             pass
+
+    def get_historiek_record_info(self, sheets_wrapper: SheetsWrapper) -> (int, str):
+        results = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='Historiek',
+                                                      sheetrange='B2:C2')
+
+        if len(results) == 0:
+            return None, ''
+        latest_sync = results[0][0]
+        previous_count = results[0][1]
+        return int(previous_count), latest_sync
+
