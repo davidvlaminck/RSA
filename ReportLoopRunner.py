@@ -55,9 +55,11 @@ class ReportLoopRunner:
                         report_instance.run_report(sender=self.mail_sender)
                     except Exception as ex:
                         logging.exception(ex)
+                        print(f'failed completing report {report_name}')
                 logging.info(f'{datetime.now()}: done running the reports')
 
                 self.mail_sender.send_all_mails()
+                logging.info(f'{datetime.now()}: sent all mails')
             else:
                 logging.info(f'{datetime.now()}: not yet the right time to run reports.')
                 time.sleep(60)

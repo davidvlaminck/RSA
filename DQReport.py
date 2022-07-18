@@ -31,7 +31,11 @@ class DQReport(Report):
         # determine to run or not, based on frequency
         # use summary sheet and self.frequence in days
 
-        self.send_mails(sender=sender, named_range=[[]], previous_result=-1, result=2)
+        # TODO
+        # use named range to fetch ppl to send mails to
+        mail_receivers = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='Overzicht',
+                                                             sheetrange='emails')
+        self.send_mails(sender=sender, named_range=mail_receivers, previous_result=-1, result=2)
 
         # persistent column
         if self.persistent_column != '':
@@ -257,7 +261,7 @@ class DQReport(Report):
                                 count=result, latest_sync=latest_data_sync)
                 continue
             elif line[1] == 'Dagelijks':
-                if line[2] == '' or line[2] is None:
+                if len(line) < 3 or line[2] == '' or line[2] is None:
                     sender.add_mail(receiver=line[0], report_name=self.title, spreadsheet_id=self.spreadsheet_id,
                                     count=result, latest_sync=latest_data_sync)
                     continue
@@ -267,10 +271,6 @@ class DQReport(Report):
                     sender.add_mail(receiver=line[0], report_name=self.title, spreadsheet_id=self.spreadsheet_id,
                                     count=result, latest_sync=latest_data_sync)
                     continue
-
-
-
-
 
             # test mails
             # sender.add_mail(receiver='david.vlaminck@mow.vlaanderen.be', report_name=self.title, spreadsheet_id=self.spreadsheet_id,

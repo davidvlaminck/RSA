@@ -36,7 +36,8 @@ class DQReportTests(unittest.TestCase):
         self.assertListEqual([], sender.mails)
         report = DQReport(name='test report', title='test report title', spreadsheet_id='testsheetId')
         report.send_mails(sender=sender, named_range=[['david.vlaminck@mow.vlaanderen.be', 'Wijziging', ''],
-                                                      ['second@mow.vlaanderen.be', 'Wijziging', '']], previous_result=0, result=1)
+                                                      ['second@mow.vlaanderen.be', 'Wijziging', '']],
+                          previous_result=0, result=1)
         self.assertEqual(2, len(sender.mails))
         self.assertEqual('david.vlaminck@mow.vlaanderen.be', sender.mails[0].receiver)
         self.assertEqual('second@mow.vlaanderen.be', sender.mails[1].receiver)
@@ -48,7 +49,8 @@ class DQReportTests(unittest.TestCase):
         sender = MailSender()
         self.assertListEqual([], sender.mails)
         report = DQReport(name='test report', title='test report title', spreadsheet_id='testsheetId')
-        report.send_mails(sender=sender, named_range=[['david.vlaminck@mow.vlaanderen.be', 'Dagelijks', '2022-01-01 01:00:00']], previous_result=0, result=1)
+        report.send_mails(sender=sender, named_range=[['david.vlaminck@mow.vlaanderen.be', 'Dagelijks', '2022-01-01 01:00:00']],
+                          previous_result=0, result=1)
         self.assertListEqual([], sender.mails)
 
     @mock.patch(f'{DQReport.__name__}.date', wraps=datetime)
@@ -58,7 +60,9 @@ class DQReportTests(unittest.TestCase):
         sender = MailSender()
         self.assertListEqual([], sender.mails)
         report = DQReport(name='test report', title='test report title', spreadsheet_id='testsheetId')
-        report.send_mails(sender=sender, named_range=[['david.vlaminck@mow.vlaanderen.be', 'Dagelijks', '2022-01-01 01:00:00']], previous_result=0, result=1)
+        report.send_mails(sender=sender,
+                          named_range=[['david.vlaminck@mow.vlaanderen.be', 'Dagelijks', '2022-01-01 01:00:00']],
+                          previous_result=0, result=1)
         self.assertEqual(1, len(sender.mails))
 
     # last sent value <> null
