@@ -61,6 +61,7 @@ class MailSender:
             server.sendmail(sender, receiver, msg)
 
             # TODO edit "laatst verzonden" in all the sheets
+            # add to mail content when fetching?
 
         server.quit()
 
