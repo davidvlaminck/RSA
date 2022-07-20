@@ -2,7 +2,7 @@ from DQReport import DQReport
 
 
 r = DQReport(name='report0031',
-             title="Netwerkementen met gebruik 'L2-switch' hebben een hoortbij relatie naar installatie L2AccesStructuur",
+             title="Netwerkelementen met gebruik 'L2-switch' hebben een hoortbij relatie naar installatie L2AccesStructuur",
              spreadsheet_id='1k5uUwLmf5IFVhftY7klBmylWtuEBwP8URjYPMcAB71w',
              datasource='Neo4J',
              persistent_column='C')
