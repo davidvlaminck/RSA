@@ -8,8 +8,8 @@ r = DQReport(name='report0031',
              persistent_column='C')
 
 # query that fetches uuids of results
-result_query = """MATCH (n:Netwerkelement) 
-WHERE n.isActief = TRUE AND n.gebruik = 'l2-switch' AND NOT EXISTS ((n)-[:HoortBij]->(:L2AccessStructuur {isActief:TRUE}))
+result_query = """MATCH (n:Netwerkelement {isActief:TRUE, gebruik:'l2-switch'}) 
+WHERE NOT EXISTS ((n)-[:HoortBij]->(:L2AccessStructuur {isActief:TRUE}))
 RETURN n.uuid, n.naam"""
 
 r.result_query = result_query
