@@ -9,7 +9,7 @@ r = DQReport(name='report0034',
 
 # query that fetches uuids of results
 result_query = """MATCH (n:Netwerkpoort {isActief:TRUE, type:'NNI'})
-WHERE NOT EXISTS ((n)-[:Sturing]->(:Netwerkpoort {isActief:TRUE, type:'NNI'}))
+WHERE NOT EXISTS ((n)-[:Sturing]-(:Netwerkpoort {isActief:TRUE, type:'NNI'}))
 RETURN n.uuid, n.naam"""
 
 r.result_query = result_query
