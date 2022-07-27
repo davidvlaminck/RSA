@@ -3,8 +3,6 @@ from dataclasses import dataclass
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-import socks
-
 
 @dataclass
 class MailContent:
@@ -28,7 +26,8 @@ class MailSender:
 
     def send_all_mails(self):
         sorted_mail_content = {}
-        server = smtplib.SMTP('smtp.vlaanderen.be')
+        server = smtplib.SMTP(host='172.23.0.12')
+        server.login(user='david.vlaminck@belfla.be', password='')
         # server.set_debuglevel(1)
 
         for mailcontent in self.mails:
@@ -36,7 +35,7 @@ class MailSender:
 
         for receiver, mails in sorted_mail_content.items():
             # combine content
-            sender = 'david.vlaminck@mow.vlaanderen.be'
+            sender = 'david.vlaminck@belfla.be'
 
             html = '<html><head><style>' \
                    'table, th, td { border: 1px solid black; border-collapse: collapse; text-align: left }' \
