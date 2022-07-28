@@ -12,26 +12,33 @@ from os.path import exists
 
 from MailSender import MailSender
 from Neo4JConnector import SingleNeo4JConnector
+from SettingsManager import SettingsManager
 from SheetsWrapper import SingleSheetsWrapper
 
 ROOT_DIR = (os.path.dirname(os.path.abspath(__file__)))
 
 
 class ReportLoopRunner:
-    def __init__(self):
+    def __init__(self, settings_path):
+        settings_manager = SettingsManager(settings_path=settings_path)
+        self.settings = settings_manager.settings
+
         logging.info = print
         logging.basicConfig(filename='logs.txt',
                             filemode='a',
                             format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
                             datefmt='%H:%M:%S',
                             level=logging.INFO)
-        SingleSheetsWrapper.init(service_cred_path='C:\\resources\\driven-wonder-149715-ca8bdf010930.json',
+        SingleSheetsWrapper.init(service_cred_path=self.settings['google_api']['credentials_path'],
                                  readonly_scope=False)
-        SingleNeo4JConnector.init("bolt://localhost:7687", "neo4jPython", "python")
+        neo4j_settings = self.settings['databases']['Neo4j']
+        SingleNeo4JConnector.init(uri=neo4j_settings['uri'], user=neo4j_settings['user'],
+                                  password=neo4j_settings['password'], database=neo4j_settings['database'])
 
         self.reports = None
+
         self.dir_path = os.path.abspath(os.path.join(os.sep, ROOT_DIR, 'Reports'))
-        self.mail_sender = MailSender()
+        self.mail_sender = MailSender(mail_settings=self.settings['smtp_options'])
 
     def run(self):
         started_running_date = None
@@ -45,7 +52,7 @@ class ReportLoopRunner:
                 # detect reports in Reports directory
                 self.reports = []
                 for file in os.listdir(self.dir_path):
-                    if file.endswith('0016.py'):
+                    if file.endswith('0016.py'):  # TODO test purposes, remove when done
                         self.reports.append(file.replace('.py', ''))
 
                 for report_name in self.reports:
@@ -59,7 +66,9 @@ class ReportLoopRunner:
                 logging.info(f'{datetime.now()}: done running the reports')
 
                 self.mail_sender.send_all_mails()
-                logging.info(f'{datetime.now()}: sent all mails')
+                self.adjust_mailed_info_in_sheets(sender=self.mail_sender)
+
+                logging.info(f'{datetime.now()}: sent all mails_to_send')
             else:
                 logging.info(f'{datetime.now()}: not yet the right time to run reports.')
                 time.sleep(60)
@@ -76,6 +85,12 @@ class ReportLoopRunner:
         except ModuleNotFoundError as exc:
             print(exc.msg)
             pass
+
+    def adjust_mailed_info_in_sheets(self, sender: MailSender):
+        sent_mails = sender.sent_mails
+        sheet_info = sender.sheet_info
+        sheets_wrapper = SingleSheetsWrapper.get_wrapper()
+
 
 
 

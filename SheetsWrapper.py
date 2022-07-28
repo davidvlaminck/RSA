@@ -113,15 +113,17 @@ class SheetsWrapper:
         ).execute()
         return result['sheets'][0]['data'][0]
 
-    def read_data_from_sheet(self, spreadsheet_id: str, sheet_name: str, sheetrange: str):
+    def read_data_from_sheet(self, spreadsheet_id: str, sheet_name: str, sheetrange: str, return_raw_results: bool = False):
         credentials = self.authenticate()
         service = build('sheets', 'v4', credentials=credentials)
         result = service.spreadsheets().values().get(
             spreadsheetId=spreadsheet_id,
             range=sheet_name + '!' + sheetrange
         ).execute()
-        return result.get('values', [])
-
+        if return_raw_results:
+            return result
+        else:
+            return result.get('values', [])
 
 
     def clear_cells_within_range(self, spreadsheet_id: str, sheet_name: str, sheetrange: str):

@@ -1,9 +1,8 @@
+import logging
 import smtplib
 from dataclasses import dataclass
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-
-import socks
 
 
 @dataclass
@@ -16,27 +15,32 @@ class MailContent:
 
 
 class MailSender:
-    def __init__(self):
-        # socks.setdefaultproxy(socks.SOCKS5, 'proxy.vlaanderen.be', 8080)
-        # socks.wrapmodule(smtplib)
-        self.mails: [MailContent] = []
+    def __init__(self, mail_settings=dict):
+        self.mails_to_send: [MailContent] = []
+        self.host = mail_settings['host']
+        self.username = mail_settings['username']
+        self.password = mail_settings['password']
+        self.sent_mails: [MailContent] = []
+        self.sheet_info = {}
 
     def add_mail(self, receiver: str, report_name: str, spreadsheet_id: str, count: int, latest_sync: str):
         content = MailContent(receiver=receiver, count=count, latest_sync=latest_sync, report_name=report_name)
         content.hyperlink = f'https://docs.google.com/spreadsheets/d/{spreadsheet_id}'
-        self.mails.append(content)
+        self.mails_to_send.append(content)
 
     def send_all_mails(self):
+        self.sent_mails = []
         sorted_mail_content = {}
-        server = smtplib.SMTP('smtp.vlaanderen.be')
-        # server.set_debuglevel(1)
+        server = smtplib.SMTP(host=self.host)
 
-        for mailcontent in self.mails:
+        server.login(user=self.username, password=self.password)
+
+        for mailcontent in self.mails_to_send:
             sorted_mail_content.setdefault(mailcontent.receiver, []).append(mailcontent)
 
         for receiver, mails in sorted_mail_content.items():
             # combine content
-            sender = 'david.vlaminck@mow.vlaanderen.be'
+            sender = self.username
 
             html = '<html><head><style>' \
                    'table, th, td { border: 1px solid black; border-collapse: collapse; text-align: left }' \
@@ -58,10 +62,15 @@ class MailSender:
             email_message.attach(MIMEText(html, "html"))
             msg = email_message.as_string()
 
-            server.sendmail(sender, receiver, msg)
-
-            # TODO edit "laatst verzonden" in all the sheets
-            # add to mail content when fetching?
+            try:
+                server.sendmail(sender, receiver, msg)
+                self.sent_mails.extend(mails)
+            except:
+                logging.error(f'Could not send an email to {receiver}')
 
         server.quit()
 
+    def add_sheet_info(self, spreadsheet_id: str, mail_receivers_raw: dict):
+        a = self.sheet_info
+        pass
+        # store all the sheet info

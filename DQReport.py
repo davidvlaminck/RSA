@@ -32,9 +32,11 @@ class DQReport(Report):
         # use summary sheet and self.frequence in days
 
         # TODO
-        # use named range to fetch ppl to send mails to
-        mail_receivers = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='Overzicht',
-                                                             sheetrange='emails')
+        # use named range to fetch ppl to send mails_to_send to
+        mail_receivers_raw = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='Overzicht',
+                                                                 sheetrange='emails', return_raw_results=True)
+        mail_receivers = mail_receivers_raw.get('values', [])
+        sender.add_sheet_info(spreadsheet_id=spreadsheet_id, mail_receivers_raw=mail_receivers_raw)
         previous_result, latest_data_sync = self.get_historiek_record_info(sheets_wrapper)
 
         # persistent column
@@ -282,7 +284,7 @@ class DQReport(Report):
             elif line[1] == 'Jaarlijks':
                 NotImplementedError("not yet implemented")
 
-            # test mails
+            # test mails_to_send
             # sender.add_mail(receiver='david.vlaminck@mow.vlaanderen.be', report_name=self.title, spreadsheet_id=self.spreadsheet_id,
             #                 count=50, latest_sync='2020-01-01 22:22:22')
             # sender.add_mail(receiver='david.vlaminck@mow.vlaanderen.be', report_name=self.title, spreadsheet_id=self.spreadsheet_id,
