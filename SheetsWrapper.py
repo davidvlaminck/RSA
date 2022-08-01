@@ -125,7 +125,6 @@ class SheetsWrapper:
         else:
             return result.get('values', [])
 
-
     def clear_cells_within_range(self, spreadsheet_id: str, sheet_name: str, sheetrange: str):
         credentials = self.authenticate()
 

@@ -1,15 +1,14 @@
 import importlib
 import importlib.util
-import os
-
 # initialize a SheetsWrapper through SingleSheetsWrapper
 # same for Neo4JConnector and other connectors
 # then run reports that use the Single.. version of the class to get the initialized version
 import logging
+import os
 import time
 from datetime import datetime
-from os.path import exists
 
+from MailContent import MailContent
 from MailSender import MailSender
 from Neo4JConnector import SingleNeo4JConnector
 from SettingsManager import SettingsManager
@@ -91,7 +90,16 @@ class ReportLoopRunner:
         sheet_info = sender.sheet_info
         sheets_wrapper = SingleSheetsWrapper.get_wrapper()
 
+        # loop through sent_mails
+        # if item is in sheet_info, adjust cell
 
-
-
-
+        for mailcontent in sent_mails:
+            if not isinstance(mailcontent, MailContent):
+                continue
+            sheet_id = mailcontent.spreadsheet_id
+            if sheet_id not in sheet_info:
+                continue
+            found_infos = list(filter(lambda info: info['mail'] == mailcontent.receiver and info['frequency'] == mailcontent.frequency, sheet_info))
+            for found_info in found_infos:
+                sheets_wrapper.write_data_to_sheet(spreadsheet_id=sheet_id, start_cell=found_info['cell'], sheet_name='Overzicht',
+                                                   data=[[mailcontent.mail_sent.strftime("%Y-%m-%d %H:%M:%S")]])

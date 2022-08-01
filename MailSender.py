@@ -1,17 +1,10 @@
 import logging
 import smtplib
-from dataclasses import dataclass
+from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-
-@dataclass
-class MailContent:
-    receiver: str = ''
-    hyperlink: str = ''
-    report_name: str = ''
-    count: int = -1
-    latest_sync: str = ''
+from MailContent import MailContent
 
 
 class MailSender:
@@ -23,8 +16,8 @@ class MailSender:
         self.sent_mails: [MailContent] = []
         self.sheet_info = {}
 
-    def add_mail(self, receiver: str, report_name: str, spreadsheet_id: str, count: int, latest_sync: str):
-        content = MailContent(receiver=receiver, count=count, latest_sync=latest_sync, report_name=report_name)
+    def add_mail(self, receiver: str, report_name: str, spreadsheet_id: str, count: int, latest_sync: str, frequency: str):
+        content = MailContent(receiver=receiver, count=count, latest_sync=latest_sync, report_name=report_name, frequency=frequency, spreadsheet_id=spreadsheet_id)
         content.hyperlink = f'https://docs.google.com/spreadsheets/d/{spreadsheet_id}'
         self.mails_to_send.append(content)
 
@@ -64,13 +57,14 @@ class MailSender:
 
             try:
                 server.sendmail(sender, receiver, msg)
+                for mail_content in mails:
+                    mail_content.mail_sent = datetime.now()
                 self.sent_mails.extend(mails)
             except:
                 logging.error(f'Could not send an email to {receiver}')
 
         server.quit()
 
-    def add_sheet_info(self, spreadsheet_id: str, mail_receivers_raw: dict):
-        a = self.sheet_info
-        pass
+    def add_sheet_info(self, spreadsheet_id: str, mail_receivers_dict: dict):
+        self.sheet_info[spreadsheet_id] = mail_receivers_dict
         # store all the sheet info
