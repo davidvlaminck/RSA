@@ -78,7 +78,7 @@ class DQReport(Report):
                 query_result: DateTime = session.run('MATCH (p:Params) RETURN p.last_update_utc').single()[0]
 
             self.last_data_update = query_result.to_native().strftime("%Y-%m-%d %H:%M:%S")
-            self.now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
 
             report_made_lines = [[f'Rapport gemaakt op {self.now} met data uit:'],
                                  [f'{self.datasource}, laatst gesynchroniseerd op {self.last_data_update}']]
@@ -219,7 +219,7 @@ class DQReport(Report):
                                                data=[[self.last_data_update]])
 
             self.send_mails(sender=sender, named_range=mail_receivers, previous_result=previous_result, result=len(result_data),
-                            latest_data_sync=latest_data_sync)
+                            latest_data_sync=last_data_update)
 
         logging.info(f'finished report {self.name}')
 
@@ -252,7 +252,7 @@ class DQReport(Report):
                     new_result_data.append(data)
         return new_result_data
 
-    def send_mails(self, sender: MailSender, named_range: [list], previous_result: int, result: int, latest_data_sync: str = '', frequency: str=''):
+    def send_mails(self, sender: MailSender, named_range: [list], previous_result: int, result: int, latest_data_sync: str = ''):
         if len(named_range) == 0:
             return
 
@@ -262,12 +262,12 @@ class DQReport(Report):
             if line[1] == 'Wijziging':
                 if previous_result != result:
                     sender.add_mail(receiver=line[0], report_name=self.title, spreadsheet_id=self.spreadsheet_id,
-                                    count=result, latest_sync=latest_data_sync, frequency=frequency)
+                                    count=result, latest_sync=latest_data_sync, frequency=line[1])
                     # add frequency
             elif line[1] in ['Dagelijks', 'Wekelijks', 'Maandelijks', 'Jaarlijks']:
                 if len(line) < 3 or line[2] == '' or line[2] is None:
                     sender.add_mail(receiver=line[0], report_name=self.title, spreadsheet_id=self.spreadsheet_id,
-                                    count=result, latest_sync=latest_data_sync, frequency=frequency)
+                                    count=result, latest_sync=latest_data_sync, frequency=line[1])
                 else:
                     dt = datetime.strptime(line[2], '%Y-%m-%d %H:%M:%S')
                     last_sent = dt.date()
@@ -275,22 +275,22 @@ class DQReport(Report):
                         diff_days = date.today() - last_sent
                         if diff_days >= timedelta(days=1):
                             sender.add_mail(receiver=line[0], report_name=self.title, spreadsheet_id=self.spreadsheet_id,
-                                            count=result, latest_sync=latest_data_sync, frequency=frequency)
+                                            count=result, latest_sync=latest_data_sync, frequency=line[1])
                     elif line[1] == 'Wekelijks':
                         diff_days = date.today() - last_sent
                         if diff_days >= timedelta(days=7):
                             sender.add_mail(receiver=line[0], report_name=self.title, spreadsheet_id=self.spreadsheet_id,
-                                            count=result, latest_sync=latest_data_sync, frequency=frequency)
+                                            count=result, latest_sync=latest_data_sync, frequency=line[1])
                     elif line[1] == 'Maandelijks':
                         current_month = date.today().month
                         if current_month != last_sent.month:
                             sender.add_mail(receiver=line[0], report_name=self.title, spreadsheet_id=self.spreadsheet_id,
-                                            count=result, latest_sync=latest_data_sync, frequency=frequency)
+                                            count=result, latest_sync=latest_data_sync, frequency=line[1])
                     elif line[1] == 'Jaarlijks':
                         current_month = date.today().year
                         if current_month != last_sent.year:
                             sender.add_mail(receiver=line[0], report_name=self.title, spreadsheet_id=self.spreadsheet_id,
-                                            count=result, latest_sync=latest_data_sync, frequency=frequency)
+                                            count=result, latest_sync=latest_data_sync, frequency=line[1])
 
     def get_historiek_record_info(self, sheets_wrapper: SheetsWrapper) -> (int, str):
         results = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='Historiek',

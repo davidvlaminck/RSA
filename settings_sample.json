@@ -5,7 +5,7 @@
         "password": ""
     },
     "google_api": {
-        "credentials_path": "C:\\resources\\driven-wonder-149715-ca8bdf010930.json",
+        "credentials_path": "C:\\resources\\driven-wonder-149715-ca8bdf010930.json"
     },
     "databases": {
         "Neo4j": {

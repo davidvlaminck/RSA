@@ -44,7 +44,7 @@ class MailSender:
                    '<p>U ontvangt hierbij een samenvatting van de rapporten die door Rapporteringsservice Assets werd uitgevoerd.<p>' \
                    '<table><tr><th>Rapport Link</th><th>Aantal</th><th>Data van</th></tr>'
 
-            for mail_content in mails:
+            for mail_content in self.remove_duplicate_mail_content(mails):
                 html += f'<tr><td><a href="{mail_content.hyperlink}">{mail_content.report_name}</a></td>' \
                         f'<td>{str(mail_content.count)}</td><td>{mail_content.latest_sync}</td>'
 
@@ -64,7 +64,7 @@ class MailSender:
                     mail_counter = 0
                     time.sleep(300) # avoid spam limit
                 for mail_content in mails:
-                    mail_content.mail_sent = datetime.now()
+                    mail_content.mail_sent = datetime.utcnow()
                 self.sent_mails.extend(mails)
             except:
                 logging.error(f'Could not send an email to {receiver}')
@@ -74,3 +74,14 @@ class MailSender:
     def add_sheet_info(self, spreadsheet_id: str, mail_receivers_dict: dict):
         self.sheet_info[spreadsheet_id] = mail_receivers_dict
         # store all the sheet info
+
+    @staticmethod
+    def remove_duplicate_mail_content(mails):
+        no_duplicate_content = []
+        for mail in mails:
+            mail_found = list(filter(lambda c: c.report_name == mail.report_name and c.latest_sync == mail.latest_sync,
+                                     no_duplicate_content))
+            if len(mail_found) > 0:
+                continue
+            no_duplicate_content.append(mail)
+        return no_duplicate_content

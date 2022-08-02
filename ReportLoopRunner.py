@@ -2,7 +2,7 @@ import importlib
 import importlib.util
 # initialize a SheetsWrapper through SingleSheetsWrapper
 # same for Neo4JConnector and other connectors
-# then run reports that use the Single.. version of the class to get the initialized version
+# then run reports that use the Single version of the class to get the initialized version
 import logging
 import os
 import time
@@ -45,7 +45,7 @@ class ReportLoopRunner:
         while True:
             if started_running_date is None or started_running_date != (datetime.utcnow()).date():
                 # start running reports at midnight
-                logging.info(f'{datetime.now()}: let\'s run the reports now')
+                logging.info(f'{datetime.utcnow()}: let\'s run the reports now')
                 started_running_date = (datetime.utcnow()).date()
 
                 # detect reports in Reports directory
@@ -60,16 +60,17 @@ class ReportLoopRunner:
                         report_instance.init_report()
                         report_instance.run_report(sender=self.mail_sender)
                     except Exception as ex:
+                        logging.info(f"exception happened in report {report_name}: {ex}")
                         logging.exception(ex)
                         print(f'failed completing report {report_name}')
-                logging.info(f'{datetime.now()}: done running the reports')
+                logging.info(f'{datetime.utcnow()}: done running the reports')
 
                 self.mail_sender.send_all_mails()
                 self.adjust_mailed_info_in_sheets(sender=self.mail_sender)
 
-                logging.info(f'{datetime.now()}: sent all mails_to_send')
+                logging.info(f'{datetime.utcnow()}: sent all mails_to_send ({len(self.mail_sender.mails_to_send)})')
             else:
-                logging.info(f'{datetime.now()}: not yet the right time to run reports.')
+                logging.info(f'{datetime.utcnow()}: not yet the right time to run reports.')
                 time.sleep(60)
 
     @staticmethod
@@ -85,7 +86,8 @@ class ReportLoopRunner:
             print(exc.msg)
             pass
 
-    def adjust_mailed_info_in_sheets(self, sender: MailSender):
+    @staticmethod
+    def adjust_mailed_info_in_sheets(sender: MailSender):
         sent_mails = sender.sent_mails
         sheet_info = sender.sheet_info
         sheets_wrapper = SingleSheetsWrapper.get_wrapper()
@@ -99,7 +101,9 @@ class ReportLoopRunner:
             sheet_id = mailcontent.spreadsheet_id
             if sheet_id not in sheet_info:
                 continue
-            found_infos = list(filter(lambda info: info['mail'] == mailcontent.receiver and info['frequency'] == mailcontent.frequency, sheet_info))
+            found_infos = list(filter(lambda info: info['mail'] == mailcontent.receiver and
+                                                   info['frequency'] == mailcontent.frequency, sheet_info[sheet_id]))
             for found_info in found_infos:
-                sheets_wrapper.write_data_to_sheet(spreadsheet_id=sheet_id, start_cell=found_info['cell'], sheet_name='Overzicht',
+                sheets_wrapper.write_data_to_sheet(spreadsheet_id=sheet_id, start_cell=found_info['cell'],
+                                                   sheet_name='Overzicht',
                                                    data=[[mailcontent.mail_sent.strftime("%Y-%m-%d %H:%M:%S")]])
