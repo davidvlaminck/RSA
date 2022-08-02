@@ -1,5 +1,6 @@
 import logging
 import smtplib
+import time
 from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -8,7 +9,7 @@ from MailContent import MailContent
 
 
 class MailSender:
-    def __init__(self, mail_settings=dict):
+    def __init__(self, mail_settings: dict):
         self.mails_to_send: [MailContent] = []
         self.host = mail_settings['host']
         self.username = mail_settings['username']
@@ -31,6 +32,7 @@ class MailSender:
         for mailcontent in self.mails_to_send:
             sorted_mail_content.setdefault(mailcontent.receiver, []).append(mailcontent)
 
+        mail_counter = 0
         for receiver, mails in sorted_mail_content.items():
             # combine content
             sender = self.username
@@ -57,6 +59,10 @@ class MailSender:
 
             try:
                 server.sendmail(sender, receiver, msg)
+                mail_counter += 1
+                if mail_counter > 90:
+                    mail_counter = 0
+                    time.sleep(300) # avoid spam limit
                 for mail_content in mails:
                     mail_content.mail_sent = datetime.now()
                 self.sent_mails.extend(mails)
