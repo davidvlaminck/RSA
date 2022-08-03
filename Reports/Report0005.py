@@ -1,18 +1,20 @@
 from DQReport import DQReport
 
 
-r = DQReport(name='report0005',
-             title='Verkeersregelaars en TLCfiPoorten hebben een HoortBij relatie naar VRLegacy objecten',
-             spreadsheet_id='1daDivHkKfMRamwgpty9swGF4Kz68MBjJlSE5SR2GqFQ',
-             datasource='Neo4J',
-             persistent_column='D')
+class Report0005:
+    def __init__(self):
+        self.report = None
 
-# query that fetches uuids of results
-result_query = """MATCH (a:onderdeel {isActief:TRUE}) 
-WHERE (a:Verkeersregelaar OR a:TLCfiPoort) AND NOT EXISTS ((a)-[:HoortBij]->(:VRLegacy {isActief:TRUE}))
-RETURN a.uuid, a.naam, a.typeURI"""
+    def init_report(self):
+        self.report = DQReport(name='report0005',
+                               title='Verkeersregelaars en TLCfiPoorten hebben een HoortBij relatie naar VRLegacy objecten',
+                               spreadsheet_id='1daDivHkKfMRamwgpty9swGF4Kz68MBjJlSE5SR2GqFQ',
+                               datasource='Neo4J',
+                               persistent_column='D')
 
-r.result_query = result_query
-r.run_report()
-    
+        self.report.result_query = """MATCH (a:onderdeel {isActief:TRUE}) 
+        WHERE (a:Verkeersregelaar OR a:TLCfiPoort) AND NOT EXISTS ((a)-[:HoortBij]->(:VRLegacy {isActief:TRUE}))
+        RETURN a.uuid, a.naam, a.typeURI"""
 
+    def run_report(self, sender):
+        self.report.run_report(sender=sender)

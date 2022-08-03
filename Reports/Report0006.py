@@ -1,18 +1,20 @@
 from DQReport import DQReport
 
 
-r = DQReport(name='report0005',
-             title='Wegkantkasten hebben een HoortBij relatie naar Kast objecten',
-             spreadsheet_id='1_yLv--qorkqbx5ym_qBUTxc6b7mOvdm5kD8SrWPkB5I',
-             datasource='Neo4J',
-             persistent_column='C')
+class Report0006:
+    def __init__(self):
+        self.report = None
 
-# query that fetches uuids of results
-result_query = """MATCH (a:Asset :Wegkantkast {isActief:TRUE}) 
-WHERE NOT EXISTS ((a)-[:HoortBij]->(:Kast {isActief:TRUE}))
-RETURN a.uuid, a.naam"""
+    def init_report(self):
+        self.report = DQReport(name='report0006',
+                               title='Wegkantkasten hebben een HoortBij relatie naar Kast objecten',
+                               spreadsheet_id='1_yLv--qorkqbx5ym_qBUTxc6b7mOvdm5kD8SrWPkB5I',
+                               datasource='Neo4J',
+                               persistent_column='C')
 
-r.result_query = result_query
-r.run_report()
-    
+        self.report.result_query = """MATCH (a:Asset :Wegkantkast {isActief:TRUE}) 
+        WHERE NOT EXISTS ((a)-[:HoortBij]->(:Kast {isActief:TRUE}))
+        RETURN a.uuid, a.naam"""
 
+    def run_report(self, sender):
+        self.report.run_report(sender=sender)

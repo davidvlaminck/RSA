@@ -18,6 +18,3 @@ class Report0016:
 
     def run_report(self, sender):
         self.report.run_report(sender=sender)
-
-        # use this report to dev emails
-        # week = today.strftime("%W")
