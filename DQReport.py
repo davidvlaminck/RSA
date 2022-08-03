@@ -2,6 +2,7 @@ import logging
 import time
 from datetime import datetime, date, timedelta
 
+from googleapiclient.errors import HttpError
 from neo4j.time import DateTime
 
 from MailSender import MailSender
@@ -33,11 +34,20 @@ class DQReport(Report):
 
         # TODO
         # use named range to fetch ppl to send mails_to_send to
-        mail_receivers_raw = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='Overzicht',
+        mail_receivers = None
+        try:
+            mail_receivers_raw = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='Overzicht',
                                                                  sheetrange='emails', return_raw_results=True)
-        mail_receivers = mail_receivers_raw.get('values', [])
-        mail_receivers_dict = self.transform_raw_to_dict(mail_receivers_raw)
-        sender.add_sheet_info(spreadsheet_id=self.spreadsheet_id, mail_receivers_dict=mail_receivers_dict)
+            mail_receivers = mail_receivers_raw.get('values', [])
+            mail_receivers_dict = self.transform_raw_to_dict(mail_receivers_raw)
+            sender.add_sheet_info(spreadsheet_id=self.spreadsheet_id, mail_receivers_dict=mail_receivers_dict)
+        except HttpError as exc:
+            if exc.error_details == 'Unable to parse range: Overzicht!emails':
+                pass
+            else:
+                raise exc
+                # skip sending mails
+
         previous_result, latest_data_sync = self.get_historiek_record_info(sheets_wrapper)
 
         # persistent column
@@ -218,8 +228,9 @@ class DQReport(Report):
                                                start_cell='C' + str(rowFound + 1),
                                                data=[[self.last_data_update]])
 
-            self.send_mails(sender=sender, named_range=mail_receivers, previous_result=previous_result, result=len(result_data),
-                            latest_data_sync=last_data_update)
+            if mail_receivers is not None:
+                self.send_mails(sender=sender, named_range=mail_receivers, previous_result=previous_result, result=len(result_data),
+                                latest_data_sync=last_data_update)
 
         logging.info(f'finished report {self.name}')
 
@@ -302,7 +313,7 @@ class DQReport(Report):
         previous_count = results[0][1]
         return int(previous_count), latest_sync
 
-    def transform_raw_to_dict(self, mail_receivers_raw):
+    def transform_raw_to_dict(self, mail_receivers_raw) -> [dict]:
         mail_dicts = []
         sheetrange = mail_receivers_raw['range'].split('!')[1]
         cells = sheetrange.split(':')
