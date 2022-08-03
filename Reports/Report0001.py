@@ -7,6 +7,7 @@ r = DQReport(name='report0001',
              datasource='Neo4J',
              persistent_column='D')
 
+# TODO feedback: bevestigingsbeugel en omvormer weghalen (omvormer naar camera moet wel aanwezig zijn)
 # query that fetches uuids of results
 result_query = """MATCH (pk:Asset)-[:Bevestiging]-(e:Asset {typeURI:'https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Netwerkelement'})-[:HoortBij]->(l:Asset) 
 WHERE pk.typeURI IN ['https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Netwerkpoort', 'https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Netwerkkaart'] AND pk.isActief AND e.isActief AND l.isActief 

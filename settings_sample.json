@@ -1,0 +1,22 @@
+{
+    "smtp_options": {
+        "host": "172.23.0.12",
+        "username": "david.vlaminck@belfla.be",
+        "password": ""
+    },
+    "google_api": {
+        "credentials_path": "C:\\resources\\driven-wonder-149715-ca8bdf010930.json"
+    },
+    "databases": {
+        "Neo4j": {
+            "uri": "bolt://localhost:7687",
+            "user": "neo4jPython",
+            "password": "python",
+            "database": "neo4j"
+        }
+    },
+    "time": {
+        "start": "00:00:00",
+        "end": "05:50:00"
+    }
+}
