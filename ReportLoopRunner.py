@@ -55,7 +55,7 @@ class ReportLoopRunner:
                     if file.endswith('.py'):
                         self.reports.append(file[:-3])
 
-                for report_name in self.reports:
+                for report_name in sorted(self.reports):
                     try:
                         report_instance = self.dynamic_create_instance_from_name(report_name)
                         report_instance.init_report()
