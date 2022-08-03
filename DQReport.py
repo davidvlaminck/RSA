@@ -43,7 +43,7 @@ class DQReport(Report):
             sender.add_sheet_info(spreadsheet_id=self.spreadsheet_id, mail_receivers_dict=mail_receivers_dict)
         except HttpError as exc:
             if exc.error_details == 'Unable to parse range: Overzicht!emails':
-                pass
+                logging.info(f'{self.__class__.__name__} does not have a range Overzicht!emails')
             else:
                 raise exc
                 # skip sending mails
