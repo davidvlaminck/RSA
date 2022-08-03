@@ -51,8 +51,8 @@ class ReportLoopRunner:
                 # detect reports in Reports directory
                 self.reports = []
                 for file in os.listdir(self.dir_path):
-                    if file.endswith('0016.py'):  # TODO test purposes, remove when done
-                        self.reports.append(file.replace('.py', ''))
+                    if file.endswith('.py'):
+                        self.reports.append(file[:-3])
 
                 for report_name in self.reports:
                     try:
