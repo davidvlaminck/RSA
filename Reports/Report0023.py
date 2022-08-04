@@ -8,7 +8,7 @@ class Report0023:
     def init_report(self):
         self.report = DQReport(name='report0023',
                                title='Camera\'s hebben een toezichter',
-                               spreadsheet_id='1p5njgNTQ3G4aogAjb2sdJTvxzXgI2z-Cd6iqlla5L0c',
+                               spreadsheet_id='1jkBCSgtZ8jlwA-Ah62I17pVtybrqPZSreXgrC6kWKoQ',
                                datasource='Neo4J',
                                persistent_column='C')
 
