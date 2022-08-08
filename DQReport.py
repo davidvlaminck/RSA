@@ -32,8 +32,6 @@ class DQReport(Report):
         # determine to run or not, based on frequency
         # use summary sheet and self.frequence in days
 
-        # TODO
-        # use named range to fetch ppl to send mails_to_send to
         mail_receivers = None
         try:
             mail_receivers_raw = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='Overzicht',
@@ -226,7 +224,7 @@ class DQReport(Report):
             sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.summary_sheet_id,
                                                sheet_name='Overzicht',
                                                start_cell='C' + str(rowFound + 1),
-                                               data=[[self.last_data_update]])
+                                               data=[[self.last_data_update, len(result_data)]])
 
             if mail_receivers is not None:
                 self.send_mails(sender=sender, named_range=mail_receivers, previous_result=previous_result, result=len(result_data),

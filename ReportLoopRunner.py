@@ -55,15 +55,23 @@ class ReportLoopRunner:
                     if file.endswith('.py'):
                         self.reports.append(file[:-3])
 
-                for report_name in sorted(self.reports):
-                    try:
-                        report_instance = self.dynamic_create_instance_from_name(report_name)
-                        report_instance.init_report()
-                        report_instance.run_report(sender=self.mail_sender)
-                    except Exception as ex:
-                        logging.info(f"exception happened in report {report_name}: {ex}")
-                        logging.exception(ex)
-                        print(f'failed completing report {report_name}')
+                reports_to_do = sorted(self.reports)
+                reports_run = 0
+
+                while reports_run < 5 and len(reports_to_do) > 0:
+                    reports_run += 1
+                    for report_name in sorted(reports_to_do):
+                        try:
+                            report_instance = self.dynamic_create_instance_from_name(report_name)
+                            report_instance.init_report()
+                            report_instance.run_report(sender=self.mail_sender)
+                            reports_to_do.remove(report_name)
+                        except Exception as ex:
+                            logging.info(f"exception happened in report {report_name}: {ex}")
+                            logging.exception(ex)
+                            print(f'failed completing report {report_name}')
+                    logging.info(f'{datetime.utcnow()}: done running report loop {reports_run}. Reports left to do: {len(reports_to_do)}')
+
                 logging.info(f'{datetime.utcnow()}: done running the reports')
 
                 self.mail_sender.send_all_mails()
