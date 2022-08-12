@@ -80,7 +80,7 @@ class DQReport(Report):
         sheets_wrapper.create_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='Resultaat')
         sheets_wrapper.delete_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='ResultaatDeleteMe')
 
-        # add first rule: when made and when was the data last sync'd
+        # add first rule: when is the report made and when is the used data last sync'd
         if self.datasource == 'Neo4J':
             connector = SingleNeo4JConnector.get_connector()
             with connector.driver.session() as session:
@@ -277,7 +277,6 @@ class DQReport(Report):
         new_result_data = []
 
         for data in result_data:
-            # see if this works
             if isinstance(data, tuple):
                 data = list(data)
 
