@@ -44,7 +44,7 @@ class ReportLoopRunner:
 
         while True:
             if started_running_date is None or started_running_date != (datetime.utcnow()).date():
-                # start running reports at midnight
+                # start running reports now and at midnight
                 logging.info(f'{datetime.utcnow()}: let\'s run the reports now')
                 started_running_date = (datetime.utcnow()).date()
 
