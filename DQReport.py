@@ -7,6 +7,7 @@ from neo4j.time import DateTime
 
 from MailSender import MailSender
 from Neo4JConnector import SingleNeo4JConnector
+from PostGISConnector import SinglePostGISConnector
 from Report import Report
 from SheetsCell import SheetsCell
 from SheetsWrapper import SingleSheetsWrapper, SheetsWrapper
@@ -93,6 +94,20 @@ class DQReport(Report):
             sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='Resultaat', start_cell=startcell,
                                                data=report_made_lines)
             start_sheetcell.update_row_by_adding_number(len(report_made_lines))
+        elif self.datasource == 'PostGIS':
+            connector = SinglePostGISConnector.get_connector()
+
+            params = connector.get_params()
+
+            self.last_data_update = params['last_update_utc'].strftime("%Y-%m-%d %H:%M:%S")
+            self.now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+
+            report_made_lines = [[f'Rapport gemaakt op {self.now} met data uit:'],
+                                 [f'{self.datasource}, laatst gesynchroniseerd op {self.last_data_update}']]
+            sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='Resultaat',
+                                               start_cell=startcell,
+                                               data=report_made_lines)
+            start_sheetcell.update_row_by_adding_number(len(report_made_lines))
 
         # get and format data
         result = []
@@ -107,19 +122,33 @@ class DQReport(Report):
             query_time = round(end - start, 2)
             logging.info(f'fetched query result for {self.name} in {query_time} seconds.')
 
-            headerrow = []
-            for key in result_keys:
-                if '.' in key:
-                    header = key.split('.')[1]
-                else:
-                    header = key
-                headerrow.append(header)
-            if self.persistent_column != '':
-                headerrow.append('opmerkingen (blijvend)')
-            result.append(headerrow)
+        elif self.datasource == 'PostGIS':
+            connector = SinglePostGISConnector.get_connector()
 
-            result_data = self.clean(result_data)
+            start = time.time()
+            with connector.connection.cursor() as cursor:
+                cursor.execute(self.result_query)
+                result_data = cursor.fetchall()
+                result_keys = list(map(lambda col: col.name, cursor.description))
 
+            end = time.time()
+            query_time = round(end - start, 2)
+            logging.info(f'fetched query result for {self.name} in {query_time} seconds.')
+
+        headerrow = []
+        for key in result_keys:
+            if '.' in key:
+                header = key.split('.')[1]
+            else:
+                header = key
+            headerrow.append(header)
+        if self.persistent_column != '':
+            headerrow.append('opmerkingen (blijvend)')
+        result.append(headerrow)
+
+        result_data = self.clean(result_data)
+
+        if self.datasource == 'Neo4J':
             for data in result_data:
                 row = []
                 for key in result_keys:
@@ -130,105 +159,115 @@ class DQReport(Report):
                     else:
                         row.append('')
                 result.append(row)
-
-            empty_row = [''] * len(result_keys)
-            result.append(empty_row)
-
-            # write data to Resultaat sheet
-            sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.spreadsheet_id,
-                                               sheet_name='Resultaat',
-                                               start_cell=start_sheetcell.cell,
-                                               data=result)
-
-            # bells and whistles
-            # filter
-            if self.add_filter:
-                sheets_wrapper.clear_filter(self.spreadsheet_id, 'Resultaat')
-                end_sheetcell = start_sheetcell.copy()
-                end_sheetcell.update_column_by_adding_number(len(result_keys))
-                end_sheetcell.update_row_by_adding_number(len(result) - 1)
-                sheets_wrapper.create_basic_filter(self.spreadsheet_id, 'Resultaat',
-                                                   f'{start_sheetcell.cell}:{end_sheetcell.cell}')
-
-            # freeze top rows
-            sheets_wrapper.freeze_top_rows(spreadsheet_id=self.spreadsheet_id,
-                                           sheet_name='Resultaat',
-                                           rows=start_sheetcell.row)
-
-            # shorten typeURI
-            type_key = next((k for k in result_keys if 'typeURI' in k), None)
-            if type_key is not None:
-                typeIndex = result_keys.index(type_key)
-                new_type_result = []
-                for data in result_data:
-                    if data[type_key] is not None and data[type_key] != '':
-                        text = data[type_key].replace('https://wegenenverkeer.data.vlaanderen.be/ns/', '') \
-                            .replace('https://lgc.data.wegenenverkeer.be/ns/', '')
-                        link = data[type_key]
-                        formula = f'=HYPERLINK("{link}"; "{text}")'
-                        new_type_result.append(formula)
+        elif self.datasource == 'PostGIS':
+            for data in result_data:
+                row = []
+                row.extend(data)
+                if self.persistent_column != '':
+                    if row[0] in self.persistent_dict:
+                        row.append(self.persistent_dict[row[0]])
                     else:
-                        for col in data.values():
-                            if col is not None:
-                                new_type_result.append('')
-                                break
+                        row.append('')
+                result.append(row)
 
-                typeUri_sheetcell = start_sheetcell.copy()
-                typeUri_sheetcell.update_column_by_adding_number(typeIndex)
-                typeUri_sheetcell.update_row_by_adding_number(1)
-                sheets_wrapper.write_formulae_cells(spreadsheet_id=self.spreadsheet_id,
-                                                    sheet_name='Resultaat',
-                                                    start_cell=typeUri_sheetcell.cell,
-                                                    formulae=new_type_result)
+        empty_row = [''] * len(result_keys)
+        result.append(empty_row)
 
-            # make columns fit to the data
-            sheets_wrapper.automatic_resize_columns(spreadsheet_id=self.spreadsheet_id,
-                                                    sheet_name='Resultaat',
-                                                    number_of_columns=len(result_keys))
+        # write data to Resultaat sheet
+        sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.spreadsheet_id,
+                                           sheet_name='Resultaat',
+                                           start_cell=start_sheetcell.cell,
+                                           data=result)
 
-            # hyperlink the first column
-            start_sheetcell.update_row_by_adding_number(1)
-            first_column = list(map(lambda x: x[0], result[1:]))
-            sheets_wrapper.add_hyperlink_column(spreadsheet_id=self.spreadsheet_id,
+        # bells and whistles
+        # filter
+        if self.add_filter:
+            sheets_wrapper.clear_filter(self.spreadsheet_id, 'Resultaat')
+            end_sheetcell = start_sheetcell.copy()
+            end_sheetcell.update_column_by_adding_number(len(result_keys))
+            end_sheetcell.update_row_by_adding_number(len(result) - 1)
+            sheets_wrapper.create_basic_filter(self.spreadsheet_id, 'Resultaat',
+                                               f'{start_sheetcell.cell}:{end_sheetcell.cell}')
+
+        # freeze top rows
+        sheets_wrapper.freeze_top_rows(spreadsheet_id=self.spreadsheet_id,
+                                       sheet_name='Resultaat',
+                                       rows=start_sheetcell.row)
+
+        # shorten typeURI
+        type_key = next((k for k in result_keys if 'typeURI' in k), None)
+        if type_key is not None:
+            typeIndex = result_keys.index(type_key)
+            new_type_result = []
+            for data in result_data:
+                if data[type_key] is not None and data[type_key] != '':
+                    text = data[type_key].replace('https://wegenenverkeer.data.vlaanderen.be/ns/', '') \
+                        .replace('https://lgc.data.wegenenverkeer.be/ns/', '')
+                    link = data[type_key]
+                    formula = f'=HYPERLINK("{link}"; "{text}")'
+                    new_type_result.append(formula)
+                else:
+                    for col in data.values():
+                        if col is not None:
+                            new_type_result.append('')
+                            break
+
+            typeUri_sheetcell = start_sheetcell.copy()
+            typeUri_sheetcell.update_column_by_adding_number(typeIndex)
+            typeUri_sheetcell.update_row_by_adding_number(1)
+            sheets_wrapper.write_formulae_cells(spreadsheet_id=self.spreadsheet_id,
                                                 sheet_name='Resultaat',
-                                                start_cell=start_sheetcell.cell,
-                                                link_type='awvinfra',
-                                                column_data=first_column)
+                                                start_cell=typeUri_sheetcell.cell,
+                                                formulae=new_type_result)
 
-            # historiek
-            historiek_data = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self.spreadsheet_id,
-                                                                 sheet_name='Historiek',
-                                                                 sheetrange='B2:B2')
-            last_data_update = None
-            if len(historiek_data) > 0:
-                last_data_update = historiek_data[0][0]
-            if last_data_update != self.last_data_update:
-                sheets_wrapper.insert_empty_rows(spreadsheet_id=self.spreadsheet_id, sheet_name='Historiek', start_cell='A2',
-                                                 number_of_rows=1)
+        # make columns fit to the data
+        sheets_wrapper.automatic_resize_columns(spreadsheet_id=self.spreadsheet_id,
+                                                sheet_name='Resultaat',
+                                                number_of_columns=len(result_keys))
 
-            sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='Historiek', start_cell='A2',
-                                               data=[[self.now, self.last_data_update, len(result_data)]])
+        # hyperlink the first column
+        start_sheetcell.update_row_by_adding_number(1)
+        first_column = list(map(lambda x: x[0], result[1:]))
+        sheets_wrapper.add_hyperlink_column(spreadsheet_id=self.spreadsheet_id,
+                                            sheet_name='Resultaat',
+                                            start_cell=start_sheetcell.cell,
+                                            link_type='awvinfra',
+                                            column_data=first_column)
 
-            # summary sheet
-            summary_links = sheets_wrapper.read_celldata_from_sheet(spreadsheet_id=self.summary_sheet_id, sheet_name='Overzicht',
-                                                                    sheetrange='B4:B')
-            rowFound = summary_links['startRow']
-            for i, summary_link in enumerate(summary_links['rowData']):
-                if 'values' not in summary_link:
-                    continue
-                if 'hyperlink' not in summary_link['values'][0]:
-                    continue
-                if self.spreadsheet_id in summary_link['values'][0]['hyperlink']:
-                    rowFound += i
-                    break
-            sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.summary_sheet_id,
-                                               sheet_name='Overzicht',
-                                               start_cell='C' + str(rowFound + 1),
-                                               data=[[self.last_data_update, len(result_data)]])
+        # historiek
+        historiek_data = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self.spreadsheet_id,
+                                                             sheet_name='Historiek',
+                                                             sheetrange='B2:B2')
+        last_data_update = None
+        if len(historiek_data) > 0:
+            last_data_update = historiek_data[0][0]
+        if last_data_update != self.last_data_update:
+            sheets_wrapper.insert_empty_rows(spreadsheet_id=self.spreadsheet_id, sheet_name='Historiek', start_cell='A2',
+                                             number_of_rows=1)
 
-            if mail_receivers is not None:
-                self.send_mails(sender=sender, named_range=mail_receivers, previous_result=previous_result, result=len(result_data),
-                                latest_data_sync=last_data_update)
+        sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='Historiek', start_cell='A2',
+                                           data=[[self.now, self.last_data_update, len(result_data)]])
+
+        # summary sheet
+        summary_links = sheets_wrapper.read_celldata_from_sheet(spreadsheet_id=self.summary_sheet_id, sheet_name='Overzicht',
+                                                                sheetrange='B4:B')
+        rowFound = summary_links['startRow']
+        for i, summary_link in enumerate(summary_links['rowData']):
+            if 'values' not in summary_link:
+                continue
+            if 'hyperlink' not in summary_link['values'][0]:
+                continue
+            if self.spreadsheet_id in summary_link['values'][0]['hyperlink']:
+                rowFound += i
+                break
+        sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.summary_sheet_id,
+                                           sheet_name='Overzicht',
+                                           start_cell='C' + str(rowFound + 1),
+                                           data=[[self.last_data_update, len(result_data)]])
+
+        if mail_receivers is not None:
+            self.send_mails(sender=sender, named_range=mail_receivers, previous_result=previous_result, result=len(result_data),
+                            latest_data_sync=last_data_update)
 
         logging.info(f'finished report {self.name}')
 
@@ -238,6 +277,10 @@ class DQReport(Report):
         new_result_data = []
 
         for data in result_data:
+            # see if this works
+            if isinstance(data, tuple):
+                data = list(data)
+
             if isinstance(data, list):
                 all_none = True
                 for column in data:

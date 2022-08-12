@@ -1,3 +1,5 @@
+from types import NoneType
+
 from neo4j import GraphDatabase
 
 
@@ -13,7 +15,7 @@ class Neo4JConnector:
 
 
 class SingleNeo4JConnector:
-    neo4j_connector: Neo4JConnector | bool = None
+    neo4j_connector: Neo4JConnector | NoneType = None
 
     @classmethod
     def init(cls, uri: str = '', user: str = '', password: str = '', database: str = 'neo4j'):
