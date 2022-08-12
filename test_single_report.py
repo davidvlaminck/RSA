@@ -11,13 +11,14 @@ from datetime import datetime
 from MailContent import MailContent
 from MailSender import MailSender
 from Neo4JConnector import SingleNeo4JConnector
+from PostGISConnector import SinglePostGISConnector
 from SettingsManager import SettingsManager
 from SheetsWrapper import SingleSheetsWrapper
 
 ROOT_DIR = (os.path.dirname(os.path.abspath(__file__)))
 
 
-class ReportLoopRunner:
+class SingleReportLoopRunner:
     def __init__(self, settings_path):
         settings_manager = SettingsManager(settings_path=settings_path)
         self.settings = settings_manager.settings
@@ -30,16 +31,22 @@ class ReportLoopRunner:
                             level=logging.INFO)
         SingleSheetsWrapper.init(service_cred_path=self.settings['google_api']['credentials_path'],
                                  readonly_scope=False)
+
         neo4j_settings = self.settings['databases']['Neo4j']
         SingleNeo4JConnector.init(uri=neo4j_settings['uri'], user=neo4j_settings['user'],
                                   password=neo4j_settings['password'], database=neo4j_settings['database'])
+
+        postgis_settings = self.settings['databases']['PostGIS']
+        SinglePostGISConnector.init(host=postgis_settings['host'], port=postgis_settings['port'],
+                                    user=postgis_settings['user'], password=postgis_settings['password'],
+                                    database=postgis_settings['database'])
 
         self.reports = None
 
         self.dir_path = os.path.abspath(os.path.join(os.sep, ROOT_DIR, 'Reports'))
         self.mail_sender = MailSender(mail_settings=self.settings['smtp_options'])
 
-    def run(self):
+    def run(self, report:str):
         started_running_date = None
 
         while True:
@@ -49,10 +56,7 @@ class ReportLoopRunner:
                 started_running_date = (datetime.utcnow()).date()
 
                 # detect reports in Reports directory
-                self.reports = []
-                for file in os.listdir(self.dir_path):
-                    if file.endswith('.py'):
-                        self.reports.append(file[:-3])
+                self.reports = [report]
 
                 reports_to_do = sorted(self.reports)
                 reports_run = 0
@@ -115,3 +119,8 @@ class ReportLoopRunner:
                 sheets_wrapper.write_data_to_sheet(spreadsheet_id=sheet_id, start_cell=found_info['cell'],
                                                    sheet_name='Overzicht',
                                                    data=[[mailcontent.mail_sent.strftime("%Y-%m-%d %H:%M:%S")]])
+
+if __name__ == '__main__':
+    reportlooprunner = SingleReportLoopRunner(settings_path=r'/home/davidlinux/Documents/AWV/resources/settings_RSA.json')
+    # reportlooprunner = SingleReportLoopRunner(settings_path=r'C:\resources\settings_RSA.json')
+    reportlooprunner.run(report='Report0035')
