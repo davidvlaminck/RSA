@@ -11,6 +11,7 @@ from datetime import datetime
 from MailContent import MailContent
 from MailSender import MailSender
 from Neo4JConnector import SingleNeo4JConnector
+from PostGISConnector import SinglePostGISConnector
 from SettingsManager import SettingsManager
 from SheetsWrapper import SingleSheetsWrapper
 
@@ -30,9 +31,15 @@ class ReportLoopRunner:
                             level=logging.INFO)
         SingleSheetsWrapper.init(service_cred_path=self.settings['google_api']['credentials_path'],
                                  readonly_scope=False)
+
         neo4j_settings = self.settings['databases']['Neo4j']
         SingleNeo4JConnector.init(uri=neo4j_settings['uri'], user=neo4j_settings['user'],
                                   password=neo4j_settings['password'], database=neo4j_settings['database'])
+
+        postgis_settings = self.settings['databases']['PostGIS']
+        SinglePostGISConnector.init(host=postgis_settings['host'], port=postgis_settings['port'],
+                                    user=postgis_settings['user'], password=postgis_settings['password'],
+                                    database=postgis_settings['database'])
 
         self.reports = None
 
