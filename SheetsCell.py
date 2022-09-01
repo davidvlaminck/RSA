@@ -67,8 +67,6 @@ class SheetsCell:
     def copy(self):
         return copy.copy(self)
 
-
-
     def update_row_by_adding_number(self, row_update: int):
         self._row += row_update
 
