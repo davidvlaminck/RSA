@@ -71,6 +71,7 @@ class MailSender:
                 logging.error(f'Could not send an email to {receiver}')
 
         server.quit()
+        self.mails_to_send = []
 
     def add_sheet_info(self, spreadsheet_id: str, mail_receivers_dict: [dict]):
         self.sheet_info[spreadsheet_id] = mail_receivers_dict
