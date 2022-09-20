@@ -1,3 +1,4 @@
+import decimal
 import logging
 import time
 from datetime import datetime, date, timedelta
@@ -301,6 +302,17 @@ class DQReport(Report):
             else:
                 if data is not None and data != '':
                     new_result_data.append(data)
+
+        result_data = new_result_data
+        new_result_data = []
+        for row in result_data:
+            for index, value in enumerate(row):
+                if isinstance(value, decimal.Decimal):
+                    row[index] = str(value)
+
+            new_result_data.append(row)
+
+
         return new_result_data
 
     def send_mails(self, sender: MailSender, named_range: [list], previous_result: int, result: int, latest_data_sync: str = ''):
@@ -359,6 +371,8 @@ class DQReport(Report):
         cells = sheetrange.split(':')
         startcell = SheetsCell(cells[0])
         startcell.update_column_by_adding_number(2)
+        if 'values' not in mail_receivers_raw:
+            return mail_dicts
         for list_element in mail_receivers_raw['values']:
             if len(list_element) < 2:
                 if len(list_element) > 0 and list_element[0] == '':

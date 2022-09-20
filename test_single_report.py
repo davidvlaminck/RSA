@@ -123,4 +123,4 @@ class SingleReportLoopRunner:
 if __name__ == '__main__':
     reportlooprunner = SingleReportLoopRunner(settings_path=r'/home/davidlinux/Documents/AWV/resources/settings_RSA.json')
     # reportlooprunner = SingleReportLoopRunner(settings_path=r'C:\resources\settings_RSA.json')
-    reportlooprunner.run(report='Report0038')
+    reportlooprunner.run(report='Report0039')
