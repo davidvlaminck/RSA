@@ -85,22 +85,3 @@ SELECT * FROM opkuis3;"""
 
     def run_report(self, sender):
         self.report.run_report(sender=sender)
-
-# WITH actieve_koppelingen AS (
-# 	SELECT assetUuid, sum(CASE WHEN koppelingstatus  IN ('ACTIEF', 'TOEKOMSTIG') THEN 1 ELSE 0 END) AS aantal
-# 	FROM bestekkoppelingen
-# 	GROUP BY assetUuid),
-# s AS (
-# 	SELECT ((NOW()- INTERVAL '30 DAYS') < date(eindDatum) AND date(eindDatum) < NOW()) AS reeds_verlopen, eindDatum,
-# 	bestekkoppelingen.assetUuid
-# 	FROM bestekkoppelingen
-# 		LEFT JOIN assets ON assets.uuid = bestekkoppelingen.assetUuid
-# 		LEFT JOIN actieve_koppelingen ON assets.uuid = actieve_koppelingen.assetUuid
-# 	WHERE assets.actief = TRUE AND actieve_koppelingen.aantal = 0)
-# SELECT assets.uuid, assets.naampad, assets.actief, assets.toestand, TO_CHAR(bestekkoppelingen.startDatum, 'YYYY-MM-DD HH24:MI:SS OF') AS startDatum, TO_CHAR(bestekkoppelingen.eindDatum, 'YYYY-MM-DD HH24:MI:SS OF') AS eindDatum, bestekkoppelingen.koppelingstatus, bestekken.eDeltaBesteknummer, bestekken.eDeltaDossiernummer
-# FROM s
-# 	LEFT JOIN assets ON s.assetUuid = assets.uuid
-# 	LEFT JOIN bestekkoppelingen ON assets.uuid = bestekkoppelingen.assetUuid
-# 	LEFT JOIN bestekken ON bestekKoppelingen.bestekUuid = bestekken.uuid
-# WHERE reeds_verlopen = TRUE
-# ORDER BY s.eindDatum DESC, naampad, bestekkoppelingen.eindDatum;
