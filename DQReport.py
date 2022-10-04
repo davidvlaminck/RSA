@@ -171,8 +171,12 @@ class DQReport(Report):
                         row.append('')
                 result.append(row)
 
-        empty_row = [''] * len(result_keys)
-        result.append(empty_row)
+        amount_empty_rows = len(result_keys)
+        if self.persistent_column != '':
+            amount_empty_rows += 1
+        empty_row = [''] * amount_empty_rows
+        if len(result) == 0:
+            result.append(empty_row)
 
         # write data to Resultaat sheet
         sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.spreadsheet_id,
