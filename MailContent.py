@@ -8,6 +8,7 @@ class MailContent:
     hyperlink: str = ''
     report_name: str = ''
     count: int = -1
+    previous: int = -1
     latest_sync: str = ''
     frequency: str = ''
     spreadsheet_id: str = ''

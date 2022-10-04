@@ -17,9 +17,10 @@ class MailSender:
         self.sent_mails: [MailContent] = []
         self.sheet_info = {}
 
-    def add_mail(self, receiver: str, report_name: str, spreadsheet_id: str, count: int, latest_sync: str, frequency: str):
+    def add_mail(self, receiver: str, report_name: str, spreadsheet_id: str, count: int, latest_sync: str,
+                 frequency: str, previous: int):
         content = MailContent(receiver=receiver, count=count, latest_sync=latest_sync, report_name=report_name,
-                              frequency=frequency, spreadsheet_id=spreadsheet_id)
+                              frequency=frequency, spreadsheet_id=spreadsheet_id, previous=previous)
         content.hyperlink = f'https://docs.google.com/spreadsheets/d/{spreadsheet_id}'
         self.mails_to_send.append(content)
 
@@ -43,11 +44,15 @@ class MailSender:
                    'th, td { padding: 5px; }' \
                    '</style></head><body>' \
                    '<p>U ontvangt hierbij een samenvatting van de rapporten die door Rapporteringsservice Assets werd uitgevoerd.<p>' \
-                   '<table><tr><th>Rapport Link</th><th>Aantal</th><th>Data van</th></tr>'
+                   '<table><tr><th>Rapport Link</th><th>Vorig aantal</th><th>Aantal</th><th>Data van</th></tr>'
 
             for mail_content in self.remove_duplicate_mail_content(mails):
-                html += f'<tr><td><a href="{mail_content.hyperlink}">{mail_content.report_name}</a></td>' \
-                        f'<td>{str(mail_content.count)}</td><td>{mail_content.latest_sync}</td>'
+                html += f'<tr><td><a href="{mail_content.hyperlink}">{mail_content.report_name}</a></td>'
+                if mail_content.previous == -1:
+                    html += '<td></td>'
+                else:
+                    html += f'<td>{str(mail_content.previous)}</td>'
+                html += f'<td>{str(mail_content.count)}</td><td>{mail_content.latest_sync}</td>'
 
             html += '</table></body></html>'
             email_message = MIMEMultipart()

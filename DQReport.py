@@ -325,12 +325,14 @@ class DQReport(Report):
             if line[1] == 'Wijziging':
                 if previous_result != result:
                     sender.add_mail(receiver=line[0], report_name=self.title, spreadsheet_id=self.spreadsheet_id,
-                                    count=result, latest_sync=latest_data_sync, frequency=line[1])
+                                    count=result, latest_sync=latest_data_sync, frequency=line[1],
+                                    previous = previous_result)
                     # add frequency
             elif line[1] in ['Dagelijks', 'Wekelijks', 'Maandelijks', 'Jaarlijks']:
                 if len(line) < 3 or line[2] == '' or line[2] is None:
                     sender.add_mail(receiver=line[0], report_name=self.title, spreadsheet_id=self.spreadsheet_id,
-                                    count=result, latest_sync=latest_data_sync, frequency=line[1])
+                                    count=result, latest_sync=latest_data_sync, frequency=line[1],
+                                    previous = previous_result)
                 else:
                     dt = datetime.strptime(line[2], '%Y-%m-%d %H:%M:%S')
                     last_sent = dt.date()
