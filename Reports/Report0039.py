@@ -21,6 +21,7 @@ WITH ruwe_data AS (
 		, attribuutwaarden_lamp_type.waarde AS lamp_type
 		, attribuutwaarden_LED_verlichting.waarde AS LED_verlichting
 		, attribuutwaarden_lumen_pakket_LED.waarde AS lumen_pakket_LED
+		, attribuutwaarden_verlichtingstype.waarde AS verlichtingstype
 		-- , attribuutwaarden_verlichtingstoestel_systeemvermogen.waarde AS verlichtingstoestel_systeemvermogen
 		, locatie.adres_gemeente , locatie.adres_provincie 
 	FROM assets 
@@ -31,6 +32,7 @@ WITH ruwe_data AS (
 		LEFT JOIN attribuutwaarden attribuutwaarden_lamp_type ON assets.uuid = attribuutwaarden_lamp_type.assetuuid AND attribuutwaarden_lamp_type.attribuutuuid = '070149cc-55f4-491f-a034-21e832e3a9e5'
 		LEFT JOIN attribuutwaarden attribuutwaarden_LED_verlichting ON assets.uuid = attribuutwaarden_LED_verlichting.assetuuid AND attribuutwaarden_LED_verlichting.attribuutuuid = 'e7ad2d9f-45f3-4e4a-be98-51d71e19c28b'
 		LEFT JOIN attribuutwaarden attribuutwaarden_lumen_pakket_LED ON assets.uuid = attribuutwaarden_lumen_pakket_LED.assetuuid AND attribuutwaarden_lumen_pakket_LED.attribuutuuid = '218f8269-21eb-445a-9c77-acb3faf6c3ba'
+		LEFT JOIN attribuutwaarden attribuutwaarden_verlichtingstype ON assets.uuid = attribuutwaarden_verlichtingstype.assetuuid AND attribuutwaarden_verlichtingstype.attribuutuuid = '79e547aa-e248-4dff-9c52-30befba43f3d'
 		-- LEFT JOIN attribuutwaarden attribuutwaarden_verlichtingstoestel_systeemvermogen ON assets.uuid = attribuutwaarden_verlichtingstoestel_systeemvermogen.assetuuid AND attribuutwaarden_verlichtingstoestel_systeemvermogen.attribuutuuid = '8ea7f7ef-c187-4a68-a92b-6a0ca855ba50'
 		LEFT JOIN locatie ON assets.uuid = locatie.assetuuid 
 	WHERE assettype = '4dfad588-277c-480f-8cdc-0889cfaf9c78' AND assets.actief = TRUE),
