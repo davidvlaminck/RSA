@@ -12,7 +12,74 @@ class Report0039:
                                datasource='PostGIS')
 
         self.report.result_query = """
-WITH ruwe_data AS (
+WITH awegen ("ident8", "beginpositie", "eindpositie") AS ( VALUES
+	('A0010001',0.381,79.637),
+	('A0010002',0.382,79.637),
+	('A0020001',86.585,0.000),
+	('A0020002',86.692,0.000),
+	('A0030001',82.290,1.744),
+	('A0030002',82.290,1.747),
+	('A0040001',14.200,0.353),
+	('A0040002',14.173,0.151),
+	('A0080001',7.675,0.000),
+	('A0080002',7.682,0.000),
+	('A0100001',0.184,104.489),
+	('A0100002',0.120,104.489),
+	('A0110001',107.210,154.578),
+	('A0110002',107.215,143.295),
+	('A0120001',0.000,54.185),
+	('A0120002',0.000,54.185),
+	('A0129251',0.962,0.000),
+	('A0130001',100.900,0.010),
+	('A0130002',100.900,0.010),
+	('A0140001',0.000,100.730),
+	('A0140002',82.062,0.000),
+	('A0170001',14.962,68.073),
+	('A0170002',15.322,68.073),
+	('A0180001',5.414,47.360),
+	('A0180002',46.950,5.414),
+	('A0190001',22.820,0.200),
+	('A0190002',0.072,22.785),
+	('A0210001',9.500,58.019),
+	('A0210002',9.936,58.019),
+	('A0250001',5.500,0.000),
+	('A0250002',5.500,0.000),
+	('A1120001',3.452,1.659),
+	('A1120002',1.864,3.498),
+	('A2010001',0.000,3.886),
+	('A2010002',3.817,0.000),
+	('A2010591',2.633,0.232),
+	('B4010001',2.338,0.000),
+	('B4010002',0.000,2.364),
+	('R0000001',75.374,23.634),
+	('R0000002',75.332,24.402),
+	('R0001811',0.521,0.521),
+	('R0001821',0.194,0.000),
+	('R0001841',0.834,0.000),
+	('R0001861',0.451,0.000),
+	('R0001871',0.000,0.202),
+	('R0002241',0.981,0.000),
+	('R0002271',0.000,0.672),
+	('R0010001',16.285,0.000),
+	('R0010002',15.961,0.000),
+	('R0020001',78.666,88.698),
+	('R0020002',78.441,89.485),
+	('R0022211',0.955,0.955),
+	('R0022281',0.000,1.171),
+	('R0040001',14.927,29.195),
+	('R0040002',28.860,14.911),
+	('R0040911',0.000,1.517),
+	('R0040961',0.338,0.835),
+	('R0040981',0.437,0.395),
+	('R0080001',4.372,6.372),
+	('R0080002',5.809,15.331),
+	('R0080911',0.197,0.000),
+	('R0080961',0.000,0.212),
+	('R0082021',0.000,0.000),
+	('R0082051',0.160,0.160),
+	('R0220001',15.550,13.164),
+	('R0220002',12.745,15.552)),
+ruwe_data AS (
 	SELECT assets.uuid, assets.naampad, assets.toestand, assets.actief
 		, attribuutwaarden_aanstuurstroomDriversInMa.waarde AS aanstuurstroomDriversInMa
 		, attribuutwaarden_aantal_verlichtingstoestellen.waarde AS aantal_verlichtingstoestellen
@@ -21,7 +88,11 @@ WITH ruwe_data AS (
 		, attribuutwaarden_lamp_type.waarde AS lamp_type
 		, attribuutwaarden_LED_verlichting.waarde AS LED_verlichting
 		, attribuutwaarden_lumen_pakket_LED.waarde AS lumen_pakket_LED
-		, attribuutwaarden_verlichtingstype.waarde AS verlichtingstype
+		, locatie.ident8
+		, CASE WHEN referentiepaal_opschrift IS NOT NULL THEN
+			CASE WHEN referentiepaal_afstand IS NULL THEN referentiepaal_opschrift
+			ELSE referentiepaal_opschrift + referentiepaal_afstand / 1000.0 END
+		ELSE NULL END AS locatie_referentiepunt
 		-- , attribuutwaarden_verlichtingstoestel_systeemvermogen.waarde AS verlichtingstoestel_systeemvermogen
 		, locatie.adres_gemeente , locatie.adres_provincie 
 	FROM assets 
@@ -32,12 +103,11 @@ WITH ruwe_data AS (
 		LEFT JOIN attribuutwaarden attribuutwaarden_lamp_type ON assets.uuid = attribuutwaarden_lamp_type.assetuuid AND attribuutwaarden_lamp_type.attribuutuuid = '070149cc-55f4-491f-a034-21e832e3a9e5'
 		LEFT JOIN attribuutwaarden attribuutwaarden_LED_verlichting ON assets.uuid = attribuutwaarden_LED_verlichting.assetuuid AND attribuutwaarden_LED_verlichting.attribuutuuid = 'e7ad2d9f-45f3-4e4a-be98-51d71e19c28b'
 		LEFT JOIN attribuutwaarden attribuutwaarden_lumen_pakket_LED ON assets.uuid = attribuutwaarden_lumen_pakket_LED.assetuuid AND attribuutwaarden_lumen_pakket_LED.attribuutuuid = '218f8269-21eb-445a-9c77-acb3faf6c3ba'
-		LEFT JOIN attribuutwaarden attribuutwaarden_verlichtingstype ON assets.uuid = attribuutwaarden_verlichtingstype.assetuuid AND attribuutwaarden_verlichtingstype.attribuutuuid = '79e547aa-e248-4dff-9c52-30befba43f3d'
 		-- LEFT JOIN attribuutwaarden attribuutwaarden_verlichtingstoestel_systeemvermogen ON assets.uuid = attribuutwaarden_verlichtingstoestel_systeemvermogen.assetuuid AND attribuutwaarden_verlichtingstoestel_systeemvermogen.attribuutuuid = '8ea7f7ef-c187-4a68-a92b-6a0ca855ba50'
 		LEFT JOIN locatie ON assets.uuid = locatie.assetuuid 
 	WHERE assettype = '4dfad588-277c-480f-8cdc-0889cfaf9c78' AND assets.actief = TRUE),
 opkuis1 AS (
-	SELECT *, 
+	SELECT ruwe_data.*,
 		CASE WHEN aanstuurstroomDriversInMa IS NOT NULL AND lamp_type <> 'LED' THEN 'LED'
 			WHEN lumen_pakket_LED IS NOT NULL AND lumen_pakket_LED <> '0' THEN 'LED'
 			ELSE lamp_type END AS lamp_type_opgekuist,
@@ -80,8 +150,12 @@ opkuis3 AS (
 			WHEN lamp_type_opgekuist LIKE 'MHHP%' THEN 'MHHP'
 			WHEN lamp_type_opgekuist LIKE 'HPIT%' OR lamp_type_opgekuist LIKE 'TL%' THEN 'andere'
 			WHEN lamp_type_opgekuist IS NULL THEN 'niet gekend'
-			ELSE lamp_type_opgekuist END AS beperkte_benaming 
-	FROM opkuis2)
+			ELSE lamp_type_opgekuist END AS beperkte_benaming,
+		CASE WHEN opkuis2.locatie_referentiepunt IS NULL THEN NULL
+			WHEN awegen.ident8 IS NOT NULL THEN 'A-Weg'
+			ELSE 'N-Weg' END AS wegcategorie
+	FROM opkuis2
+		LEFT JOIN awegen ON awegen.ident8 = opkuis2.ident8 AND awegen.beginpositie <= opkuis2.locatie_referentiepunt AND opkuis2.locatie_referentiepunt <= awegen.eindpositie)
 -- SELECT DISTINCT lamp_type_opgekuist, beperkte_benaming FROM opkuis3; -- mappingtabel beperkte_benaming
 SELECT * FROM opkuis3;"""
 
