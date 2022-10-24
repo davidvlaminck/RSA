@@ -12,13 +12,12 @@ class Report0020:
                                datasource='Neo4J',
                                persistent_column='C')
 
-        self.report.result_query = """MATCH (gl:Zpad {isActief:TRUE})<-[:HoortBij]-(p:Netwerkpoort {isActief:TRUE})
-        WITH gl, COUNT(p) AS aantal_poorten
-        WHERE aantal_poorten = 2
-        WITH collect(gl.uuid) AS good_paden
-        MATCH (p:Zpad {isActief:TRUE} )
-        WHERE NOT p.uuid IN good_paden
-        RETURN p.uuid, p.naam"""
+        self.report.result_query = """MATCH (z:Zpad {isActief:TRUE})
+        WHERE z.toestand = "in-gebruik"
+        OPTIONAL MATCH (z)<-[:HoortBij]-(n:Netwerkpoort {isActief:TRUE})
+        WITH z, count(n) AS n_netwerkpoort
+        WHERE n_netwerkpoort <> 2
+        RETURN z.uuid, z.naam"""
 
     def run_report(self, sender):
         self.report.run_report(sender=sender)
