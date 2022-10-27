@@ -12,13 +12,9 @@ class Report0041:
                                datasource='Neo4J',
                                persistent_column='D')
 
-        self.report.result_query = """MATCH (e:EnergiemeterDNB {isActief: TRUE})
-            WHERE NOT EXISTS((e)-[:HoortBij]->(:LS {isActief: TRUE})) AND NOT EXISTS((e)-[:HoortBij]->(:HS {isActief: TRUE}))
-            RETURN e.uuid as uuid, e.naam as naam, e.typeURI as typeURI
-            UNION
-            MATCH (f:ForfaitaireAansluiting {isActief: TRUE})
-            WHERE NOT EXISTS((f)-[:HoortBij]->(:LS {isActief: TRUE})) AND NOT EXISTS((f)-[:HoortBij]->(:HS {isActief: TRUE}))
-            RETURN f.uuid as uuid, f.naam as naam, f.typeURI as typeURI"""
+        self.report.result_query = """MATCH (x {isActief: TRUE})
+            WHERE (x:EnergiemeterDNB OR x:ForfaitaireAansluiting) AND NOT EXISTS((x)-[:HoortBij]->(:LS {isActief: TRUE})) AND NOT EXISTS((x)-[:HoortBij]->(:HS {isActief: TRUE}))
+            RETURN x.uuid as uuid, x.naam as naam, x.typeURI as typeURI"""
 
     def run_report(self, sender):
         self.report.run_report(sender=sender)
