@@ -12,7 +12,7 @@ class Report0042:
                                datasource='Neo4J',
                                persistent_column='D')
 
-        self.report.result_query = """PROFILE MATCH (x {isActief: TRUE})
+        self.report.result_query = """MATCH (x {isActief: TRUE})
             WHERE (x:EnergiemeterDNB OR x:ForfaitaireAansluiting) AND NOT EXISTS((x)<-[:Voedt]-(:DNBLaagspanning {isActief: TRUE}))
             RETURN x.uuid as uuid, x.naam as naam, x.typeURI as typeURI"""
 
