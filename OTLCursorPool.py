@@ -42,16 +42,3 @@ class OTLCursorPool:
         :return: A cursor represented by a sqlite3.Cursor object.
         """
         return self.get_connection().cursor()
-
-
-otl_cursor_pool = OTLCursorPool()
-connection = otl_cursor_pool.get_connection()
-print("Done")
-
-#db_filename, headers = urlretrieve(r"https://wegenenverkeer.data.vlaanderen.be/doc/implementatiemodel/master/html/OTL.db")
-#con = sqlite3.connect(db_filename)
-#cur = con.cursor()
-#res = cur.execute("""SELECT c.name, c.deprecated_version
-#FROM OSLOClass as c
-#WHERE c.deprecated_version IS NOT NULL AND c.deprecated_version != '' """)
-#print(res.fetchone())
