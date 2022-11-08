@@ -1,5 +1,5 @@
 from DQReport import DQReport
-
+from OTLCursorPool import OTLCursorPool
 
 class Report0043:
     def __init__(self):
@@ -12,15 +12,18 @@ class Report0043:
                                datasource='Neo4J',
                                persistent_column='D')
 
-        # TODO: refactor so list is not hardcoded
+        otl_cursor = OTLCursorPool().get_cursor()
+        deprecated_classes = otl_cursor.execute("""
+            SELECT c.name, c.deprecated_version
+            FROM OSLOClass as c
+            WHERE c.deprecated_version IS NOT NULL AND c.deprecated_version != '' 
+        """).fetchall()
+
         self.report.result_query = """MATCH (x) 
             UNWIND labels(x) as label
             WITH x, label
-            WHERE label IN [
-                "Betonfundering", "GeluidswerendeConstructie", "Doorgang", "Bovenbouw", "FieldOfView", 
-                "OpgaandeBoom", "Exoten", "ProefVoertuigOverhelling", "ProefSchokindex", "ProefKerendVermogen",
-                "ProefPerformantieniveau", "ProefWerkingsbreedteMVP", "ProefPerformantieKlasse", "ProefWerkingsbreedteGC"]
-            RETURN x.uuid as uuid, x.naam as naam, x.typeURI as typeURI"""
+            WHERE label IN {}
+            RETURN x.uuid as uuid, x.naam as naam, x.typeURI as typeURI""".format(deprecated_classes)
 
     def run_report(self, sender):
         self.report.run_report(sender=sender)
