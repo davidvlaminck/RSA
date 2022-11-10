@@ -13,9 +13,10 @@ class Report0045:
                                persistent_column='C')
 
         self.report.result_query = """
-        MATCH (b:BitumineuzeLaag)
-        WHERE NOT EXISTS((b)-[:LigtOp]->(:Onderbouw))
-        RETURN b.uuid as uuid, b.name as name"""
+            MATCH (b:BitumineuzeLaag {isActief: TRUE})
+            WHERE NOT EXISTS((b)-[:LigtOp]->(:Onderbouw {isActief: TRUE}))
+            RETURN b.uuid AS uuid, b.toestand AS toestand
+        """
 
     def run_report(self, sender):
         self.report.run_report(sender=sender)
