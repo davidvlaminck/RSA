@@ -12,20 +12,18 @@ class Report0043:
                                datasource='Neo4J',
                                persistent_column='D')
 
-        otl_cursor = OTLCursorPool().get_cursor()
+        otl_cursor = OTLCursorPool.get_cursor()
         deprecated_classes = [row[0] for row in otl_cursor.execute("""
-            SELECT c.uri 
+            SELECT c.name 
             FROM OSLOClass as c
             WHERE c.deprecated_version IS NOT NULL AND c.deprecated_version != ""
         """).fetchall()]
 
         self.report.result_query = """
-            UNWIND {} AS c_uri
-            WITH c_uri, split(c_uri, '#')[-1] as c_name
             MATCH (x {{isActief: TRUE}})
-            WHERE c_name in LABELS(x) AND x.typeURI = c_uri
+            WHERE {}
             RETURN x.uuid as uuid, x.naam as naam, x.typeURI as typeURI
-        """.format(deprecated_classes)
+        """.format(" OR ".join(["x:{}".format(d) for d in deprecated_classes]))
 
     def run_report(self, sender):
         self.report.run_report(sender=sender)
