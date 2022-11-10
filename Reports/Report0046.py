@@ -13,9 +13,10 @@ class Report0046:
                                persistent_column='C')
 
         self.report.result_query = """
-        MATCH (o:Onderbouw)
-        WHERE NOT EXISTS((o)-[:LigtOp]->(:Geotextiel))
-        RETURN o.uuid as uuid, o.name as name"""
+            MATCH (o:Onderbouw {isActief: TRUE})
+            WHERE NOT EXISTS((o)-[:LigtOp]->(:Geotextiel {isActief: TRUE}))
+            RETURN o.uuid as uuid, o.toestand as toestand
+        """
 
     def run_report(self, sender):
         self.report.run_report(sender=sender)
