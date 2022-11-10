@@ -1,6 +1,7 @@
 from DQReport import DQReport
 from OTLCursorPool import OTLCursorPool
 
+
 class Report0043:
     def __init__(self):
         self.report = None
