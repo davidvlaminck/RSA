@@ -27,18 +27,36 @@ class OTLCursorPool:
         db_file, _ = urllib.request.urlretrieve(URL_OTL)
         return db_file
 
-    def get_connection(self):
+    @staticmethod
+    def get_connection():
         """
         Create and return a read-only connection with the local OTL SQLite database.
 
         :return: An open SQLite database represented by a sqlite3.Connection object
         """
-        return sqlite3.connect(f'file:{self._db_file}?mode=ro', uri=True)
+        return sqlite3.connect(f'file:{OTLCursorPool()._db_file}?mode=ro', uri=True)
 
-    def get_cursor(self):
+    @staticmethod
+    def get_cursor():
         """
         Create and return a Cursor object for the local OTL SQLite database.
 
         :return: A cursor represented by a sqlite3.Cursor object.
         """
-        return self.get_connection().cursor()
+        return OTLCursorPool().get_connection().cursor()
+
+
+otl_cursor = OTLCursorPool.get_cursor()
+deprecated_classes = [row[0] for row in otl_cursor.execute("""
+    SELECT c.name 
+    FROM OSLOClass as c
+    WHERE c.deprecated_version IS NOT NULL AND c.deprecated_version != ""
+""").fetchall()]
+
+result_query = """
+    MATCH (x {{isActief: TRUE}})
+    WHERE {}
+    RETURN x.uuid as uuid, x.naam as naam, x.typeURI as typeURI
+""".format(" OR ".join(["x:{}".format(d) for d in deprecated_classes]))
+
+print(result_query)
