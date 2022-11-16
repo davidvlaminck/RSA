@@ -15,9 +15,9 @@ class Report0043:
 
         otl_cursor = OTLCursorPool.get_cursor()
         deprecated_classes = otl_cursor.execute("""
-            SELECT oc.uri
-            FROM OSLOClass oc
-            WHERE oc.deprecated_version IS NOT NULL AND oc.deprecated_version != ""
+            SELECT o_c.uri
+            FROM OSLOClass o_c
+            WHERE o_c.deprecated_version IS NOT NULL AND o_c.deprecated_version != ""
         """).fetchall()
 
         self.report.result_query = """
