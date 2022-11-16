@@ -10,21 +10,23 @@ class Report0043:
         self.report = DQReport(name='report0043',
                                title='Er zijn geen instanties van classes die deprecated zijn in de OTL',
                                spreadsheet_id='',
-                               datasource='Neo4J',
+                               datasource='PostGIS',
                                persistent_column='D')
 
         otl_cursor = OTLCursorPool.get_cursor()
-        deprecated_classes = [row[0] for row in otl_cursor.execute("""
-            SELECT c.name 
-            FROM OSLOClass as c
-            WHERE c.deprecated_version IS NOT NULL AND c.deprecated_version != ""
-        """).fetchall()]
+        deprecated_classes = otl_cursor.execute("""
+            SELECT oc.uri
+            FROM OSLOClass oc
+            WHERE oc.deprecated_version IS NOT NULL AND oc.deprecated_version != ""
+        """).fetchall()
 
         self.report.result_query = """
-            MATCH (x {{isActief: TRUE}})
-            WHERE {}
-            RETURN x.uuid as uuid, x.naam as naam, x.typeURI as typeURI
-        """.format(" OR ".join(["x:{}".format(d) for d in deprecated_classes]))
+            SELECT a.uuid AS asset_uuid, a_t.uri AS assettype_uri, a.toestand AS asset_toestand 
+            FROM assets a
+            INNER JOIN assettypes AS a_t ON (a.assettype = a_t.uuid)
+            INNER JOIN (VALUES {}) AS d_c(uri) ON (a_t.uri = d_c.uri)
+            WHERE a.actief = TRUE
+        """.format(",".join(["({})".format(d) for d in deprecated_classes]))
 
     def run_report(self, sender):
         self.report.run_report(sender=sender)
