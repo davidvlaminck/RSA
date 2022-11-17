@@ -27,7 +27,7 @@ class Report0044:
             INNER JOIN attributen AS ab ON (a_w.attribuutuuid = ab.uuid)
             INNER JOIN (values {}) AS d_a(uri) ON (ab.uri = d_a.uri)
             WHERE a.actief = TRUE AND a_w NOTNULL
-        """.format(",".join(["({})".format(d) for d in deprecated_attributes]))
+        """.format(",".join(["('{}')".format(d[0]) for d in deprecated_attributes]))
 
     def run_report(self, sender):
         self.report.run_report(sender=sender)
