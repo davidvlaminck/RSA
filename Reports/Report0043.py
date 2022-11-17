@@ -26,7 +26,7 @@ class Report0043:
             INNER JOIN assettypes AS a_t ON (a.assettype = a_t.uuid)
             INNER JOIN (VALUES {}) AS d_c(uri) ON (a_t.uri = d_c.uri)
             WHERE a.actief = TRUE
-        """.format(",".join(["({})".format(d) for d in deprecated_classes]))
+        """.format(",".join(["('{}')".format(d[0]) for d in deprecated_classes]))
 
     def run_report(self, sender):
         self.report.run_report(sender=sender)
