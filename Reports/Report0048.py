@@ -7,28 +7,32 @@ class Report0048:
 
     def init_report(self):
         self.report = DQReport(name='report0048',
-                               title='(Experimenteel) Wanneer een BitumineuzeLaag geen LigtOpt relatie heeft naar een Onderbouw, welke Onderbouw(en) liggen dan geometrisch onder deze BitumineuzeLaag.',
+                               title='BitumineuzeLaag heeft steeds een LigtOp relatie naar een Onderbouw. Wanneer niet aan deze voorwaarde voldaan is, geeft dit rapport een aantal suggesties voor Onderbouwen adhv de geometrie.',
                                spreadsheet_id='',
                                datasource='PostGIS',
                                persistent_column='C')
 
         self.report.result_query = """
-            WITH a_bl AS (
-                SELECT *
+            WITH a_bl as (
+                SELECT a.uuid, g.wkt_string
                 FROM assets a
+                INNER JOIN assettypes a_t ON (a.assettype = a_t.uuid)
                 INNER JOIN geometrie g ON (g.assetuuid = a.uuid)
-                WHERE a.assettype = '3d24792a-6941-481b-9c8c-739309fd3ffb')
+                WHERE a_t.uri = 'https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BitumineuzeLaag')
             , a_ob AS (
-                SELECT *
+                SELECT a.uuid , g.wkt_string 
                 FROM assets a
+                INNER JOIN assettypes a_t ON (a.assettype = a_t.uuid)
                 INNER JOIN geometrie g ON (g.assetuuid = a.uuid)
-                WHERE a.assettype = '3d24792a-6941-481b-9c8c-739309fd3ffb')
-            SELECT a_bl.uuid AS uuid_bitum_missing, a_ob.uuid AS uuid_onder_suggestie
+                WHERE a_t.uri = 'https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Onderbouw')
+            SELECT a_bl.uuid AS uuid_bitumineuze_laag, a_ob.uuid AS uuid_suggested_onderbouw
             FROM a_bl, a_ob
             WHERE NOT EXISTS (
                 SELECT 1
                 FROM assetrelaties a_r
-                WHERE a_r.bronuuid = a_bl.uuid AND a_r.relatietype = '321c18b8-92ca-4188-a28a-f00cdfaa0e31'
+                INNER JOIN relatietypes r_t ON (a_r.relatietype = r_t.uuid)
+                WHERE a_r.bronuuid = a_bl.uuid AND r_t.uri = 'https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#LigtOp'
+                LIMIT 1
             ) AND ST_Intersects(ST_GeogFromText(a_bl.wkt_string), ST_GeogFromText(a_ob.wkt_string))
         """
 
