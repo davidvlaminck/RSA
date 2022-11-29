@@ -8,8 +8,8 @@ class Report0044:
 
     def init_report(self):
         self.report = DQReport(name='report0044',
-                               title='Er zijn geen classes met ingevulde attributen die deprecated zijn in de OTL',
-                               spreadsheet_id='',
+                               title='Ingevulde deprecated attributen',
+                               spreadsheet_id='1GFfEoWVvi0-BpFvrPQUG6w5AuMcoyVk9Kutf9ux8bOE',
                                datasource='PostGIS',
                                persistent_column='E')
 
