@@ -8,7 +8,7 @@ class Report0040:
     def init_report(self):
         self.report = DQReport(name='report0040',
                                title='DNBLaagspanning/DNBHoogspanning hebben een HoortBij relatie naar LS/HS respectievelijk',
-                               spreadsheet_id='',
+                               spreadsheet_id='1WLXykE5pX9wiBqnSgJ1HTE8dtkjRydMxAnccLV3T1_U',
                                datasource='Neo4J',
                                persistent_column='D')
 

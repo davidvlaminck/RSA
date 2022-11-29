@@ -8,7 +8,7 @@ class Report0042:
     def init_report(self):
         self.report = DQReport(name='report0042',
                                title='EnergiemeterDNB en ForfaitaireAansluiting worden gevoed door een DNBLaagspanning',
-                               spreadsheet_id='',
+                               spreadsheet_id='1QloH-HeEqyMpg2hnbAPSv8tLpxsLDOaXcPMywTj_Oi4',
                                datasource='Neo4J',
                                persistent_column='D')
 
