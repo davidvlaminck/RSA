@@ -8,7 +8,7 @@ class Report0051:
     def init_report(self):
         self.report = DQReport(name='report0051',
                                title='Akela IMKL constraints for Appurtenance (ElectricityAppurtenance and TelecomAppurtenance have seperate IMKL no types)',
-                               spreadsheet_id='',
+                               spreadsheet_id='1YFBTA9LDACfW5IV1wBT-T6OQFkhi6i6bwpduppYoals',
                                datasource='Neo4J',
                                persistent_column='E')
 

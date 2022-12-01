@@ -8,7 +8,7 @@ class Report0050:
     def init_report(self):
         self.report = DQReport(name='report0050',
                                title='Akela IMKL constraints for Cabinet',
-                               spreadsheet_id='',
+                               spreadsheet_id='1cxwxDsCIVO1_fXD96Qr_v6RxT-ErWkmTfezt0cAyiHU',
                                datasource='Neo4J',
                                persistent_column='E')
 
