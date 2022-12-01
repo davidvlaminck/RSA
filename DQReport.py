@@ -84,7 +84,7 @@ class DQReport(Report):
         # add first rule: when is the report made and when is the used data last sync'd
         if self.datasource == 'Neo4J':
             connector = SingleNeo4JConnector.get_connector()
-            with connector.driver.session() as session:
+            with connector.driver.session(database=connector.db) as session:
                 query_result: DateTime = session.run('MATCH (p:Params) RETURN p.last_update_utc').single()[0]
 
             self.last_data_update = query_result.to_native().strftime("%Y-%m-%d %H:%M:%S")
