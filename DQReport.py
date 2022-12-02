@@ -115,7 +115,8 @@ class DQReport(Report):
         if self.datasource == 'Neo4J':
             connector = SingleNeo4JConnector.get_connector()
             start = time.time()
-            with connector.driver.session() as session:
+            self.result_query = self.clean_query(self.result_query)
+            with connector.driver.session(database=connector.db) as session:
                 query_result = session.run(self.result_query)
                 result_keys = query_result.keys()
                 result_data = query_result.data()
@@ -396,6 +397,17 @@ class DQReport(Report):
             startcell.row += 1
 
         return mail_dicts
+
+    def clean_query(self, query):
+        query_lines = query.split('\n')
+        new_q = []
+        for line in query_lines:
+            if '//' not in line:
+                new_q.append(line)
+            else:
+                new_q.append(line.split('//')[0])
+        return '\n'.join(new_q)
+
 
 
 
