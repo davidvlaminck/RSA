@@ -1,12 +1,12 @@
 from DQReport import DQReport
 
 
-class Report0058:
+class Report0057:
     def __init__(self):
         self.report = None
 
     def init_report(self):
-        self.report = DQReport(name='report0058',
+        self.report = DQReport(name='report0057',
                                title='Er zijn geen assets die het doel zijn van twee of meer Voedt relaties.',
                                spreadsheet_id='',
                                datasource='Neo4J',
