@@ -1,25 +1,21 @@
 from DQReport import DQReport
 
 
-class Report0058:
+class Report0059:
     def __init__(self):
         self.report = None
 
     def init_report(self):
-        self.report = DQReport(name='report0058',
+        self.report = DQReport(name='report0059',
                                title='Er zijn geen assets die zichzelf direct of indirect voeden (geen lussen in voeding).',
                                spreadsheet_id='',
                                datasource='Neo4J',
                                persistent_column='E')
 
         self.report.result_query = """
-            match (a:Asset {isActief: True}) - [:HoortBij] - (b {isActief: True}) where ((b:DNBHoogspanning) or (b:DNBLaagspanning)) 
-            and  a.eanNummer <> b.eanNummer
-            return  a.naampad as naampad 
-            union 
-            match (a:Asset {isActief: True}) - [:HoortBij] - (b {isActief: True}) where (b:DNBHoogspanning) or (b:DNBLaagspanning)
-            with a, collect(b.eanNummer) as EAN, count(distinct b.eanNummer) as cnt where cnt > 1
-            return a.naampad as naampad
+            MATCH p=(x:Asset {isActief: True})-[:Voedt*]->(x:Asset {isActief: True})
+            WITH x, reduce(path_loop = [], n IN nodes(p) | path_loop + [[n.uuid, n.typeURI]]) as path_loop
+            RETURN DISTINCT x.uuid AS uuid, x.naampad AS naampad, x.typeURI AS typeURI, path_loop
         """
 
     def run_report(self, sender):
