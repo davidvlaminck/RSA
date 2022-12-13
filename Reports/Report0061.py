@@ -7,7 +7,7 @@ class Report0061:
 
     def init_report(self):
         self.report = DQReport(name='report0061',
-                               title='Het EAN nummer van een DNBLaagspanning of DNBHoogspanning is geldig..',
+                               title='Het EAN nummer van een DNBLaagspanning of DNBHoogspanning is geldig.',
                                spreadsheet_id='',
                                datasource='Neo4J',
                                persistent_column='I')
