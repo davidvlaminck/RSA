@@ -7,15 +7,17 @@ class Report0058:
 
     def init_report(self):
         self.report = DQReport(name='report0058',
-                               title='Er zijn geen assets die zichzelf direct of indirect voeden (geen lussen in voeding).',
+                               title='Er zijn geen assets die het doel zijn van twee of meer Voedt relaties.',
                                spreadsheet_id='',
                                datasource='Neo4J',
-                               persistent_column='E')
+                               persistent_column='G')
 
         self.report.result_query = """
-            MATCH p=(x:Asset {isActief: True})-[:Voedt*]->(x:Asset {isActief: True})
-            WITH x, reduce(path_loop = [], n IN nodes(p) | path_loop + [[n.uuid, n.typeURI]]) as path_loop
-            RETURN DISTINCT x.uuid AS uuid, x.naampad AS naampad, x.typeURI AS typeURI, path_loop
+            MATCH (a {isActief: TRUE})<-[:Voedt]-(v {isActief: TRUE})
+            WHERE NOT (v:onderdeel) AND NOT (v:UPSLegacy)
+            WITH a, count(v) as v_count 
+            WHERE v_count > 1
+            RETURN DISTINCT a.uuid as uuid, a.naampad as naampad, a.toestand as toestand, a.`tz:toezichter.tz:voornaam` as tz_voornaam, a.`tz:toezichter.tz:naam` as tz_naam, a.`tz:toezichter.tz:email` as tz_email
         """
 
     def run_report(self, sender):
