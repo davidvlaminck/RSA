@@ -9,7 +9,8 @@ class Report0039:
         self.report = DQReport(name='report0039',
                                title="Lichtmast LED",
                                spreadsheet_id='1DZjg3zbcoY7_9Q0qj74KkgLL3eOwWa7e4_0SlbLMM5o',
-                               datasource='PostGIS')
+                               datasource='PostGIS',
+                               convert_columns_to_numbers=['K', 'Q', 'S', 'W'])
 
         self.report.result_query = """
 WITH awegen ("ident8", "beginpositie", "eindpositie") AS ( VALUES
@@ -112,7 +113,7 @@ opkuis1 AS (
 			WHEN lumen_pakket_LED IS NOT NULL AND lumen_pakket_LED <> '0' THEN 'LED'
 			ELSE lamp_type END AS lamp_type_opgekuist,
 		CASE WHEN aantal_verlichtingstoestellen IS NOT NULL THEN aantal_verlichtingstoestellen::NUMERIC
-			ELSE 1 END AS aantal_verlichtingstoestellen_getal
+			ELSE 1::NUMERIC END AS aantal_verlichtingstoestellen_getal
 	FROM ruwe_data),
 opkuis2 AS (
 	SELECT *, 

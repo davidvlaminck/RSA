@@ -16,13 +16,17 @@ from SheetsWrapper import SingleSheetsWrapper, SheetsWrapper
 
 class DQReport(Report):
     def __init__(self, name: str = '', title: str = '', spreadsheet_id: str = '', datasource: str = '', add_filter: bool = True,
-                 persistent_column: str = '', frequency: int = 1):
+                 persistent_column: str = '', frequency: int = 1, convert_columns_to_numbers:list = None):
         Report.__init__(self, name=name, title=title, spreadsheet_id=spreadsheet_id, datasource=datasource, add_filter=add_filter,
                         frequency=frequency)
         self.last_data_update = ''
         self.now = ''
         self.persistent_column = persistent_column
         self.persistent_dict = {}
+        if convert_columns_to_numbers is None:
+            self.convert_columns_to_numbers = []
+        else:
+            self.convert_columns_to_numbers = convert_columns_to_numbers
 
     def run_report(self, startcell: str = 'A1', sender: MailSender = None):
         logging.info(f'start running report {self.name}: {self.title}')
@@ -178,6 +182,19 @@ class DQReport(Report):
         empty_row = [''] * amount_empty_rows
         if len(result) == 0:
             result.append(empty_row)
+
+        # convert specified columns to numbers
+        col_indices = []
+        for col in self.convert_columns_to_numbers:  # columns
+            col_indices.append(SheetsCell(col + '1')._column_int - 1)
+        if len(col_indices) > 0:
+            for row_index, result_row in enumerate(result):
+                if row_index == 0:
+                    continue
+                for col_index in col_indices:
+                    value = result[row_index][col_index]
+                    if value is not None:
+                        result[row_index][col_index] = float(result[row_index][col_index])
 
         # write data to Resultaat sheet
         sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.spreadsheet_id,
