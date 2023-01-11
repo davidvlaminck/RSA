@@ -88,6 +88,7 @@ class LegacyHistoryReport(Report):
             for delete_name in sheet_names[self.sheets_to_keep:]:
                 sheets_wrapper.delete_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name=delete_name)
         if new_sheetname not in sheet_names:
+            # TODO create at index 1 (after Historiek)
             sheets_wrapper.create_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name=new_sheetname)
 
         # persistent column
