@@ -13,12 +13,13 @@ class Report0001:
                                persistent_column='D')
 
         # TODO feedback: bevestigingsbeugel en omvormer weghalen (omvormer naar camera moet wel aanwezig zijn)
-        self.report.result_query = """MATCH (pk:Asset)-[:Bevestiging]-(e:Asset {typeURI:'https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Netwerkelement'})-[:HoortBij]->(l:Asset) 
-        WHERE pk.typeURI IN ['https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Netwerkpoort', 'https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Netwerkkaart'] AND pk.isActief AND e.isActief AND l.isActief 
-        WITH collect(pk) as poortofkaart  
-        MATCH (a:Asset) 
-        WHERE a.typeURI CONTAINS 'onderdeel' AND NOT EXISTS((a)-[:HoortBij]->(:Asset {isActief:TRUE})) AND NOT a IN poortofkaart AND a.isActief
-        RETURN a.uuid, a.naam, a.typeURI"""
+        self.report.result_query = """
+MATCH (pk:Asset {isActief: TRUE})-[:Bevestiging]-(:Netwerkelement {isActief: TRUE})-[:HoortBij]->(:Asset {isActief: TRUE}) 
+WHERE pk:Netwerkpoort OR pk:Netwerkkaart
+WITH collect(pk) as poortofkaart
+MATCH (a:onderdeel {isActief: TRUE}) 
+WHERE NOT EXISTS((a)-[:HoortBij]->(:Asset {isActief: TRUE})) AND NOT a IN poortofkaart
+RETURN a.uuid, a.naam, a.typeURI"""
 
     def run_report(self, sender):
         self.report.run_report(sender=sender)
