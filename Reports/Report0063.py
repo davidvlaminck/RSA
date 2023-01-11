@@ -1,4 +1,5 @@
 from DQReport import DQReport
+from LegacyReport import LegacyReport
 
 
 class Report0063:
@@ -8,10 +9,10 @@ class Report0063:
     def init_report(self):
         self.report = LegacyReport(name='report0063',
                                    title="Overzicht invulgraad installaties per toezichtgroep",
-                                   spreadsheet_id='1hX4KW6lRgUWb-uhtmdmBVeHUb-7xDs1Mg5sCvMZ-jhA',
+                                   spreadsheet_id='1i-CB_Kox651c9zP8e1Q_XtflOqvta-xlCfKSj7h_4gM',
                                    datasource='PostGIS',
-                                   sheetname='Gegevens',
-                                   action='add')
+                                   sheet_name='Gegevens',
+                                   frequency=7)
 
         self.report.result_query = """
 WITH totaal AS ( 
@@ -178,7 +179,7 @@ samengevoegd AS (
 		ELSE 'Andere toezichtgroepen'
 	END AS toezichtgroep, tijdstip, aantal, titel
 	FROM combinatie ) 
-SELECT toezichtgroep, tijdstip, SUM(aantal) AS aantal, titel
+SELECT toezichtgroep, tijdstip::text, SUM(aantal) AS aantal, titel
 FROM samengevoegd
 GROUP BY 1, 2, 4;
 """

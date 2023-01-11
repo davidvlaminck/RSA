@@ -91,13 +91,14 @@ class SheetsWrapper:
             sheets_dict[sheet['properties']['title']] = sheet['properties']
         return sheets_dict
 
-    def write_data_to_sheet(self, spreadsheet_id: str, sheet_name: str, start_cell: str, data: list):
+    def write_data_to_sheet(self, spreadsheet_id: str, sheet_name: str, start_cell: str, data: list,
+                            value_input_option: str = 'RAW'):
         credentials = self.authenticate()
         cell_range = self.calculate_cell_range_by_data(SheetsCell(start_cell), data)
         service = build('sheets', 'v4', credentials=credentials)
         service.spreadsheets().values().update(
             spreadsheetId=spreadsheet_id,
-            valueInputOption='RAW',
+            valueInputOption=value_input_option,
             range=sheet_name + '!' + cell_range,
             body=dict(
                 majorDimension='ROWS',
