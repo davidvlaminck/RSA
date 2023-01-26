@@ -1,4 +1,3 @@
-import functools
 import sqlite3
 import urllib.request
 
@@ -8,7 +7,7 @@ URL_OTL = r"https://wegenenverkeer.data.vlaanderen.be/doc/implementatiemodel/mas
 class OTLCursorPool:
     """
     Single source for connections and cursors to the OTL SQLite database.
-    Lazily fetches and caches the latest version of the SQLite database file.
+    Fetches the latest version of the SQLite database file on every connection request.
     """
     _instance = None
 
@@ -17,16 +16,6 @@ class OTLCursorPool:
             cls._instance = super(OTLCursorPool, cls).__new__(cls, *args, **kwargs)
         return cls._instance
 
-    @functools.cached_property
-    def _db_file(self):
-        """
-        Cached property for SQLite database file.
-
-        :return: tempfile containing OTL SQLite database
-        """
-        db_file, _ = urllib.request.urlretrieve(URL_OTL)
-        return db_file
-
     @staticmethod
     def get_connection():
         """
@@ -34,7 +23,8 @@ class OTLCursorPool:
 
         :return: An open SQLite database represented by a sqlite3.Connection object
         """
-        return sqlite3.connect(f'file:{OTLCursorPool()._db_file}?mode=ro', uri=True)
+        db_file, _ = urllib.request.urlretrieve(URL_OTL)
+        return sqlite3.connect(f'file:{db_file}?mode=ro', uri=True)
 
     @staticmethod
     def get_cursor():
