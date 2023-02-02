@@ -17,7 +17,10 @@ class Report0058:
             WHERE NOT (v:onderdeel) AND NOT (v:UPSLegacy)
             WITH a, count(v) as v_count 
             WHERE v_count > 1
-            RETURN DISTINCT a.uuid as uuid, a.naampad as naampad, a.toestand as toestand, a.`tz:toezichter.tz:voornaam` as tz_voornaam, a.`tz:toezichter.tz:naam` as tz_naam, a.`tz:toezichter.tz:email` as tz_email
+            RETURN 
+                DISTINCT a.uuid as uuid, a.naampad as naampad, a.toestand as toestand, 
+                a.`tz:toezichter.tz:voornaam` as tz_voornaam, a.`tz:toezichter.tz:naam` as tz_naam, a.`tz:toezichter.tz:email` as tz_email,
+                a.`tz:toezichtgroep.tz:naam` as tzg_naam,  a.`tz:toezichtgroep.tz:referentie` as tzg_referentie
         """
 
     def run_report(self, sender):
