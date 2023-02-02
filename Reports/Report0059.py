@@ -13,9 +13,9 @@ class Report0059:
                                persistent_column='E')
 
         self.report.result_query = """
-            MATCH p=(x:Asset {isActief: True, toestand: "in-gebruik"})-[:Voedt*]->(x:Asset {isActief: True, toestand: "in-gebruik"})
+            MATCH p=(x:Asset {isActief: True})-[:Voedt*]->(x)
             WITH x, reduce(path_loop = [], n IN nodes(p) | path_loop + [[n.uuid, n.typeURI]]) as path_loop
-            RETURN DISTINCT x.uuid AS uuid, x.naampad AS naampad, x.typeURI AS typeURI, path_loop
+            RETURN DISTINCT x.uuid AS uuid, x.naampad AS naampad, x.typeURI AS typeURI, x.toestand as toestand, path_loop
         """
 
     def run_report(self, sender):
