@@ -13,7 +13,7 @@ class Report0061:
                                persistent_column='I')
 
         self.report.result_query = """
-            MATCH (a:Asset {isActief: TRUE, toestand: "in-gebruik"})
+            MATCH (a:Asset {isActief: TRUE})
             WITH a, split(a.eanNummer, "") as split_ean
             WITH a, split_ean, reduce(
                 acc = [0, 0, 0], 
