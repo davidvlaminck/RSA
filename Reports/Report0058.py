@@ -13,7 +13,7 @@ class Report0058:
                                persistent_column='G')
 
         self.report.result_query = """
-            MATCH (a {isActief: TRUE})<-[:Voedt]-(v {isActief: TRUE})
+            MATCH (a {isActief: TRUE, toestand: "in-gebruik"})<-[:Voedt]-(v {isActief: TRUE, toestand: "in-gebruik"})
             WHERE NOT (v:onderdeel) AND NOT (v:UPSLegacy)
             WITH a, count(v) as v_count 
             WHERE v_count > 1
