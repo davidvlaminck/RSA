@@ -8,7 +8,7 @@ class Report0046:
     def init_report(self):
         self.report = DQReport(name='report0046',
                                title='Een Onderbouw heeft steeds een ligtOp relatie naar een Geotextiel',
-                               spreadsheet_id='',
+                               spreadsheet_id='1eFVzTiSiPASlvTE4tva9Vw1on5Z8AJNalj4im8tRops',
                                datasource='Neo4J',
                                persistent_column='C')
 

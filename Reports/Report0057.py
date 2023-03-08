@@ -8,7 +8,7 @@ class Report0057:
     def init_report(self):
         self.report = DQReport(name='report0057',
                                title='Er zijn geen attributen met de waarde -99999.99 (indicatie voor lege waarde).',
-                               spreadsheet_id='',
+                               spreadsheet_id='1aLox-JNzTrwqNzexO6eygpbsUOyqeyy79T6SLUnsLHw',
                                datasource='PostGIS',
                                persistent_column='F')
 

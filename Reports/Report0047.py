@@ -7,10 +7,11 @@ class Report0047:
 
     def init_report(self):
         self.report = DQReport(name='report0047',
-                               title='Wanneer een BitumineuzeLaag geometrisch op een Onderbouw ligt, dan zijn deze assets verbonden door een LigtOp relatie van BitumineuzeLaag naar Onderbouw.',
-                               spreadsheet_id='',
+                               title='Wanneer een BitumineuzeLaag geometrisch op een Onderbouw ligt, dan zijn deze '
+                                     'assets verbonden door een LigtOp relatie van BitumineuzeLaag naar Onderbouw.',
+                               spreadsheet_id='1BiRG3GxXF1AjpAoCWW_O7ukg2WeCEvGnhew-_YuclrQ',
                                datasource='PostGIS',
-                               persistent_column='C')
+                               persistent_column='D')
 
         self.report.result_query = """
             WITH a_bl as (

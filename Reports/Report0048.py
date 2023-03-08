@@ -8,7 +8,7 @@ class Report0048:
     def init_report(self):
         self.report = DQReport(name='report0048',
                                title='BitumineuzeLaag heeft steeds een LigtOp relatie naar een Onderbouw. Wanneer niet aan deze voorwaarde voldaan is, geeft dit rapport een aantal suggesties voor Onderbouwen adhv de geometrie.',
-                               spreadsheet_id='',
+                               spreadsheet_id='1E2PjV5T7w1RGeZKEr3ad3L-CMKvtkzwdx53GuH5IxM0',
                                datasource='PostGIS',
                                persistent_column='C')
 
