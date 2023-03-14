@@ -14,6 +14,7 @@ class Report0059:
 
         self.report.result_query = """
             MATCH p=(x:Asset {isActief: True})-[:Voedt*]->(x)
+            WHERE all(n in nodes(p) WHERE NOT (n:UPSLegacy))
             WITH x, reduce(path_loop = [], n IN nodes(p) | path_loop + [[n.uuid, n.typeURI]]) as path_loop
             RETURN DISTINCT x.uuid AS uuid, x.naampad AS naampad, x.typeURI AS typeURI, x.toestand as toestand, path_loop
         """
