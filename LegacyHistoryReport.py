@@ -166,7 +166,7 @@ class LegacyHistoryReport(Report):
             connector = SinglePostGISConnector.get_connector()
 
             start = time.time()
-            with connector.connection.cursor() as cursor:
+            with connector.main_connection.cursor() as cursor:
                 cursor.execute(self.result_query)
                 result_data = cursor.fetchall()
                 result_keys = list(map(lambda col: col.name, cursor.description))
