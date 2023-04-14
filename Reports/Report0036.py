@@ -12,7 +12,7 @@ class Report0036:
                                datasource='Neo4J',
                                persistent_column='C')
 
-        self.report.result_query = """MATCH (n:Netwerkpoort {isActief:TRUE, type:'UNI'}) 
+        self.report.result_query = """MATCH (n:Netwerkpoort {isActief:TRUE, type:'UNI'})-[:Bevestiging]-(:Netwerkelement {isActief:TRUE, gebruik:'l2-switch'}) 
         WHERE NOT EXISTS ((n)-[:HoortBij]->(:VLAN {isActief:TRUE}))
         RETURN n.uuid, n.naam"""
 
