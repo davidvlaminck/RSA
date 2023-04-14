@@ -46,7 +46,7 @@ class SingleReportLoopRunner:
         self.dir_path = os.path.abspath(os.path.join(os.sep, ROOT_DIR, 'Reports'))
         self.mail_sender = MailSender(mail_settings=self.settings['smtp_options'])
 
-    def run(self, report:str):
+    def run(self, report: str):
         started_running_date = None
 
         while True:
@@ -73,7 +73,8 @@ class SingleReportLoopRunner:
                             logging.info(f"exception happened in report {report_name}: {ex}")
                             logging.exception(ex)
                             print(f'failed completing report {report_name}')
-                    logging.info(f'{datetime.utcnow()}: done running report loop {reports_run}. Reports left to do: {len(reports_to_do)}')
+                    logging.info(
+                        f'{datetime.utcnow()}: done running report loop {reports_run}. Reports left to do: {len(reports_to_do)}')
 
                 logging.info(f'{datetime.utcnow()}: done running the reports')
 
@@ -120,7 +121,9 @@ class SingleReportLoopRunner:
                                                    sheet_name='Overzicht',
                                                    data=[[mailcontent.mail_sent.strftime("%Y-%m-%d %H:%M:%S")]])
 
+
 if __name__ == '__main__':
-    reportlooprunner = SingleReportLoopRunner(settings_path=r'/home/davidlinux/Documents/AWV/resources/settings_RSA.json')
+    reportlooprunner = SingleReportLoopRunner(
+        settings_path=r'/home/davidlinux/Documents/AWV/resources/settings_RSA.json')
     # reportlooprunner = SingleReportLoopRunner(settings_path=r'C:\resources\settings_RSA.json')
-    reportlooprunner.run(report='Report0039')
+    reportlooprunner.run(report='Report0064')
