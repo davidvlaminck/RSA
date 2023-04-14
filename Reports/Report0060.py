@@ -8,9 +8,9 @@ class Report0060:
     def init_report(self):
         self.report = DQReport(name='report0060',
                                title='Er zijn geen conflicten tussen EAN-nummers (dubbel EAN-nummer).',
-                               spreadsheet_id='',
+                               spreadsheet_id='1od9125ZSoFG6fGwvoS8CSCz-Bne4N8vVBXORjYhtjQY',
                                datasource='Neo4J',
-                               persistent_column='G')
+                               persistent_column='I')
 
         self.report.result_query = """
             MATCH (x:Asset{isActief: True})-[:HoortBij]-(y{isActief: True}) 

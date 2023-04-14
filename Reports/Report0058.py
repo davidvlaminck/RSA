@@ -8,9 +8,9 @@ class Report0058:
     def init_report(self):
         self.report = DQReport(name='report0058',
                                title='Er zijn geen assets die het doel zijn van twee of meer Voedt relaties.',
-                               spreadsheet_id='',
+                               spreadsheet_id='15knbCKB7xWKDX_7utnDBsNe2mYHxGwM6cl8bPwg6q5k',
                                datasource='Neo4J',
-                               persistent_column='G')
+                               persistent_column='H')
 
         self.report.result_query = """
             MATCH (a {isActief: TRUE})<-[:Voedt]-(v {isActief: TRUE})

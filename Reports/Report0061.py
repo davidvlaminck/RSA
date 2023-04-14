@@ -8,9 +8,9 @@ class Report0061:
     def init_report(self):
         self.report = DQReport(name='report0061',
                                title='Het EAN nummer van een DNBLaagspanning of DNBHoogspanning is geldig (checksum).',
-                               spreadsheet_id='',
+                               spreadsheet_id='1M8NE8RxnEJdG-8suCjKOzh96O6pGUcfmFi83ePO3glc',
                                datasource='Neo4J',
-                               persistent_column='I')
+                               persistent_column='L')
 
         self.report.result_query = """
             MATCH (a:Asset {isActief: TRUE})

@@ -8,9 +8,9 @@ class Report0059:
     def init_report(self):
         self.report = DQReport(name='report0059',
                                title='Er zijn geen assets die zichzelf direct of indirect voeden (geen lussen in voeding).',
-                               spreadsheet_id='',
+                               spreadsheet_id='15z-3mTVmjg63EepO1uaN5R5dgFARcfiyrRBbXa3TzUQ',
                                datasource='Neo4J',
-                               persistent_column='E')
+                               persistent_column='F')
 
         self.report.result_query = """
             MATCH p=(x:Asset {isActief: True})-[:Voedt*]->(x)
