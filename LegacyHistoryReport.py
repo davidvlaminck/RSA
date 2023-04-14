@@ -136,9 +136,9 @@ class LegacyHistoryReport(Report):
         elif self.datasource == 'PostGIS':
             connector = SinglePostGISConnector.get_connector()
 
-            params = connector.get_params()
+            params = connector.get_params(connector.main_connection)
 
-            self.last_data_update = params['last_update_utc'].strftime("%Y-%m-%d %H:%M:%S")
+            self.last_data_update = params['last_update_utc_assets'].strftime("%Y-%m-%d %H:%M:%S")
             self.now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
 
             report_made_lines = [[f'Rapport gemaakt op {self.now} met data uit:'],
