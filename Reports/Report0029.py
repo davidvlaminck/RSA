@@ -12,7 +12,7 @@ class Report0029:
                                datasource='Neo4J',
                                persistent_column='C')
 
-        self.report.result_query = """MATCH (i:IP {isActief:TRUE})
+        self.report.result_query = """MATCH (i:IP {isActief:TRUE, `tz:toezichtgroep.tz:referentie`:'EMT_TELE'})
         WHERE NOT EXISTS((i)<-[:HoortBij]-(:Netwerkelement {isActief:TRUE}))
         RETURN i.uuid, i.naam, i.naampad, i.`tz:toezichter.tz:gebruikersnaam` as toezichter"""
 
