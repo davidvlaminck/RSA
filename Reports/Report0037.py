@@ -12,8 +12,8 @@ class Report0037:
                                datasource='Neo4J',
                                persistent_column='C')
 
-        self.report.result_query = """MATCH (n:Netwerkelement {isActief:TRUE, gebruik:'l2-switch'})
-        WHERE NOT EXISTS ((n)-[:HoortBij]-()<-[:Voedt]-())
+        self.report.result_query = """MATCH (n:Netwerkelement {isActief:TRUE, toestand:'in-gebruik', gebruik:'l2-switch'})
+        WHERE NOT EXISTS ((n)-[:HoortBij]-(:Asset {isActief:TRUE})<-[:Voedt]-(:Asset {isActief:TRUE}))
         RETURN n.uuid, n.naam"""
 
     def run_report(self, sender):
