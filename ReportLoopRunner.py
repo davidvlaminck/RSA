@@ -47,10 +47,10 @@ class ReportLoopRunner:
         self.mail_sender = MailSender(mail_settings=self.settings['smtp_options'])
 
     def run(self):
-        started_running_date = None
+        started_running_date = datetime.today()  # skip running right now, else: - timedelta(days=1)
 
         while True:
-            if started_running_date is None or started_running_date != (datetime.utcnow()).date():
+            if started_running_date != (datetime.utcnow()).date():
                 # start running reports now and at midnight
                 logging.info(f'{datetime.utcnow()}: let\'s run the reports now')
                 started_running_date = (datetime.utcnow()).date()
