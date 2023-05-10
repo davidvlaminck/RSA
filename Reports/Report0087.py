@@ -1,7 +1,7 @@
 from DQReport import DQReport
 
 
-class Report0086:
+class Report0087:
     def __init__(self):
         self.report = None
 
@@ -12,8 +12,8 @@ class Report0086:
                                datasource='Neo4J',
                                persistent_column='C')
 
-        self.report.result_query = """MATCH (k:Wegkantkast {isActief:TRUE})-[:Bevestiging]-(Verkeersregelaar {isActief:TRUE}) 
-WHERE k.datumOprichtingObject IS NOT NULL
+        self.report.result_query = """MATCH (k:Wegkantkast {isActief:TRUE})-[:Bevestiging]-(vr:Verkeersregelaar {isActief:TRUE}) 
+WHERE k.datumOprichtingObject IS NULL AND vr IS NOT NULL
 RETURN k.uuid, k.naam"""
 
     def run_report(self, sender):
