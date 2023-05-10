@@ -72,7 +72,7 @@ class SingleReportLoopRunner:
                         except Exception as ex:
                             logging.info(f"exception happened in report {report_name}: {ex}")
                             logging.exception(ex)
-                            print(f'failed completing report {report_name}')
+                            logging.error(f'failed completing report {report_name}')
                     logging.info(
                         f'{datetime.utcnow()}: done running report loop {reports_run}. Reports left to do: {len(reports_to_do)}')
 
@@ -96,7 +96,7 @@ class SingleReportLoopRunner:
             instance = class_()
             return instance
         except ModuleNotFoundError as exc:
-            print(exc.msg)
+            logging.error(exc.msg)
             pass
 
     @staticmethod

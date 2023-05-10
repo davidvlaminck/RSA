@@ -1,3 +1,4 @@
+import logging
 from types import NoneType
 
 import psycopg2  # == psycopg2-binary==2.9.3
@@ -80,7 +81,7 @@ class PostGISConnector:
                 connection.rollback()
                 return None
             else:
-                print("Error while connecting to PostgreSQL", error)
+                logging.error("Error while connecting to PostgreSQL", error)
                 cursor.close()
                 connection.rollback()
                 raise error
