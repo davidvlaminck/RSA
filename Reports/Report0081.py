@@ -13,7 +13,7 @@ class Report0081:
                                persistent_column='C')
 
         self.report.result_query = """MATCH (a:Verkeersregelaar {isActief:TRUE}) 
-WHERE a.naam is NULL OR NOT (a.naam =~ '^\d{3}A\d$' OR a.naam =~ '^\d{3}C\d$' OR a.naam =~ '^\d{3}G\d$' OR a.naam =~ '^W[WO]\d{4}$')
+WHERE a.naam is NULL OR NOT (a.naam =~ '^\d{3}[ACG]\d$' OR a.naam =~ '^W[WO]\d{4}$')
 RETURN a.uuid, a.naam"""
 
     def run_report(self, sender):
