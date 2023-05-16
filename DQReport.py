@@ -15,12 +15,14 @@ from SheetsWrapper import SingleSheetsWrapper, SheetsWrapper
 
 
 class DQReport(Report):
-    def __init__(self, name: str = '', title: str = '', spreadsheet_id: str = '', datasource: str = '', add_filter: bool = True,
-                 persistent_column: str = '', frequency: int = 1, convert_columns_to_numbers:list = None):
+    def __init__(self, name: str = '', title: str = '', spreadsheet_id: str = '', datasource: str = '',
+                 add_filter: bool = True, persistent_column: str = '', frequency: int = 1,
+                 convert_columns_to_numbers: list = None, link_type: str = 'awvinfra'):
         Report.__init__(self, name=name, title=title, spreadsheet_id=spreadsheet_id, datasource=datasource, add_filter=add_filter,
                         frequency=frequency)
         self.last_data_update = ''
         self.now = ''
+        self.link_type = link_type
         self.persistent_column = persistent_column
         self.persistent_dict = {}
         if convert_columns_to_numbers is None:
@@ -254,7 +256,7 @@ class DQReport(Report):
         sheets_wrapper.add_hyperlink_column(spreadsheet_id=self.spreadsheet_id,
                                             sheet_name='Resultaat',
                                             start_cell=start_sheetcell.cell,
-                                            link_type='awvinfra',
+                                            link_type=self.link_type,
                                             column_data=first_column)
 
         # historiek
