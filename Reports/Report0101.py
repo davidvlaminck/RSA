@@ -26,7 +26,7 @@ SELECT vrs.uuid as em_infra_link, split_part(naampad, '/', 1) AS installatie, ac
     , CASE WHEN uitdienstdatum IS NULL AND indienstdatum <= CURRENT_DATE - INTERVAL '10' YEAR THEN TRUE ELSE FALSE END AS "10_jaar_oud"
     , CASE WHEN vplan_koppelingen.uuid IS NULL AND actief = TRUE AND toestand = 'in-gebruik' THEN TRUE
         WHEN uitdienstdatum IS NULL AND vplan_koppelingen.uuid IS NOT NULL AND actief = TRUE AND toestand <> 'in-gebruik' AND toestand <> 'overgedragen' THEN TRUE
-        WHEN locatie.adres_provincie IS NULL OR locatie.x IS NULL THEN TRUE
+        WHEN locatie.adres_provincie IS NULL OR locatie.x IS NULL AND actief = TRUE THEN TRUE
         ELSE FALSE END AS dataconflicten
 FROM vrs
     LEFT JOIN locatie ON vrs.uuid = locatie.assetuuid
