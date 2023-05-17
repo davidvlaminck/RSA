@@ -37,19 +37,17 @@ class Report0038:
 #
 # SELECT ?ip ?ip_naampad ?toezichter_naam ?tt ?tt_naampad
 # WHERE {
-#     ?ip a inst:IP .
-#     ?ip imel:NaampadObject.naampad ?ip_naampad .
-#     ?ip imel:AIMDBStatus.isActief ?ip_actief .
-#     ?ip toezicht:Toezicht.toezichter ?toezichter .
+#     ?ip a inst:IP ;
+#         imel:NaampadObject.naampad ?ip_naampad ;
+#         imel:AIMDBStatus.isActief "true"^^xsd:boolean ;
+#         toezicht:Toezicht.toezichter ?toezichter .
 #     ?toezichter toezicht:DtcToezichter.gebruikersnaam ?toezichter_naam
 #     BIND (STRBEFORE(?ip_naampad, "/") AS ?beh).
-#     FILTER (STRENDS(?ip_naampad, ".AS1" )
-#         && ?ip_actief = "true"^^xsd:boolean) .
+#     FILTER (STRENDS(?ip_naampad, ".AS1" )).
 #     FILTER (NOT EXISTS {?tt a inst:TT .
-#         ?tt imel:AIMDBStatus.isActief ?tt_actief .
-#         ?tt imel:NaampadObject.naampad ?tt_naampad .
-#         FILTER (?tt_actief = "true"^^xsd:boolean &&
-#             STRENDS(?tt_naampad, ".ODF" ) &&
+#         ?tt imel:AIMDBStatus.isActief "true"^^xsd:boolean ;
+#             imel:NaampadObject.naampad ?tt_naampad .
+#         FILTER (STRENDS(?tt_naampad, ".ODF" ) &&
 #             STRSTARTS(?tt_naampad, ?beh) )
 # 	})
 # }
