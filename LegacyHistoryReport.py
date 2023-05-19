@@ -16,7 +16,7 @@ from SheetsWrapper import SingleSheetsWrapper
 class LegacyHistoryReport(Report):
     def __init__(self, name: str = '', title: str = '', spreadsheet_id: str = '', datasource: str = '',
                  add_filter: bool = True, frequency: int = 1, persistent_column: str = '', sheets_to_keep: int = 5,
-                 sheet_name: str = ''):
+                 sheet_name: str = '', sheets_to_ignore: [str] = None):
         Report.__init__(self, name=name, title=title, spreadsheet_id=spreadsheet_id, datasource=datasource,
                         add_filter=add_filter,
                         frequency=frequency)
@@ -24,6 +24,10 @@ class LegacyHistoryReport(Report):
         self.persistent_column = persistent_column
         self.persistent_dict = {}
         self.sheets_to_keep = sheets_to_keep
+        if sheets_to_ignore is None:
+            self.sheets_to_ignore = []
+        else:
+            self.sheets_to_ignore = sheets_to_ignore
 
         self.last_data_update = ''
         self.now = ''
@@ -77,6 +81,9 @@ class LegacyHistoryReport(Report):
         sheets = sheets_wrapper.get_sheets_in_spreadsheet(spreadsheet_id=self.spreadsheet_id).keys()
         sheet_names = [sheet_key for sheet_key in sheets]
         sheet_names.remove('Historiek')
+        for sheet_to_ignore in self.sheets_to_ignore:
+            if sheet_to_ignore in sheet_names:
+                sheet_names.remove(sheet_to_ignore)
         sheet_names = list(reversed(sorted(sheet_names, key=lambda x: datetime.strptime(x, '%d/%m/%Y'))))
 
         lastest_sheetname = None

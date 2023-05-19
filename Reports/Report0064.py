@@ -10,6 +10,7 @@ class Report0064:
                                           title="Detailrapport invulgraad legacy installaties VMHS",
                                           spreadsheet_id='1_rPRByOUYfdteAZre5xofSRuSO0K05UPB2xSFJGOekM',
                                           datasource='PostGIS',
+                                          sheets_to_ignore=['Pivot', 'acties'],
                                           frequency=7,
                                           persistent_column='K')
 
