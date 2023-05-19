@@ -22,3 +22,34 @@ class Report0040:
 
     def run_report(self, sender):
         self.report.run_report(sender=sender)
+
+# SPARQL query
+# PREFIX inst: <https://lgc.data.wegenenverkeer.be/ns/installatie#>
+# PREFIX imel: <https://wegenenverkeer.data.vlaanderen.be/ns/implementatieelement#>
+# PREFIX ond: <https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#>
+# PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+#
+# SELECT ?asset ?naam ?type
+# WHERE {
+#     {
+#         ?asset a ond:DNBLaagspanning ;
+#             imel:AIMDBStatus.isActief "true"^^xsd:boolean ;
+#             imel:AIMNaamObject.naam ?naam ;
+#             a ?type .
+#         FILTER(NOT EXISTS{
+#             ?hoortbij a ond:HoortBij .
+#             ?hoortbij imel:RelatieObject.doel ?legacy .
+#             ?hoortbij imel:RelatieObject.bron ?asset .
+#             ?legacy a inst:LS  })
+#     } UNION {
+#         ?asset a ond:DNBHoogspanning ;
+#             imel:AIMDBStatus.isActief "true"^^xsd:boolean ;
+#             imel:AIMNaamObject.naam ?naam ;
+#             a ?type .
+#         FILTER(NOT EXISTS{
+#             ?hoortbij a ond:HoortBij .
+#             ?hoortbij imel:RelatieObject.doel ?legacy .
+#             ?hoortbij imel:RelatieObject.bron ?asset .
+#             ?legacy a inst:HS  })
+#     }
+# }
