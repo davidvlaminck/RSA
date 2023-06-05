@@ -6,7 +6,7 @@ class Report0084:
         self.report = None
 
     def init_report(self):
-        self.report = DQReport(name='report0084',
+        self.report = DQReport(name='Report0084',
                                title='Verkeersregelaars hebben een vplannummer en vplandatum dat overeenkomt met het legacy vplan',
                                spreadsheet_id='1pGZUOMXLeWRo0Ykzshxt9PJN2tCbznsBxQf0mgh7Zos',
                                datasource='PostGIS',
