@@ -333,6 +333,8 @@ class DQReport(Report):
             for index, value in enumerate(row):
                 if isinstance(value, decimal.Decimal):
                     row[index] = str(value)
+                elif isinstance(value, datetime) or isinstance(value, date):
+                    row[index] = str(value)
 
             new_result_data.append(row)
 
