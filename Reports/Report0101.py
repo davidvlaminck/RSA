@@ -11,7 +11,8 @@ class Report0101:
                                spreadsheet_id='17gA1IKf5VSF-HslE-C90l2msSNFzCsiakpcn-IlMDtI',
                                datasource='PostGIS',
                                link_type='eminfra',
-                               persistent_column='P')
+                               persistent_column='P',
+                               recalculate_cells=[('Dataconflicten', 'A1'), ('>10 jaar oud', 'A1')])
 
         self.report.result_query = """
 WITH vrs AS (

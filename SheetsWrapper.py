@@ -105,6 +105,14 @@ class SheetsWrapper:
                 values=data)
         ).execute()
 
+    def recalculate_formula(self, spreadsheet_id: str, sheet_name: str, cell: str):
+        cell_data = self.read_data_from_sheet(spreadsheet_id=spreadsheet_id, sheet_name=sheet_name, sheetrange=cell,
+                                              value_render_option='FORMULA')
+        formula = cell_data[0][0]
+
+        self.write_data_to_sheet(spreadsheet_id=spreadsheet_id, sheet_name=sheet_name, start_cell=cell, data=[[formula]],
+                                 value_input_option='USER_ENTERED')
+
     def read_celldata_from_sheet(self, spreadsheet_id: str, sheet_name: str, sheetrange: str):
         credentials = self.authenticate()
         service = build('sheets', 'v4', credentials=credentials)
@@ -114,11 +122,12 @@ class SheetsWrapper:
         ).execute()
         return result['sheets'][0]['data'][0]
 
-    def read_data_from_sheet(self, spreadsheet_id: str, sheet_name: str, sheetrange: str, return_raw_results: bool = False):
+    def read_data_from_sheet(self, spreadsheet_id: str, sheet_name: str, sheetrange: str,
+                             return_raw_results: bool = False, value_render_option: str ='FORMATTED_VALUE'):
         credentials = self.authenticate()
         service = build('sheets', 'v4', credentials=credentials)
         result = service.spreadsheets().values().get(
-            spreadsheetId=spreadsheet_id,
+            spreadsheetId=spreadsheet_id, valueRenderOption=value_render_option,
             range=sheet_name + '!' + sheetrange
         ).execute()
         if return_raw_results:
