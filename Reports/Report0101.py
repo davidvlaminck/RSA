@@ -19,7 +19,7 @@ WITH vrs AS (
     SELECT assets.*, ST_SETSRID(ST_MakePoint(cast(x as float), cast(y as float)), 31370) AS geom
     FROM assets 
         LEFT JOIN locatie ON assets.uuid = locatie.assetuuid
-    WHERE assettype = '13fa9473-f919-432a-bd00-bc19645bd30a')
+    WHERE assettype IN ('13fa9473-f919-432a-bd00-bc19645bd30a','40f86745-ecaa-456b-8262-0a1f014602df'))
 SELECT vrs.uuid as em_infra_link, split_part(naampad, '/', 1) AS installatie, actief, toestand, ST_X(ST_Transform(geom, 4326)) AS longitude, ST_Y(ST_Transform(geom, 4326)) AS latitude
     , locatie.adres_gemeente, locatie.adres_provincie, text(date(indienstdatum)) AS indienstdatum
     , CASE WHEN uitdienstdatum IS NULL AND indienstdatum IS NOT NULL AND indienstdatum <= CURRENT_DATE THEN text('in dienst') ELSE to_char(date(uitdienstdatum), 'yyyy-mm-dd') END AS uitdienstdatum
