@@ -20,7 +20,7 @@ FROM assets imkl
 	LEFT JOIN assets legacy ON hb.doeluuid = legacy.uuid AND legacy.actief = TRUE
 	LEFT JOIN betrokkenerelaties b ON otl.uuid = b.bronassetuuid AND rol = 'toezichtsgroep' 
 WHERE imkl.assettype = 'b62ac453-ae96-4630-833a-895c57dbb666' -- IMKL activitycomplex  
-	AND legacy.assettype <> '37b4af66-a06f-43fe-a80f-8b4bac9907a9' -- lgc RIOOL
+	AND (legacy.uuid IS NULL OR legacy.assettype <> '37b4af66-a06f-43fe-a80f-8b4bac9907a9') -- lgc RIOOL
 	AND imkl.actief = TRUE AND b.doeluuid IS NULL
 """
 
