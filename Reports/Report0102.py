@@ -11,14 +11,17 @@ class Report0102:
                                persistent_column='C')
 
         self.report.result_query = """
-SELECT otl.uuid, a2.uri 
-FROM assets 
-    LEFT JOIN assetrelaties a ON a.doeluuid = assets.uuid AND a.relatietype = 'afbe8124-a9e2-41b9-a944-c14a41a9f4d5'
-    LEFT JOIN assets otl ON a.bronuuid = otl.uuid 
-    LEFT JOIN assettypes a2 ON otl.assettype = a2.uuid
-    LEFT JOIN betrokkenerelaties b ON otl.uuid = b.bronuuid AND rol = 'toezichtgroep'
-WHERE assets.assettype = 'b62ac453-ae96-4630-833a-895c57dbb666' AND assets.actief = TRUE AND 
-    assets.assettype <> '37b4af66-a06f-43fe-a80f-8b4bac9907a9' AND otl.uuid IS NOT NULL AND b.doeluuid IS NULL;
+SELECT otl.uuid, otl_type.uri
+FROM assets imkl
+	INNER JOIN assetrelaties dv ON dv.doeluuid = imkl.uuid AND dv.relatietype = 'afbe8124-a9e2-41b9-a944-c14a41a9f4d5' -- DeelVan
+	INNER JOIN assets otl ON dv.bronuuid = otl.uuid AND otl.actief = TRUE
+	INNER JOIN assettypes otl_type ON otl.assettype = otl_type.uuid
+	LEFT JOIN assetrelaties hb ON hb.bronuuid = otl.uuid AND hb.relatietype = '812dd4f3-c34e-43d1-88f1-3bcd0b1e89c2'
+	LEFT JOIN assets legacy ON hb.doeluuid = legacy.uuid AND legacy.actief = TRUE
+	LEFT JOIN betrokkenerelaties b ON otl.uuid = b.bronassetuuid AND rol = 'toezichtsgroep' 
+WHERE imkl.assettype = 'b62ac453-ae96-4630-833a-895c57dbb666' -- IMKL activitycomplex  
+	AND legacy.assettype <> '37b4af66-a06f-43fe-a80f-8b4bac9907a9' -- lgc RIOOL
+	AND imkl.actief = TRUE AND b.doeluuid IS NULL
 """
 
     def run_report(self, sender):
