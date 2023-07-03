@@ -7,7 +7,7 @@ class Report0103:
 
     def init_report(self):
         self.report = DQReport(name='report0103', title='Inconsistente EAN nummers tusen legacy en OTL',
-                               spreadsheet_id='1fbnP-heDtQnG9Q5kF1DA_cn3cY7egNFRgXMB4QaZKZk', datasource='PostGIS',
+                               spreadsheet_id='1o1Z2zDeSn4pUotSBczST4cZRpzxg1-2Ef6vrRuNyjoA', datasource='PostGIS',
                                persistent_column='K', link_type='eminfra')
 
         self.report.result_query = """
