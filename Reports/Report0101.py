@@ -30,6 +30,7 @@ SELECT vrs.uuid as em_infra_link, split_part(naampad, '/', 1) AS installatie, ac
         WHEN uitdienstdatum IS NULL AND vplan_koppelingen.uuid IS NOT NULL AND actief = TRUE AND toestand <> 'in-gebruik' AND toestand <> 'overgedragen' THEN TRUE
         WHEN locatie.adres_provincie IS NULL OR locatie.x IS NULL AND actief = TRUE THEN TRUE
         ELSE FALSE END AS dataconflicten
+    , naampad
 FROM vrs
     LEFT JOIN locatie ON vrs.uuid = locatie.assetuuid
     LEFT JOIN vplan_koppelingen ON vrs.uuid = vplan_koppelingen.assetuuid
