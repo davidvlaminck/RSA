@@ -13,7 +13,7 @@ class Report0021:
                                persistent_column='G')
 
         self.report.result_query = """OPTIONAL MATCH (n:Netwerkelement {isActief:TRUE})-[h:HoortBij]->(i:installatie {isActief:TRUE})
-        WHERE (n.merk IN ['NOKIA', 'Ciena'] AND (h IS NULL OR NOT(i:SDH OR i:CEN OR i:OTN))) OR ((i:SDH OR i:CEN OR i:OTN) AND NOT (n.merk in ['NOKIA', 'Ciena']))
+        WHERE (n.merk IN ['NOKIA', 'Ciena', 'Edge'] AND (h IS NULL OR NOT(i:SDH OR i:CEN OR i:OTN))) OR ((i:SDH OR i:CEN OR i:OTN) AND NOT (n.merk in ['NOKIA', 'Ciena', 'Edge']))
         RETURN n.uuid, n.naam, n.merk, i.uuid as installatie_uuid, i.naampad as installatie_naampad, i.typeURI"""
 
     def run_report(self, sender):

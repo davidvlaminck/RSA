@@ -13,7 +13,7 @@ class Report0028:
                                persistent_column='G')
 
         self.report.result_query = """MATCH (n:Netwerkelement {isActief:TRUE})
-        WHERE NOT n.merk IN ['NOKIA', 'Ciena'] AND NOT EXISTS ((n)-[:HoortBij]->(:IP {isActief:TRUE}))
+        WHERE NOT n.merk IN ['NOKIA', 'Ciena', 'Edge'] AND NOT EXISTS ((n)-[:HoortBij]->(:IP {isActief:TRUE}))
         RETURN n.uuid, n.naam, n.merk"""
 
     def run_report(self, sender):
