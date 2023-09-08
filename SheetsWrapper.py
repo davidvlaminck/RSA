@@ -39,6 +39,8 @@ class SheetsWrapper:
         service = build('sheets', 'v4', credentials=credentials)
 
         sheets = self.get_sheets_in_spreadsheet(spreadsheet_id)
+        if sheet_name not in sheets:
+            return
 
         service.spreadsheets().batchUpdate(
             spreadsheetId=spreadsheet_id,

@@ -86,6 +86,7 @@ class DQReport(Report):
                     self.persistent_dict[id[0]] = persistent_item[0]
 
         # create a new sheet
+        sheets_wrapper.delete_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='ResultaatRenameMe')
         sheets_wrapper.create_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='ResultaatRenameMe')
         sheets_wrapper.delete_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='Resultaat')
         sheets_wrapper.rename_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='ResultaatRenameMe',
