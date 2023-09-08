@@ -8,7 +8,7 @@ class Report0085:
     def init_report(self):
         self.report = DQReport(name='report0085',
                                title='Verkeersregelaars hebben een ingevulde theoretische levensduur',
-                               spreadsheet_id='1s_oro-4tJy_1R1G99TTPnL4-5ACR4BD-R1XWFvFuviQ',
+                               spreadsheet_id='11QZWCKGmGAkWWECLqtbuV4URFo3Gj4obrW4fMcEOT5s',
                                datasource='Neo4J',
                                persistent_column='C')
 
