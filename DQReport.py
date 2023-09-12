@@ -62,28 +62,34 @@ class DQReport(Report):
 
         # persistent column
         if self.persistent_column != '':
-            # find first non empty row
-            first_cell = SheetsCell(self.persistent_column + '1')
-            first_nonempty_row = sheets_wrapper.find_first_nonempty_row_from_starting_cell(spreadsheet_id=self.spreadsheet_id,
-                                                                                           sheet_name='Resultaat',
-                                                                                           start_cell=first_cell.cell)
-            sheets = sheets_wrapper.get_sheets_in_spreadsheet(spreadsheet_id=self.spreadsheet_id)
-            grid_props = sheets['Resultaat']['gridProperties']
-            max_row = grid_props['rowCount']
-
-            ids = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self.spreadsheet_id,
-                                                      sheet_name='Resultaat',
-                                                      sheetrange='A' + str(first_nonempty_row) + ':A' + str(max_row))
-            persisent_column_data = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self.spreadsheet_id,
-                                                                        sheet_name='Resultaat',
-                                                                        sheetrange=self.persistent_column + str(
-                                                                            first_nonempty_row) + ':' + self.persistent_column + str(
-                                                                            max_row))
             self.persistent_dict = {}
-            combined_list = zip(ids, persisent_column_data)
-            for id, persistent_item in combined_list:
-                if id != [] and id[0] != '' and persistent_item != [] and persistent_item[0] != '':
-                    self.persistent_dict[id[0]] = persistent_item[0]
+
+            # check if there is a Resultaat sheet, only proceed when it does
+            sheets = sheets_wrapper.get_sheets_in_spreadsheet(spreadsheet_id=self.spreadsheet_id)
+            if 'Resultaat' in sheets:
+
+                # find first non empty row
+                first_cell = SheetsCell(self.persistent_column + '1')
+                first_nonempty_row = sheets_wrapper.find_first_nonempty_row_from_starting_cell(spreadsheet_id=self.spreadsheet_id,
+                                                                                               sheet_name='Resultaat',
+                                                                                               start_cell=first_cell.cell)
+
+                grid_props = sheets['Resultaat']['gridProperties']
+                max_row = grid_props['rowCount']
+
+                ids = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self.spreadsheet_id,
+                                                          sheet_name='Resultaat',
+                                                          sheetrange='A' + str(first_nonempty_row) + ':A' + str(max_row))
+                persisent_column_data = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self.spreadsheet_id,
+                                                                            sheet_name='Resultaat',
+                                                                            sheetrange=self.persistent_column + str(
+                                                                                first_nonempty_row) + ':' + self.persistent_column + str(
+                                                                                max_row))
+
+                combined_list = zip(ids, persisent_column_data)
+                for id, persistent_item in combined_list:
+                    if id != [] and id[0] != '' and persistent_item != [] and persistent_item[0] != '':
+                        self.persistent_dict[id[0]] = persistent_item[0]
 
         # create a new sheet
         sheets_wrapper.delete_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='ResultaatRenameMe')
