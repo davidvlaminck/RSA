@@ -307,8 +307,8 @@ class DQReport(Report):
                                            data=[[self.last_data_update, len(result_data)]])
 
         if mail_receivers is not None:
-            self.send_mails(sender=sender, named_range=mail_receivers, previous_result=previous_result, result=len(result_data),
-                            latest_data_sync=self.last_data_update)
+            self.send_mails(sender=sender, named_range=mail_receivers, previous_result=previous_result,
+                            result=len(result_data), latest_data_sync=self.last_data_update)
 
         logging.info(f'finished report {self.name}')
 

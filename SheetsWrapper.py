@@ -321,11 +321,9 @@ class SheetsWrapper:
             if row is not None and row != '':
                 url = ''
                 if link_type == 'awvinfra':
-                    # TODO change to https://apps.mow.vlaanderen.be/awvinfra/ui/#?asset=6dba490e-1cdd-460d-8529-da0b4ef8d1ab-b25kZXJkZWVsI1dlZ2thbnRrYXN0
-                    url = 'https://apps.mow.vlaanderen.be/awvinfra/ui/otl-assets/installatie/{uuid}/detail/attributen'
+                    url = f'https://apps.mow.vlaanderen.be/awvinfra/ui/#/?asset={row}'
                 elif link_type == 'eminfra':
-                    url = 'https://apps.mow.vlaanderen.be/eminfra/installaties/{uuid}'
-                url = url.replace('{uuid}', row)
+                    url = f'https://apps.mow.vlaanderen.be/eminfra/installaties/{row}'
                 sheet_values.append({
                     "values": {
                         "userEnteredValue": {
