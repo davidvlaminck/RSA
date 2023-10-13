@@ -7,7 +7,7 @@ class Report0028:
 
     def init_report(self):
         self.report = DQReport(name='report0028',
-                               title='IP Netwerkelementen (niet merk Nokia of Ciena) hebben een HoortBij relatie met een legacy object van type IP',
+                               title='IP Netwerkelementen (niet OTN) hebben een HoortBij relatie met een legacy object van type IP',
                                spreadsheet_id='1wn05XDV1PkyVdGgDEO3yUU0Jqf3t6asGH0SyGXQQWS8',
                                datasource='PostGIS',
                                persistent_column='D')
@@ -17,7 +17,7 @@ class Report0028:
                 SELECT assets.uuid, assets.naam, a.waarde AS merk
                 FROM assets 
                     LEFT JOIN attribuutwaarden a ON a.assetuuid = assets.uuid AND a.attribuutuuid = 'a88f8ffe-2d15-48a6-872e-e74b72d20591'
-                WHERE assettype = 'b6f86b8d-543d-4525-8458-36b498333416' AND assets.actief = TRUE AND a.waarde NOT IN ('https://wegenenverkeer.data.vlaanderen.be/id/concept/KlNetwerkMerk/NOKIA', 'https://wegenenverkeer.data.vlaanderen.be/id/concept/KlNetwerkMerk/Ciena', 'https://wegenenverkeer.data.vlaanderen.be/id/concept/KlNetwerkMerk/edge')),
+                WHERE assettype = 'b6f86b8d-543d-4525-8458-36b498333416' AND assets.actief = TRUE AND (a.waarde NOT IN ('https://wegenenverkeer.data.vlaanderen.be/id/concept/KlNetwerkMerk/NULL', 'https://wegenenverkeer.data.vlaanderen.be/id/concept/KlNetwerkMerk/NOKIA', 'https://wegenenverkeer.data.vlaanderen.be/id/concept/KlNetwerkMerk/Ciena', 'https://wegenenverkeer.data.vlaanderen.be/id/concept/KlNetwerkMerk/edge')) OR a.waarde is NULL),
             relaties_met_ips AS (
                 SELECT n.uuid, COUNT(assets.uuid) AS aantal 
                 FROM n
