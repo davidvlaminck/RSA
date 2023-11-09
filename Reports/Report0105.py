@@ -1,7 +1,7 @@
 from DQReport import DQReport
 
 
-class Report0104:
+class Report0105:
     def __init__(self):
         self.report = None
 
