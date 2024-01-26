@@ -329,7 +329,7 @@ class DQReport(Report):
                         break
                 if all_none:
                     continue
-                new_result_data.append(data)
+                new_result_data.append(DQReport.make_list_into_strings(data))
             elif isinstance(data, dict):
                 all_none = True
                 for column in data.values():
@@ -338,7 +338,13 @@ class DQReport(Report):
                         break
                 if all_none:
                     continue
-                new_result_data.append(data)
+                new_d = {}
+                for k, v in data.items():
+                    if isinstance(v, list):
+                        new_d[k] = DQReport.make_list_into_strings(v)
+                    else:
+                        new_d[k] = v
+                new_result_data.append(new_d)
             else:
                 if data is not None and data != '':
                     new_result_data.append(data)
@@ -446,6 +452,14 @@ class DQReport(Report):
             else:
                 new_q.append(line.split('//')[0])
         return '\n'.join(new_q)
+
+    @classmethod
+    def make_list_into_strings(cls, data: list):
+        for index, value in enumerate(data):
+            if isinstance(value, list):
+                value = cls.make_list_into_strings(value)
+                data[index] = '||'.join(value)
+        return '|'.join(data)
 
 
 
