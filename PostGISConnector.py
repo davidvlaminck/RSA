@@ -134,7 +134,7 @@ class PostGISConnector:
         cursor.close()
 
     def add_params_entry(self, params_dict, raw_param_record):
-        param_type = self.param_type_map.get([raw_param_record[0]], None)
+        param_type = self.param_type_map.get(raw_param_record[0], None)
         if param_type == 'int':
             params_dict[raw_param_record[0]] = raw_param_record[1]
         elif param_type == 'text' or param_type is None:
