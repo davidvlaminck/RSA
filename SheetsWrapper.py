@@ -101,10 +101,8 @@ class SheetsWrapper:
         service.spreadsheets().values().update(
             spreadsheetId=spreadsheet_id,
             valueInputOption=value_input_option,
-            range=sheet_name + '!' + cell_range,
-            body=dict(
-                majorDimension='ROWS',
-                values=data)
+            range=f'{sheet_name}!{cell_range}',
+            body=dict(majorDimension='ROWS', values=data),
         ).execute()
 
     def recalculate_formula(self, spreadsheet_id: str, sheet_name: str, cell: str):
