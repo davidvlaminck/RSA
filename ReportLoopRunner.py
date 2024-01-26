@@ -17,6 +17,7 @@ from PostGISConnector import SinglePostGISConnector
 from SettingsManager import SettingsManager
 from SheetsWrapper import SingleSheetsWrapper
 
+from datetime import timezone
 ROOT_DIR = (os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -48,51 +49,58 @@ class ReportLoopRunner:
         self.dir_path = os.path.abspath(os.path.join(os.sep, ROOT_DIR, 'Reports'))
         self.mail_sender = MailSender(mail_settings=self.settings['smtp_options'])
 
-    def run(self):
-        now = datetime.now(tz=pytz.timezone("Europe/Brussels"))
-        last_run_date = now.date()  # skip running right now, else: - timedelta(days=1)
+    def start(self, run_right_away: bool):
+        last_run_date = datetime.now(tz=pytz.timezone("Europe/Brussels")).date()
 
         while True:
+            if run_right_away:
+                self.run()
+                run_right_away = False
+
             now = datetime.now(tz=pytz.timezone("Europe/Brussels"))
             if last_run_date == now.date() or now.hour < 3:
-                logging.info(f'{datetime.utcnow()}: not yet the right time to run reports.')
+                logging.info(f'{datetime.now(timezone.utc)}: not yet the right time to run reports.')
                 time.sleep(60)
                 continue
 
-            # start running reports now and at midnight
-            logging.info(f'{datetime.utcnow()}: let\'s run the reports now')
-            last_run_date = now.date()
+            # start running reports now
+            self.run()
 
-            # detect reports in Reports directory
-            self.reports = []
-            for file in os.listdir(self.dir_path):
-                if file.endswith('.py'):
-                    self.reports.append(file[:-3])
+    def run(self):    
+        # start running reports now and at midnight
+        logging.info(f"{datetime.now(timezone.utc)}: let\'s run the reports now")
 
-            reports_to_do = sorted(self.reports)
-            reports_run = 0
+        # detect reports in Reports directory
+        self.reports = []
+        for file in os.listdir(self.dir_path):
+            if file.endswith('.py'):
+                self.reports.append(file[:-3])
 
-            while reports_run < 5 and len(reports_to_do) > 0:
-                reports_run += 1
-                for report_name in sorted(reports_to_do):
-                    try:
-                        report_instance = self.dynamic_create_instance_from_name(report_name)
-                        report_instance.init_report()
-                        report_instance.run_report(sender=self.mail_sender)
-                        reports_to_do.remove(report_name)
-                    except Exception as ex:
-                        logging.info(f"exception happened in report {report_name}: {ex}")
-                        logging.exception(ex)
-                        logging.error(f'failed completing report {report_name}')
-                logging.info(f'{datetime.utcnow()}: done running report loop {reports_run}. Reports left to do: {len(reports_to_do)}')
+        reports_to_do = sorted(self.reports)
+        reports_run = 0
 
-            logging.info(f'{datetime.utcnow()}: done running the reports')
+        while reports_run < 5 and len(reports_to_do) > 0:
+            reports_run += 1
+            for report_name in sorted(reports_to_do):
+                try:
+                    report_instance = self.dynamic_create_instance_from_name(report_name)
+                    report_instance.init_report()
+                    report_instance.run_report(sender=self.mail_sender)
+                    reports_to_do.remove(report_name)
+                except Exception as ex:
+                    logging.info(f"exception happened in report {report_name}: {ex}")
+                    logging.exception(ex)
+                    logging.error(f'failed completing report {report_name}')
+            logging.info(
+                f'{datetime.now(timezone.utc)}: done running report loop {reports_run}. Reports left to do: {len(reports_to_do)}'
+            )
 
-            self.mail_sender.send_all_mails()
-            self.adjust_mailed_info_in_sheets(sender=self.mail_sender)
+        logging.info(f'{datetime.now(timezone.utc)}: done running the reports')
 
-            logging.info(f'{datetime.utcnow()}: sent all mails_to_send ({len(self.mail_sender.mails_to_send)})')
+        self.mail_sender.send_all_mails()
+        self.adjust_mailed_info_in_sheets(sender=self.mail_sender)
 
+        logging.info(f'{datetime.now(timezone.utc)}: sent all mails_to_send ({len(self.mail_sender.mails_to_send)})')
 
     @staticmethod
     def dynamic_create_instance_from_name(report_name):
@@ -101,11 +109,9 @@ class ReportLoopRunner:
             module = importlib.util.module_from_spec(module_spec)
             module_spec.loader.exec_module(module)
             class_ = getattr(module, report_name)
-            instance = class_()
-            return instance
+            return class_()
         except ModuleNotFoundError as exc:
             logging.error(exc.msg)
-            pass
 
     @staticmethod
     def adjust_mailed_info_in_sheets(sender: MailSender):

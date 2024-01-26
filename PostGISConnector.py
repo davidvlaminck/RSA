@@ -45,8 +45,6 @@ class PostGISConnector:
             'relatietypes_cursor': 'text',
             'assets_fill': 'bool',
             'assets_cursor': 'text',
-            'bestekkoppelingen_fill': 'bool',
-            'bestekkoppelingen_cursor': 'text',
             'betrokkenerelaties_fill': 'bool',
             'betrokkenerelaties_cursor': 'text',
             'assetrelaties_fill': 'bool',
@@ -55,6 +53,12 @@ class PostGISConnector:
             'assets_ad_hoc': 'text',
             'betrokkenerelaties_ad_hoc': 'text',
             'assetrelaties_ad_hoc': 'text',
+            'controlefiches_ad_hoc': 'text',
+            'controlefiches_fill': 'bool',
+            'controlefiches_cursor': 'text',
+            'page_controlefiches': 'int',
+            'event_uuid_controlefiches': 'text',
+            'last_update_utc_controlefiches': 'timestamp',
         }
 
     def perform_query(self, query: str):
@@ -130,10 +134,10 @@ class PostGISConnector:
         cursor.close()
 
     def add_params_entry(self, params_dict, raw_param_record):
-        param_type = self.param_type_map[raw_param_record[0]]
+        param_type = self.param_type_map.get([raw_param_record[0]], None)
         if param_type == 'int':
             params_dict[raw_param_record[0]] = raw_param_record[1]
-        elif param_type == 'text':
+        elif param_type == 'text' or param_type is None:
             params_dict[raw_param_record[0]] = raw_param_record[2]
         elif param_type == 'bool':
             params_dict[raw_param_record[0]] = raw_param_record[3]

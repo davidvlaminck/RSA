@@ -1,12 +1,12 @@
 from DQReport import DQReport
 
 
-class Report0057:
+class Report0000:
     def __init__(self):
         self.report = None
 
     def init_report(self):
-        self.report = DQReport(name='report0057',
+        self.report = DQReport(name='report0000',
                                title="testsheet (dev only)",
                                spreadsheet_id='1SK0UVeKnJe0eQaktKMFjeJSg16wZ4SAW-W8wz16x3Tg',
                                datasource='PostGIS',
