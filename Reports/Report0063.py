@@ -39,7 +39,7 @@ metKenmerkBestek AS (
 bestek_koppelingen AS ( 
 	SELECT DISTINCT assetUuid
 	FROM bestekkoppelingen
-	WHERE koppelingStatus = 'ACTIEF'), 
+	WHERE lower(koppelingStatus) = 'actief'), 
 metBestek AS (
 	SELECT CASE
 		WHEN toezichtgroepen.naam IS NULL THEN '(onbekend)'

@@ -17,7 +17,7 @@ class Report0068:
 WITH bestek_koppelingen AS ( 
 	SELECT DISTINCT assetuuid 
 	FROM bestekkoppelingen
-	WHERE koppelingstatus  = 'ACTIEF'), 
+	WHERE lower(koppelingstatus) = 'actief'), 
 voedingsrelaties AS ( 
 	SELECT DISTINCT doelUuid
 	FROM assetrelaties
