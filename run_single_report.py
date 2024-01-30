@@ -6,6 +6,7 @@ import importlib.util
 import logging
 import os
 import time
+import traceback
 from datetime import datetime
 
 from MailContent import MailContent
@@ -72,6 +73,7 @@ class SingleReportLoopRunner:
                         except Exception as ex:
                             logging.info(f"exception happened in report {report_name}: {ex}")
                             logging.exception(ex)
+                            traceback.print_exc()
                             logging.error(f'failed completing report {report_name}')
                     logging.info(
                         f'{datetime.utcnow()}: done running report loop {reports_run}. Reports left to do: {len(reports_to_do)}')

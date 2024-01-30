@@ -314,8 +314,41 @@ class DQReport(Report):
 
     @staticmethod
     def clean(result_data):
-        """Removes the empty rows in the results"""
+        """Removes the empty rows in the results, converts lists, decimals and dates to strings """
         new_result_data = []
+
+        for row in result_data:
+            if isinstance(row, tuple):
+                row = list(row)
+
+            if isinstance(row, list):
+                all_none = True
+                for column in row:
+                    if column is not None or column != '':
+                        all_none = False
+                        break
+                if all_none:
+                    continue
+            new_row = []
+            for column in row:
+                if not isinstance(column, str):
+                    if isinstance(column, datetime):
+                        new_row.append(column.strftime('%Y-%m-%d %H:%M:%S'))
+                    elif isinstance(column, date):
+                        new_row.append(column.strftime('%Y-%m-%d'))
+                    elif isinstance(column, list):
+                        new_row.append(DQReport.make_list_into_strings(column))
+                    else:
+                        new_row.append(str(column))
+                else:
+                    new_row.append(column)
+            row = new_row
+
+            new_result_data.append(row)
+        return new_result_data
+
+            # test if row has all empty elements
+
 
         for data in result_data:
             if isinstance(data, tuple):
@@ -454,12 +487,14 @@ class DQReport(Report):
         return '\n'.join(new_q)
 
     @classmethod
-    def make_list_into_strings(cls, data: list):
+    def make_list_into_strings(cls, data: list, sep: str = '|'):
+        if not isinstance(data, list):
+            return data
         for index, value in enumerate(data):
             if isinstance(value, list):
-                value = cls.make_list_into_strings(value)
-                data[index] = '||'.join(value)
-        return '|'.join(data)
+                value = cls.make_list_into_strings(value, sep = f'|{sep}')
+                data[index] = value
+        return sep.join([str(d) for d in data])
 
 
 
