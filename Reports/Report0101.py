@@ -34,7 +34,7 @@ SELECT vrs.uuid as em_infra_link, split_part(naampad, '/', 1) AS installatie, ac
 FROM vrs
     LEFT JOIN locatie ON vrs.uuid = locatie.assetuuid
     LEFT JOIN vplan_koppelingen ON vrs.uuid = vplan_koppelingen.assetuuid
-    LEFT JOIN bestekkoppelingen ON vrs.uuid = bestekkoppelingen.assetuuid AND bestekkoppelingen.koppelingstatus = 'ACTIEF'
+    LEFT JOIN bestekkoppelingen ON vrs.uuid = bestekkoppelingen.assetuuid AND lower(bestekkoppelingen.koppelingstatus) = 'actief'
     LEFT JOIN bestekken ON bestekkoppelingen.bestekuuid = bestekken.uuid
 WHERE (vplan_koppelingen.uuid IS NOT NULL AND actief = FALSE) OR actief = TRUE
 ORDER BY actief DESC, dataconflicten, naampad;"""
