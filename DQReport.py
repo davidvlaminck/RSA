@@ -206,7 +206,7 @@ class DQReport(Report):
                     continue
                 for col_index in col_indices:
                     value = result[row_index][col_index]
-                    if value is not None:
+                    if value is not None and value != 'None':
                         result[row_index][col_index] = float(result[row_index][col_index])
 
         # write data to Resultaat sheet
@@ -331,7 +331,9 @@ class DQReport(Report):
                     continue
             new_row = []
             for column in row:
-                if not isinstance(column, str):
+                if column is None:
+                    new_row.append(None)
+                elif not isinstance(column, str):
                     if isinstance(column, datetime):
                         new_row.append(column.strftime('%Y-%m-%d %H:%M:%S'))
                     elif isinstance(column, date):
