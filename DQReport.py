@@ -165,29 +165,17 @@ class DQReport(Report):
             headerrow.append('opmerkingen (blijvend)')
         result.append(headerrow)
 
-        result_data = self.clean(result_data)
+        result_data = self.clean(result_data, headerrow=headerrow)
 
-        if self.datasource == 'Neo4J':
-            for data in result_data:
-                row = []
-                for key in result_keys:
-                    row.append(data[key])
-                if self.persistent_column != '':
-                    if row[0] in self.persistent_dict:
-                        row.append(self.persistent_dict[row[0]])
-                    else:
-                        row.append('')
-                result.append(row)
-        elif self.datasource == 'PostGIS':
-            for data in result_data:
-                row = []
-                row.extend(data)
-                if self.persistent_column != '':
-                    if row[0] in self.persistent_dict:
-                        row.append(self.persistent_dict[row[0]])
-                    else:
-                        row.append('')
-                result.append(row)
+        for data in result_data:
+            row = []
+            row.extend(data)
+            if self.persistent_column != '':
+                if row[0] in self.persistent_dict:
+                    row.append(self.persistent_dict[row[0]])
+                else:
+                    row.append('')
+            result.append(row)
 
         amount_empty_rows = len(result_keys)
         if self.persistent_column != '':
@@ -236,15 +224,15 @@ class DQReport(Report):
             typeIndex = result_keys.index(type_key)
             new_type_result = []
             for data in result_data:
-                if data[type_key] is not None and data[type_key] != '':
-                    text = data[type_key].replace('https://wegenenverkeer.data.vlaanderen.be/ns/', '') \
+                if data[typeIndex] is not None and data[typeIndex] != '':
+                    text = data[typeIndex].replace('https://wegenenverkeer.data.vlaanderen.be/ns/', '') \
                         .replace('https://lgc.data.wegenenverkeer.be/ns/', '')
-                    link = data[type_key]
+                    link = data[typeIndex]
                     formula = f'=HYPERLINK("{link}"; "{text}")'
                     new_type_result.append(formula)
                 else:
-                    for col in data.values():
-                        if col is not None:
+                    for col in data:
+                        if col is not None and col != '':
                             new_type_result.append('')
                             break
 
@@ -313,11 +301,14 @@ class DQReport(Report):
         logging.info(f'finished report {self.name}')
 
     @staticmethod
-    def clean(result_data):
+    def clean(result_data, headerrow: list[str]):
         """Removes the empty rows in the results, converts lists, decimals and dates to strings """
         new_result_data = []
 
         for row in result_data:
+            if isinstance(row, dict):
+                row = [row.get(key, '') for key in headerrow]
+
             if isinstance(row, tuple):
                 row = list(row)
 
@@ -329,6 +320,7 @@ class DQReport(Report):
                         break
                 if all_none:
                     continue
+
             new_row = []
             for column in row:
                 if column is None:
@@ -347,57 +339,6 @@ class DQReport(Report):
             row = new_row
 
             new_result_data.append(row)
-        return new_result_data
-
-            # test if row has all empty elements
-
-
-        for data in result_data:
-            if isinstance(data, tuple):
-                data = list(data)
-
-            if isinstance(data, list):
-                all_none = True
-                for column in data:
-                    if column is not None or column != '':
-                        all_none = False
-                        break
-                if all_none:
-                    continue
-                new_result_data.append(DQReport.make_list_into_strings(data))
-            elif isinstance(data, dict):
-                all_none = True
-                for column in data.values():
-                    if column is not None and column != '':
-                        all_none = False
-                        break
-                if all_none:
-                    continue
-                new_d = {}
-                for k, v in data.items():
-                    if isinstance(v, list):
-                        new_d[k] = DQReport.make_list_into_strings(v)
-                    else:
-                        new_d[k] = v
-                new_result_data.append(new_d)
-            else:
-                if data is not None and data != '':
-                    new_result_data.append(data)
-
-        result_data = new_result_data
-        new_result_data = []
-        for row in result_data:
-            for index, value in enumerate(row):
-                if isinstance(value, decimal.Decimal):
-                    row[index] = str(value)
-                elif isinstance(value, datetime):
-                    row[index] = value.strftime('%Y-%m-%d %H:%M:%S')
-                elif isinstance(value, date):
-                    row[index] = value.strftime('%Y-%m-%d')
-
-            new_result_data.append(row)
-
-
         return new_result_data
 
     def send_mails(self, sender: MailSender, named_range: [list], previous_result: int, result: int, latest_data_sync: str = ''):
