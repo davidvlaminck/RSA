@@ -165,7 +165,7 @@ class DQReport(Report):
             headerrow.append('opmerkingen (blijvend)')
         result.append(headerrow)
 
-        result_data = self.clean(result_data, headerrow=headerrow)
+        result_data = self.clean(result_data, headerrow=result_keys)
 
         for data in result_data:
             row = []
