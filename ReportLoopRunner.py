@@ -56,19 +56,22 @@ class ReportLoopRunner:
             if run_right_away:
                 self.run()
                 run_right_away = False
+                last_run_date = datetime.now(tz=pytz.timezone("Europe/Brussels")).date()
+                continue
 
             now = datetime.now(tz=pytz.timezone("Europe/Brussels"))
-            if last_run_date == now.date() or now.hour < 3:
-                logging.info(f'{datetime.now(timezone.utc)}: not yet the right time to run reports.')
+            if last_run_date == now.date() or now.hour < 3:  # don't start until 3 am
+                logging.info(f'{datetime.now(tz=pytz.timezone("Europe/Brussels"))}: not yet the right time to run reports.')
                 time.sleep(60)
                 continue
 
             # start running reports now
             self.run()
+            last_run_date = datetime.now(tz=pytz.timezone("Europe/Brussels")).date()
 
     def run(self):    
         # start running reports now and at midnight
-        logging.info(f"{datetime.now(timezone.utc)}: let\'s run the reports now")
+        logging.info(f"{datetime.now(tz=pytz.timezone("Europe/Brussels"))}: let's run the reports now")
 
         # detect reports in Reports directory
         self.reports = []
@@ -92,15 +95,15 @@ class ReportLoopRunner:
                     logging.exception(ex)
                     logging.error(f'failed completing report {report_name}')
             logging.info(
-                f'{datetime.now(timezone.utc)}: done running report loop {reports_run}. Reports left to do: {len(reports_to_do)}'
+                f'{datetime.now(tz=pytz.timezone("Europe/Brussels"))}: done running report loop {reports_run}. Reports left to do: {len(reports_to_do)}'
             )
 
-        logging.info(f'{datetime.now(timezone.utc)}: done running the reports')
+        logging.info(f'{datetime.now(tz=pytz.timezone("Europe/Brussels"))}: done running the reports')
 
         self.mail_sender.send_all_mails()
         self.adjust_mailed_info_in_sheets(sender=self.mail_sender)
 
-        logging.info(f'{datetime.now(timezone.utc)}: sent all mails_to_send ({len(self.mail_sender.mails_to_send)})')
+        logging.info(f'{datetime.now(tz=pytz.timezone("Europe/Brussels"))}: sent all mails_to_send ({len(self.mail_sender.mails_to_send)})')
 
     @staticmethod
     def dynamic_create_instance_from_name(report_name):
