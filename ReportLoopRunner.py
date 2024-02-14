@@ -7,6 +7,7 @@ import logging
 import os
 import time
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import pytz
 
@@ -17,8 +18,8 @@ from PostGISConnector import SinglePostGISConnector
 from SettingsManager import SettingsManager
 from SheetsWrapper import SingleSheetsWrapper
 
-from datetime import timezone
 ROOT_DIR = (os.path.dirname(os.path.abspath(__file__)))
+BRUSSELS = ZoneInfo("Europe/Brussels")
 
 
 class ReportLoopRunner:
@@ -50,28 +51,28 @@ class ReportLoopRunner:
         self.mail_sender = MailSender(mail_settings=self.settings['smtp_options'])
 
     def start(self, run_right_away: bool):
-        last_run_date = datetime.now(tz=pytz.timezone("Europe/Brussels")).date()
+        last_run_date = datetime.now(tz=BRUSSELS).date()
 
         while True:
             if run_right_away:
                 self.run()
                 run_right_away = False
-                last_run_date = datetime.now(tz=pytz.timezone("Europe/Brussels")).date()
+                last_run_date = datetime.now(tz=BRUSSELS).date()
                 continue
 
             now = datetime.now(tz=pytz.timezone("Europe/Brussels"))
             if last_run_date == now.date() or now.hour < 3:  # don't start until 3 am
-                logging.info(f'{datetime.now(tz=pytz.timezone("Europe/Brussels"))}: not yet the right time to run reports.')
+                logging.info(f'{datetime.now(tz=BRUSSELS)}: not yet the right time to run reports.')
                 time.sleep(60)
                 continue
 
             # start running reports now
             self.run()
-            last_run_date = datetime.now(tz=pytz.timezone("Europe/Brussels")).date()
+            last_run_date = datetime.now(tz=BRUSSELS).date()
 
-    def run(self):    
+    def run(self):
         # start running reports now and at midnight
-        logging.info(f"{datetime.now(tz=pytz.timezone("Europe/Brussels"))}: let's run the reports now")
+        logging.info(f"{datetime.now(tz=BRUSSELS)}: let's run the reports now")
 
         # detect reports in Reports directory
         self.reports = []
@@ -95,7 +96,8 @@ class ReportLoopRunner:
                     logging.exception(ex)
                     logging.error(f'failed completing report {report_name}')
             logging.info(
-                f'{datetime.now(tz=pytz.timezone("Europe/Brussels"))}: done running report loop {reports_run}. Reports left to do: {len(reports_to_do)}'
+                f'{datetime.now(tz=pytz.timezone("Europe/Brussels"))}: done running report loop {reports_run}. '
+                f'Reports left to do: {len(reports_to_do)}'
             )
 
         logging.info(f'{datetime.now(tz=pytz.timezone("Europe/Brussels"))}: done running the reports')
@@ -103,7 +105,8 @@ class ReportLoopRunner:
         self.mail_sender.send_all_mails()
         self.adjust_mailed_info_in_sheets(sender=self.mail_sender)
 
-        logging.info(f'{datetime.now(tz=pytz.timezone("Europe/Brussels"))}: sent all mails_to_send ({len(self.mail_sender.mails_to_send)})')
+        logging.info(f'{datetime.now(tz=pytz.timezone("Europe/Brussels"))}: '
+                     f'sent all mails_to_send ({len(self.mail_sender.mails_to_send)})')
 
     @staticmethod
     def dynamic_create_instance_from_name(report_name):
@@ -125,15 +128,15 @@ class ReportLoopRunner:
         # loop through sent_mails
         # if item is in sheet_info, adjust cell
 
-        for mailcontent in sent_mails:
-            if not isinstance(mailcontent, MailContent):
+        for mail_content in sent_mails:
+            if not isinstance(mail_content, MailContent):
                 continue
-            sheet_id = mailcontent.spreadsheet_id
+            sheet_id = mail_content.spreadsheet_id
             if sheet_id not in sheet_info:
                 continue
-            found_infos = list(filter(lambda info: info['mail'] == mailcontent.receiver and
-                                                   info['frequency'] == mailcontent.frequency, sheet_info[sheet_id]))
+            found_infos = list(filter(lambda info: info['mail'] == mail_content.receiver and info[
+                'frequency'] == mail_content.frequency, sheet_info[sheet_id]))
             for found_info in found_infos:
                 sheets_wrapper.write_data_to_sheet(spreadsheet_id=sheet_id, start_cell=found_info['cell'],
                                                    sheet_name='Overzicht',
-                                                   data=[[mailcontent.mail_sent.strftime("%Y-%m-%d %H:%M:%S")]])
+                                                   data=[[mail_content.mail_sent.strftime("%Y-%m-%d %H:%M:%S")]])
