@@ -6,6 +6,7 @@ import importlib.util
 import logging
 import os
 import time
+import traceback
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -129,14 +130,22 @@ class ReportLoopRunner:
         # if item is in sheet_info, adjust cell
 
         for mail_content in sent_mails:
-            if not isinstance(mail_content, MailContent):
-                continue
-            sheet_id = mail_content.spreadsheet_id
-            if sheet_id not in sheet_info:
-                continue
-            found_infos = list(filter(lambda info: info['mail'] == mail_content.receiver and info[
-                'frequency'] == mail_content.frequency, sheet_info[sheet_id]))
-            for found_info in found_infos:
-                sheets_wrapper.write_data_to_sheet(spreadsheet_id=sheet_id, start_cell=found_info['cell'],
-                                                   sheet_name='Overzicht',
-                                                   data=[[mail_content.mail_sent.strftime("%Y-%m-%d %H:%M:%S")]])
+            try:
+                if not isinstance(mail_content, MailContent):
+                    continue
+                sheet_id = mail_content.spreadsheet_id
+                if sheet_id not in sheet_info:
+                    continue
+                found_infos = list(filter(lambda info: info['mail'] == mail_content.receiver and info[
+                    'frequency'] == mail_content.frequency, sheet_info[sheet_id]))
+                for found_info in found_infos:
+                    try:
+                        sheets_wrapper.write_data_to_sheet(spreadsheet_id=sheet_id, start_cell=found_info['cell'],
+                                                           sheet_name='Overzicht',
+                                                           data=[[mail_content.mail_sent.strftime("%Y-%m-%d %H:%M:%S")]])
+                    except Exception as ex:
+                        logging.error(f"exception {ex} happened in adjusting mailed info in sheet {sheet_id}")
+                        logging.error(traceback.format_exc())
+            except Exception as ex:
+                logging.error(f"exception happened in adjusting mailed info in sheets: {ex}")
+                logging.error(traceback.format_exc())
