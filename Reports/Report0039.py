@@ -13,7 +13,7 @@ class Report0039:
                                convert_columns_to_numbers=['K', 'Q', 'S', 'W'])
 
         self.report.result_query = """
-WITH awegen ("ident8", "beginpositie", "eindpositie") AS ( VALUES
+WITH awegen ("aweg_ident8", "beginpositie", "eindpositie") AS ( VALUES
 	('A0010001',0.381,79.637),
 	('A0010002',0.382,79.637),
 	('A0020001',0.000,86.585),
@@ -155,10 +155,10 @@ opkuis3 AS (
 		CASE WHEN opkuis2.ident8 IS NULL THEN NULL
 		    WHEN opkuis2.locatie_referentiepunt IS NULL THEN
 		        CASE WHEN opkuis2.ident8 LIKE 'R%' OR opkuis2.ident8 LIKE 'A%' THEN 'A-Weg' ELSE 'N-Weg' END
-			WHEN awegen.ident8 IS NOT NULL THEN 'A-Weg'
+			WHEN awegen.aweg_ident8 IS NOT NULL THEN 'A-Weg'
 			ELSE 'N-Weg' END AS wegcategorie
 	FROM opkuis2
-		LEFT JOIN awegen ON awegen.ident8 = opkuis2.ident8 AND awegen.beginpositie <= opkuis2.locatie_referentiepunt AND opkuis2.locatie_referentiepunt <= awegen.eindpositie)
+		LEFT JOIN awegen ON awegen.aweg_ident8 = opkuis2.ident8 AND awegen.beginpositie <= opkuis2.locatie_referentiepunt AND opkuis2.locatie_referentiepunt <= awegen.eindpositie)
 -- SELECT DISTINCT lamp_type_opgekuist, beperkte_benaming FROM opkuis3; -- mappingtabel beperkte_benaming
 SELECT * FROM opkuis3;"""
 
