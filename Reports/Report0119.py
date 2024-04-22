@@ -16,6 +16,7 @@ class Report0119:
                 MATCH (a:DNBHoogspanning|DNBLaagspanning {isActief:TRUE})-[r:HeeftBetrokkene]->(b:Agent)
                 WHERE r.rol <> 'installatieverantwoordelijke'
                 RETURN a.uuid, a.naam, a.typeURI, r.rol as relatie_rol, b.naam as agent_naam
+                
                 """
 
     def run_report(self, sender):
