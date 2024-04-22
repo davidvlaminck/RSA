@@ -6,13 +6,15 @@ class Report0114:
         self.report = None
 
     def init_report(self):
-        self.report = DQReport(name='report0114', title='EAN Nummer niet als commentaar gedocumenteerd',
-                               spreadsheet_id='188xxFUa1uZ8GPgwB9a2c0gtkrdtacg5ft5TkODanatk', datasource='Neo4J',
+        self.report = DQReport(name='report0114',
+                               title='EAN Nummer niet als commentaar gedocumenteerd',
+                               spreadsheet_id='188xxFUa1uZ8GPgwB9a2c0gtkrdtacg5ft5TkODanatk',
+                               datasource='Neo4J',
                                persistent_column='I')
 
         self.report.result_query = """
         // EAN wordt gecontroleerd door een regex match met 18 digits, starting with 54
-        MATCH (a {isActief:true})-[r:HoortBij {isActief:true}]->(b)
+        MATCH (a {isActief:true})-[r:HoortBij {isActief:true}]->(b {isActief:true})
         where
             a.notitie =~ '54\d{16}'
             OR
