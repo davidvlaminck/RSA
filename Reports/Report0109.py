@@ -8,7 +8,7 @@ class Report0109:
     def init_report(self):
         self.report = DQReport(name='report0109', title='Geometrie is geldig: geen opeenvolgende punten',
                                spreadsheet_id='1AmtcjAkh5H95O_lXtd4p_MHeoqFpQKQlIRfQk3MxGQ4', datasource='PostGIS',
-                               persistent_column='C')
+                               persistent_column='E')
 
         self.report.result_query = """
         SELECT
