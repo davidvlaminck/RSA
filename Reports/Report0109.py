@@ -11,15 +11,16 @@ class Report0109:
                                persistent_column='E')
 
         self.report.result_query = """
-        SELECT
-            assetuuid
-            , wkt_string
-            , SUBSTRING("wkt_string" FROM '^(POINT Z|LINESTRING Z|POLYGON Z)') AS wkt_string_prefix
-            , st_geomfromtext(wkt_string) as geom
-        FROM geometrie
-        WHERE 
-            wkt_string IS NOT NULL
-        --limit 100000
+        with cte_geom as (
+            SELECT
+                assetuuid
+                , wkt_string
+                , SUBSTRING("wkt_string" FROM '^(POINT Z|LINESTRING Z|POLYGON Z)') AS wkt_string_prefix
+                , st_geomfromtext(wkt_string) as geom
+            FROM geometrie
+            WHERE 
+                wkt_string IS NOT NULL
+            --limit 100000
         )
         SELECT
             assetuuid
