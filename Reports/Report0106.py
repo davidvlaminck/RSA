@@ -8,7 +8,7 @@ class Report0106:
     def init_report(self):
         self.report = DQReport(name='report0106', title='Geometrie is consistent met GeometrieArtefact',
                                spreadsheet_id='1x9g0b_wQtLgkxnAwR_lffzVLdS3PElb3mLWtqItqkig', datasource='PostGIS',
-                               persistent_column='D')
+                               persistent_column='G')
 
         self.report.result_query = """
 with cte_geometry_artefact(uri, label_nl, geen_geometrie, punt3D, lijn3D, polygoon3D) as (
