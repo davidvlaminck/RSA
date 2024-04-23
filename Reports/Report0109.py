@@ -21,7 +21,6 @@ class Report0109:
                     geometrie
                 WHERE
                     wkt_string IS NOT NULL
-                LIMIT 1000000
             )
             select distinct
                 assetuuid,
