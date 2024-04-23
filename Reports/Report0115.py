@@ -8,7 +8,7 @@ class Report0115:
     def init_report(self):
         self.report = DQReport(name='report0115',
                                title='EAN Nummer is steeds ingevuld (Legacy-data)',
-                               spreadsheet_id='1s_oro-4tJy_1R1G99TTPnL4-5ACR4BD-R1XWFvFuviQ',
+                               spreadsheet_id='1dZBo960siYL8u9UZSigp_Ql7SIeFWPx-NYTdPNvnPzs',
                                datasource='PostGIS',
                                persistent_column='F')
 
