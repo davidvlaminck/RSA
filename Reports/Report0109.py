@@ -8,7 +8,7 @@ class Report0109:
     def init_report(self):
         self.report = DQReport(name='report0109', title='Geometrie is geldig: geen opeenvolgende punten',
                                spreadsheet_id='1AmtcjAkh5H95O_lXtd4p_MHeoqFpQKQlIRfQk3MxGQ4', datasource='PostGIS',
-                               persistent_column='D')
+                               persistent_column='E')
 
         self.report.result_query = """
             WITH cte_geom AS (
@@ -20,16 +20,21 @@ class Report0109:
                 FROM
                     geometrie
                 WHERE
-                    wkt_string IS NOT NULL
+                    wkt_string IS NOT null
+                -- Remove multipart geometries from the query
+                -- Compare the number with/without the Multiparts
             )
-            select distinct
-                assetuuid,
-                wkt_string_prefix,
-                wkt_string
+            select 
+                assetuuid
+                , wkt_string_prefix
+                , ST_NPoints(geom) - ST_NPoints(st_removerepeatedpoints(geom)) as aantal_dubbele_punten
+                -- Aantal karakters afronden tot het maximaal toegelaten aantal karakters in Google Sheets: 50.000
+                , left(wkt_string, 50000) as wkt_string_afgerond
             FROM
                 cte_geom
             where
                 ST_NPoints(st_removerepeatedpoints(geom)) <> ST_NPoints(geom)
+            order by aantal_dubbele_punten desc
         	"""
 
     def run_report(self, sender):
