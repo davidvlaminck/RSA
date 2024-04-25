@@ -7,7 +7,7 @@ class Report0121:
 
     def init_report(self):
         self.report = DQReport(name='report0121',
-                               title='Netwerkpoorten moeten een naam hebben en deze moet uniek zijn',
+                               title='Netwerkpoorten hebben een unieke naam',
                                spreadsheet_id='1QPnohwuI7ziIFU2wac_9ZbOcJWr20asu4gvsr0t3x3E',
                                datasource='Neo4J',
                                persistent_column='H',
