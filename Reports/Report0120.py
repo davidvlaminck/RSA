@@ -10,7 +10,8 @@ class Report0120:
                                title='OTL installatie types mogen niet voorkomen in "legacy" boomstructuren',
                                spreadsheet_id='1sBJEGOpcGfrjvBWGAkBU_vnWirsGwq2cL8faX3vdapI',
                                datasource='PostGIS',
-                               persistent_column='F')
+                               persistent_column='F',
+                               link_type='eminfra')
 
         self.report.result_query = """
             WITH otl_installatietypes as (
