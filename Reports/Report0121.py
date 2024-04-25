@@ -41,9 +41,9 @@ class Report0121:
                 , a_aantal.aantal as dubbele_naam_aantal
                 , attr_type.waarde as type
                 , attr_merk.waarde as merk
-                --, b.edeltadossiernummer as bestek_dossiernummer
-                --, b.edeltabesteknummer  as bestel_besteknummer
-                --, b.aannemernaam as bestek_aannemernaam
+                , b.edeltadossiernummer as bestek_dossiernummer
+                , b.edeltabesteknummer  as bestel_besteknummer
+                , b.aannemernaam as bestek_aannemernaam
             from cte_netwerkpoort_aantal a_aantal
             left join assets a on a_aantal.uuid = a."uuid"
             left join cte_attribuutwaarden_netwerkpoort_type attr_type on a."uuid" = attr_type.assetuuid
