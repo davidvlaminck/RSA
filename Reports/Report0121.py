@@ -10,14 +10,21 @@ class Report0121:
                                title='Netwerkpoorten moeten een naam hebben en deze moet uniek zijn',
                                spreadsheet_id='1QPnohwuI7ziIFU2wac_9ZbOcJWr20asu4gvsr0t3x3E',
                                datasource='Neo4J',
-                               persistent_column='G')
+                               persistent_column='H',
+                               link_type='eminfra')
 
         self.report.result_query = """
-            MATCH (n:Netwerkpoort)
             WITH n.naam AS naam, count(n.naam) AS aantal, collect(n) AS nodes
             WHERE naam is not null and aantal > 1
             UNWIND nodes AS node
-            RETURN node.uuid, node.naam, aantal, node.type, node.merk, node.assetIdUri
+            RETURN
+                node.uuid as uuid
+                , node.naam as naam
+                , aantal
+                , node.type as type
+                , node.merk as merk
+                , node.isActief as isActief
+                , node.typeURI as typeURI
             ORDER BY aantal DESC
             """
 
