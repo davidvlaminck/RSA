@@ -761,7 +761,7 @@ with cte_geometry_artefact(uri, label_nl, geen_geometrie, punt3D, lijn3D, polygo
 select
 	a.uuid
 	, a.naam
-	, a.wkt_string
+	, LEFT(a.wkt_string, 50000) as wkt_string
 	, ga.uri
 	-- Het actuele geometrie type
 	,
