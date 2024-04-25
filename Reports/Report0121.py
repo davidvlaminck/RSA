@@ -14,6 +14,7 @@ class Report0121:
                                link_type='eminfra')
 
         self.report.result_query = """
+        MATCH (n:Netwerkpoort {isActief:TRUE})
             WITH n.naam AS naam, count(n.naam) AS aantal, collect(n) AS nodes
             WHERE naam is not null and aantal > 1
             UNWIND nodes AS node
