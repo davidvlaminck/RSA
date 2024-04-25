@@ -17,12 +17,12 @@ class Report0122:
             with cte_attribuutwaarden_netwerkpoort_type as (
                 select *
                 from attribuutwaarden
-                where attribuutuuid in ('f8590b23-3fa5-4d3f-bc4c-c2591a8bf7c8', '97977fa6-732b-4222-94fa-b9723945bd79') -- Netwerkpoort.type
+                where attribuutuuid in ('97977fa6-732b-4222-94fa-b9723945bd79') -- Netwerkpoort.type
             )
             , cte_attribuutwaarden_netwerkpoort_merk as (
                 select *
                 from attribuutwaarden
-                where attribuutuuid in ('6eb792f9-65e2-49a6-b899-b89f2313b0ed', '6db57eb2-e3ea-461f-812b-2d8fae7c2b0f') --Netwerkpoort.merk
+                where attribuutuuid in ('6db57eb2-e3ea-461f-812b-2d8fae7c2b0f') --Netwerkpoort.merk
             )
             select
                 a."uuid"
