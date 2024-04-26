@@ -11,7 +11,7 @@ class Report0121:
                                spreadsheet_id='1QPnohwuI7ziIFU2wac_9ZbOcJWr20asu4gvsr0t3x3E',
                                datasource='PostGIS',
                                persistent_column='I',
-                               link_type='eminfra')
+                               link_type='eminfra_onderdeel')
 
         self.report.result_query = """
             with cte_netwerkpoort_aantal as (
