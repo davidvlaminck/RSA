@@ -322,6 +322,8 @@ class SheetsWrapper:
                     url = f'https://apps.mow.vlaanderen.be/awvinfra/ui/#/?asset={row}'
                 elif link_type == 'eminfra':
                     url = f'https://apps.mow.vlaanderen.be/eminfra/installaties/{row}'
+                elif link_type == 'eminfra_onderdeel':
+                    url = f'https://apps.mow.vlaanderen.be/eminfra/onderdelen/{row}'
                 sheet_values.append({
                     "values": {
                         "userEnteredValue": {
