@@ -10,7 +10,8 @@ class Report0115:
                                title='EAN Nummer is steeds ingevuld (Legacy-data)',
                                spreadsheet_id='1dZBo960siYL8u9UZSigp_Ql7SIeFWPx-NYTdPNvnPzs',
                                datasource='PostGIS',
-                               persistent_column='F')
+                               persistent_column='F',
+                               link_type='eminfra')
 
         self.report.result_query = """
         select
