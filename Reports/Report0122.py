@@ -11,7 +11,7 @@ class Report0122:
                                spreadsheet_id='1kOEWxEfBVrft7bxM3F6YiQrNk3YFRXeZmr2edsvhuwQ',
                                datasource='PostGIS',
                                persistent_column='H',
-                               link_type='eminfra')
+                               link_type='eminfra_onderdeel')
 
         self.report.result_query = """
             with cte_attribuutwaarden_netwerkpoort_type as (
