@@ -30,7 +30,7 @@ class Report0122:
                 , attr_type.waarde as type
                 , attr_merk.waarde as merk
                 , b.edeltadossiernummer as bestek_dossiernummer
-                , b.edeltabesteknummer  as bestel_besteknummer
+                , b.edeltabesteknummer  as bestek_besteknummer
                 , b.aannemernaam as bestek_aannemernaam
             from assets a
             left join cte_attribuutwaarden_netwerkpoort_type attr_type on a."uuid" = attr_type.assetuuid

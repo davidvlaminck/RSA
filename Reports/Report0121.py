@@ -28,7 +28,7 @@ class Report0121:
             , a2.waarde AS "type"
             , a3.waarde AS merk
             , b.edeltadossiernummer AS bestek_dossiernummer
-            , b.edeltabesteknummer  AS bestel_besteknummer
+            , b.edeltabesteknummer  AS bestek_besteknummer
             , b.aannemernaam AS bestek_aannemernaam
         FROM assets a
             INNER JOIN dubbele_namen ON dubbele_namen.naam = a.naam
