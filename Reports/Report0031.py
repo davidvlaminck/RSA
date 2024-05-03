@@ -10,7 +10,8 @@ class Report0031:
                                title="Netwerkelementen met gebruik 'L2-switch' hebben een hoortbij relatie naar installatie L2AccesStructuur",
                                spreadsheet_id='1k5uUwLmf5IFVhftY7klBmylWtuEBwP8URjYPMcAB71w',
                                datasource='PostGIS',
-                               persistent_column='D')
+                               persistent_column='D',
+                               link_type='eminfra_onderdeel')
 
         self.report.result_query = """
             -- Netwerkementen met gebruik 'L2-switch' hebben een hoortbij relatie naar installatie L2AccesStructuur
