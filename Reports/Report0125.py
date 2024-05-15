@@ -15,7 +15,7 @@ class Report0125:
 
         self.report.result_query = """
         // KabelnetToegang zonder relatie
-        MATCH (n:KabelnetToegang)
+        MATCH (n:KabelnetToegang {isActief:True})
         WHERE NOT (n)--()
         RETURN n.uuid as uuid, n.toestand as toestand, n.isActief as isActief
         """
