@@ -1,6 +1,8 @@
 from ReportLoopRunner import ReportLoopRunner
 
 if __name__ == '__main__':
-    reportlooprunner = ReportLoopRunner(settings_path=r'/home/davidlinux/Documents/AWV/resources/settings_RSA.json')
+    reportlooprunner = ReportLoopRunner(settings_path=r'/home/david/Documents/AWV/resources/settings_RSA.json')
     # reportlooprunner = ReportLoopRunner(settings_path=r'C:\resources\settings_RSA.json')
-    reportlooprunner.run()
+    reportlooprunner.start(run_right_away=False)
+
+# first on linux do: pip install psycopg2-binary
