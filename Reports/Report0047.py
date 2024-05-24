@@ -14,29 +14,23 @@ class Report0047:
                                persistent_column='D')
 
         self.report.result_query = """
-            WITH a_bl as (
-                SELECT a.uuid, g.wkt_string
-                FROM assets a
-                INNER JOIN assettypes a_t ON (a.assettype = a_t.uuid)
-                INNER JOIN geometrie g ON (g.assetuuid = a.uuid)
-                WHERE a_t.uri = 'https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BitumineuzeLaag')
-            , a_ob AS (
-                SELECT a.uuid, g.wkt_string 
-                FROM assets a
-                INNER JOIN assettypes a_t ON (a.assettype = a_t.uuid)
-                INNER JOIN geometrie g ON (g.assetuuid = a.uuid)
-                WHERE a_t.uri = 'https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Onderbouw')
-            SELECT a_bl_prime.uuid AS uuid_bitumineuze_laag, a_ob_prime.uuid AS uuid_onderbouw
-            FROM a_bl AS a_bl_prime, a_ob AS a_ob_prime
-            WHERE ST_Intersects(ST_GeogFromText(a_bl_prime.wkt_string), ST_GeogFromText(a_ob_prime.wkt_string))
-            AND NOT EXISTS (
-                SELECT 1
-                FROM a_bl, a_ob
-                INNER JOIN assetrelaties a_r ON (a_r.bronuuid = a_bl_prime.uuid AND a_r.doeluuid = a_ob_prime.uuid)
-                INNER JOIN relatietypes r_t ON (a_r.relatietype = r_t.uuid)
-                WHERE r_t.uri = 'https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#LigtOp'
-                LIMIT 1
-            )
+WITH a_bl as (
+    SELECT a.uuid, ST_GeomFromText(wkt_string) AS geom
+    FROM assets a
+        INNER JOIN assettypes a_t ON a.assettype = a_t.uuid
+        INNER JOIN geometrie g ON g.assetuuid = a.uuid
+    WHERE a_t.uri = 'https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BitumineuzeLaag' AND a.actief = TRUE)
+, a_ob AS (
+    SELECT a.uuid, ST_GeomFromText(wkt_string) AS geom
+    FROM assets a
+        INNER JOIN assettypes a_t ON a.assettype = a_t.uuid
+        INNER JOIN geometrie g ON g.assetuuid = a.uuid
+    WHERE a_t.uri = 'https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Onderbouw' AND a.actief = TRUE)
+SELECT a_bl.uuid AS uuid_bitumineuze_laag, a_ob.uuid AS uuid_onderbouw 
+FROM a_bl
+    INNER JOIN a_ob ON ST_Intersects(a_bl.geom, a_ob.geom)
+    LEFT JOIN assetrelaties ON (bronuuid = a_bl.uuid AND doeluuid = a_ob.uuid AND assetrelaties.relatietype = '321c18b8-92ca-4188-a28a-f00cdfaa0e31' AND assetrelaties.actief = TRUE) -- LigtOp
+WHERE assetrelaties.doeluuid IS NULL;
         """
 
     def run_report(self, sender):
