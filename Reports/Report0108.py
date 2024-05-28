@@ -8,7 +8,7 @@ class Report0108:
     def init_report(self):
         self.report = DQReport(name='report0108', title='Geometrie is geldig: enkelvoudig punt, lijn of vlak',
                                spreadsheet_id='1glkACdbjMyh81DFyxuKpC1yNjDZeWjDH_kxAyw-TkY0', datasource='PostGIS',
-                               persistent_column='C')
+                               persistent_column='E')
 
         self.report.result_query = """
         with cte_geom as (
@@ -19,18 +19,23 @@ class Report0108:
             , st_geomfromtext(wkt_string) as geom
         FROM geometrie
         WHERE 
-            wkt_string IS NOT NULL
-        --limit 100000
-        )
-        select 
+            wkt_string IS NOT null
+        ), cte_geom_multiparts as (
+        select
             assetuuid
-        --	, wkt_string
-        --	, geom
             , st_geometrytype(geom) as geometry_type
         from cte_geom
         where st_numgeometries(geom) > 1
-        
-	"""
+        )
+        select 
+            g.assetuuid
+            , g.geometry_type
+            , at.naam
+            , at.URI
+        from cte_geom_multiparts g
+        LEFT JOIN assets a ON g.assetuuid = a.uuid
+        LEFT JOIN assettypes at ON a.assettype = at.uuid
+        """
 
     def run_report(self, sender):
         self.report.run_report(sender=sender)
