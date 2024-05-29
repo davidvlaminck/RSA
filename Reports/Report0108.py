@@ -35,6 +35,7 @@ class Report0108:
         from cte_geom_multiparts g
         LEFT JOIN assets a ON g.assetuuid = a.uuid
         LEFT JOIN assettypes at ON a.assettype = at.uuid
+        where at.URI !~ '^(https://grp.).*' -- Regular expression does not start with 
         """
 
     def run_report(self, sender):
