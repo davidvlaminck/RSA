@@ -25,15 +25,19 @@ class Report0109:
                 -- Compare the number with/without the Multiparts
             )
             select 
-                assetuuid
+                g.assetuuid
                 , wkt_string_prefix
                 , ST_NPoints(geom) - ST_NPoints(st_removerepeatedpoints(geom)) as aantal_dubbele_punten
                 -- Aantal karakters afronden tot het maximaal toegelaten aantal karakters in Google Sheets: 50.000
                 , left(wkt_string, 50000) as wkt_string_afgerond
             FROM
-                cte_geom
+                cte_geom g
+            left join assets a on g.assetuuid = a.uuid
+            left join assettypes at on a.assettype = at.uuid
             where
                 ST_NPoints(st_removerepeatedpoints(geom)) <> ST_NPoints(geom)
+                and
+                at.URI !~ '^(https://grp.).*' -- Regular expression does not start with 
             order by aantal_dubbele_punten desc
         	"""
 
