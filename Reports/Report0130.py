@@ -24,6 +24,20 @@ class Report0130:
                 left join geometrie g on a.uuid = g.assetuuid
                 left join assettypes at on a.assettype = at.uuid
                 where g.wkt_string ~ '^LINESTRING*'
+                  and at.uri !~ '^https://lgc.data.*'
+                  and at.label not in (
+                    'IMKLTelecomCable'
+                    , 'TelecommunicationsCable'
+                    , 'Telecomkabel'
+                    , 'IMKLElectricityCable'
+                    , 'ElectricityCable'
+                    , 'Voedingskabel'
+                    , 'Signaalkabel'
+                    , 'MIVLus'
+                    , 'Datakabel'
+                    , 'SelectieveDetectielus'
+                    , 'NietSelectieveDetectielus'
+                  )
             )
             select
                 uuid
