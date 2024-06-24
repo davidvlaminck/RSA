@@ -18,7 +18,7 @@ class MailSender:
         self.sheet_info = {}
 
     def add_mail(self, receiver: str, report_name: str, spreadsheet_id: str, count: int, latest_sync: str,
-                 frequency: str, previous: int):
+                 frequency: str, previous: int = -1):
         content = MailContent(receiver=receiver, count=count, latest_sync=latest_sync, report_name=report_name,
                               frequency=frequency, spreadsheet_id=spreadsheet_id, previous=previous)
         content.hyperlink = f'https://docs.google.com/spreadsheets/d/{spreadsheet_id}'
