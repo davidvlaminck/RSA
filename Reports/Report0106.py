@@ -784,7 +784,7 @@ class Report0106:
             select
                 a.uuid
                 , a.naam
-                , LEFT(a.wkt_string, 50000) as wkt_string
+                , LEFT(a.wkt_string, 100) as wkt_string
                 , ga.uri
                 -- Het actuele geometrie type
                 ,
