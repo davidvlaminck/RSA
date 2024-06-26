@@ -26,7 +26,7 @@ class Report0109:
             )
             select 
                 g.assetuuid
-                , at.typeURI
+                , at.uri as typeURI
                 , at.label as assettype
                 , wkt_string_prefix
                 , ST_NPoints(geom) - ST_NPoints(st_removerepeatedpoints(geom)) as aantal_dubbele_punten
