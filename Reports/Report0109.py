@@ -8,7 +8,7 @@ class Report0109:
     def init_report(self):
         self.report = DQReport(name='report0109', title='Geometrie is geldig: geen opeenvolgende punten',
                                spreadsheet_id='1AmtcjAkh5H95O_lXtd4p_MHeoqFpQKQlIRfQk3MxGQ4', datasource='PostGIS',
-                               persistent_column='F')
+                               persistent_column='G')
 
         self.report.result_query = """
             WITH cte_geom AS (
@@ -26,6 +26,7 @@ class Report0109:
             )
             select 
                 g.assetuuid
+                , at.typeURI
                 , at.label as assettype
                 , wkt_string_prefix
                 , ST_NPoints(geom) - ST_NPoints(st_removerepeatedpoints(geom)) as aantal_dubbele_punten
