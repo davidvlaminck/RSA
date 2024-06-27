@@ -8,7 +8,7 @@ class Report0106:
     def init_report(self):
         self.report = DQReport(name='report0106', title='Geometrie is consistent met GeometrieArtefact',
                                spreadsheet_id='1x9g0b_wQtLgkxnAwR_lffzVLdS3PElb3mLWtqItqkig', datasource='PostGIS',
-                               persistent_column='G')
+                               persistent_column='I')
 
         self.report.result_query = """
         with cte_geometry_artefact(uri, label_nl, geen_geometrie, punt3D, lijn3D, polygoon3D) as (
@@ -740,6 +740,7 @@ class Report0106:
                     , at.naam
                     , at.uri
                     , coalesce(g.wkt_string, l.geometrie) as wkt_string
+                    , g.geo_niveau
                     -- Extract the type of geometry from the wkt_string
                     , case
                         when
@@ -774,17 +775,11 @@ class Report0106:
                     and 
                     a.actief = true
             )
-            /*
-             * 
-            -- Selecteer alle figuratieMArkeringen
-            select *
-            from cte_asset_withGeomInfo
-            where uri = 'https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#FiguratieMarkering'
-            */
             select
                 a.uuid
                 , a.naam
                 , LEFT(a.wkt_string, 100) as wkt_string
+                , a.geo_niveau as level_of_geometrie
                 , ga.uri
                 -- Het actuele geometrie type
                 ,
@@ -799,25 +794,26 @@ class Report0106:
                 CASE
                     WHEN a.polygoon3D = '1' THEN 'polygoon3D'
                     ELSE ''
-                END AS actuele_geometrie_OTL
+                END AS OTL_actuele_geometrie
                 -- Het verwachte geometrie type
                 ,
                 case
-                    WHEN ga.geen_geometrie = '1' THEN 'geen_geometrie, '
+                    WHEN ga.geen_geometrie = '1' THEN 'geen_geometrie '
                     ELSE ''
                 END ||
                 case
-                    WHEN ga.punt3D = '1' THEN 'punt3D, '
+                    WHEN ga.punt3D = '1' THEN 'punt3D '
                     ELSE ''
                 END ||
                 CASE
-                    WHEN ga.lijn3D = '1' THEN 'lijn3D, '
+                    WHEN ga.lijn3D = '1' THEN 'lijn3D '
                     ELSE ''
                 END ||
                 CASE
-                    WHEN ga.polygoon3D = '1' THEN 'polygoon3D, '
+                    WHEN ga.polygoon3D = '1' THEN 'polygoon3D '
                     ELSE ''
-                END AS verwachte_geometrie_GeometrieArtefact
+                END AS GA_verwachte_geometrie
+                , 'GA_2.11.0' as GA_Versie
             from cte_asset_withGeomInfo a -- a staat voor assets
             left join cte_geometry_artefact ga on a.uri = ga.uri -- ga staat voor GeometrieArtefact
             where
