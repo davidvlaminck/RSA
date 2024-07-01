@@ -40,6 +40,8 @@ class Report0109:
                 ST_NPoints(st_removerepeatedpoints(geom)) <> ST_NPoints(geom)
                 and
                 at.URI !~ '^(https://grp.).*' -- Regular expression does not start with 
+                and
+                a.actief = true -- Enkel de actieve assets
             order by aantal_dubbele_punten desc
         	"""
 
