@@ -10,48 +10,16 @@ class Report0039:
                                title="Lichtmast LED",
                                spreadsheet_id='1DZjg3zbcoY7_9Q0qj74KkgLL3eOwWa7e4_0SlbLMM5o',
                                datasource='PostGIS',
-                               convert_columns_to_numbers=['K', 'Q', 'S', 'W'])
+                               convert_columns_to_numbers=['K', 'S', 'X', 'Y'])
 
         self.report.result_query = """
 WITH awegen ("aweg_ident8", "beginpositie", "eindpositie") AS ( VALUES
-	('A0010001',0.381,79.637),
-	('A0010002',0.382,79.637),
-	('A0020001',0.000,86.585),
-	('A0020002',0.000,86.692),
-	('A0030001',1.744,82.290),
-	('A0030002',1.747,82.290),
-	('A0040001',0.353,14.200),
-	('A0040002',0.151,14.173),
-	('A0080001',0.000,7.675),
-	('A0080002',0.000,7.682),
-	('A0100001',0.184,104.489),
-	('A0100002',0.120,104.489),
-	('A0110001',107.210,154.578),
-	('A0110002',107.215,143.295),
-	('A0120001',0.000,54.185),
-	('A0120002',0.000,54.185),
-	('A0129251',0.000,0.962),
-	('A0130001',0.010,100.900),
-	('A0130002',0.010,100.900),
-	('A0140001',0.000,100.730),
-	('A0140002',0.000,82.062),
-	('A0170001',14.962,68.073),
-	('A0170002',15.322,68.073),
-	('A0180001',5.414,47.360),
-	('A0180002',5.414,46.950),
-	('A0190001',0.200,22.820),
-	('A0190002',0.072,22.785),
-	('A0210001',9.500,58.019),
-	('A0210002',9.936,58.019),
-	('A0250001',0.000,5.500),
-	('A0250002',0.000,5.500),
-	('A1120001',1.659,3.452),
-	('A1120002',1.864,3.498),
-	('A2010001',0.000,3.886),
-	('A2010002',0.000,3.817),
-	('A2010591',0.232,2.633),
+	('B1010001',0.000,5.000),
+	('B1010002',0.000,5.000),
 	('B4010001',0.000,2.338),
 	('B4010002',0.000,2.364),
+	('B403001',0.0000,99.9999),
+	('B403002',0.0000,99.9999),
 	('R0000001',23.634,75.374),
 	('R0000002',24.402,75.332),
 	('R0001811',0.521,0.521),
@@ -77,9 +45,7 @@ WITH awegen ("aweg_ident8", "beginpositie", "eindpositie") AS ( VALUES
 	('R0080911',0.000,0.197),
 	('R0080961',0.000,0.212),
 	('R0082021',0.000,0.000),
-	('R0082051',0.160,0.160),
-	('R0220001',13.164,15.550),
-	('R0220002',12.745,15.552)),
+	('R0082051',0.160,0.160)),
 ruwe_data AS (
 	SELECT assets.uuid, assets.naampad, assets.toestand, assets.actief
 		, attribuutwaarden_aanstuurstroomDriversInMa.waarde AS aanstuurstroomDriversInMa
@@ -95,7 +61,14 @@ ruwe_data AS (
 			ELSE referentiepaal_opschrift + referentiepaal_afstand / 1000.0 END
 		ELSE NULL END AS locatie_referentiepunt
 		-- , attribuutwaarden_verlichtingstoestel_systeemvermogen.waarde AS verlichtingstoestel_systeemvermogen
-		, locatie.adres_gemeente , locatie.adres_provincie 
+		, 'POINT Z (' || locatie.x || ' ' || locatie.y || ' ' || coalesce(locatie.z, 0) || ')' as wkt_geom
+		, locatie.adres_gemeente
+		-- Overschrijf Brussel >> Vlaams-Brabant
+		, case 
+			when locatie.adres_provincie = 'Brussel' then 'Vlaams-Brabant'
+			else locatie.adres_provincie 
+		end as adres_provincie
+		, locatie.adres_provincie as adres_provincie_origineel_met_brussel
 	FROM assets 
 		LEFT JOIN attribuutwaarden attribuutwaarden_aanstuurstroomDriversInMa ON assets.uuid = attribuutwaarden_aanstuurstroomDriversInMa.assetuuid AND attribuutwaarden_aanstuurstroomDriversInMa.attribuutuuid = '6f3d2728-448c-4975-8f4a-cba21d2634b8'
 		LEFT JOIN attribuutwaarden attribuutwaarden_aantal_verlichtingstoestellen ON assets.uuid = attribuutwaarden_aantal_verlichtingstoestellen.assetuuid AND attribuutwaarden_aantal_verlichtingstoestellen.attribuutuuid = '568ba32e-847c-496a-be20-5d022897f032'
@@ -106,7 +79,8 @@ ruwe_data AS (
 		LEFT JOIN attribuutwaarden attribuutwaarden_lumen_pakket_LED ON assets.uuid = attribuutwaarden_lumen_pakket_LED.assetuuid AND attribuutwaarden_lumen_pakket_LED.attribuutuuid = '218f8269-21eb-445a-9c77-acb3faf6c3ba'
 		-- LEFT JOIN attribuutwaarden attribuutwaarden_verlichtingstoestel_systeemvermogen ON assets.uuid = attribuutwaarden_verlichtingstoestel_systeemvermogen.assetuuid AND attribuutwaarden_verlichtingstoestel_systeemvermogen.attribuutuuid = '8ea7f7ef-c187-4a68-a92b-6a0ca855ba50'
 		LEFT JOIN locatie ON assets.uuid = locatie.assetuuid 
-	WHERE assettype = '4dfad588-277c-480f-8cdc-0889cfaf9c78' AND assets.actief = TRUE),
+	WHERE assettype = '4dfad588-277c-480f-8cdc-0889cfaf9c78' AND assets.actief = true
+	),
 opkuis1 AS (
 	SELECT ruwe_data.*,
 		CASE WHEN aanstuurstroomDriversInMa IS NOT NULL AND lamp_type <> 'LED' THEN 'LED'
@@ -141,7 +115,9 @@ opkuis2 AS (
 			WHEN lamp_type_opgekuist = 'NaLP66' THEN 66
 			WHEN lamp_type_opgekuist = 'NaLP91' THEN 91
 		ELSE 0 END AS vermogen
-	FROM opkuis1),
+	FROM opkuis1
+	LEFT JOIN awegen ON awegen.aweg_ident8 = opkuis1.ident8 AND awegen.beginpositie <= locatie_referentiepunt AND opkuis1.locatie_referentiepunt <= awegen.eindpositie
+	),
 -- SELECT DISTINCT lamp_type_opgekuist, vermogen FROM opkuis2; -- mappingtabel vermogens
 opkuis3 AS (
 	SELECT *, 
@@ -152,15 +128,18 @@ opkuis3 AS (
 			WHEN lamp_type_opgekuist LIKE 'HPIT%' OR lamp_type_opgekuist LIKE 'TL%' THEN 'andere'
 			WHEN lamp_type_opgekuist IS NULL THEN 'niet gekend'
 			ELSE lamp_type_opgekuist END AS beperkte_benaming,
-		CASE WHEN opkuis2.ident8 IS NULL THEN NULL
-		    WHEN opkuis2.locatie_referentiepunt IS NULL THEN
-		        CASE WHEN opkuis2.ident8 LIKE 'R%' OR opkuis2.ident8 LIKE 'A%' THEN 'A-Weg' ELSE 'N-Weg' END
-			WHEN awegen.aweg_ident8 IS NOT NULL THEN 'A-Weg'
-			ELSE 'N-Weg' END AS wegcategorie
-	FROM opkuis2
-		LEFT JOIN awegen ON awegen.aweg_ident8 = opkuis2.ident8 AND awegen.beginpositie <= opkuis2.locatie_referentiepunt AND opkuis2.locatie_referentiepunt <= awegen.eindpositie)
+		CASE
+			WHEN opkuis2.ident8 LIKE 'A%' THEN 'A-Weg'
+			WHEN opkuis2.ident8 LIKE 'N%' THEN 'N-Weg'
+			WHEN opkuis2.ident8 LIKE 'T%' THEN 'N-Weg'
+			WHEN opkuis2.aweg_ident8 IS NOT NULL THEN 'A-Weg'
+			WHEN opkuis2.wkt_geom is not null then 'Gemeente-Weg'
+			ELSE 'locatie ongekend'
+		END AS wegcategorie
+	FROM opkuis2)
 -- SELECT DISTINCT lamp_type_opgekuist, beperkte_benaming FROM opkuis3; -- mappingtabel beperkte_benaming
-SELECT * FROM opkuis3;"""
+SELECT * FROM opkuis3;
+"""
 
     def run_report(self, sender):
         self.report.run_report(sender=sender)
