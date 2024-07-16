@@ -10,7 +10,7 @@ class Report0133:
                                title='Dubbele bomen',
                                spreadsheet_id='1rh9WX_zT9KjLPac9B4jg5p5rXKDBRlMIlkJVZKoQWd4',
                                datasource='PostGIS',
-                               persistent_column='K'
+                               persistent_column='I'
                                )
 
         self.report.result_query = """
@@ -14941,8 +14941,8 @@ select
 	, b2.naam as boom2_naam
 	, b1.soortnaam as boom1_soortnaam
 	, b2.soortnaam as boom2_soortnaam
-	, b1.geom as boom1_geom
-	, b2.geom as boom2_geom
+	--, b1.geom as boom1_geom
+	--, b2.geom as boom2_geom
 	, b1.prv_naam as provincie_naam
 	, ROUND(ST_Distance(b1.geom, b2.geom)::numeric, 2) as afstand
 -- Join een boom met zichzelf
