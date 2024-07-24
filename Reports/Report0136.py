@@ -8,7 +8,7 @@ class Report0136:
     def init_report(self):
         self.report = DQReport(name='report0136',
                                title='Straatkolk heeft betrokkene relaties beheerder en verantwoordelijke-reiniging',
-                               spreadsheet_id='1s_oro-4tJy_1R1G99TTPnL4-5ACR4BD-R1XWFvFuviQ',
+                               spreadsheet_id='1uYTd1vGSKMxxWbkbTjgpSo969ntXGj_-xXebBGXPdVY',
                                datasource='PostGIS',
                                persistent_column='G'
                                )
