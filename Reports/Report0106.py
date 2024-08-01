@@ -8,7 +8,7 @@ class Report0106:
     def init_report(self):
         self.report = DQReport(name='report0106', title='Geometrie is consistent met GeometrieArtefact',
                                spreadsheet_id='1x9g0b_wQtLgkxnAwR_lffzVLdS3PElb3mLWtqItqkig', datasource='PostGIS',
-                               persistent_column='I')
+                               persistent_column='J')
 
         self.report.result_query = """
 with cte_geometry_artefact(uri,label_nl,geen_geometrie,punt3D,lijn3D,polygoon3D,gewijzigd_sinds) as (
@@ -796,6 +796,7 @@ with cte_geometry_artefact(uri,label_nl,geen_geometrie,punt3D,lijn3D,polygoon3D,
     ), cte_asset_withGeomInfo as (
         select
             a.uuid
+            , a.toestand
             , at.uuid as assettype_uuid
             , at.naam
             , at.uri
@@ -838,6 +839,7 @@ select
 	, a.naam
     , LEFT(a.wkt_string, 50) as wkt_string
     , a.geo_niveau as level_of_geometrie
+    , a.toestand
     , ga.uri
     -- Het actuele geometrie type
     ,
