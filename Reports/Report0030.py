@@ -13,7 +13,7 @@ class Report0030:
                                persistent_column='C')
 
         self.report.result_query = """MATCH (n:Netwerkelement {isActief:TRUE})
-        WHERE n.geometry IS NULL
+        WHERE n.geometry IS NULL or n.geometry = ''
         RETURN n.uuid, n.naam"""
 
     def run_report(self, sender):
