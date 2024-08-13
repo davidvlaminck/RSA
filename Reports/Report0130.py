@@ -14,6 +14,7 @@ class Report0130:
                                )
 
         self.report.result_query = """
+            -- Report0130
             with cte_asset_of_interest as (
                 select
                     a.uuid
@@ -26,17 +27,25 @@ class Report0130:
                 where g.wkt_string ~ '^LINESTRING*'
                   and at.uri !~ '^https://lgc.data.*'
                   and at.label not in (
-                    'IMKLTelecomCable'
-                    , 'TelecommunicationsCable'
-                    , 'Telecomkabel'
-                    , 'IMKLElectricityCable'
-                    , 'ElectricityCable'
-                    , 'Voedingskabel'
-                    , 'Signaalkabel'
-                    , 'MIVLus'
+                    'Aardingskabel'
+                    , 'Beschermbuis'
                     , 'Datakabel'
-                    , 'SelectieveDetectielus'
+                    , 'ElectricityCable'
+                    , 'Gracht'
+                    , 'IMKLElectricityCable'
+                    , 'IMKLExtraPlan'
+                    , 'IMKLPipe'
+                    , 'IMKLTelecomCable'
+                    , 'KabelnetBuis'
+                    , 'MIVLus'
                     , 'NietSelectieveDetectielus'
+                    , 'Onderdoorboring'
+                    , 'OverlangseMarkering'
+                    , 'SelectieveDetectielus'
+                    , 'Signaalkabel'
+                    , 'Telecomkabel'
+                    , 'TelecommunicationsCable'
+                    , 'Voedingskabel'
                   )
             )
             select

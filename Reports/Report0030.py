@@ -12,9 +12,17 @@ class Report0030:
                                datasource='Neo4J',
                                persistent_column='C')
 
-        self.report.result_query = """MATCH (n:Netwerkelement {isActief:TRUE})
-        WHERE n.geometry IS NULL or n.geometry = ''
-        RETURN n.uuid, n.naam"""
+        self.report.result_query = """
+        // Report 0030
+        MATCH (n:Netwerkelement {isActief: TRUE})
+        WHERE (n.geometry IS NULL OR n.geometry = '')
+        WITH n
+        OPTIONAL MATCH (n)-[:HoortBij]-(n2)
+        WHERE n2.isActief = TRUE
+        WITH n, collect(n2) AS relatedNodes
+        WHERE ALL(node IN relatedNodes WHERE node.geometry IS NULL OR node.geometry = '')
+        RETURN n.uuid as uuid, n.naam as naam
+        """
 
     def run_report(self, sender):
         self.report.run_report(sender=sender)
