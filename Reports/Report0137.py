@@ -10,7 +10,7 @@ class Report0137:
                                title='Bijhorende assets hebben een verschillende toezichtshouder/toezichtsgroep',
                                spreadsheet_id='1HBOnmY6Q7ed3zeRMVlVL7EC6S9PiMa6gv80AWcdrve8',
                                datasource='PostGIS',
-                               persistent_column='S'
+                               persistent_column='R'
                                )
 
         self.report.result_query = """
@@ -73,8 +73,7 @@ class Report0137:
             -- main query:
             -- Legacy en OTL-assets die via HoortBij-relatie aan elkaar zijn gekoppeld en die een verschillende toezichthouder kennen.
             select
-                concat('https://apps.mow.vlaanderen.be/awvinfra/ui/?asset=', rel.bronuuid) as otl_link_elisainfra
-                , otl.*
+                otl.*
                 , concat('https://apps.mow.vlaanderen.be/eminfra/installaties/', rel.doeluuid) as lgc_link_eminfra
                 , lgc.*
             from cte_relatie_hoortbij rel
