@@ -1,14 +1,14 @@
 from DQReport import DQReport
 
 
-class Report0137:
+class Report0140:
     def __init__(self):
         self.report = None
 
     def init_report(self):
-        self.report = DQReport(name='report0137',
-                               title='Bijhorende assets hebben een verschillende toezichtshouder/toezichtsgroep (assettype = Signaalkabel)',
-                               spreadsheet_id='1HBOnmY6Q7ed3zeRMVlVL7EC6S9PiMa6gv80AWcdrve8',
+        self.report = DQReport(name='report0140',
+                               title='Bijhorende assets hebben een verschillende toezichtshouder/toezichtsgroep (assettype = WVLichtmast)',
+                               spreadsheet_id='1E2vu5AtwpnZbQeJY5sTWqEI8EYYJ6QdEh6yfjPaA-0Q',
                                datasource='PostGIS',
                                persistent_column='R'
                                )
@@ -48,13 +48,13 @@ class Report0137:
                         and
                         -- Disable the assettype in function of the report
                         (
-                        a.assettype = '9a1a94ef-7928-473f-9bbf-c1c00eff345e'  -- Signaalkabel
+                        --a.assettype = '9a1a94ef-7928-473f-9bbf-c1c00eff345e'  -- Signaalkabel
                         --or
                         --a.assettype = '4834b49b-f198-4632-b4dc-6d49d557a42a'  -- Voedingskabel
                         --or
                         --a.assettype = 'e51ac22a-8673-47cd-8fcd-c9c84372886e'  -- Beschermbuis
                         --or
-                        --a.assettype = '478add39-e6fb-4b0b-b090-9c65e836f3a0'  -- WVLichtmast
+                        a.assettype = '478add39-e6fb-4b0b-b090-9c65e836f3a0'  -- WVLichtmast
                         )
                 ),
                 -- Legacy-asset met toezichthouder
