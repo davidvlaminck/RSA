@@ -320,10 +320,8 @@ class SheetsWrapper:
                 url = ''
                 if link_type == 'awvinfra':
                     url = f'https://apps.mow.vlaanderen.be/awvinfra/ui/#/?asset={row}'
-                elif link_type == 'eminfra':
-                    url = f'https://apps.mow.vlaanderen.be/eminfra/installaties/{row}'
-                elif link_type == 'eminfra_onderdeel':
-                    url = f'https://apps.mow.vlaanderen.be/eminfra/onderdelen/{row}'
+                elif link_type in {'eminfra', 'eminfra_onderdeel'}:
+                    url = f'https://apps.mow.vlaanderen.be/eminfra/assets/{row}'
                 sheet_values.append({
                     "values": {
                         "userEnteredValue": {
