@@ -14,6 +14,7 @@ class Report0130:
                                )
 
         self.report.result_query = """
+            -- Report0130
             with cte_asset_of_interest as (
                 select
                     a.uuid
@@ -24,6 +25,28 @@ class Report0130:
                 left join geometrie g on a.uuid = g.assetuuid
                 left join assettypes at on a.assettype = at.uuid
                 where g.wkt_string ~ '^LINESTRING*'
+                  and at.uri !~ '^https://lgc.data.*'
+                  and at.label not in (
+                    'Aardingskabel'
+                    , 'Beschermbuis'
+                    , 'Datakabel'
+                    , 'ElectricityCable'
+                    , 'Gracht'
+                    , 'IMKLElectricityCable'
+                    , 'IMKLExtraPlan'
+                    , 'IMKLPipe'
+                    , 'IMKLTelecomCable'
+                    , 'KabelnetBuis'
+                    , 'MIVLus'
+                    , 'NietSelectieveDetectielus'
+                    , 'Onderdoorboring'
+                    , 'OverlangseMarkering'
+                    , 'SelectieveDetectielus'
+                    , 'Signaalkabel'
+                    , 'Telecomkabel'
+                    , 'TelecommunicationsCable'
+                    , 'Voedingskabel'
+                  )
             )
             select
                 uuid

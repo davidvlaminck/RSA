@@ -8,807 +8,891 @@ class Report0106:
     def init_report(self):
         self.report = DQReport(name='report0106', title='Geometrie is consistent met GeometrieArtefact',
                                spreadsheet_id='1x9g0b_wQtLgkxnAwR_lffzVLdS3PElb3mLWtqItqkig', datasource='PostGIS',
-                               persistent_column='G')
+                               persistent_column='J')
 
         self.report.result_query = """
-with cte_geometry_artefact(uri, label_nl, geen_geometrie, punt3D, lijn3D, polygoon3D) as (
-  VALUES
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Baanlichaam','Baanlichaam','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#BlindePut','Blinde put','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Ecoduct','Ecoduct','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Ecoduiker','Ecoduiker','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Ecokoker','Ecokoker','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Ecotunnel','Ecotunnel','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Ecovallei','Ecovallei','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Fietstelinstallatie','Fietstelinstallatie','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Gebouw','Gebouw','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#GecombineerdePut','Gecombineerde put','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#GeluidwerendeConstructie','Geluidwerende constructie','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#GroepDwarseMarkeringEnFiguratie','Groep dwarse- en figuratiemarkering','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#GroepMarkering','Groepering alle soorten markering','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Gronddam','Gronddam','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Hulppost','Hulppost','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#InspectieputRiolering','Inspectieput riolering','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#IPBackbone','IP backbone','1','0','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#L2AccessStructuur','L2 access structuur','1','0','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Link','Link','1','0','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Lokaal','Lokaal','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Luchtkwaliteitsensor','Luchtkwaliteitsensor','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#MIVInstallatie','MIV-installatie','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Onderbord','Onderbord','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Pad','Pad','1','0','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Rioleringsstelsel','Rioleringsstelsel','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Slagboom','Slagboom installatie','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Trajectcontrole','Trajectcontrole','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#VerkeersbordConcept','Verkeersbordconcept','1','0','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Verkeersbordopstelling','Verkeersbordopstelling','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#VerkeersbordVerkeersteken','Verkeersbord - verkeersteken','1','0','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#VLAN','VLAN','1','0','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Wegberm','Wegberm','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Zpad','Zpad','1','0','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Aansluitmof','Aansluitmof','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Aansluitopening','Aansluitopening','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Aanstraalverlichting','Aanstraalverlichting','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Afmetingsensor','Afmetingsensor','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Afscherming','Afscherming','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Afsluiter','Afsluiter','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Aftakking','Aftakking','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#AIDModule','AID-module','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#AnalogeHoppinzuil','Analoge hoppinzuil','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#ANPRCamera','ANPR camera','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Antenne','Antenne','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#AntiParkeerpaal','Antiparkeerpaal','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Armatuurcontroller','Armatuurcontroller','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Audioversterker','Audioversterker','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Batterij','Batterij','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Bel','Bel','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BeschermingWapening','Bescherming wapening','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BestratingVanBetonstraatsteen','Bestrating van betonstraatsteen','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BestratingVanBetontegel','Bestrating van betontegel','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BestratingVanGebakkenStraatsteen','Bestrating van gebakken straatsteen','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BestratingVanGrasbetontegel','Bestrating van grasbetontegel','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BestratingVanKassei','Bestrating van kassei','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BestratingVanMozaiekkei','Bestrating van mozaiekkei','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BestratingVanNatuursteentegel','Bestrating van natuursteentegel','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Bestrijking','Bestrijking','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Bevestigingsbeugel','Bevestigingsbeugel','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BijzonderGeluidsschermelement','BijzonderGeluidsschermelement','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Binnenverlichtingstoestel','Binnenverlichtingstoestel','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BitumineuzeLaag','Bitumineuze laag','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BloemrijkGlanshavergrasland','Bloemrijk glanshavergrasland','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BloemrijkGraslandGraslandfase4','Bloemrijk grasland - fase4','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BloemrijkStruisgrasgrasland','Bloemrijk struisgrasgrasland','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BloemrijkVochtigTotNatGrasland','Bloemrijk vochtig tot nat grasland','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BoogpaalVerkeerslicht','Boogpaal verkeerslicht','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Boom','Boom','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Boombrug','Boombrug','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Bouwput','Bouwput','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Bovenbouw','Bovenbouw','0','1','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Braam','Braam','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Brandblusser','Brandblusser','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Brandhaspel','Brandhaspel','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Brandleiding','Brandleiding','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Brandnetelruigte','Brandnetelruigte','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BremEnGaspeldoornstruweel','Brem en gaspeldoornstruweel','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Buisbekleding','Buisbekleding','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Cabine','Cabine','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Cabinecontroller','Cabinecontroller','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Calamiteitendoorsteek','Calamiteitendoorsteek','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#CalamiteitsBord','Calamiteitsbord','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Camera','Camera','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Cementbetonverharding','Cementbetonverharding','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Cluster','Cluster','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Codeklavier','Codeklavier','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#ColloidaalBeton','Colloidaal beton','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Combilantaarn','Combilantaarn','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#ConstructieSokkel','Constructie sokkel','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Contactor','Contactor','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Contactpunt','Contactpunt','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Container','Container','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Contourverlichting','Contourverlichting','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Damwand','Damwand','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#DetectieCamera','Detectie camera','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Dieselgenerator','Dieselgenerator','0','1','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Dilatatie','Dilatatie','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Divergentiepuntbebakeningselement','Divergentiepuntbebakeningselement','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#DNBHoogspanning','DNB hoogspanning','1','0','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#DNBLaagspanning','DNB laagspanning','1','0','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Dolomietverharding','Dolomietverharding','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#DominantGraslandfase2','Dominant grasland - fase2','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Dongle','Dongle','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Doorgang','Doorgang','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Doornstruweel','Doornstruweel','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Draineerbuis','Draineerbuis','0','1','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Drukknop','Drukknop','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Drukverhogingsgroep','Drukverhogingsgroep','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Duikschot','Duikschot','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Duingrasland','Duingrasland','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#DunneOverlaging','Dunne overlaging','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#DwarseMarkering','Dwarse markering','0','0','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#DwarseMarkeringVerschuind','Dwarse markering verschuind','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Dwerghavergrasland','Dwerghavergrasland','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#DwergstruikvegetatieHeidesoorten','Dwergstruikvegetatie heidesoorten','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#DynamischeVluchtwegindicatie','Dynamische vluchtwegindicatie','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#DynBordExternePU','Processing unit voor dynamisch borden','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#DynBordOpMaat','Dynamisch bord op maat','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#DynBordPK','Pijl-Kruis-bord','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#DynBordRSS','RSS-bord','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#DynBordRVMS','RVMS-bord','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#DynBordVMS','VMS-bord','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#DynBordZ30','Dynamisch Zone-30 bord','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#EcoPoort','Eco poort','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Ecoraster','Ecoraster','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Eindstuk','Eindstuk','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#EnergiemeterAWV','Energiemeter AWV','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#EnergiemeterDerden','Energiemeter derden','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#EnergiemeterDNB','Energiemeter DNB','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#EnergiemeterDNBPiek','Energiemeter DNB piek','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#EnergiemeterDNBReactief','Energiemeter DNB reactief','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Exoten','Exoten','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#ExterneDetectie','Externe detectie','1','0','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#FieldOfView','Field-of-View','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Fietslantaarn','Fietslantaarn','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#FietstelDisplay','Fietstel display','0','1','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Fietstelsysteem','Fietstelsysteem','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#FiguratieMarkering','Figuratiemarkering','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#FiguratieMarkeringVerschuind','Figuratie markering verschuind','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#ForfaitaireAansluiting','Forfaitaire aansluiting','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Funderingsmassief','Funderingsmassief','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Funderingsplaat','Funderingsplaat','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Galgpaal','Galgpaal','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#GeexpandeerdPolystyreen','Geexpandeerd polystyreen','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#GekleurdWegvlakMarkering','Gekleurd wegvlak markering','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Geleideconstructie','Geleideconstructie','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Geleidingsverlichting','Geleidingsverlichting','0','1','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Geleidingswand','Geleidingswand','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#GeluidswerendeConstructie','Geluidswerende constructie','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Geotextiel','Geotextiel','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#GetesteBeginconstructie','Geteste beginconstructie','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#GPU','GPU','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#GrasKruidenmixGraslandfase3','Gras kruidenmix grasland - fase3','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Grasland','Grasland','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Grasmat','Grasmat','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#GrassenmixGraslandfase1','Grassenmix grasland - fase1','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Grindgazon','Grindgazon','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Haag','Haag','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Handbediening','Handbediening','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Handwiel','Handwiel','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Hardware','Hardware','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Heestermassief','Heestermassief','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#HeischraalGrasland','Heischraal grasland','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Hoofdschakelaar','Hoofdschakelaar','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Hoogtedetectie','Hoogtedetectie','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#HSBeveiligingscel','HS beveiligingscel','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#HSCabine','HS-cabine','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Huisaansluitput','Huisaansluitput','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Hulppostkast','Hulppostkast','0','1','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Hulpstuk','Hulpstuk','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Hydrant','Hydrant','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Iepenstruweel','Iepenstruweel','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#IndoorKast','Indoor kast','0','1','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Infiltratievoorziening','Infiltratievoorziening','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#IntercomServer','Intercom server','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#IntercomToestel','Intercom toestel','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#InvasieveExoten','Invasieve exoten','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#InwendigVerlichtPictogram','Inwendig verlicht pictogram','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#IOKaart','IO-Kaart','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#IpPowerSwitch','IP powerswitch','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#ITSapp','ITSapp','1','0','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Kabelmof','Kabelmof','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#KabelnetToegang','Kabelnet toegang','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Kalkgrasland','Kalkgrasland','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#KalkrijkKamgrasland','Kalkrijk kamgrasland','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Kamer','Kamer','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#KantstrookAfw','Afwijkende kantstrook','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#KantstrookStd','Gestandaardiseerde Kantstrook','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Klimatisatie','Klimatisatie','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Klimvorm','Klimvorm','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Knipperlantaarn','Knipperlantaarn','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Kopmuur','Kopmuur','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#KringsBerliner','Krings Berliner','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Laagspanningsbord','Laagspanningsbord','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#LEDDriver','LED-driver','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#LetterCijferMarkering','Letter-cijfer markering','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#LetterMarkeringVerschaald','Verschaalde letter markering','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Lichtmast','Lichtmast','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Lichtsensor','Lichtsensor','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#LijnvormigElementMarkering','Lijnvormig element markering','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#LogischePoort','Logische poort','1','0','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Loofhout','Loofhout','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#LoopTerminationAndProtection','Loop termination and protection','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#LuchtkwaliteitControleUnit','Luchtkwaliteit controle unit','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Luchtkwaliteitreflector','Luchtkwaliteitreflector','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#LuchtkwaliteitZenderOntvanger','Luchtkwaliteit Zender-Ontvanger','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Luidspreker','Luidspreker','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#MACQPUFrontend','MACQ PU Frontend','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Mantelbuis','Mantelbuis','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Meetcel','Meetcel','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Meetmicrofoon','Meetmicrofoon','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#MIVCommunicatiekaart','MIV-communicatiekaart','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#MIVLus','MIV-lus','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#MIVLuskaart','MIV-luskaart','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#MIVProcessorkaart','MIV-processorkaart','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#MIVVoedingsmodule','MIV-voedingsmodule','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Montagekast','Montagekast','0','1','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Motorvangplank','Motorvangplank','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Muurdoorgangsstuk','Muurdoorgangsstuk','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Muurvegetatie','Muurvegetatie','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Naaldhout','Naaldhout','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#NatteRuigte','Natte ruigte','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Neerslagsensor','Neerslagsensor','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Netstabilisator','Netstabilisator','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Netwerkelement','Netwerkelement','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Netwerkkaart','Netwerkkaart','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#NetwerkModem','Netwerkmodem','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Netwerkpoort','Netwerkpoort','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#NietGetestBeginstuk','Niet getest beginstuk','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#NietSelectieveDetectielus','Niet-selectieve detectielus','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#NietStandaardStalenProfiel','Niet-standaard stalen profiel','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Noppendrainage','Noppendrainage','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Obstakelbeveiliger','Obstakelbeveiliger','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#OmegaElement','Omega element','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Omvormer','Omvormer','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#OnbegroeidVoorkomen','Onbegroeid voorkomen','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Onderbouw','Onderbouw','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Onderwatervegetatie','Onderwatervegetatie','0','1','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#OntluchterBrandleiding','Ontluchter brandleiding','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Ontvanger','Ontvanger','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#OpenbaarVervoerslantaarn','Openbaar vervoerslantaarn','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#OpgaandeBoom','Opgaande boom','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#OpgaandeHoutigeVegetatie','Opgaande houtige vegetatie','0','0','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Overdrukventilator','Overdrukventilator','0','1','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Overgangsconstructie','Overgangsconstructie','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#OverlangseMarkering','Overlangse markering','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Overstort','Overstort','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Overstortrand','Overstortrand','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#PCIKaart','PCI-kaart','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Persleiding','Persleiding','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Pictogram','Pictogram','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#PiezometrischeBuis','Piezometrische buis','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Plantbakvorm','Plantbakvorm','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#PLC','PLC','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#PlintGC','PlintGC','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Plooibaken','Plooibaken','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#PoEInjector','Power over Ethernet injector','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Pomp','Pomp','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#PTDemodulatoren','PT-demodulatoren','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#PTKARModem','PT-KAR-modem','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#PTModem','PT-modem','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#PTRadio','PT-radio','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#PTRegelaar','PT-regelaar','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#PTSCKaart','PT-SC-kaart','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#PTUitgangskaart','PT-uitgangskaart','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#PTVerwerkingseenheid','PT-verwerkingseenheid','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#PTVoedingsmodule','PT-voedingsmodule','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Putbekleding','Putbekleding','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#PutBovenbouw','Put bovenbouw','0','1','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#RaaigrasweideGraslandfase0','Raaigrasweide grasland - fase0','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Rack','Rack','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Radar','Radar','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#RechteSteun','Rechte steun','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Referentiepunt','Referentiepunt','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#ReflectorInLijnvormigElement','Reflector in lijnvormig element','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Reflectorpaal','Reflectorpaal','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Repeater','Repeater','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Reservoir','Reservoir','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#RetroreflecterendeFolie','Retroreflecterende folie','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#RetroReflecterendeKoker','Retroreflecterende koker','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#RetroreflecterendVerkeersbord','Retroreflecterend verkeersbord','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Riet','Riet','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Rioleringsbuis','Rioleringsbuis','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Riooltoegang','Riooltoegang','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#RIS','RIS','1','0','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Ruigte','Ruigte','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Schacht','Schacht','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#SchampkantAfw','Afwijkende schampkant','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#SchampkantStd','Gestandaardiseerde schampkant','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Schanskorf','Schanskorf','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#ScheurremmendeLaag','Scheurremmende laag','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Segmentcontroller','Segmentcontroller','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Seinbord','Seinbord','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Seinbrug','Seinbrug','0','0','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#SelectieveDetectielus','Selectieve detectielus','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Sierbeplanting','Sierbeplanting','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Slagboomarm','Slagboomarm','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#SlagboomarmVerlichting','Slagboomarm verlichting','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Slagboomkolom','Slagboomkolom','0','1','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Slemlaag','Slemlaag','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Sleuf','Sleuf','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Software','Software','1','0','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Sokkel','Sokkel','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#SolitaireHeester','Solitaire heester','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#SoortenrijkSchraalGraslandGraslandfase5','Soortenrijk schraal grasland - fase5','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#StandaardStalenProfiel','Standaard stalen profiel','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Steenslagverharding','Steenslagverharding','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Stobbenwal','Stobbenwal','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Stopcontact','Stopcontact','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Stortdraad','stortdraad','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Stortsteen','Stortsteen','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Straatkolk','Straatkolk','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Stroomdalgrasland','Stroomdalgrasland','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Stroomkring','Stroomkring','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#StroomMeetmodule','StroomMeetmodule','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Struweel','Struweel','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#StuurklepBrandleiding','Stuurklep brandleiding','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Taludgoot','Taludgoot','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#TechnischePut','Technische put','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Ternairmengselverharding','Ternairmengselverharding','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Terugkeer','Terugkeer','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Terugslagklep','Terugslagklep','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#TLCfiPoort','TLC-FI poort','1','0','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Toegangscontrole','Toegangscontrole','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Transformator','Transformator','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#TrottoirbandAfw','Afwijkende trottoirband','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#TrottoirbandStd','Gestandaardiseerde trottoirband','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#TrottoirbandWatergreppelAfw','Afwijkende trottoirband-watergreppel','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#TrottoirbandWatergreppelStd','Gestandaardiseerde trottoirband-watergreppel','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#UitheemsLoofhout','Uitheems loofhout','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#UPS','UPS','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Veerooster','Veerooster','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VentilatieAfsluitklep','Ventilatie afsluitklep','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Ventilatierooster','Ventilatierooster','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Ventilator','Ventilator','0','1','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Verankeringslandhoofd','Verankeringslandhoofd','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Verankeringsmassief','Verankeringsmassief','0','1','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VerhardingGrasKunststofplaat','Verharding gras-kunststofplaat','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Verkeersbordsteun','Verkeersbordsteun','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VerkeerslichtGroen','Verkeerslicht groen','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VerkeerslichtOranjegeel','Verkeerslicht oranjegeel','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VerkeerslichtRood','Verkeerslicht rood','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VerkeerslichtWit','Verkeerslicht wit','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Verkeersregelaar','Verkeersregelaar','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Verkeersspiegel','Verkeersspiegel','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VerlichtingstoestelHgLP','Verlichtingstoestel Hg LP','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VerlichtingstoestelLED','Verlichtingstoestel LED','0','1','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VerlichtingstoestelMHHP','Verlichtingstoestel MH HP','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VerlichtingstoestelNaHP','Verlichtingstoestel Na HP','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VerlichtingstoestelNaLP','Verlichtingstoestel Na LP','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VerlichtingstoestelTL','Verlichtingstoestel TL','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VerruigdGrasland','Verruigd grasland','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VerstoordGrasland','Verstoord grasland','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Verwarmingselement','Verwarmingselement','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Verwarmingslint','Verwarmingslint','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VirtueleServer','Virtuele server','1','0','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VlakGeluidsschermelement','VlakGeluidsschermelement','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Vlierstruweel','Vlierstruweel','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Vluchtdeur','Vluchtdeur','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Vluchtopening','Vluchtopening','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VoedingDerdenLaagspanning','Voeding derden laagspanning','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VoertuigkerendGeluidsschermelement','VoertuigkerendGeluidsschermelement','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Voertuiglantaarn','Voertuiglantaarn','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Voetgangerslantaarn','Voetgangerslantaarn','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Vooraankondiging','Vooraankondiging','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Voorschakelapparaat','Voorschakelapparaat','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VRBatterijICU','VR-batterij ICU','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VRBAZ','VR-BAZ','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VRBeveiligingskaart','VR-beveiligingskaart','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VRCommunicatiekaart','VR-communicatiekaart','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VRHandbediening','VR-handbediening','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VRIngangscontacten','VR-ingangscontacten','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VRIVirtueleDetectiezone','Virtuele detectiezone','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VRKortsluitbeveiliging','VR-kortsluitbeveiliging','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VRLuskaart','VR-luskaart','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VRStuurkaart','VR-stuurkaart','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VRUitgangscontacten','VR-uitgangscontacten','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VulpuntBrandweer','Vulpunt brandweer','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Walsbetonverharding','Walsbetonverharding','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#WaterdoorlatendeBestrating','Waterdoorlatende bestrating','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#WatergreppelAfw','Afwijkende watergreppel','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#WatergreppelStd','Gestandaardiseerde watergreppel','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Weegsensor','Weegsensor','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#WegbebakeningAfschermendeConstructies','Wegbebakening afschermende constructie','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Wegdekvoeg','Wegdekvoeg','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#WeggebondenDetector','Weggebonden detector','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Wegkantkast','Wegkantkast','0','1','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Wegreflector','Wegreflector','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Wervel','Wervel','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Wildreflector','Wildreflector','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Wilgenstruweel','Wilgenstruweel','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#WIMDatalogger','WIM-datalogger','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#WVConsole','WV console','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#WVLichtmast','WV lichtmast','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#WVOpvoertransformator','WV opvoertransformator','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Zender','Zender','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Zonnepaneel','Zonnepaneel','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#Keuring','Keuring','1','0','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#MeteropnameEnergiemeter','Meteropname energiemeter','1','0','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#MeteropnameEnergiemeterGecombineerd','Meteropname gecombineerde energiemeter','1','0','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefBindmiddeldosering','Proef bindmiddeldosering','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefBoomtoestand','Proef boomtoestand','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefConsistentie','Proef consistentie','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefDoorlatendheid','Proef doorlatendheid','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefDraagvermogen','Proef draagvermogen','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefDraineervermogen','Proef draineervermogen','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefDruksterkte','Proef druksterkte','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefDwarsvlakheid','Proef dwarsvlakheid','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefEffectiefBindmiddelgehalte','Proef effectief bindmiddelgehalte','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefGaafheid','Proef gaafheid','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefGeluidstest','Proef geluidstest','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefGemetenDikte','Proef gemeten dikte','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefGrondkarakteristieken','Proef grondkarakteristieken','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefHechtsterkte','Proef hechtsterkte','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefKerendVermogen','Proef kerend vermogen','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefKorrelverdeling','Proef korrelverdeling','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefLangsvlakheid','Proef langsvlakheid','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefLuchtdichtheid','Proef luchtdichtheid','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefLuchtgehalte','Proef luchtgehalte','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefLuminantie','Proef luminantie','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefMortelkwaliteit','Proef mortelkwaliteit','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefNaderOnderzoekTomograaf','Proef nader onderzoek tomograaf','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefPctHolleruimte','Proef procent holle ruimte','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefPerformantieklasse','Proef perfomantieklasse','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefPerformantieniveau','Proef performantieniveau','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefRetroreflectie','Proef retroreflectie','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefRolgeluid','Proef rolgeluid','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefSchokindex','Proef schokindex','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefSchokindexMVP','Proef schokindex motorvangplank','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefStaalvezelgehalte','Proef staalvezelgehalte','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefStroefheid','Proef stroefheid','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefTemperatuur','Proef temperatuur','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefTextuurdiepte','Proef textuurdiepte','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefVerankeringskracht','Proef verankeringskracht','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefVerderOnderzoekTrekproef','Proef verder onderzoek trekproef','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefVisueleBeoordeling','Proef visuele beoordeling','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefVlakheid','Proef vlakheid','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefVoertuigOverhelling','Proef voertuig overhelling','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefWaterdichtheid','Proef waterdichtheid','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefWatergehalte','Proef watergehalte','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefWateropslorping','Proef wateropslorping','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefWeerstandAfschilfering','Proef weerstand afschilfering','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefWerkingsbreedteGC','Proef werkingsbreedte geleide constructie','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefWerkingsbreedteMVP','Proef werkingsbreedte motorvangplank','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefZichtbaarheidBijDagOfWV','Proef zichtbaarheid bij dag of wegverlichting','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefZichtbaarheidBijNacht','Proef zichtbaarheid bij nacht','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefZichtbaarheidBijNachtNatWegdek','Proef zichtbaarheid bij nacht bij nat wegdek','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefZichtbaarheidBijNachtRegenweer','Proef zichtbaarheid bij nacht en regenweer','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/implementatieelement#Derdenobject','Derdenobject','0','1','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/implementatieelement#ActivityComplex','Activity complex','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/implementatieelement#ElectricityAppurtenance','Electricity appurtenance','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/implementatieelement#ElectricityCable','Electricity cable','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/implementatieelement#Pipe','Pipe','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/implementatieelement#TelecommunicationsAppurtenance','Telecommunications appurtenance','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/implementatieelement#TelecommunicationsCable','Telecommunications cable','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Aardingsinstallatie','Aardingsinstallatie','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Bochtafbakeningsinstallatie','Bochtafbakeningsinstallatie','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Flitsgroep','Flitsinstallatiegroep','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Kabelkoker','Kabelkoker','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#LEDRotondeafbakening','LED rotondeafbakening','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#LEDWegdekreflectorBebakening','LED wegdekreflector bebakening','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#AanvullendeGeometrie','Aanvullende geometrie','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Aardingskabel','Aardingskabel','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Aardingslus','Aardingslus','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Aardingsonderbreker','Aardingsonderbreker','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Aardingspen','Aardingspen','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Beschermbuis','Beschermbuis','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Datakabel','Datakabel','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#EquipotentiaalVerbinding','Equipotentiaal verbinding','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Flitscamera','Flitscamera','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Kabelgoot','Kabelgoot','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Kabelladder','Kabelladder','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#KabelnetBuis','Kabelnet buis','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Lensplaat','Lensplaat','1','0','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Lichtnagel','Lichtnagel','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Onderdoorboring','Onderdoorboring','0','0','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Onderwaterkruising','Onderwaterkruising','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#PunctueleVerlichtingsmast','Punctuele verlichtingsmast','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Signaalkabel','Signaalkabel','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Telecomkabel','Telecomkabel','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Voedingskabel','Voedingskabel','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Doorverbinddoos','Doorverbinddoos','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Flitspaal','Flitspaal','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Lichtzuil','Lichtzuil','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Afsluiting','Afsluiting','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Aswegerput','Aswegerput','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Aswegersite','Aswegersite','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BetonnenHeipaal','Betonnen heipaal','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BiFlash','Bi-flash','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#BiFlashInstallatie','Bi-Flash installatie','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Dieptetemperatuursensor','Dieptetemperatuursensor','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Funderingspaal','Funderingspaal','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#IoTSensor','IoT sensor','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Meetstation','Meetstation','0','1','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#NietConformBegin','Niet conform begin','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#OptischeWegdeksensor','Optische wegdeksensor','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#PMU','Power management unit','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Printer','Printer','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Pyranometer','Pyranometer','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#ThermoHygrometer','Thermo-hygrometer','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Tijdschakelaar','Tijdschakelaar','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Weegcel','Weegcel','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Weegcomputer','Weegcomputer','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Weegplaat','Weegplaat','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Wegdeksensor','Wegdeksensor','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Windmeter','Windmeter','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Aanvaarbescherming','Aanvaarbescherming','0','1','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#ASTRIDInstallatie','ASTRID installatie','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Balk','Balk','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Boog','Boog','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Brug','Brug','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Brugballast','Brugballast','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Brugdeel','Brugdeel','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Brugdek','Brugdek','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Brugligger','Brugligger','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#ExterneNaspanning','Externe naspanning','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#HorizontaleConstructieplaat','Horizontale constructieplaat','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Kelderlandhoofd','Kelderlandhoofd','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Kelderpijler','Kelderpijler','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Kolom','Kolom','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Landhoofd','Landhoofd','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Oplegrij','Oplegrij','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Pijler','Pijler','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Pyloon','Pyloon','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#RadioheruitzendInstallatie','Radioheruitzend installatie','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Randprofiel','Randprofiel','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Silo','Silo','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Tank','Tank','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Trekker','Trekker','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#VakwerkElement','Vakwerkelement','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#VoorzieningNegatieveReactie','Voorziening negatieve reactie','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Wand','Wand','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Windverband','Windverband','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Zoutbijlaadplaats','Zoutbijlaadplaats','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#AlarmModule','Alarmmodule','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Antennecoupler','Antennecoupler','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Badgelezer','Badgelezer','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BetonnenConstructieObject','Betonnen constructie object','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BetonnenPlaat','Betonnen plaat','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BetonnenProfiel','Betonnen profiel','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Breedplaat','Breedplaat','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Brugdekvoeg','Brugdekvoeg','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#CapacitieveNiveaumeting','Capacitieve niveaumeting','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#DABRepeater','DAB Repeater','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Display','Display','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Draagkabel','Draagkabel','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Druklaag','Druklaag','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Elektromotor','Elektromotor','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#FMRepeaterBox','FM repeater box','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Funderingszool','Funderingszool','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Grond','Grond','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#HoutenConstructieprofiel','Houten constructieprofiel','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#HydrostatischeNiveaumeting','Hydrostatische niveaumeting','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Ladder','Ladder','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Lockerkast','Lockerkast','0','1','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Lockermanagementmodule','Lockermanagementmodule','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Metselwerk','Metselwerk','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Noodstopknop','Noodstopknop','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Oplegging','Oplegging','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#RadarNiveaumeting','Radarniveaumeting','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Radiolistener','Radiolistener','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#SignaalControleModule','Signaal controle module','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Signaalfilter','Signaalfilter','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#SignaalSplitter','Signaalsplitter','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Spankabel','Spankabel','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Spanstaaf','Spanstaaf','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#StalenConstructieObject','Stalen constructie-object','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#StalenPlaat','Stalen plaat','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Stuurklep','Stuurklep','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Toegangscontroller','Toegangscontroller','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#TrekdraadEncoderNiveaumeting','Trekdraad encoder niveaumeting','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Trillingsvoorziening','Trillingsvoorziening','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#UltrasoonNiveaumeting','Ultrasoon niveaumeting','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Veiligheidsrelais','Veilgheidsrelais','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Verkenmerk','Verkenmerk','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Vlotplaat','Vlotplaat','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Vlotterschakelaar','Vlotterschakelaar','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Zendmast','Zendmast','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#ZuilTGC','Zuil toegangscontrole','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#AutomatischeOmschakelaar','Automatische omschakelaar','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Batterijlader','Batterijlader','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Been','Been','1','0','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Bewegingssensor','Bewegingssensor','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BypassSchakelaar','Bypass schakelaar','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#MIVMeetpunt','MIV meetpunt','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Spanningsomvormer','Spanningsomvormer','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Stroomverdelingssysteem','Stroomverdelingssysteem','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Wilddetectiezone','Wilddetectiezone','0','0','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/implementatieelement#Toegangsprocedure','Toegangsprocedure','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Berlinerwand','Berlinerwand','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Combiwand','Combiwand','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Damwand','Damwand','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#DrogePompkelder','Droge pompkelder','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Funderingswand','Funderingswand','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#GewapendeGrond','Gewapende grond','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Gewichtsmuur','Gewichtsmuur','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Koppeling','Koppeling','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#MVPaal','MV Paal','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Overbrenging','Overbrenging','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#PompGroep','Pompgroep','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Pompkamer','Pompkamer','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Pompstation','Pompstation','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#SecansTangenspalenwand','Secans- of tangenspalenwand','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Soilmixwand','Soilmixwand','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#StalenCaisson','Stalen caisson','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#StalenFunderingsprofiel','Stalen funderingsprofiel','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#TijdelijkeBerlinerwandTussenschot','Tijdelijke berlinerwandtussenschot','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#VernageldeWand','Vernagelde wand','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Aandrijfas','Aandrijfas','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#AfdekplaatBuispaal','Afdekplaat buispaal','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Afdichting','Afdichting','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Baret','Baret','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Beschermlaag','Beschermlaag','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BetonnenBoorpaal','Betonnen boorpaal','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BetonnenCaison','Betonnen caisson','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BetonnenDamplank','Betonnen damplank','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BetonnenPredal','Betonnen predal','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BetonnenSchroefpaal','Betonnen schroefpaal','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#CementBentonietwand','Cement-bentonietwand','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#CFAPaal','CFA paal','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Controlepaneel','Controlepaneel','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Dichting','Dichting','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Diepwand','Diepwand','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Dompelpomp','Dompelpomp','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#ElastischElement','Elastisch element','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Flens','Flens','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Flenskoppeling','Flenskoppeling','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#FunderingOpStaal','Fundering op staal','0','1','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Funderingsput','Funderingsput','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Gassensor','Gassensor','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Glijlager','Glijlager','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Grindkern','Grindkern','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#GrondankerVerdeelplaat','Stalen verdeelplaat','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Groutanker','Groutanker','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Groutpaal','Groutpaal','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Hijsinstallatie','hijsinstallatie','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#HoutenDamplank','Houten damplank','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#HoutenHeipaal','Houten Heipaal','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Huls','Huls','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Injectiepaal','Injectiepaal','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#KunststoffenDamplank','Kunststoffen Damplank','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Lagerblok','Lagerblok','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Micropaal','Micropaal','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Motorbeveiligingsschakelaar','Motorbeveiliging','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Motorsturing','Motorsturing','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Naaf','Naaf','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Onderdrukventilator','Onderdrukventilator','0','1','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Onderstel','Onderstel','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Ontluchtingsventiel','Ontluchtingsventiel','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Pompgeleiding','Pompgeleiding','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Pomphuis','Pomphuis','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Relais','Relais','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Riem','Riem','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Riemschijf','Riemschijf','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Riemspanner','Riemspanner','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Schakelketting','Schakelketting','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Sleufbekisting','Sleufbekisting','0','0','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Smeernippel','Smeernippel','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#SoilmixwandElement','Soilmixwand-element','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Spuitbeton','Spuitbeton','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#StalenBuispaal','Stalen buispaal','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#StalenDamplank','Stalen damplank','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#StalenTrekstaaf','Stalen trekstaaf','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Tandwiel','Tandwiel','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Tandwielkast','Tandwielkast','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Toestelventilator','Toestelventilator','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VerankeringsplaatMicropaal','Verankeringsplaat micropaal','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Verluchtingskap','Verluchtingskap','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Voetbocht','Voetbocht','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Voorzetconstructie','Voorzetconstructie','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Waaier','Waaier','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Wentellager','Wentellager','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Werkschakelaar','Werkschakelaar','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Wormschroef','Wormschroef','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Afsluitkraan','Afsluitkraan','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#BasisverlichtingTunnel','Basisverlichting','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Deur','Deur','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Gracht','Gracht','0','0','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Koker','Koker','0','0','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Kokerafsluiting','Kokerafsluiting','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Kokercomplex','Kokercomplex','0','0','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Kokersectie','Kokersectie','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Kokerventilatie','Kokerventilatie','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Kokervoeg','Kokervoeg','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Leuning','Leuning','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Lmuur','L-muur','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Loopvloer','Loopvloer','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Magneetgrendel','Magneetgrendel','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Matrixbord','Matrixbord','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Noodverlichtingstoestel','Noodverlichtingstoestel','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Slot','Slot','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Slotcilinder','Slotcilinder','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#StalenSchroefpaal','Stalen schroefpaal','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Temperatuursensor','Temperatuursensor','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#TGCUitbreidingsModule','Toegangscontroller uitbreidingsmodule','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#TijdelijkeOpslagplaats','Tijdelijke opslagplaats','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Toegangspoort','Toegangspoort','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Trap','Trap','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Trappentoren','Trappentoren','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Tunnelverlichting','Tunnelverlichting','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Ventilatiecluster','Ventilatiecluster','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#VersterkingsverlichtingTunnel','Versterkingsverlichting','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Vluchtdeurindicatie','Vluchtdeurindicatie','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Vluchtganginrichting','Vluchtganginrichting','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#WaterdoorvoerendeDuiker','Waterdoorvoerende duiker','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Waterloop','Waterloop','0','0','1','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Waterweg','Waterweg','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Zelfsluiter','Zelfsluiter','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Zendontvanger','Zendontvanger','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#LKSensorDoorverbinddoos','Luchtkwaliteitsensor doorverbinddoos','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#MIVModule','MIV-module','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Bliksemafleider','Bliksemafleider','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Straatkap','Straatkap','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Ventilatiekanaal','Ventilatiekanaal','0','0','1','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Vluchtgeleiding','Vluchtgeleiding','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Voedingskeuzeschakelaar','Voedingskeuzeschakelaar','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Bevestigingssteun','Bevestigingssteun','0','1','0','0'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#OpenInfiltratievoorziening','Open infiltratievoorziening','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Spaarbekken','Spaarbekken','0','0','0','1'),
-('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Vluchtroute','Vluchtroute','0','0','0','1')
-), cte_asset_withGeomInfo as (
-	select
-		a.uuid
-		, at.uuid as assettype_uuid
-		, at.naam
-		, at.uri
-		, g.wkt_string
-		-- Extract the type of geometry from the wkt_string
-		, case
-			when SUBSTRING("wkt_string" FROM '^(POINT Z|LINESTRING Z|POLYGON Z)') = 'POINT Z' then 1 else 0
-		end as punt3D
-		, case
-			when SUBSTRING("wkt_string" FROM '^(POINT Z|LINESTRING Z|POLYGON Z)') = 'LINESTRING Z' then 1 else 0
-		end as lijn3D
-		, case
-			when SUBSTRING("wkt_string" FROM '^(POINT Z|LINESTRING Z|POLYGON Z)') = 'POLYGON Z' then 1 else 0
-		end as polygoon3D
-	from assets a 
-	left join geometrie g on a.uuid = g.assetuuid
-	left join assettypes at on a.assettype = at.uuid
-	where
-		g.wkt_string is not null
-		and 
-		a.actief = true
-)
+with cte_geometry_artefact(uri,label_nl,geen_geometrie,punt3D,lijn3D,polygoon3D,gewijzigd_sinds) as (
+      VALUES
+ ('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Baanlichaam','Baanlichaam','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#BlindePut','Blinde put','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Ecoduct','Ecoduct','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Ecoduiker','Ecoduiker','0','0','1','1','GA_2.12.0')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Ecokoker','Ecokoker','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Ecotunnel','Ecotunnel','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Ecovallei','Ecovallei','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Fietstelinstallatie','Fietstelinstallatie','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Gebouw','Gebouw','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#GecombineerdePut','Gecombineerde put','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#GeluidwerendeConstructie','Geluidwerende constructie','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#GroepDwarseMarkeringEnFiguratie','Groep dwarse- en figuratiemarkering','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#GroepMarkering','Groepering alle soorten markering','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Gronddam','Gronddam','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Hulppost','Hulppost','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#InspectieputRiolering','Inspectieput riolering','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#IPBackbone','IP backbone','1','0','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#L2AccessStructuur','L2 access structuur','1','0','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Link','Link','1','0','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Lokaal','Lokaal','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Luchtkwaliteitsensor','Luchtkwaliteitsensor','0','1','0','0','GA_2.11.0')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#MIVInstallatie','MIV-installatie','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Onderbord','Onderbord','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Pad','Pad','1','0','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Rioleringsstelsel','Rioleringsstelsel','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Slagboom','Slagboom installatie','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Trajectcontrole','Trajectcontrole','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#VerkeersbordConcept','Verkeersbordconcept','1','0','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Verkeersbordopstelling','Verkeersbordopstelling','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#VerkeersbordVerkeersteken','Verkeersbord - verkeersteken','1','0','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#VLAN','VLAN','1','0','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Wegberm','Wegberm','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Zpad','Zpad','1','0','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Aansluitmof','Aansluitmof','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Aansluitopening','Aansluitopening','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Aanstraalverlichting','Aanstraalverlichting','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Afmetingsensor','Afmetingsensor','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Afscherming','Afscherming','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Afsluiter','Afsluiter','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Aftakking','Aftakking','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#AIDModule','AID-module','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#AnalogeHoppinzuil','Analoge hoppinzuil','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#ANPRCamera','ANPR camera','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Antenne','Antenne','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#AntiParkeerpaal','Antiparkeerpaal','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Armatuurcontroller','Armatuurcontroller','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Audioversterker','Audioversterker','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Batterij','Batterij','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Bel','Bel','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BeschermingWapening','Bescherming wapening','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BestratingVanBetonstraatsteen','Bestrating van betonstraatsteen','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BestratingVanBetontegel','Bestrating van betontegel','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BestratingVanGebakkenStraatsteen','Bestrating van gebakken straatsteen','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BestratingVanGrasbetontegel','Bestrating van grasbetontegel','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BestratingVanKassei','Bestrating van kassei','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BestratingVanMozaiekkei','Bestrating van mozaiekkei','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BestratingVanNatuursteentegel','Bestrating van natuursteentegel','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Bestrijking','Bestrijking','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Bevestigingsbeugel','Bevestigingsbeugel','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BijzonderGeluidsschermelement','BijzonderGeluidsschermelement','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Binnenverlichtingstoestel','Binnenverlichtingstoestel','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BitumineuzeLaag','Bitumineuze laag','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BloemrijkGlanshavergrasland','Bloemrijk glanshavergrasland','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BloemrijkGraslandGraslandfase4','Bloemrijk grasland - fase4','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BloemrijkStruisgrasgrasland','Bloemrijk struisgrasgrasland','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BloemrijkVochtigTotNatGrasland','Bloemrijk vochtig tot nat grasland','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BoogpaalVerkeerslicht','Boogpaal verkeerslicht','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Boom','Boom','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Boombrug','Boombrug','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Bouwput','Bouwput','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Bovenbouw','Bovenbouw','0','1','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Braam','Braam','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Brandblusser','Brandblusser','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Brandhaspel','Brandhaspel','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Brandleiding','Brandleiding','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Brandnetelruigte','Brandnetelruigte','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BremEnGaspeldoornstruweel','Brem en gaspeldoornstruweel','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Buisbekleding','Buisbekleding','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Cabine','Cabine','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Cabinecontroller','Cabinecontroller','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Calamiteitendoorsteek','Calamiteitendoorsteek','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#CalamiteitsBord','Calamiteitsbord','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Camera','Camera','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Cementbetonverharding','Cementbetonverharding','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Cluster','Cluster','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Codeklavier','Codeklavier','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#ColloidaalBeton','Colloidaal beton','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Combilantaarn','Combilantaarn','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#ConstructieSokkel','Constructie sokkel','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Contactor','Contactor','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Contactpunt','Contactpunt','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Container','Container','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Contourverlichting','Contourverlichting','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Damwand','Damwand','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#DetectieCamera','Detectie camera','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Dieselgenerator','Dieselgenerator','0','1','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Dilatatie','Dilatatie','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Divergentiepuntbebakeningselement','Divergentiepuntbebakeningselement','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#DNBHoogspanning','DNB hoogspanning','1','0','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#DNBLaagspanning','DNB laagspanning','1','0','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Dolomietverharding','Dolomietverharding','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#DominantGraslandfase2','Dominant grasland - fase2','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Dongle','Dongle','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Doorgang','Doorgang','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Doornstruweel','Doornstruweel','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Draineerbuis','Draineerbuis','0','1','1','0','GA_2.8.0')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Drukknop','Drukknop','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Drukverhogingsgroep','Drukverhogingsgroep','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Duikschot','Duikschot','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Duingrasland','Duingrasland','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#DunneOverlaging','Dunne overlaging','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#DwarseMarkering','Dwarse markering','0','0','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#DwarseMarkeringVerschuind','Dwarse markering verschuind','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Dwerghavergrasland','Dwerghavergrasland','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#DwergstruikvegetatieHeidesoorten','Dwergstruikvegetatie heidesoorten','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#DynamischeVluchtwegindicatie','Dynamische vluchtwegindicatie','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#DynBordExternePU','Processing unit voor dynamisch borden','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#DynBordOpMaat','Dynamisch bord op maat','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#DynBordPK','Pijl-Kruis-bord','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#DynBordRSS','RSS-bord','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#DynBordRVMS','RVMS-bord','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#DynBordVMS','VMS-bord','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#DynBordZ30','Dynamisch Zone-30 bord','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#EcoPoort','Eco poort','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Ecoraster','Ecoraster','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Eindstuk','Eindstuk','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#EnergiemeterAWV','Energiemeter AWV','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#EnergiemeterDerden','Energiemeter derden','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#EnergiemeterDNB','Energiemeter DNB','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#EnergiemeterDNBPiek','Energiemeter DNB piek','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#EnergiemeterDNBReactief','Energiemeter DNB reactief','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Exoten','Exoten','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#ExterneDetectie','Externe detectie','1','0','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#FieldOfView','Field-of-View','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Fietslantaarn','Fietslantaarn','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#FietstelDisplay','Fietstel display','0','1','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Fietstelsysteem','Fietstelsysteem','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#FiguratieMarkering','Figuratiemarkering','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#FiguratieMarkeringVerschuind','Figuratie markering verschuind','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#ForfaitaireAansluiting','Forfaitaire aansluiting','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Funderingsmassief','Funderingsmassief','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Funderingsplaat','Funderingsplaat','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Galgpaal','Galgpaal','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#GeexpandeerdPolystyreen','Geexpandeerd polystyreen','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#GekleurdWegvlakMarkering','Gekleurd wegvlak markering','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Geleideconstructie','Geleideconstructie','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Geleidingsverlichting','Geleidingsverlichting','0','1','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Geleidingswand','Geleidingswand','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#GeluidswerendeConstructie','Geluidswerende constructie','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Geotextiel','Geotextiel','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#GetesteBeginconstructie','Geteste beginconstructie','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#GPU','GPU','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#GrasKruidenmixGraslandfase3','Gras kruidenmix grasland - fase3','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Grasland','Grasland','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Grasmat','Grasmat','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#GrassenmixGraslandfase1','Grassenmix grasland - fase1','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Grindgazon','Grindgazon','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Haag','Haag','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Handbediening','Handbediening','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Handwiel','Handwiel','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Hardware','Hardware','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Heestermassief','Heestermassief','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#HeischraalGrasland','Heischraal grasland','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Hoofdschakelaar','Hoofdschakelaar','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Hoogtedetectie','Hoogtedetectie','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#HSBeveiligingscel','HS beveiligingscel','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#HSCabine','HS-cabine','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Huisaansluitput','Huisaansluitput','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Hulppostkast','Hulppostkast','0','1','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Hulpstuk','Hulpstuk','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Hydrant','Hydrant','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Iepenstruweel','Iepenstruweel','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#IndoorKast','Indoor kast','0','1','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Infiltratievoorziening','Infiltratievoorziening','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#IntercomServer','Intercom server','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#IntercomToestel','Intercom toestel','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#InvasieveExoten','Invasieve exoten','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#InwendigVerlichtPictogram','Inwendig verlicht pictogram','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#IOKaart','IO-Kaart','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#IpPowerSwitch','IP powerswitch','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#ITSapp','ITSapp','1','0','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Kabelmof','Kabelmof','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#KabelnetToegang','Kabelnet toegang','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Kalkgrasland','Kalkgrasland','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#KalkrijkKamgrasland','Kalkrijk kamgrasland','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Kamer','Kamer','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#KantstrookAfw','Afwijkende kantstrook','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#KantstrookStd','Gestandaardiseerde Kantstrook','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Klimatisatie','Klimatisatie','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Klimvorm','Klimvorm','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Knipperlantaarn','Knipperlantaarn','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Kopmuur','Kopmuur','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#KringsBerliner','Krings Berliner','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Laagspanningsbord','Laagspanningsbord','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#LEDDriver','LED-driver','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#LetterCijferMarkering','Letter-cijfer markering','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#LetterMarkeringVerschaald','Verschaalde letter markering','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Lichtmast','Lichtmast','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Lichtsensor','Lichtsensor','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#LijnvormigElementMarkering','Lijnvormig element markering','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#LogischePoort','Logische poort','1','0','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Loofhout','Loofhout','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#LoopTerminationAndProtection','Loop termination and protection','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#LuchtkwaliteitControleUnit','Luchtkwaliteit controle unit','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Luchtkwaliteitreflector','Luchtkwaliteitreflector','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#LuchtkwaliteitZenderOntvanger','Luchtkwaliteit Zender-Ontvanger','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Luidspreker','Luidspreker','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#MACQPUFrontend','MACQ PU Frontend','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Mantelbuis','Mantelbuis','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Meetcel','Meetcel','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Meetmicrofoon','Meetmicrofoon','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#MIVCommunicatiekaart','MIV-communicatiekaart','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#MIVLus','MIV-lus','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#MIVLuskaart','MIV-luskaart','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#MIVProcessorkaart','MIV-processorkaart','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#MIVVoedingsmodule','MIV-voedingsmodule','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Montagekast','Montagekast','0','1','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Motorvangplank','Motorvangplank','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Muurdoorgangsstuk','Muurdoorgangsstuk','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Muurvegetatie','Muurvegetatie','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Naaldhout','Naaldhout','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#NatteRuigte','Natte ruigte','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Neerslagsensor','Neerslagsensor','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Netstabilisator','Netstabilisator','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Netwerkelement','Netwerkelement','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Netwerkkaart','Netwerkkaart','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#NetwerkModem','Netwerkmodem','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Netwerkpoort','Netwerkpoort','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#NietGetestBeginstuk','Niet getest beginstuk','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#NietSelectieveDetectielus','Niet-selectieve detectielus','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#NietStandaardStalenProfiel','Niet-standaard stalen profiel','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Noppendrainage','Noppendrainage','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Obstakelbeveiliger','Obstakelbeveiliger','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#OmegaElement','Omega element','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Omvormer','Omvormer','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#OnbegroeidVoorkomen','Onbegroeid voorkomen','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Onderbouw','Onderbouw','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Onderwatervegetatie','Onderwatervegetatie','0','1','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#OntluchterBrandleiding','Ontluchter brandleiding','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Ontvanger','Ontvanger','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#OpenbaarVervoerslantaarn','Openbaar vervoerslantaarn','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#OpgaandeBoom','Opgaande boom','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#OpgaandeHoutigeVegetatie','Opgaande houtige vegetatie','0','0','1','1','GA_2.8.0')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Overdrukventilator','Overdrukventilator','0','1','0','1','GA_2.9.0')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Overgangsconstructie','Overgangsconstructie','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#OverlangseMarkering','Overlangse markering','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Overstort','Overstort','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Overstortrand','Overstortrand','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#PCIKaart','PCI-kaart','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Persleiding','Persleiding','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Pictogram','Pictogram','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#PiezometrischeBuis','Piezometrische buis','0','1','1','0','GA_2.12.0')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Plantbakvorm','Plantbakvorm','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#PLC','PLC','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#PlintGC','PlintGC','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Plooibaken','Plooibaken','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#PoEInjector','Power over Ethernet injector','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Pomp','Pomp','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#PTDemodulatoren','PT-demodulatoren','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#PTKARModem','PT-KAR-modem','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#PTModem','PT-modem','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#PTRadio','PT-radio','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#PTRegelaar','PT-regelaar','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#PTSCKaart','PT-SC-kaart','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#PTUitgangskaart','PT-uitgangskaart','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#PTVerwerkingseenheid','PT-verwerkingseenheid','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#PTVoedingsmodule','PT-voedingsmodule','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Putbekleding','Putbekleding','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#PutBovenbouw','Put bovenbouw','0','1','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#RaaigrasweideGraslandfase0','Raaigrasweide grasland - fase0','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Rack','Rack','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Radar','Radar','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#RechteSteun','Rechte steun','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Referentiepunt','Referentiepunt','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#ReflectorInLijnvormigElement','Reflector in lijnvormig element','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Reflectorpaal','Reflectorpaal','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Repeater','Repeater','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Reservoir','Reservoir','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#RetroreflecterendeFolie','Retroreflecterende folie','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#RetroReflecterendeKoker','Retroreflecterende koker','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#RetroreflecterendVerkeersbord','Retroreflecterend verkeersbord','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Riet','Riet','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Rioleringsbuis','Rioleringsbuis','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Riooltoegang','Riooltoegang','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#RIS','RIS','1','0','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Ruigte','Ruigte','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Schacht','Schacht','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#SchampkantAfw','Afwijkende schampkant','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#SchampkantStd','Gestandaardiseerde schampkant','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Schanskorf','Schanskorf','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#ScheurremmendeLaag','Scheurremmende laag','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Segmentcontroller','Segmentcontroller','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Seinbord','Seinbord','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Seinbrug','Seinbrug','0','0','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#SelectieveDetectielus','Selectieve detectielus','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Sierbeplanting','Sierbeplanting','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Slagboomarm','Slagboomarm','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#SlagboomarmVerlichting','Slagboomarm verlichting','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Slagboomkolom','Slagboomkolom','0','1','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Slemlaag','Slemlaag','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Sleuf','Sleuf','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Software','Software','1','0','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Sokkel','Sokkel','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#SolitaireHeester','Solitaire heester','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#SoortenrijkSchraalGraslandGraslandfase5','Soortenrijk schraal grasland - fase5','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#StandaardStalenProfiel','Standaard stalen profiel','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Steenslagverharding','Steenslagverharding','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Stobbenwal','Stobbenwal','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Stopcontact','Stopcontact','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Stortdraad','stortdraad','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Stortsteen','Stortsteen','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Straatkolk','Straatkolk','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Stroomdalgrasland','Stroomdalgrasland','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Stroomkring','Stroomkring','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#StroomMeetmodule','StroomMeetmodule','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Struweel','Struweel','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#StuurklepBrandleiding','Stuurklep brandleiding','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Taludgoot','Taludgoot','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#TechnischePut','Technische put','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Ternairmengselverharding','Ternairmengselverharding','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Terugkeer','Terugkeer','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Terugslagklep','Terugslagklep','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#TLCfiPoort','TLC-FI poort','1','0','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Toegangscontrole','Toegangscontrole','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Transformator','Transformator','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#TrottoirbandAfw','Afwijkende trottoirband','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#TrottoirbandStd','Gestandaardiseerde trottoirband','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#TrottoirbandWatergreppelAfw','Afwijkende trottoirband-watergreppel','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#TrottoirbandWatergreppelStd','Gestandaardiseerde trottoirband-watergreppel','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#UitheemsLoofhout','Uitheems loofhout','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#UPS','UPS','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Veerooster','Veerooster','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VentilatieAfsluitklep','Ventilatie afsluitklep','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Ventilatierooster','Ventilatierooster','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Ventilator','Ventilator','0','1','0','1','GA_2.9.0')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Verankeringslandhoofd','Verankeringslandhoofd','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Verankeringsmassief','Verankeringsmassief','0','1','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VerhardingGrasKunststofplaat','Verharding gras-kunststofplaat','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Verkeersbordsteun','Verkeersbordsteun','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VerkeerslichtGroen','Verkeerslicht groen','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VerkeerslichtOranjegeel','Verkeerslicht oranjegeel','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VerkeerslichtRood','Verkeerslicht rood','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VerkeerslichtWit','Verkeerslicht wit','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Verkeersregelaar','Verkeersregelaar','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Verkeersspiegel','Verkeersspiegel','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VerlichtingstoestelHgLP','Verlichtingstoestel Hg LP','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VerlichtingstoestelLED','Verlichtingstoestel LED','0','1','1','0','GA_2.5.0')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VerlichtingstoestelMHHP','Verlichtingstoestel MH HP','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VerlichtingstoestelNaHP','Verlichtingstoestel Na HP','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VerlichtingstoestelNaLP','Verlichtingstoestel Na LP','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VerlichtingstoestelTL','Verlichtingstoestel TL','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VerruigdGrasland','Verruigd grasland','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VerstoordGrasland','Verstoord grasland','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Verwarmingselement','Verwarmingselement','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Verwarmingslint','Verwarmingslint','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VirtueleServer','Virtuele server','1','0','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VlakGeluidsschermelement','VlakGeluidsschermelement','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Vlierstruweel','Vlierstruweel','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Vluchtdeur','Vluchtdeur','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Vluchtopening','Vluchtopening','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VoedingDerdenLaagspanning','Voeding derden laagspanning','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VoertuigkerendGeluidsschermelement','VoertuigkerendGeluidsschermelement','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Voertuiglantaarn','Voertuiglantaarn','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Voetgangerslantaarn','Voetgangerslantaarn','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Vooraankondiging','Vooraankondiging','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Voorschakelapparaat','Voorschakelapparaat','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VRBatterijICU','VR-batterij ICU','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VRBAZ','VR-BAZ','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VRBeveiligingskaart','VR-beveiligingskaart','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VRCommunicatiekaart','VR-communicatiekaart','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VRHandbediening','VR-handbediening','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VRIngangscontacten','VR-ingangscontacten','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VRIVirtueleDetectiezone','Virtuele detectiezone','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VRKortsluitbeveiliging','VR-kortsluitbeveiliging','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VRLuskaart','VR-luskaart','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VRStuurkaart','VR-stuurkaart','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VRUitgangscontacten','VR-uitgangscontacten','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VulpuntBrandweer','Vulpunt brandweer','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Walsbetonverharding','Walsbetonverharding','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#WaterdoorlatendeBestrating','Waterdoorlatende bestrating','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#WatergreppelAfw','Afwijkende watergreppel','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#WatergreppelStd','Gestandaardiseerde watergreppel','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Weegsensor','Weegsensor','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#WegbebakeningAfschermendeConstructies','Wegbebakening afschermende constructie','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Wegdekvoeg','Wegdekvoeg','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#WeggebondenDetector','Weggebonden detector','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Wegkantkast','Wegkantkast','0','1','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Wegreflector','Wegreflector','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Wervel','Wervel','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Wildreflector','Wildreflector','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Wilgenstruweel','Wilgenstruweel','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#WIMDatalogger','WIM-datalogger','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#WVConsole','WV console','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#WVLichtmast','WV lichtmast','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#WVOpvoertransformator','WV opvoertransformator','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Zender','Zender','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Zonnepaneel','Zonnepaneel','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#Keuring','Keuring','1','0','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#MeteropnameEnergiemeter','Meteropname energiemeter','1','0','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#MeteropnameEnergiemeterGecombineerd','Meteropname gecombineerde energiemeter','1','0','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefBindmiddeldosering','Proef bindmiddeldosering','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefBoomtoestand','Proef boomtoestand','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefConsistentie','Proef consistentie','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefDoorlatendheid','Proef doorlatendheid','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefDraagvermogen','Proef draagvermogen','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefDraineervermogen','Proef draineervermogen','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefDruksterkte','Proef druksterkte','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefDwarsvlakheid','Proef dwarsvlakheid','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefEffectiefBindmiddelgehalte','Proef effectief bindmiddelgehalte','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefGaafheid','Proef gaafheid','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefGeluidstest','Proef geluidstest','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefGemetenDikte','Proef gemeten dikte','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefGrondkarakteristieken','Proef grondkarakteristieken','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefHechtsterkte','Proef hechtsterkte','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefKerendVermogen','Proef kerend vermogen','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefKorrelverdeling','Proef korrelverdeling','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefLangsvlakheid','Proef langsvlakheid','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefLuchtdichtheid','Proef luchtdichtheid','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefLuchtgehalte','Proef luchtgehalte','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefLuminantie','Proef luminantie','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefMortelkwaliteit','Proef mortelkwaliteit','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefNaderOnderzoekTomograaf','Proef nader onderzoek tomograaf','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefPctHolleruimte','Proef procent holle ruimte','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefPerformantieklasse','Proef perfomantieklasse','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefPerformantieniveau','Proef performantieniveau','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefRetroreflectie','Proef retroreflectie','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefRolgeluid','Proef rolgeluid','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefSchokindex','Proef schokindex','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefSchokindexMVP','Proef schokindex motorvangplank','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefStaalvezelgehalte','Proef staalvezelgehalte','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefStroefheid','Proef stroefheid','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefTemperatuur','Proef temperatuur','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefTextuurdiepte','Proef textuurdiepte','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefVerankeringskracht','Proef verankeringskracht','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefVerderOnderzoekTrekproef','Proef verder onderzoek trekproef','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefVisueleBeoordeling','Proef visuele beoordeling','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefVlakheid','Proef vlakheid','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefVoertuigOverhelling','Proef voertuig overhelling','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefWaterdichtheid','Proef waterdichtheid','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefWatergehalte','Proef watergehalte','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefWateropslorping','Proef wateropslorping','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefWeerstandAfschilfering','Proef weerstand afschilfering','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefWerkingsbreedteGC','Proef werkingsbreedte geleide constructie','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefWerkingsbreedteMVP','Proef werkingsbreedte motorvangplank','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefZichtbaarheidBijDagOfWV','Proef zichtbaarheid bij dag of wegverlichting','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefZichtbaarheidBijNacht','Proef zichtbaarheid bij nacht','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefZichtbaarheidBijNachtNatWegdek','Proef zichtbaarheid bij nacht bij nat wegdek','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefZichtbaarheidBijNachtRegenweer','Proef zichtbaarheid bij nacht en regenweer','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/implementatieelement#Derdenobject','Derdenobject','0','1','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/implementatieelement#ActivityComplex','Activity complex','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/implementatieelement#ElectricityAppurtenance','Electricity appurtenance','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/implementatieelement#ElectricityCable','Electricity cable','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/implementatieelement#Pipe','Pipe','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/implementatieelement#TelecommunicationsAppurtenance','Telecommunications appurtenance','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/implementatieelement#TelecommunicationsCable','Telecommunications cable','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Aardingsinstallatie','Aardingsinstallatie','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Bochtafbakeningsinstallatie','Bochtafbakeningsinstallatie','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Flitsgroep','Flitsinstallatiegroep','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Kabelkoker','Kabelkoker','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#LEDRotondeafbakening','LED rotondeafbakening','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#LEDWegdekreflectorBebakening','LED wegdekreflector bebakening','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#AanvullendeGeometrie','Aanvullende geometrie','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Aardingskabel','Aardingskabel','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Aardingslus','Aardingslus','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Aardingsonderbreker','Aardingsonderbreker','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Aardingspen','Aardingspen','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Beschermbuis','Beschermbuis','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Datakabel','Datakabel','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#EquipotentiaalVerbinding','Equipotentiaal verbinding','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Flitscamera','Flitscamera','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Kabelgoot','Kabelgoot','0','0','0','1','GA_2.8.0')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Kabelladder','Kabelladder','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#KabelnetBuis','Kabelnet buis','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Lensplaat','Lensplaat','1','0','0','0','GA_2.8.0')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Lichtnagel','Lichtnagel','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Onderdoorboring','Onderdoorboring','0','0','1','1','GA_2.11.0')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Onderwaterkruising','Onderwaterkruising','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#PunctueleVerlichtingsmast','Punctuele verlichtingsmast','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Signaalkabel','Signaalkabel','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Telecomkabel','Telecomkabel','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Voedingskabel','Voedingskabel','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Doorverbinddoos','Doorverbinddoos','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Flitspaal','Flitspaal','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Lichtzuil','Lichtzuil','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Afsluiting','Afsluiting','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Aswegerput','Aswegerput','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Aswegersite','Aswegersite','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BetonnenHeipaal','Betonnen heipaal','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BiFlash','Bi-flash','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#BiFlashInstallatie','Bi-Flash installatie','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Dieptetemperatuursensor','Dieptetemperatuursensor','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Funderingspaal','Funderingspaal','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#IoTSensor','IoT sensor','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Meetstation','Meetstation','0','1','0','0','GA_2.12.0')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#NietConformBegin','Niet conform begin','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#OptischeWegdeksensor','Optische wegdeksensor','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#PMU','Power management unit','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Printer','Printer','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Pyranometer','Pyranometer','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#ThermoHygrometer','Thermo-hygrometer','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Tijdschakelaar','Tijdschakelaar','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Weegcel','Weegcel','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Weegcomputer','Weegcomputer','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Weegplaat','Weegplaat','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Wegdeksensor','Wegdeksensor','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Windmeter','Windmeter','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Aanvaarbescherming','Aanvaarbescherming','0','1','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#ASTRIDInstallatie','ASTRID installatie','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Balk','Balk','0','0','0','1','GA_2.9.0')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Boog','Boog','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Brug','Brug','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Brugballast','Brugballast','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Brugdeel','Brugdeel','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Brugdek','Brugdek','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Brugligger','Brugligger','0','0','0','1','GA_2.8.0')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#ExterneNaspanning','Externe naspanning','0','1','0','0','GA_2.9.0')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#HorizontaleConstructieplaat','Horizontale constructieplaat','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Kelderlandhoofd','Kelderlandhoofd','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Kelderpijler','Kelderpijler','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Kolom','Kolom','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Landhoofd','Landhoofd','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Oplegrij','Oplegrij','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Pijler','Pijler','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Pyloon','Pyloon','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#RadioheruitzendInstallatie','Radioheruitzend installatie','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Randprofiel','Randprofiel','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Silo','Silo','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Tank','Tank','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Trekker','Trekker','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#VakwerkElement','Vakwerkelement','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#VoorzieningNegatieveReactie','Voorziening negatieve reactie','0','0','1','0','GA_2.8.0')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Wand','Wand','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Windverband','Windverband','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Zoutbijlaadplaats','Zoutbijlaadplaats','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#AlarmModule','Alarmmodule','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Antennecoupler','Antennecoupler','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Badgelezer','Badgelezer','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BetonnenConstructieObject','Betonnen constructie object','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BetonnenPlaat','Betonnen plaat','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BetonnenProfiel','Betonnen profiel','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Breedplaat','Breedplaat','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Brugdekvoeg','Brugdekvoeg','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#CapacitieveNiveaumeting','Capacitieve niveaumeting','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#DABRepeater','DAB Repeater','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Display','Display','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Draagkabel','Draagkabel','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Druklaag','Druklaag','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Elektromotor','Elektromotor','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#FMRepeaterBox','FM repeater box','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Funderingszool','Funderingszool','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Grond','Grond','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#HoutenConstructieprofiel','Houten constructieprofiel','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#HydrostatischeNiveaumeting','Hydrostatische niveaumeting','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Ladder','Ladder','0','1','0','0','GA_2.12.0')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Lockerkast','Lockerkast','0','1','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Lockermanagementmodule','Lockermanagementmodule','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Metselwerk','Metselwerk','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Noodstopknop','Noodstopknop','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Oplegging','Oplegging','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#RadarNiveaumeting','Radarniveaumeting','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Radiolistener','Radiolistener','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#SignaalControleModule','Signaal controle module','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Signaalfilter','Signaalfilter','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#SignaalSplitter','Signaalsplitter','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Spankabel','Spankabel','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Spanstaaf','Spanstaaf','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#StalenConstructieObject','Stalen constructie-object','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#StalenPlaat','Stalen plaat','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Stuurklep','Stuurklep','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Toegangscontroller','Toegangscontroller','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#TrekdraadEncoderNiveaumeting','Trekdraad encoder niveaumeting','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Trillingsvoorziening','Trillingsvoorziening','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#UltrasoonNiveaumeting','Ultrasoon niveaumeting','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Veiligheidsrelais','Veilgheidsrelais','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Verkenmerk','Verkenmerk','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Vlotplaat','Vlotplaat','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Vlotterschakelaar','Vlotterschakelaar','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Zendmast','Zendmast','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#ZuilTGC','Zuil toegangscontrole','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#AutomatischeOmschakelaar','Automatische omschakelaar','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Batterijlader','Batterijlader','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Been','Been','1','0','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Bewegingssensor','Bewegingssensor','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BypassSchakelaar','Bypass schakelaar','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#MIVMeetpunt','MIV meetpunt','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Spanningsomvormer','Spanningsomvormer','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Stroomverdelingssysteem','Stroomverdelingssysteem','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Wilddetectiezone','Wilddetectiezone','0','0','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/implementatieelement#Toegangsprocedure','Toegangsprocedure','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Berlinerwand','Berlinerwand','0','0','1','1','GA_2.12.0')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Combiwand','Combiwand','0','0','1','1','GA_2.12.0')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Damwand','Damwand','0','0','1','1','GA_2.12.0')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#DrogePompkelder','Droge pompkelder','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Funderingswand','Funderingswand','0','0','1','1','GA_2.12.0')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#GewapendeGrond','Gewapende grond','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Gewichtsmuur','Gewichtsmuur','0','0','1','1','GA_2.12.0')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Koppeling','Koppeling','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#MVPaal','MV Paal','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Overbrenging','Overbrenging','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#PompGroep','Pompgroep','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Pompkamer','Pompkamer','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Pompstation','Pompstation','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#SecansTangenspalenwand','Secans- of tangenspalenwand','0','0','1','1','GA_2.12.0')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Soilmixwand','Soilmixwand','0','0','1','1','GA_2.12.0')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#StalenCaisson','Stalen caisson','0','0','1','1','GA_2.12.0')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#StalenFunderingsprofiel','Stalen funderingsprofiel','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#TijdelijkeBerlinerwandTussenschot','Tijdelijke berlinerwandtussenschot','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#VernageldeWand','Vernagelde wand','0','0','1','1','GA_2.12.0')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Aandrijfas','Aandrijfas','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#AfdekplaatBuispaal','Afdekplaat buispaal','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Afdichting','Afdichting','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Baret','Baret','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Beschermlaag','Beschermlaag','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BetonnenBoorpaal','Betonnen boorpaal','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BetonnenCaison','Betonnen caisson','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BetonnenDamplank','Betonnen damplank','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BetonnenPredal','Betonnen predal','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BetonnenSchroefpaal','Betonnen schroefpaal','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#CementBentonietwand','Cement-bentonietwand','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#CFAPaal','CFA paal','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Controlepaneel','Controlepaneel','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Dichting','Dichting','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Diepwand','Diepwand','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Dompelpomp','Dompelpomp','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#ElastischElement','Elastisch element','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Flens','Flens','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Flenskoppeling','Flenskoppeling','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#FunderingOpStaal','Fundering op staal','0','1','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Funderingsput','Funderingsput','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Gassensor','Gassensor','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Glijlager','Glijlager','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Grindkern','Grindkern','0','1','0','0','GA_2.9.0')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#GrondankerVerdeelplaat','Stalen verdeelplaat','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Groutanker','Groutanker','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Groutpaal','Groutpaal','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Hijsinstallatie','hijsinstallatie','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#HoutenDamplank','Houten damplank','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#HoutenHeipaal','Houten Heipaal','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Huls','Huls','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Injectiepaal','Injectiepaal','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#KunststoffenDamplank','Kunststoffen Damplank','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Lagerblok','Lagerblok','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Micropaal','Micropaal','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Motorbeveiligingsschakelaar','Motorbeveiliging','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Motorsturing','Motorsturing','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Naaf','Naaf','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Onderdrukventilator','Onderdrukventilator','0','1','0','1','GA_2.9.0')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Onderstel','Onderstel','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Ontluchtingsventiel','Ontluchtingsventiel','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Pompgeleiding','Pompgeleiding','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Pomphuis','Pomphuis','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Relais','Relais','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Riem','Riem','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Riemschijf','Riemschijf','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Riemspanner','Riemspanner','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Schakelketting','Schakelketting','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Sleufbekisting','Sleufbekisting','0','0','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Smeernippel','Smeernippel','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#SoilmixwandElement','Soilmixwand-element','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Spuitbeton','Spuitbeton','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#StalenBuispaal','Stalen buispaal','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#StalenDamplank','Stalen damplank','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#StalenTrekstaaf','Stalen trekstaaf','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Tandwiel','Tandwiel','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Tandwielkast','Tandwielkast','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Toestelventilator','Toestelventilator','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VerankeringsplaatMicropaal','Verankeringsplaat micropaal','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Verluchtingskap','Verluchtingskap','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Voetbocht','Voetbocht','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Voorzetconstructie','Voorzetconstructie','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Waaier','Waaier','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Wentellager','Wentellager','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Werkschakelaar','Werkschakelaar','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Wormschroef','Wormschroef','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Afsluitkraan','Afsluitkraan','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#BasisverlichtingTunnel','Basisverlichting','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Deur','Deur','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Gracht','Gracht','0','0','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Koker','Koker','0','0','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Kokerafsluiting','Kokerafsluiting','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Kokercomplex','Kokercomplex','0','0','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Kokersectie','Kokersectie','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Kokerventilatie','Kokerventilatie','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Kokervoeg','Kokervoeg','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Leuning','Leuning','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Lmuur','L-muur','0','0','1','1','GA_2.12.0')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Loopvloer','Loopvloer','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Magneetgrendel','Magneetgrendel','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Matrixbord','Matrixbord','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Noodverlichtingstoestel','Noodverlichtingstoestel','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Slot','Slot','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Slotcilinder','Slotcilinder','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#StalenSchroefpaal','Stalen schroefpaal','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Temperatuursensor','Temperatuursensor','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#TGCUitbreidingsModule','Toegangscontroller uitbreidingsmodule','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#TijdelijkeOpslagplaats','Tijdelijke opslagplaats','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Toegangspoort','Toegangspoort','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Trap','Trap','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Trappentoren','Trappentoren','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Tunnelverlichting','Tunnelverlichting','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Ventilatiecluster','Ventilatiecluster','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#VersterkingsverlichtingTunnel','Versterkingsverlichting','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Vluchtdeurindicatie','Vluchtdeurindicatie','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Vluchtganginrichting','Vluchtganginrichting','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#WaterdoorvoerendeDuiker','Waterdoorvoerende duiker','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Waterloop','Waterloop','0','0','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Waterweg','Waterweg','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Zelfsluiter','Zelfsluiter','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Zendontvanger','Zendontvanger','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#LKSensorDoorverbinddoos','Luchtkwaliteitsensor doorverbinddoos','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#MIVModule','MIV-module','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Bliksemafleider','Bliksemafleider','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Straatkap','Straatkap','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Ventilatiekanaal','Ventilatiekanaal','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Vluchtgeleiding','Vluchtgeleiding','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Voedingskeuzeschakelaar','Voedingskeuzeschakelaar','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Bevestigingssteun','Bevestigingssteun','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#OpenInfiltratievoorziening','Open infiltratievoorziening','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Spaarbekken','Spaarbekken','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Vluchtroute','Vluchtroute','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/implementatieelement#Bijlage','Bijlage','1','0','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Aanslagbalk','Aanslagbalk','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Balans','Balans','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Balansarm','Balansarm','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#BeweegbareWaterkerendeConstructie','Beweegbare waterkerende constructie','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Bodembescherming','Bodembescherming','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Breekbalk','Breekbalk','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Deurkamer','Deurkamer','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Deurkas','Deurkas','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Deurloop','Deurloop','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Deurnis','Deurnis','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#DraagstructuurBWCTWC','Draagstructuur van een beweegbare -en tijdelijke waterkerende constructie','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Drempel','Drempel','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Fuik','Fuik','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Geleidewerk','Geleidewerk','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Gewelf','Gewelf','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Hameipoort','Hameipoort','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Hameistijl','Hameistijl','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Hanger','Hanger','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Hefportiek','Hefportiek','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Heftoren','Heftoren','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Kolk','Kolk','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Kolkvloer','Kolkvloer','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Kolkwand','Kolkwand','0','0','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Omloopriool','Omloopriool','0','0','1','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#RegelbaarTegengewicht','Regelbaar Tegengewicht','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Sluis','Sluis','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Sluishoofd','Sluishoofd','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Sluisvloertegel','Sluisvloertegel','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Stuw','Stuw','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Stuwhoofd','Stuwhoofd','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Tegengewichtkist','Tegengewichtskist','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#TijdelijkeWaterkerendeConstructie','Tijdelijke waterkerende constructie','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#VasteWaterbouwkundigeConstructie','Vaste waterbouwkundige constructie','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VastTegengewicht','Vast Tegengewicht','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Vloernis','Vloernis','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Wrijfbalk','Wrijfbalk','0','1','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#AanvullendeMiddellijn','Aanvullende middellijn','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Afdichtingsvoorziening','Afdichtingsvoorziening','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Asfaltmat','Asfaltmat','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Ballastcompartiment','Ballastcompartiment','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#BeslagHoutenSluisdeur','Beslag houten sluisdeur','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Betonmat','Betonmat','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Betonmatras','Betonmatras','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Bolder','Bolder','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Centreerinrichting','Centreerinrichting','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Draineerlaag','Draineerlaag','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Fendering','Fendering','0','1','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Haalkom','Haalkom','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#HoutenBeplanking','Houten beplanking','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Stootblok','Stootblok','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Stormraam','Stormraam','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Stortsteenpenetratie','Stortsteenpenetratie','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Stuwconstructie','Stuwconstructie','0','0','1','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Toegangsluik','Toegangsluik','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Toegangsvoorziening','Toegangsvoorziening','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VlottendeBolder','Vlottende bolder','0','1','0','0','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Werkvloer','Werkvloer','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Wiepenmat','Wiepenmat','0','0','0','1','')
+,('https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Aardingsplaat','Aardingsplaat','0','1','0','0','')
+    ), cte_asset_withGeomInfo as (
+        select
+            a.uuid
+            , a.toestand
+            , at.uuid as assettype_uuid
+            , at.naam
+            , at.uri
+            , coalesce(g.wkt_string, l.geometrie) as wkt_string
+            , g.geo_niveau
+            -- Extract the asset geometry type from the wkt_string (OTL or Legacy)
+            , case
+                when
+                    coalesce(g.wkt_string, l.geometrie) is null then 1
+                	else 0
+            end as geen_geometrie
+            , case
+                when
+                    SUBSTRING(coalesce(g.wkt_string, l.geometrie) FROM '(POINT Z|LINESTRING Z|POLYGON Z)') = 'POINT Z'
+                then 1
+                else 0
+            end as punt3D
+            , case
+                when
+                    SUBSTRING(coalesce(g.wkt_string, l.geometrie) FROM '(POINT Z|LINESTRING Z|POLYGON Z)') = 'LINESTRING Z'
+                then 1
+                else 0
+            end as lijn3D
+            , case
+                when
+                    SUBSTRING(coalesce(g.wkt_string, l.geometrie) FROM '(POINT Z|LINESTRING Z|POLYGON Z)') = 'POLYGON Z'
+                then 1
+                else 0
+            end as polygoon3D
+        from assets a 
+        left join geometrie g on a.uuid = g.assetuuid
+        left join locatie l on a.uuid = l.assetuuid
+        left join assettypes at on a.assettype = at.uuid
+        where
+            a.actief = true
+    )
+-- Main query
 select
-	a.uuid
+    a.uuid
 	, a.naam
-	, LEFT(a.wkt_string, 50000) as wkt_string
-	, ga.uri
-	-- Het actuele geometrie type
-	,
-	case
-		WHEN a.punt3D = '1' THEN 'punt3D'
-	    ELSE ''
-	END ||
-	CASE
-	    WHEN a.lijn3D = '1' THEN 'lijn3D'
-	    ELSE ''
-	END ||
+    , LEFT(a.wkt_string, 50) as wkt_string
+    , a.geo_niveau as level_of_geometrie
+    , a.toestand
+    , ga.uri
+    -- Het actuele geometrie type
+    ,
+    case
+        WHEN a.geen_geometrie = '1' THEN 'geen_geometrie'
+        ELSE ''
+    END ||
+    case
+        WHEN a.punt3D = '1' THEN 'punt3D'
+        ELSE ''
+    END ||
     CASE
-	    WHEN a.polygoon3D = '1' THEN 'polygoon3D'
-	    ELSE ''
-	END AS actuele_geometrie_OTL
-	-- Het verwachte geometrie type
-	,
-	case
-		WHEN ga.geen_geometrie = '1' THEN 'geen_geometrie, '
-	    ELSE ''
-	END ||
-	case
-		WHEN ga.punt3D = '1' THEN 'punt3D, '
-	    ELSE ''
-	END ||
-	CASE
-	    WHEN ga.lijn3D = '1' THEN 'lijn3D, '
-	    ELSE ''
-	END ||
+        WHEN a.lijn3D = '1' THEN 'lijn3D'
+        ELSE ''
+    END ||
     CASE
-	    WHEN ga.polygoon3D = '1' THEN 'polygoon3D, '
-	    ELSE ''
-	END AS verwachte_geometrie_GeometrieArtefact
+        WHEN a.polygoon3D = '1' THEN 'polygoon3D'
+        ELSE ''
+    END AS OTL_actuele_geometrie
+    -- Het verwachte geometrie type
+    ,
+    case
+        WHEN ga.geen_geometrie = '1' THEN 'geen_geometrie '
+        ELSE ''
+    END ||
+    case
+        WHEN ga.punt3D = '1' THEN 'punt3D '
+        ELSE ''
+    END ||
+    CASE
+        WHEN ga.lijn3D = '1' THEN 'lijn3D '
+        ELSE ''
+    END ||
+    CASE
+        WHEN ga.polygoon3D = '1' THEN 'polygoon3D '
+        ELSE ''
+    END AS GA_verwachte_geometrie
+    , 'GA_2.12.0' as GA_Versie
 from cte_asset_withGeomInfo a -- a staat voor assets
 left join cte_geometry_artefact ga on a.uri = ga.uri -- ga staat voor GeometrieArtefact
 where
     ga.uri is not null -- om o.a. de groeperingen uit de resultaten te filteren
     and
-	-- 1 van de kolommen moet overeenstemmen, en de kolom moet ook 1 zijn.
-	not
-	(
-	a.punt3D = 1 and a.punt3D = ga.punt3D::int
-	or
-	a.lijn3D = 1 and a.lijn3D = ga.lijn3D::int
-	or
-	a.polygoon3D = 1 and a.polygoon3D = ga.polygoon3D::int
-	)
+    -- Een asset heeft 1 bepaalde geometrie, stemt dit overeen met het verwachte GA?
+    (
+    a.geen_geometrie = 1 and a.geen_geometrie != ga.geen_geometrie::int
+    or
+    a.punt3D = 1 and a.punt3D != ga.punt3D::int
+    or
+    a.lijn3D = 1 and a.lijn3D != ga.lijn3D::int
+    or
+    a.polygoon3D = 1 and a.polygoon3D != ga.polygoon3D::int
+    )
 	"""
 
     def run_report(self, sender):

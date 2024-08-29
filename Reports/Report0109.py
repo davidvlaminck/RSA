@@ -8,7 +8,7 @@ class Report0109:
     def init_report(self):
         self.report = DQReport(name='report0109', title='Geometrie is geldig: geen opeenvolgende punten',
                                spreadsheet_id='1AmtcjAkh5H95O_lXtd4p_MHeoqFpQKQlIRfQk3MxGQ4', datasource='PostGIS',
-                               persistent_column='E')
+                               persistent_column='G')
 
         self.report.result_query = """
             WITH cte_geom AS (
@@ -26,10 +26,12 @@ class Report0109:
             )
             select 
                 g.assetuuid
+                , at.uri as typeURI
+                , at.label as assettype
                 , wkt_string_prefix
                 , ST_NPoints(geom) - ST_NPoints(st_removerepeatedpoints(geom)) as aantal_dubbele_punten
                 -- Aantal karakters afronden tot het maximaal toegelaten aantal karakters in Google Sheets: 50.000
-                , left(wkt_string, 50000) as wkt_string_afgerond
+                , left(wkt_string, 100) as wkt_string_afgerond
             FROM
                 cte_geom g
             left join assets a on g.assetuuid = a.uuid
@@ -38,6 +40,8 @@ class Report0109:
                 ST_NPoints(st_removerepeatedpoints(geom)) <> ST_NPoints(geom)
                 and
                 at.URI !~ '^(https://grp.).*' -- Regular expression does not start with 
+                and
+                a.actief = true -- Enkel de actieve assets
             order by aantal_dubbele_punten desc
         	"""
 
