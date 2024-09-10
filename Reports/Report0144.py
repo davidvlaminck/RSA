@@ -7,7 +7,7 @@ class Report0144:
 
     def init_report(self):
         self.report = DQReport(name='report0144',
-                               title='',
+                               title='Assets (legacy) met ingevuld kenmerk: "elektrische aansluiting"',
                                spreadsheet_id='1jXwjdnox1cb-uh-tJMP2BuZwrrxCL0StjZspjVw9MGQ',
                                datasource='PostGIS',
                                persistent_column='I'
