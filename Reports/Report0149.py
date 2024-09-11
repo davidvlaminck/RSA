@@ -136,7 +136,7 @@ select
     , b1.soortnaam::json->>'DtcVegetatieSoortnaam.soortnaamNederlands' AS boom1_soortnaamNederlands
 	, b1.soortnaam::json->>'DtcVegetatieSoortnaam.soortnaamWetenschappelijk' AS boom1_soortnaamWetenschappelijk
 	, b1.soortnaam::json->>'DtcVegetatieSoortnaam.wetenschappelijkeSoortnaam' AS boom1_wetenschappelijkeSoortnaam
-	, b1.geometry as boom1_geometry
+	, st_astext(b1.geometry) as boom1_geometry
 	, ROUND(ST_Distance(b1.geometry, b2.geometry)::numeric, 3) as afstand
 	, b2.uuid as boom2_uuid
 	, b2.ident2 as boom2_ident2
@@ -146,7 +146,7 @@ select
     , b2.soortnaam::json->>'DtcVegetatieSoortnaam.soortnaamNederlands' AS boom2_soortnaamNederlands
 	, b2.soortnaam::json->>'DtcVegetatieSoortnaam.soortnaamWetenschappelijk' AS boom2_soortnaamWetenschappelijk
 	, b2.soortnaam::json->>'DtcVegetatieSoortnaam.wetenschappelijkeSoortnaam' AS boom2_wetenschappelijkeSoortnaam
-	, b2.geometry as boom2_geometry
+	, st_astext(b2.geometry) as boom2_geometry
 -- Join een boom met zichzelf
 from cte_boom_incl_gemeente b1
 --left join cte_boom_incl_gemeente b2 on  -- left join: alle bomen, de vrijstaande en de dubbele
