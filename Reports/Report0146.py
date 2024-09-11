@@ -154,7 +154,7 @@ inner join cte_boom_incl_gemeente b2 on  -- inner join: enkel de dubbele bomen, 
 	--b1.naam_provincie = b2.naam_provincie  -- beide bomen binnen dezelfde provincie
 	--and
 	b1.nis = b2.nis -- beide bomen binnen dezelfde gemeente
-    and b1.geometry && b2.geometry -- bbox intersection check
+    -- and b1.geometry && b2.geometry -- bbox intersection check
 	-- De bufferafstand tussen 2 bomen is kleiner dan een gegeven afstand (te bepalen)
 	and ST_DWithin(b1.geometry, b2.geometry, 1)   -- Exact distance check. Beide bomen binnen een straal van x meter van elkaar
 	and b1.uuid <> b2.uuid  -- geen vergelijking van een boom met zichzelf
