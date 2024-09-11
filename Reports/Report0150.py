@@ -85,7 +85,7 @@ from cte_straatkolk_incl_gemeente s1
 inner join cte_straatkolk_incl_gemeente s2 on  -- inner join: enkel de dubbele straatkolken, niet de vrijstaande
 	s1.naam_provincie = s2.naam_provincie  -- beide straatkolken binnen dezelfde provincie
 	and s1.nis = s2.nis -- beide straatkolken binnen dezelfde gemeente
-    and s1.geometry && s2.geometry -- bbox intersection check
+    -- and s1.geometry && s2.geometry -- bbox intersection check
 	-- De bufferafstand tussen 2 Straatkolken is kleiner dan een gegeven afstand (te bepalen)
 	and ST_DWithin(s1.geometry, s2.geometry, 1.0)   -- Exact distance check. Beide Straatkolken binnen een straal van x meter van elkaar
 	and s1.uuid <> s2.uuid  -- geen vergelijking van een straatkolk met zichzelf
