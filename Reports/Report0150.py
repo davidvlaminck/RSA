@@ -73,12 +73,12 @@ select
 	s1.uuid as straatkolk1_uuid
 	, s1.ident2 as straatkolk1_ident2
 	, s1.ident8 as straatkolk1_ident8
-	, s1.geometry as straatkolk1_geometry
+	, st_astext(s1.geometry) as straatkolk1_geometry
 	, ROUND(ST_Distance(s1.geometry, s2.geometry)::numeric, 3) as afstand
 	, s2.uuid as straatkolk2_uuid
 	, s2.ident2 as straatkolk2_ident2
 	, s2.ident8 as straatkolk2_ident8
-	, s2.geometry as straatkolk2_geometry
+	, st_astext(s2.geometry) as straatkolk2_geometry
 -- Join een Straatkolk met zichzelf
 from cte_straatkolk_incl_gemeente s1
 --left join cte_straatkolk_incl_gemeente s2 on  -- left join: alle straatkolken, de vrijstaande en de dubbele
