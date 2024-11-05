@@ -77,7 +77,7 @@ class Report0171:
                 , a.assettype
                 , lookup.assetnaam
                 , lookup.regexp_pattern
-                , regexp_like(a.naam, lookup.regexp_pattern) as naamconventie	 -- boolean check on regular expression
+                , a.naam ~ lookup.regexp_pattern as naamconventie	 -- boolean check on regular expression
             from assets a
             inner join cte_lookup_table lookup on a.assettype = lookup.assettype
             where
