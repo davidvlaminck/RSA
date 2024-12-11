@@ -8,7 +8,7 @@ class Report0104:
     def init_report(self):
         self.report = DQReport(name='report0104', title='Dubbele EAN nummers over legacy en OTL assets',
                                spreadsheet_id='1yZpc1jcFUwEIMYSC0B4JCLhMtHYAnW0Ua6WYtW_gGew', datasource='PostGIS',
-                               persistent_column='G')
+                               persistent_column='G', link_type='eminfra')
 
         self.report.result_query = """
 WITH ean_info AS (

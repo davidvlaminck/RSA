@@ -11,37 +11,38 @@ class Report0109:
                                persistent_column='G')
 
         self.report.result_query = """
-            WITH cte_geom AS (
+            WITH cte_geometrie_dubbele_punten AS (
                 SELECT
                     assetuuid,
                     wkt_string,
                     SUBSTRING("wkt_string" FROM '^[^ (]+') AS wkt_string_prefix,
-                    st_geomfromtext(wkt_string) AS geom
+                    geometry
                 FROM
                     geometrie
-                WHERE
-                    wkt_string IS NOT null
-                -- Remove multipart geometries from the query
-                -- Compare the number with/without the Multiparts
+                where
+                    -- geen missing geometriën of multi-geometriën
+                    ST_NumGeometries(geometry) = 1
+                    and
+                    st_geometrytype(geometry) in ('ST_LineString', 'ST_Polygon', 'ST_Point')
+                    and
+                    ST_NPoints(st_removerepeatedpoints(geometry)) <> ST_NPoints(geometry)
             )
             select 
                 g.assetuuid
                 , at.uri as typeURI
                 , at.label as assettype
-                , wkt_string_prefix
-                , ST_NPoints(geom) - ST_NPoints(st_removerepeatedpoints(geom)) as aantal_dubbele_punten
+                , g.wkt_string_prefix
+                , ST_NPoints(g.geometry) - ST_NPoints(st_removerepeatedpoints(g.geometry)) as aantal_dubbele_punten
                 -- Aantal karakters afronden tot het maximaal toegelaten aantal karakters in Google Sheets: 50.000
                 , left(wkt_string, 100) as wkt_string_afgerond
             FROM
-                cte_geom g
+                cte_geometrie_dubbele_punten g
             left join assets a on g.assetuuid = a.uuid
             left join assettypes at on a.assettype = at.uuid
             where
-                ST_NPoints(st_removerepeatedpoints(geom)) <> ST_NPoints(geom)
+                a.actief = true -- Enkel de actieve assets
                 and
                 at.URI !~ '^(https://grp.).*' -- Regular expression does not start with 
-                and
-                a.actief = true -- Enkel de actieve assets
             order by aantal_dubbele_punten desc
         	"""
 
