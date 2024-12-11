@@ -22,7 +22,9 @@ WITH vrs AS (
     WHERE assettype IN ('13fa9473-f919-432a-bd00-bc19645bd30a','40f86745-ecaa-456b-8262-0a1f014602df'))
 SELECT vrs.uuid as em_infra_link, split_part(naampad, '/', 1) AS installatie, actief, toestand, ST_X(ST_Transform(geom, 4326)) AS longitude, ST_Y(ST_Transform(geom, 4326)) AS latitude
     , locatie.adres_gemeente, locatie.adres_provincie, text(date(indienstdatum)) AS indienstdatum
-    , CASE WHEN uitdienstdatum IS NULL AND indienstdatum IS NOT NULL AND indienstdatum <= CURRENT_DATE THEN text('in dienst') ELSE to_char(date(uitdienstdatum), 'yyyy-mm-dd') END AS uitdienstdatum
+    , CASE WHEN uitdienstdatum IS NULL AND indienstdatum IS NOT NULL AND indienstdatum <= CURRENT_DATE THEN text('in dienst')
+    	WHEN indienstdatum IS NOT NULL AND indienstdatum <= CURRENT_DATE AND uitdienstdatum IS NOT NULL AND CURRENT_DATE < uitdienstdatum THEN text('in dienst')
+    	ELSE to_char(date(uitdienstdatum), 'yyyy-mm-dd') END AS uitdienstdatum
     , vplannummer AS vplan_nr, left(vplannummer, 7) AS vplan_kort, vplan_koppelingen.commentaar AS commentaar
     , bestekken.edeltadossiernummer, bestekken.aannemernaam
     , CASE WHEN uitdienstdatum IS NULL AND indienstdatum <= CURRENT_DATE - INTERVAL '10' YEAR THEN TRUE ELSE FALSE END AS "10_jaar_oud"
