@@ -23,7 +23,7 @@ class Report0107:
                     ), 31370)
                 )
             ), cte_asset_withGeom as (
-                select a.uuid, a.assettype, g.wkt_string, st_setsrid(st_geomfromtext(g.wkt_string), 31370) as geom 
+                select a.uuid, a.assettype, g.wkt_string, g.geometry as geom
                 from assets a
                 left join geometrie g on a.uuid = g.assetuuid
                 where
@@ -37,7 +37,7 @@ class Report0107:
                 , left(a.wkt_string, 50000) as wkt_string
             FROM cte_asset_withGeom a
             left join cte_bbox_vlaanderen bbox on st_within(a.geom, bbox.geom)
-            left join assettypes at on a.assettype =  at.uuid
+            left join assettypes at on a.assettype = at.uuid
             where bbox.geom is null
             ;
 	"""
