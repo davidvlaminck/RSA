@@ -7,7 +7,7 @@ class Report0035:
 
     def init_report(self):
         self.report = DQReport(name='report0035',
-                               title="Bestekkoppelingen die bijna vervallen (komende 60 dagen)",
+                               title="Bestekkoppelingen die bijna vervallen (komende 30 dagen)",
                                spreadsheet_id='1DfUOm6Z38BYR7R809wiUDNrd8Fj4O-dC59ylHn99iqE',
                                datasource='PostGIS',
                                persistent_column='J')
