@@ -39,7 +39,7 @@ class Report0139:
                     , ag.ovo_code as otl_betrokkene_ovo_code
                 from assets a
                 inner join assettypes at on a.assettype = at.uuid
-                left join betrokkenerelaties b on a.uuid = b.bronassetuuid  -- of b.bronuuid
+                left join betrokkenerelaties b on a.uuid = b.bronassetuuid and b.actief is true and b.rol = 'toezichter'
                 left join agents ag on b.doeluuid = ag.uuid
                 where
                     at.uri ~ '^https://wegenenverkeer.data.vlaanderen.be.*'
