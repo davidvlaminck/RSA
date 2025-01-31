@@ -155,7 +155,6 @@ SELECT
         ELSE 'locatie ongekend'
     END AS wegcategorie
 FROM cte_opkuis2
-order by uuid desc limit 10
 """
 
     def run_report(self, sender):
