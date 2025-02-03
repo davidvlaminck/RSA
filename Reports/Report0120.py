@@ -32,6 +32,8 @@ class Report0120:
                 a.actief = true
                 and
                 (
+                a.naampad != ''
+                and
                 a.naampad is not null
                 and
                 a.naampad NOT LIKE 'DA-%'  -- Davie
