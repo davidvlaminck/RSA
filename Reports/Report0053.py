@@ -13,29 +13,28 @@ class Report0053:
                                persistent_column='E')
 
         self.report.result_query = """
-            MATCH (x:IMKLExtraPlan) // extraPlanType mandatory
-            WHERE x.`grp:extraPlantype` IS NULL
-            RETURN x.uuid as uuid, 'extraPlanType' as property, 'is null/empty but mandatory' as fault, x.`grp:extraPlantype` as property_value
-            UNION
-            MATCH (x:IMKLExtraPlan) // extraPlanType enumeration
-            WHERE x.`grp:extraPlantype` IS NOT NULL AND NOT x.`grp:extraPlantype` IN ['detailplan','lengteprofiel','gestuurdeBoring','andere','veiligheidsVoorschriften']
-            RETURN x.uuid as uuid, 'extraPlanType' as property, 'value not in enumeration' as fault, x.`grp:extraPlantype` as property_value
-            UNION
-            MATCH (x:IMKLExtraPlan) // inNetwork mandatory
-            WHERE x.`grp:inNetwork` IS NULL
-            RETURN x.uuid as uuid, 'inNetwork' as property, 'is null/empty but mandatory' as fault, x.`grp:inNetwork` as property_value
-            UNION
-            MATCH (x:IMKLExtraPlan) // inNetwork enumeration
-            WHERE x.`grp:inNetwork` IS NOT NULL AND NOT x.`grp:inNetwork` IN ['electricity','telecommunications','crossTheme']
-            RETURN x.uuid as uuid, 'inNetwork' as property, 'value not in enumeration' as fault, x.`grp:inNetwork` as property_value
-            UNION
-            MATCH (x:IMKLExtraPlan) // uuid mandatory
-            WHERE x.uuid IS NULL
-            RETURN x.uuid as uuid, 'uuid' as property, 'is null/empty but mandatory' as fault, x.uuid as property_value
-            UNION
-            MATCH (x:IMKLExtraPlan) // uuid max length
-            WHERE x.uuid IS NOT NULL AND size(x.uuid) > 255
-            RETURN x.uuid as uuid, 'uuid' as property, 'max length is 255' as fault, x.uuid as property_value
+MATCH (x:IMKLExtraPlan)
+WITH x, [
+    {property: 'grp:inNetwork', value: x.`grp:inNetwork`, mandatory: true, enum: ['electricity', 'telecommunications', 'crossTheme']},
+    {property: 'grp:extraPlantype', value: x.`grp:extraPlantype`, mandatory:true, enum: ['detailplan','lengteprofiel','gestuurdeBoring','andere','veiligheidsVoorschriften']},
+    {property: 'uuid', value: x.uuid, mandatory: true, maxLength: 255}
+] AS checks
+UNWIND checks AS check
+WITH x, check.property AS property, check.value AS property_value, check.mandatory AS mandatory, check.enum AS enum, check.maxLength AS maxLength
+WHERE 
+    (mandatory = true AND property_value IS NULL) OR 
+    (enum IS NOT NULL AND property_value IS NOT NULL AND NOT property_value IN enum) OR 
+    (maxLength IS NOT NULL AND property_value IS NOT NULL AND size(property_value) > maxLength)
+RETURN 
+    x.uuid AS uuid,
+    CASE 
+        WHEN mandatory = true AND property_value IS NULL THEN 'is null/empty but mandatory'
+        WHEN enum IS NOT NULL AND property_value IS NOT NULL AND NOT property_value IN enum THEN 'value not in enumeration'
+        WHEN maxLength IS NOT NULL AND property_value IS NOT NULL AND size(property_value) > maxLength THEN 'max length exceeded'
+    END AS fault,
+    property,
+	coalesce(property_value, 'NULL') as value
+ORDER BY uuid, property;
         """
 
     def run_report(self, sender):
