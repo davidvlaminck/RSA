@@ -10,7 +10,7 @@ class Report0052:
                                title='Akela IMKL constraints for ElectricityCable',
                                spreadsheet_id='1bCiwfYJxEbYQ8fd3AcL61SwCdGZaLVW9xNkKOagNzRg',
                                datasource='Neo4J',
-                               persistent_column='D')
+                               persistent_column='E')
 
         self.report.result_query = """
         MATCH (x:IMKLElectricityCable)
@@ -36,7 +36,8 @@ class Report0052:
                 WHEN enum IS NOT NULL AND property_value IS NOT NULL AND NOT property_value IN enum THEN 'value not in enumeration'
                 WHEN maxLength IS NOT NULL AND property_value IS NOT NULL AND size(property_value) > maxLength THEN 'max length exceeded'
             END AS fault,
-            property + "_" + coalesce(property_value, 'NULL') as property_and_value
+            property, 
+            coalesce(property_value, 'NULL') as value
         ORDER BY uuid, property;
         """
 
