@@ -13,45 +13,30 @@ class Report0051:
                                persistent_column='E')
 
         self.report.result_query = """
-            MATCH (x:IMKLAppurtenance) // appurtenanceType mandatory
-            WHERE x.`grp:appurtenanceType` IS NULL
-            RETURN x.uuid as uuid, 'appurtenanceType' as property, 'is null/empty but mandatory' as fault, x.`grp:appurtenanceType` as property_value
-            UNION
-            MATCH (x:IMKLAppurtenance) // appurtenanceType enumeration
-            WHERE x.`grp:appurtenanceType` IS NOT NULL AND NOT x.`grp:appurtenanceType` IN ['aarding','mof','deliveryPoint','streetLight','spliceClosure','termination']
-            RETURN x.uuid as uuid, 'appurtenanceType' as property, 'value not in enumeration' as fault, x.`grp:appurtenanceType` as property_value
-            UNION
-            MATCH (x:IMKLAppurtenance) // currentStatus mandatory
-            WHERE x.`grp:currentStatus` IS NULL
-            RETURN x.uuid as uuid, 'currentStatus' as property, 'is null/empty but mandatory' as fault, x.`grp:currentStatus` as property_value
-            UNION
-            MATCH (x:IMKLAppurtenance) // currentStatus enumeration
-            WHERE x.`grp:currentStatus` IS NOT NULL AND NOT x.`grp:currentStatus` IN ['functional','projected','disused']
-            RETURN x.uuid as uuid, 'currentStatus' as property, 'value not in enumeration' as fault, x.`grp:currentStatus` as property_value
-            UNION
-            MATCH (x:IMKLAppurtenance) // inNetwork mandatory
-            WHERE x.`grp:inNetwork` IS NULL
-            RETURN x.uuid as uuid, 'inNetwork' as property, 'is null/empty but mandatory' as fault, x.`grp:inNetwork` as property_value
-            UNION
-            MATCH (x:IMKLAppurtenance) // inNetwork enumeration
-            WHERE x.`grp:inNetwork` IS NOT NULL AND NOT x.`grp:inNetwork` IN ['electricity','telecommunications','crossTheme']
-            RETURN x.uuid as uuid, 'inNetwork' as property, 'value not in enumeration' as fault, x.`grp:inNetwork` as property_value
-            UNION
-            MATCH (x:IMKLAppurtenance) // subThema mandatory
-            WHERE x.`grp:subThema` IS NULL
-            RETURN x.uuid as uuid, 'subThema' as property, 'is null/empty but mandatory' as fault, x.`grp:subThema` as property_value
-            UNION
-            MATCH (x:IMKLAppurtenance) // subThema enumeration
-            WHERE x.`grp:subThema` IS NOT NULL AND NOT x.`grp:subThema` IN ['elektriciteitTransport','elektriciteitTransportPlaatselijk','elektriciteitDistributieHoogspanning','elektriciteitDistributieLaagspanning','elektriciteitOpenbareVerlichting','elektriciteitVerkeerslichten','elektriciteitVerkeershandhavingssystemen','elektronischeCommunicatie']
-            RETURN x.uuid as uuid, 'subThema' as property, 'value not in enumeration' as fault, x.`grp:subThema` as property_value
-            UNION
-            MATCH (x:IMKLAppurtenance) // uuid mandatory
-            WHERE x.uuid IS NULL
-            RETURN x.uuid as uuid, 'uuid' as property, 'is null/empty but mandatory' as fault, x.uuid as property_value
-            UNION
-            MATCH (x:IMKLAppurtenance) // uuid max length
-            WHERE x.uuid IS NOT NULL AND size(x.uuid) > 255
-            RETURN x.uuid as uuid, 'uuid' as property, 'max length is 255' as fault, x.uuid as property_value
+MATCH (x:IMKLAppurtenance)
+WITH x, [
+    {property: 'grp:currentStatus', value: x.`grp:currentStatus`, mandatory: true, enum: ['functional', 'projected', 'disused']},
+    {property: 'grp:inNetwork', value: x.`grp:inNetwork`, mandatory: true, enum: ['electricity', 'telecommunications', 'crossTheme']},
+    {property: 'grp:appurtenanceType', value: x.`grp:appurtenanceType`, mandatory: true, enum: ['aarding','mof','deliveryPoint','streetLight','spliceClosure','termination']},
+    {property: 'grp:subThema', value: x.`grp:subThema`, mandatory: true, enum: ['elektriciteitTransport','elektriciteitTransportPlaatselijk','elektriciteitDistributieHoogspanning','elektriciteitDistributieLaagspanning','elektriciteitOpenbareVerlichting','elektriciteitVerkeerslichten','elektriciteitVerkeershandhavingssystemen','elektronischeCommunicatie']},
+    {property: 'uuid', value: x.uuid, mandatory: true, maxLength: 255}
+] AS checks
+UNWIND checks AS check
+WITH x, check.property AS property, check.value AS property_value, check.mandatory AS mandatory, check.enum AS enum, check.maxLength AS maxLength
+WHERE 
+    (mandatory = true AND property_value IS NULL) OR 
+    (enum IS NOT NULL AND property_value IS NOT NULL AND NOT property_value IN enum) OR 
+    (maxLength IS NOT NULL AND property_value IS NOT NULL AND size(property_value) > maxLength)
+RETURN 
+    x.uuid AS uuid,
+    CASE 
+        WHEN mandatory = true AND property_value IS NULL THEN 'is null/empty but mandatory'
+        WHEN enum IS NOT NULL AND property_value IS NOT NULL AND NOT property_value IN enum THEN 'value not in enumeration'
+        WHEN maxLength IS NOT NULL AND property_value IS NOT NULL AND size(property_value) > maxLength THEN 'max length exceeded'
+    END AS fault,
+    property,
+	coalesce(property_value, 'NULL') as value
+ORDER BY uuid, property;
         """
 
     def run_report(self, sender):
