@@ -13,45 +13,31 @@ class Report0055:
                                persistent_column='E')
 
         self.report.result_query = """
-            MATCH (x:IMKLPipe) // containerType mandatory
-            WHERE x.`grp:containerType` IS NULL
-            RETURN x.uuid as uuid, 'containerType' as property, 'is null/empty but mandatory' as fault, x.`grp:containerType` as property_value
-            UNION
-            MATCH (x:IMKLPipe) // containerType enumeration
-            WHERE x.`grp:containerType` IS NOT NULL AND NOT x.`grp:containerType` IN ['mantelbuis', 'kabelEnLeidingGoot']
-            RETURN x.uuid as uuid, 'containerType' as property, 'value not in enumeration' as fault, x.`grp:containerType` as property_value
-            UNION
-            MATCH (x:IMKLPipe) // currentStatus mandatory
-            WHERE x.`grp:currentStatus` IS NULL
-            RETURN x.uuid as uuid, 'currentStatus' as property, 'is null/empty but mandatory' as fault, x.`grp:currentStatus` as property_value
-            UNION
-            MATCH (x:IMKLPipe) // currentStatus enumeration
-            WHERE x.`grp:currentStatus` IS NOT NULL AND NOT x.`grp:currentStatus` IN ['functional','projected','disused']
-            RETURN x.uuid as uuid, 'currentStatus' as property, 'value not in enumeration' as fault, x.`grp:currentStatus` as property_value
-            UNION
-            MATCH (x:IMKLPipe) // inNetwork mandatory
-            WHERE x.`grp:inNetwork` IS NULL
-            RETURN x.uuid as uuid, 'inNetwork' as property, 'is null/empty but mandatory' as fault, x.`grp:inNetwork` as property_value
-            UNION
-            MATCH (x:IMKLPipe) // inNetwork enumeration
-            WHERE x.`grp:inNetwork` IS NOT NULL AND NOT x.`grp:inNetwork` IN ['electricity','telecommunications','crossTheme']
-            RETURN x.uuid as uuid, 'inNetwork' as property, 'value not in enumeration' as fault, x.`grp:inNetwork` as property_value
-            UNION
-            MATCH (x:IMKLPipe) // kleur max length
-            WHERE x.`grp:kleur` IS NOT NULL AND size(x.`grp:kleur`) > 256
-            RETURN x.uuid as uuid, 'kleur' as property, 'max length is 256' as fault, x.`grp:kleur` as property_value
-            UNION
-            MATCH (x:IMKLPipe) // pipeDiameter mandatory
-            WHERE x.`grp:pipeDiameter` IS NULL
-            RETURN x.uuid as uuid, 'pipeDiameter' as property, 'is null/empty but mandatory' as fault, x.`grp:pipeDiameter` as property_value
-            UNION
-            MATCH (x:IMKLPipe) // uuid mandatory
-            WHERE x.uuid IS NULL
-            RETURN x.uuid as uuid, 'uuid' as property, 'is null/empty but mandatory' as fault, x.uuid as property_value
-            UNION
-            MATCH (x:IMKLPipe) // uuid max length
-            WHERE x.uuid IS NOT NULL AND size(x.uuid) > 255
-            RETURN x.uuid as uuid, 'uuid' as property, 'max length is 255' as fault, x.uuid as property_value
+MATCH (x:IMKLPipe)
+WITH x, [
+    {property: 'grp:currentStatus', value: x.`grp:currentStatus`, mandatory: true, enum: ['functional', 'projected', 'disused']},
+    {property: 'grp:inNetwork', value: x.`grp:inNetwork`, mandatory: true, enum: ['electricity', 'telecommunications', 'crossTheme']},
+    {property: 'grp:containerType', value: x.`grp:containerType`, mandatory: true, enum: ['mantelbuis', 'kabelEnLeidingGoot']},
+    {property: 'grp:kleur', value: x.`grp:kleur`, maxLength: 256},
+    {property: 'grp:pipeDiameter', value: x.`grp:pipeDiameter`, mandatory: true, maxLength:256},
+    {property: 'uuid', value: x.uuid, mandatory: true, maxLength: 255}
+] AS checks
+UNWIND checks AS check
+WITH x, check.property AS property, check.value AS property_value, check.mandatory AS mandatory, check.enum AS enum, check.maxLength AS maxLength
+WHERE 
+    (mandatory = true AND property_value IS NULL) OR 
+    (enum IS NOT NULL AND property_value IS NOT NULL AND NOT property_value IN enum) OR 
+    (maxLength IS NOT NULL AND property_value IS NOT NULL AND size(toString(property_value)) > maxLength)
+RETURN 
+    x.uuid AS uuid,
+    CASE 
+        WHEN mandatory = true AND property_value IS NULL THEN 'is null/empty but mandatory'
+        WHEN enum IS NOT NULL AND property_value IS NOT NULL AND NOT property_value IN enum THEN 'value not in enumeration'
+        WHEN maxLength IS NOT NULL AND property_value IS NOT NULL AND size(property_value) > maxLength THEN 'max length exceeded'
+    END AS fault,
+    property,
+	coalesce(property_value, 'NULL') as value
+ORDER BY uuid, property;
         """
 
     def run_report(self, sender):
