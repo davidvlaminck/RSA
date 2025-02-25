@@ -10,7 +10,8 @@ class Report0173:
                                title='Legacy assets ontbreken een naampad',
                                spreadsheet_id='1Lu1nSafM08GgwY1FHd4vnEN6qbS0Z4lI-H96gZzV8Z0',
                                datasource='PostGIS',
-                               persistent_column='H'
+                               persistent_column='H',
+                               link_type='eminfra'
                                )
 
         self.report.result_query = """
