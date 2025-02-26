@@ -22,7 +22,7 @@ with cte_assets_verweven1 as (
 	where
 		a.actief = true
 		and
-	    a.assettype not in (
+	    a.assettype in (
         'efb995df-057b-4ab8-baa8-4f9918f8ec5e'  -- fietstelinstallatie
         , '8d42ee56-17d3-455e-bd9c-1eb1aad3c1ec'  -- fietsteldisplay
         , 'c0def180-e2a5-40eb-abdd-c752cbab48af'  -- fietstelsysteem
