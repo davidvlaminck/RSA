@@ -10,7 +10,7 @@ class Report0175:
                                title='SegmentControllers (SegC (OTL) - [HoortBij] - SegC (LGC)) hebben identieke serienummers.',
                                spreadsheet_id='1qoXaCy5U2H-HloAHNojkuraN4Du1D0gWy6yr4nY2BjQ',
                                datasource='PostGIS',
-                               persistent_column='D',
+                               persistent_column='G',
                                link_type='eminfra'
                                )
 
@@ -50,9 +50,9 @@ class Report0175:
             segc_otl.uuid
             , segc_otl.naam
             , segc_otl.serienummer_otl
-        --	, segc_lgc.uuid
-        --	, segc_lgc.naam
-        --	, segc_lgc.serienummer_lgc
+        	, segc_lgc.uuid
+        	, segc_lgc.naam
+        	, segc_lgc.serienummer_lgc
         from cte_asset_segmentcontroller_otl as segc_otl
         left join cte_hoortbij_relaties as rel on segc_otl.uuid = rel.bronuuid
         left join cte_asset_segmentcontroller_lgc as segc_lgc on rel.doeluuid = segc_lgc.uuid
