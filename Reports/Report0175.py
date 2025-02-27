@@ -10,7 +10,8 @@ class Report0175:
                                title='SegmentControllers (SegC (OTL) - [HoortBij] - SegC (LGC)) hebben identieke serienummers.',
                                spreadsheet_id='1qoXaCy5U2H-HloAHNojkuraN4Du1D0gWy6yr4nY2BjQ',
                                datasource='PostGIS',
-                               persistent_column='D'
+                               persistent_column='D',
+                               link_type='eminfra'
                                )
 
         self.report.result_query = """
