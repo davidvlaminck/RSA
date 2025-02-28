@@ -15,8 +15,8 @@ class Report0051:
         self.report.result_query = """
 MATCH (x:IMKLAppurtenance)
 WITH x, [
-    {property: 'grp:currentStatus', value: x.`grp:currentStatus`, mandatory: true, enum: ['functional', 'projected', 'disused']},
-    {property: 'grp:inNetwork', value: x.`grp:inNetwork`, mandatory: true, enum: ['electricity', 'telecommunications', 'crossTheme']},
+//    {property: 'grp:currentStatus', value: x.`grp:currentStatus`, mandatory: true, enum: ['functional', 'projected', 'disused']},
+//    {property: 'grp:inNetwork', value: x.`grp:inNetwork`, mandatory: true, enum: ['electricity', 'telecommunications', 'crossTheme']},
     {property: 'grp:appurtenanceType', value: x.`grp:appurtenanceType`, mandatory: true, enum: ['aarding','mof','deliveryPoint','streetLight','spliceClosure','termination']},
     {property: 'grp:subThema', value: x.`grp:subThema`, mandatory: true, enum: ['elektriciteitTransport','elektriciteitTransportPlaatselijk','elektriciteitDistributieHoogspanning','elektriciteitDistributieLaagspanning','elektriciteitOpenbareVerlichting','elektriciteitVerkeerslichten','elektriciteitVerkeershandhavingssystemen','elektronischeCommunicatie']},
     {property: 'uuid', value: x.uuid, mandatory: true, maxLength: 255}

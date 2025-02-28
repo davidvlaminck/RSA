@@ -15,7 +15,7 @@ class Report0049:
         self.report.result_query = """
 MATCH (x:IMKLActivityComplex)
 WITH x, [
-	{property: 'grp:inNetwork', value: x.`grp:inNetwork`, mandatory: true, enum: ['electricity', 'telecommunications', 'crossTheme']},
+//	{property: 'grp:inNetwork', value: x.`grp:inNetwork`, mandatory: true, enum: ['electricity', 'telecommunications', 'crossTheme']},
 	{property: 'grp:activity', value: x.`grp:activity`, mandatory: true, maxLength: 20},
 	{property: 'name', value: x.`grp:name`, maxLength: 200},
 	{property: 'uuid', value: x.uuid, mandatory: true, maxLength: 255}

@@ -15,8 +15,8 @@ class Report0055:
         self.report.result_query = """
 MATCH (x:IMKLPipe)
 WITH x, [
-    {property: 'grp:currentStatus', value: x.`grp:currentStatus`, mandatory: true, enum: ['functional', 'projected', 'disused']},
-    {property: 'grp:inNetwork', value: x.`grp:inNetwork`, mandatory: true, enum: ['electricity', 'telecommunications', 'crossTheme']},
+//    {property: 'grp:currentStatus', value: x.`grp:currentStatus`, mandatory: true, enum: ['functional', 'projected', 'disused']},
+//    {property: 'grp:inNetwork', value: x.`grp:inNetwork`, mandatory: true, enum: ['electricity', 'telecommunications', 'crossTheme']},
     {property: 'grp:containerType', value: x.`grp:containerType`, mandatory: true, enum: ['mantelbuis', 'kabelEnLeidingGoot']},
     {property: 'grp:kleur', value: x.`grp:kleur`, maxLength: 256},
     {property: 'grp:pipeDiameter', value: x.`grp:pipeDiameter`, mandatory: true, maxLength:256},

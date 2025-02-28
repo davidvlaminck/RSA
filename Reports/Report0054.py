@@ -15,8 +15,8 @@ class Report0054:
         self.report.result_query = """
 MATCH (x:IMKLManhole)
 WITH x, [
-    {property: 'grp:currentStatus', value: x.`grp:currentStatus`, mandatory: true, enum: ['functional', 'projected', 'disused']},
-    {property: 'grp:inNetwork', value: x.`grp:inNetwork`, mandatory: true, enum: ['electricity', 'telecommunications', 'crossTheme']},
+//    {property: 'grp:currentStatus', value: x.`grp:currentStatus`, mandatory: true, enum: ['functional', 'projected', 'disused']},
+//    {property: 'grp:inNetwork', value: x.`grp:inNetwork`, mandatory: true, enum: ['electricity', 'telecommunications', 'crossTheme']},
     {property: 'uuid', value: x.uuid, mandatory: true, maxLength: 255}
 ] AS checks
 UNWIND checks AS check
