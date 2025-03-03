@@ -34,7 +34,7 @@ class Report0180:
                     '6c1883d1-7e50-441a-854c-b53552001e5f'  -- OTL
                 )
                 AND aw.waarde IS NOT NULL
-                AND aw.waarde !~* '^aps-g3-\d{4}-\d+$'
+                AND aw.waarde !~ '^APS-G3-\d{4}-\d+$'
         )
         SELECT *
         FROM cte_segmentcontroller
