@@ -7,7 +7,7 @@ class Report0137:
 
     def init_report(self):
         self.report = DQReport(name='report0137',
-                               title='Bijhorende assets hebben een verschillende toezichtshouder/toezichtsgroep (assettype = Signaalkabel)',
+                               title='Bijhorende assets hebben een verschillende toezichtshouder (assettype = Signaalkabel)',
                                spreadsheet_id='1HBOnmY6Q7ed3zeRMVlVL7EC6S9PiMa6gv80AWcdrve8',
                                datasource='PostGIS',
                                persistent_column='R'
@@ -92,8 +92,8 @@ class Report0137:
                 inner join cte_asset_otl otl on rel.bronuuid = otl.otl_uuid
                 where
                     otl.otl_betrokkene_naam != concat(lgc.lgc_toezichthouder_voornaam, ' ', lgc.lgc_toezichthouder_naam)
-                    and 
-                    otl.otl_betrokkene_naam != lgc.lgc_toezichtsgroep_naam
+                --  and 
+                --    otl.otl_betrokkene_naam != lgc.lgc_toezichtsgroep_naam
                 """
 
     def run_report(self, sender):
