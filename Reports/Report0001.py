@@ -69,10 +69,7 @@ cte_onderdelen AS (
         and
         -- bevraag enkel onderdelen van een bepaald assettype, en niet alle onderdelen
         at.uri in (
-        	'https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#LEDDriver'
-			, 'https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VerlichtingstoestelLED'
-			, 'https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Armatuurcontroller'
-			, 'https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Montagekast'
+        	'https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VerlichtingstoestelLED'
 			, 'https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#WVLichtmast'
 			, 'https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Wegkantkast'
 			, 'https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VerlichtingstoestelNaHP'
