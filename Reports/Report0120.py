@@ -55,10 +55,9 @@ select
     , a.commentaar 
 FROM assets a
 left join assettypes at on a.assettype = at.uuid
-left join cte_assets_verweven1 whitelist1 on a."uuid" = whitelist1.uuid and whitelist1.uuid is null
-left join cte_assets_verweven2 whitelist2 on a."uuid" = whitelist2.uuid and whitelist2.uuid is null
+left join cte_assets_verweven1 whitelist1 on a."uuid" = whitelist1.uuid
+left join cte_assets_verweven2 whitelist2 on a."uuid" = whitelist2.uuid
 where
-	-- vanaf hier de originele query
     (
     (at.uri like '%installatie%' or at.uri like '%onderdeel%')
     and 
@@ -78,6 +77,8 @@ where
     and
     a.naampad NOT LIKE 'Netwerkgroepen%'
     )
+    and whitelist1.uuid is null
+    and whitelist2.uuid is null
             """
 
     def run_report(self, sender):
