@@ -79,6 +79,7 @@ where
     )
     and whitelist1.uuid is null
     and whitelist2.uuid is null
+order by at.uri, a.naampad
             """
 
     def run_report(self, sender):
