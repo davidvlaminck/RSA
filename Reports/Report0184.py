@@ -78,7 +78,7 @@ from cte_laagspanningsaansluiting ls
 left join identiteiten i on ls.toezichter = i.uuid and i.actief = true
 left join toezichtgroepen tg on ls.toezichtgroep = tg.uuid and tg.actief = true
 left join cte_attribuutwaarden_grouped aw on ls.uuid = aw.assetuuid
-order by ls_bevat_keuringsinfo desc, aantal_resterende_dagen_tot_vervaldag_keuring
+order by bevat_keuringsinfo desc, aantal_resterende_dagen_tot_vervaldag_keuring
 	    """
 
     def run_report(self, sender):
