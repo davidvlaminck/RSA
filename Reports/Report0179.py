@@ -8,7 +8,7 @@ class Report0179:
     def init_report(self):
         self.report = DQReport(name='report0179', title='Assets gelinkt aan bestekken zonder aannemer',
                                spreadsheet_id='1KoN2tfOLSmJJ6OT540hyIwkf3MXX6vrnnLkONS-nIis', datasource='PostGIS',
-                               persistent_column='L')
+                               persistent_column='L', link_type='eminfra')
 
         self.report.result_query = """
 with cte_bestek_zonder_aannemer as (
