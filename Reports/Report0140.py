@@ -10,7 +10,8 @@ class Report0140:
                                title='Bijhorende assets hebben een verschillende toezichtshouder (assettype = WVLichtmast)',
                                spreadsheet_id='1E2vu5AtwpnZbQeJY5sTWqEI8EYYJ6QdEh6yfjPaA-0Q',
                                datasource='PostGIS',
-                               persistent_column='R'
+                               persistent_column='R',
+                               link_type='eminfra'
                                )
 
         self.report.result_query = """

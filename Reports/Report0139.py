@@ -10,7 +10,8 @@ class Report0139:
                                title='Bijhorende assets hebben een verschillende toezichtshouder (assettype = Beschermbuis)',
                                spreadsheet_id='1unBJL8JSNflw3GCeHeZdhXyghZfo-llg7py5SmkvMMg',
                                datasource='PostGIS',
-                               persistent_column='R'
+                               persistent_column='R',
+                               link_type='eminfra'
                                )
 
         self.report.result_query = """

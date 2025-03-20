@@ -10,7 +10,8 @@ class Report0138:
                                title='Bijhorende assets hebben een verschillende toezichtshouder (assettype = Voedingskabel)',
                                spreadsheet_id='10k_HmpIGsBW1pISnZZrrI-PmIanxgyGG4c59J6V_YGs',
                                datasource='PostGIS',
-                               persistent_column='R'
+                               persistent_column='R',
+                               link_type='eminfra'
                                )
 
         self.report.result_query = """

@@ -10,7 +10,8 @@ class Report0141:
                                title='Bijhorende assets hebben een verschillende toezichtshouder (assettype = overige)',
                                spreadsheet_id='1GVAhyNSqWLhnyCRoTiKnUJvJfRXLcfKLHSS8RtZ-ssM',
                                datasource='PostGIS',
-                               persistent_column='R'
+                               persistent_column='R',
+                               link_type='eminfra'
                                )
 
         self.report.result_query = """
