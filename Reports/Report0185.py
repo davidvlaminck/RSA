@@ -50,8 +50,13 @@ class Report0185:
         )
         -- main query
         select
-            a1.*
-            , a2.*
+            a1.uuid
+            , a1.netwerkelement_naam
+            , st_astext(a1.geometry) as netwerkelement_geometry
+            , a2.uuid
+            , a2.ip_naam
+            , a2.ip_naampad
+            , st_astext(a2.geometry) as ip_geometry
             , round(st_distance(a1.geometry, a2.geometry)::numeric, 2) as afstand
         from cte_asset_netwerkelement a1
         left join cte_relatie_hoortbij rel on a1.uuid = rel.bronuuid
