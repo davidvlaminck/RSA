@@ -61,7 +61,10 @@ class Report0185:
         from cte_asset_netwerkelement a1
         left join cte_relatie_hoortbij rel on a1.uuid = rel.bronuuid
         left join cte_asset_IP a2 on rel.doeluuid = a2.uuid
-        where a1.geometry::text <> a2.geometry::text
+        where
+            a1.geometry is null
+            or
+            a1.geometry::text <> a2.geometry::text
         order by afstand desc
 	    """
 
