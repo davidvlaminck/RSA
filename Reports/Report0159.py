@@ -7,7 +7,7 @@ class Report0159:
 
     def init_report(self):
         self.report = DQReport(name='report0159',
-                               title='Ontbrekende gegevens installaties Telematica',
+                               title='Ontbrekende gegevens installaties VMHS',
                                spreadsheet_id='1kmBlXvNmBxi0r2e79ys_wjxbzG6uW2QAJWPts_9XhqI',
                                datasource='PostGIS',
                                persistent_column='K'

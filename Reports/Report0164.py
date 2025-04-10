@@ -7,7 +7,7 @@ class Report0164:
 
     def init_report(self):
         self.report = DQReport(name='report0164',
-                               title='Ontbrekende gegevens installaties EW Limburg',
+                               title='Ontbrekende gegevens installaties V&W-WL',
                                spreadsheet_id='1TrmBoXlONFeTMCnpWJYbI1a89j3ifcIL84MznbwqD0M',
                                datasource='PostGIS',
                                persistent_column='K'
@@ -41,7 +41,7 @@ records AS (
 		LEFT JOIN beheerders ON assets.schadebeheerder = beheerders.uuid
 		LEFT JOIN bestek_koppelingen ON assets.uuid = bestek_koppelingen.assetUuid
 		LEFT JOIN locatie ON assets.uuid = locatie.assetuuid 
-	WHERE assets.actief = TRUE AND assettypes.uri NOT LIKE 'https://grp%' AND assettypes.uri NOT LIKE 'https://wegen%' AND toezichtgroepen.referentie = 'AWV_EW_LB' ) 
+	WHERE assets.actief = TRUE AND assettypes.uri NOT LIKE 'https://grp%' AND assettypes.uri NOT LIKE 'https://wegen%' AND toezichtgroepen.referentie = 'V&W-WL' ) 
 SELECT *
 FROM records
 WHERE zonder_toezichter = '1' OR zonder_bestek = '1' OR zonder_locatie = '1' OR zonder_beheerder = '1' OR zonder_voeding = '1';

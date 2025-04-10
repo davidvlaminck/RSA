@@ -42,7 +42,7 @@ records AS (
 		LEFT JOIN bestek_koppelingen ON assets.uuid = bestek_koppelingen.assetUuid
 		LEFT JOIN locatie ON assets.uuid = locatie.assetuuid 
 	WHERE assets.actief = TRUE AND assettypes.uri NOT LIKE 'https://grp%' AND assettypes.uri NOT LIKE 'https://wegen%' 
-	    AND toezichtgroepen.referentie NOT IN ('EMT_BMI','EMT_TELE','EMT_VHS','TOV','AWV_EW_AN','AWV_EW_VB','AWV_EW_OV','AWV_EW_LB','AWV_EW_WV')) 
+	    AND toezichtgroepen.referentie NOT IN ('EMT_BMI','EMT_TELE','EMT_VHS','TOV','V&W-WA','V&W-WVB','V&W-WO','V&W-WL','V&W-WW')) 
 SELECT *
 FROM records
 WHERE zonder_toezichter = '1' OR zonder_bestek = '1' OR zonder_locatie = '1' OR zonder_beheerder = '1' OR zonder_voeding = '1';
