@@ -45,10 +45,10 @@ class Report0186:
             a1.uuid
             , a1.assettype_naam
             , a1.naam
-            , a1.geometry
+            , st_astext(a1.geometry)
             , a2.uuid
             , a2.assettype_naam
-            , a2.geometry
+            , st_astext(a2.geometry)
             , st_distance(a1.geometry, a2.geometry) as afstand_tussen_verwerkingseenheid_en_demodulator
         --    , a1.bestek_startdatum
         --    , a1.bestek_einddatum
