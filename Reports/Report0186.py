@@ -42,11 +42,11 @@ class Report0186:
          * PT-verwerkingseenheden zonder Bevestiging-relatie naar PR-demodulatoren
          * */
         select
-            a1.uuid
+            a1.uuid as "uuid_PT-verwerkingseenheid"
             , a1.assettype_naam
             , a1.naam
             , st_astext(a1.geometry)
-            , a2.uuid
+            , a2.uuid as "uuid_PT-demodulator"
             , a2.assettype_naam
             , st_astext(a2.geometry)
             , st_distance(a1.geometry, a2.geometry) as afstand_tussen_verwerkingseenheid_en_demodulator
