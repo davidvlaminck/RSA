@@ -8,13 +8,15 @@ class Report0183:
     def init_report(self):
         self.report = DQReport(name='report0183', title='Teletransmissieverbinding (TT) ODF met meerdere HoortBij-relaties naar een KabelnetToegang',
                                spreadsheet_id='1xrzVWW4K4InhtoDMF3ETxcbZSo1MmyUy4EtbAAoMEmY', datasource='PostGIS',
-                               persistent_column='H', link_type='eminfra')
+                               persistent_column='J', link_type='eminfra')
 
         self.report.result_query = """
         with 
         cte_assets_TT_ODF as (
-            select a.*
-            from assets a 
+            select a.*, st_astext(l.geometry) as geometry, gem.gemeente, gem.provincie
+            from assets a
+            left join locatie l on a.uuid = l.assetuuid
+            left join gemeente gem on st_dwithin(l.geometry, gem.geom, 0)
             where
                 a.naam ~ '.ODF$'
                 and
@@ -46,16 +48,18 @@ class Report0183:
             , a.toestand
             , a.naampad
             , a.naam
-            , coalesce(g.geometry, l.geometry) as geometry
+            , a.geometry
+            , a.gemeente
+            , a.provincie
             , count(a.uuid) as aantal_kabelnettoegangen
             , string_agg(concat('uuid: ', a2.uuid::text, ' naam: ', a2.naam::text), '; ') as kabelnettoegang_info
         from cte_assets_TT_ODF a
         left join geometrie g on a.uuid = g.assetuuid
         left join locatie l on a.uuid = l.assetuuid
         left join cte_relaties_hoortbij rel on a.uuid = rel.doeluuid
-        left join cte_assets_kabelnettoegang a2 on rel.bronuuid = a2."uuid" 
+        left join cte_assets_kabelnettoegang a2 on rel.bronuuid = a2."uuid"
         where rel.uuid is not null
-        group by a.uuid, a.toestand, a.naampad, a.naam, g.geometry, l.geometry
+        group by a.uuid, a.toestand, a.naampad, a.naam, a.geometry, a.gemeente, a.provincie
         having count(a.uuid) > 1
         order by aantal_kabelnettoegangen desc, a.naampad asc
 	    """
