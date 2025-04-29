@@ -10,7 +10,8 @@ class Report0170:
                                title='Actieve assets hebben een inactieve parent-asset',
                                spreadsheet_id='1XHAWkGnKse2bmZth1d0PybcvyWNDO-cv3QjokT1aOic',
                                datasource='PostGIS',
-                               persistent_column='I'
+                               persistent_column='I',
+                               link_type='eminfra'
                                )
 
         self.report.result_query = """
