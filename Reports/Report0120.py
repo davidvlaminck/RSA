@@ -29,6 +29,15 @@ with cte_assets_verweven1 as (
         , '7a175f2f-d195-4fb6-bdb3-84f398629e39'  -- zoutbijlaadplaats
         , 'c575f03c-83c1-41c0-9dc6-3d1232bebe99'  -- silo
         , 'cdcd6d8b-0e73-4f87-a62d-be8744e075db'  -- tank
+        , '27db1214-a622-45f8-b124-384598b210f4'  -- ASTRID installatie
+        , '9baa5c87-a56e-4ece-9fd0-a0d82a3dc7ec'  -- Radioheruitzend installatie
+        , '97b7c30a-f5e9-4008-a3e8-19064146c0c3'  -- Datakabel
+        , '3ff63fb2-0234-4e94-a807-5db4dd05a92e'  -- ITSapp
+        , 'ae45eec9-b992-4704-a3df-11e8d65d2ad1'  -- Meteostation
+        , '4749ba74-ed5a-4811-9428-bcf0e227093a'  -- Elektromotor
+        , 'a88493ab-3748-4636-96ed-9c8e8460260d'  -- Toegangscontroller
+        , '4e12c432-1546-4bbd-95d9-8fc9bc1e0e02'  -- MIV Meetpunt
+        , '7f59b64e-9d6c-4ac9-8de7-a279973c9210'  -- MIV-module
     )
 )
 -- whitelist van assets: niet-selectieve detectielus met een 'Sturing'-relatie naar een fietstelsysteem 
