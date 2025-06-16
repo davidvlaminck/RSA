@@ -10,7 +10,8 @@ class Report0100:
                                title='Verkeersregelaars hebben een sturingsrelatie naar een TLCfiPoort',
                                spreadsheet_id='1MLoe5_exhht_bR2y9uTxPBaGIAObzwUqqHvWwBttRzk',
                                datasource='Neo4J',
-                               persistent_column='C')
+                               persistent_column='C',
+                               link_type='eminfra')
 
         self.report.result_query = """MATCH (a:Verkeersregelaar {isActief:TRUE}) 
         WHERE NOT EXISTS ((a)-[:Sturing]-(:TLCfiPoort {isActief:TRUE}))
