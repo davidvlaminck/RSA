@@ -38,6 +38,19 @@ with cte_assets_verweven1 as (
         , 'a88493ab-3748-4636-96ed-9c8e8460260d'  -- Toegangscontroller
         , '4e12c432-1546-4bbd-95d9-8fc9bc1e0e02'  -- MIV Meetpunt
         , '7f59b64e-9d6c-4ac9-8de7-a279973c9210'  -- MIV-module
+        , 'b6f86b8d-543d-4525-8458-36b498333416'  -- Netwerkelement
+        , '50f7400a-2e67-4550-b135-08cde6f6d64f'  -- DynBordVMS
+        , '0515e9bc-1778-43ae-81a9-44df3e2b7c21'  -- DynBordRVMS
+        , '4aabd323-5480-4771-b33f-28d5c6d46cee'  -- DynBordPK
+        , 'fcc947c6-5923-4d56-96fc-73ce4b0bae7f'  -- DynBordGroep
+        , '87ef5c66-1f50-4010-a47c-90027ad72421'  -- Hoogtedetectie
+        , '9826b683-02fa-4d97-8680-fbabc91a417f'  -- DynBordRSS
+        , 'fcc947c6-5923-4d56-96fc-73ce4b0bae7f'  -- DynBordGroep
+        , '40b2e487-f4b8-48a2-be9d-e68263bab75a'  -- Seinbrug
+        , '615356ae-64eb-4a7d-8f40-6e496ec5b8d7'  -- Galgpaal
+        , '6d7544da-2688-4e87-b9e1-305a9009ba18'  -- Z30Groep
+        , '4afb0d67-bf8f-4e0e-8544-6af1f296f6bf'  -- DynBordZ30
+        , '8d9f83fa-0e19-47ec-902f-ac2c538dd6d9'  -- Lichtmast
     )
 )
 -- whitelist van assets: niet-selectieve detectielus met een 'Sturing'-relatie naar een fietstelsysteem 
