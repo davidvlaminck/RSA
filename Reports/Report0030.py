@@ -9,19 +9,24 @@ class Report0030:
         self.report = DQReport(name='report0030',
                                title='Netwerkelementen hebben een (afgeleide) locatie',
                                spreadsheet_id='1ZAZ8chzMbLEyGd-cbZM6S7Uw4aNOrBmAE1KWnbyvdK4',
-                               datasource='Neo4J',
-                               persistent_column='C')
+                               datasource='PostGIS',
+                               persistent_column='G')
 
         self.report.result_query = """
-        // Report 0030
-        MATCH (n:Netwerkelement {isActief: TRUE})
-        WHERE (n.geometry IS NULL OR n.geometry = '')
-        WITH n
-        OPTIONAL MATCH (n)-[:HoortBij]-(n2)
-        WHERE n2.isActief = TRUE
-        WITH n, collect(n2) AS relatedNodes
-        WHERE ALL(node IN relatedNodes WHERE node.geometry IS NULL OR node.geometry = '')
-        RETURN n.uuid as uuid, n.naam as naam
+        select
+            a."uuid"
+            , a.actief 
+            , a.toestand 
+            , a.naam 
+            , at."label" 
+            , g.wkt_string 
+        from assets a
+        left join assettypes at on a.assettype = at."uuid"
+        left join geometrie g on a."uuid" = g.assetuuid
+        where
+            a.actief is true
+            and a.assettype = 'b6f86b8d-543d-4525-8458-36b498333416' -- Netwerkelement (OTL)
+            and g.geometry is null
         """
 
     def run_report(self, sender):
