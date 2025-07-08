@@ -10,7 +10,8 @@ class Report0194:
                                title='CabineControllers (Afstandsbewaking) hebben een (afgeleide) locatie',
                                spreadsheet_id='1P-6URGL4nQujCzeeuHq50GMLWYRpMCXaf9gjouYTLMU',
                                datasource='PostGIS',
-                               persistent_column='G')
+                               persistent_column='G',
+                               link_type='eminfra')
 
         self.report.result_query = """
         select

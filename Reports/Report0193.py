@@ -10,7 +10,8 @@ class Report0193:
                                title='SegmentControllers hebben een (afgeleide) locatie',
                                spreadsheet_id='1O3e83o3Aa-b0eW3xMBjCZoG6b5vNfY9PAXmeULjo1as',
                                datasource='PostGIS',
-                               persistent_column='G')
+                               persistent_column='G',
+                               link_type='eminfra')
 
         self.report.result_query = """
         select

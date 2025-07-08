@@ -10,7 +10,8 @@ class Report0030:
                                title='Netwerkelementen hebben een (afgeleide) locatie',
                                spreadsheet_id='1ZAZ8chzMbLEyGd-cbZM6S7Uw4aNOrBmAE1KWnbyvdK4',
                                datasource='PostGIS',
-                               persistent_column='G')
+                               persistent_column='G',
+                               link_type='eminfra')
 
         self.report.result_query = """
         select
