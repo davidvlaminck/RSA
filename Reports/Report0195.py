@@ -19,9 +19,12 @@ class Report0195:
             , a.toestand
             , a.actief
             , a.naam
+            , a.commentaar 
+            , i.gebruikersnaam
             , l.geometry
         from assets a
         left join locatie l on a."uuid" = l.assetuuid
+        left join identiteiten i on a.toezichter = i."uuid" 
         where
             a.assettype = '10377658-776f-4c21-a294-6c740b9f655e' -- Kast (Legacy)
             and
@@ -29,7 +32,7 @@ class Report0195:
             and
             l.geometry is null
         order by
-            a.toestand
+            a.toestand, i.gebruikersnaam 
         """
 
     def run_report(self, sender):
