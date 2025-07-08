@@ -10,7 +10,7 @@ class Report0195:
                                title='Kast (Legacy) hebben een locatie',
                                spreadsheet_id='1xFCTQpOty0ur3Tgn-rYmHs4jonZkA5l794Neid1kaCw',
                                datasource='PostGIS',
-                               persistent_column='G',
+                               persistent_column='H',
                                link_type='eminfra')
 
         self.report.result_query = """
