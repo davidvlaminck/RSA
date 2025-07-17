@@ -10,7 +10,8 @@ class Report0060:
                                title='Er zijn geen conflicten tussen EAN-nummers (dubbel EAN-nummer).',
                                spreadsheet_id='1od9125ZSoFG6fGwvoS8CSCz-Bne4N8vVBXORjYhtjQY',
                                datasource='Neo4J',
-                               persistent_column='I')
+                               persistent_column='I',
+                               link_type='eminfra')
 
         self.report.result_query = """
             MATCH (x:Asset{isActief: True})-[:HoortBij]-(y{isActief: True}) 
