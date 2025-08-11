@@ -7,7 +7,7 @@ class Report0198:
 
     def init_report(self):
         self.report = DQReport(name='report0198',
-                               title='Asset (Legacy) heeft een inactieve toezichter',
+                               title='Asset (OTL) heeft een inactieve toezichter',
                                spreadsheet_id='1c-dKxkczJRFVNEvNoXIem-HZ3e68Cx7yawfTg0rjNXg',
                                datasource='PostGIS',
                                persistent_column='J',
