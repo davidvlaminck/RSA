@@ -10,7 +10,7 @@ class Report0196:
                                title='Lichtmast heeft een locatie',
                                spreadsheet_id='1dgAGfvuGBCnW4oWXm0eUJMqSv6PXbbtAEEmNNUdOmwk',
                                datasource='PostGIS',
-                               persistent_column='H',
+                               persistent_column='J',
                                link_type='eminfra')
 
         self.report.result_query = """
@@ -22,8 +22,12 @@ class Report0196:
                 , a.naampad
                 , a.commentaar 
                 , g.geometry
+                , br.rol
+                , age.naam as naam_toezichter
             from assets a
             left join geometrie g on a.uuid = g.assetuuid
+            left join betrokkenerelaties br on a."uuid" = br.bronassetuuid and br.actief is true and br.rol = 'toezichter'
+            left join agents age on br.doeluuid = age."uuid" 
             where
                 a.assettype = '8d9f83fa-0e19-47ec-902f-ac2c538dd6d9' -- Lichtmast
                 and
