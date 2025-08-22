@@ -36,7 +36,7 @@ class Report0198:
                 , a.naampad 
                 , a.naam 
                 , a.commentaar 
-                , age.naam
+                , age.naam as "naam_agent"
                 , age.rol
             from assets a
             inner join cte_agent_inactief age on a.uuid = age.bronassetuuid
