@@ -51,6 +51,8 @@ with cte_assets_verweven1 as (
         , '6d7544da-2688-4e87-b9e1-305a9009ba18'  -- Z30Groep
         , '4afb0d67-bf8f-4e0e-8544-6af1f296f6bf'  -- DynBordZ30
         , '8d9f83fa-0e19-47ec-902f-ac2c538dd6d9'  -- Lichtmast
+        , '6d518126-d229-4446-89ee-1ae2a9be4318'  -- Stralende Kabel
+        , '48afe679-1483-46dd-ac5e-b3f2f97506bf'  -- Zuil toegangscontrole
     )
 )
 -- whitelist van assets: niet-selectieve detectielus met een 'Sturing'-relatie naar een fietstelsysteem 
