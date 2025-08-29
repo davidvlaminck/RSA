@@ -53,6 +53,37 @@ with cte_assets_verweven1 as (
         , '8d9f83fa-0e19-47ec-902f-ac2c538dd6d9'  -- Lichtmast
         , '6d518126-d229-4446-89ee-1ae2a9be4318'  -- Stralende Kabel
         , '48afe679-1483-46dd-ac5e-b3f2f97506bf'  -- Zuil toegangscontrole
+        -- verweving september
+        --, 'df9f19eb-5eb3-49d9-b782-6b22cfb8993b'  -- Bel
+        --, 'be55ecdf-aa99-4dac-b00a-6ad4f9f6b615'  -- Calamiteitendoorsteek
+        --, '0f55b669-2b77-4812-ae6f-867749fc76ac'  -- Slagboom
+        --, 'd5705624-233f-4e05-9574-86dd9c98b4e5'  -- Hulppost
+        --, 'a58ed6fe-e930-41b4-baa4-b7f7950b5b3b'  -- Inwenvig verlicht pictogram
+        --, 'c3106313-4b66-44cb-b885-39ae91fdf00e'  -- Brandblusser
+        --, '86dc2408-ff32-42a7-a393-718a5f9fcf91'  -- Luchtkwaliteit zender ontvanger
+        --, '07f28457-3123-4bd8-baee-8504c027d358'  -- Luchtkwaliteitsensor
+        --, '9cb182d9-d893-43e4-b998-09cd950bccd5'  -- Noodverlichtingstoestel
+        --, '42efc21e-8424-4680-a611-d0f04d2a215c'  -- Intercomtoestel
+        --, '664a09b8-ce64-49a1-9cc4-b575ab072095'  -- Intercomserver
+        --, 'd3e26758-6b3d-4ee9-b04e-238eefe86e43'  -- Deur
+        --, 'cf53f4fd-a8ca-413a-83c4-1c670fab7a5e'  -- Contourverlichting
+        --, 'abb7572e-fa82-4d45-b3ca-b06abdd7cfa4'  -- Geleidingsverlichting
+        --, '6e9010da-507f-426c-a4c5-f3a49baacb8a'  -- Kokerventilatie
+        --, 'f815c084-ac38-4f9b-8bc3-a501ef6c227f'  -- Ventilatiecluster
+        --, '69462525-65de-4951-8442-57cbc24fe598'  -- Ventilator
+        --, '015f6cc2-7daa-4578-a360-01c810feaff6'  --  Tunneluitrusting
+        --, '10088403-228d-43f7-9aa6-66469d2e7760'  --  Pomp
+        --, '855812a3-a32f-4968-9238-46dbe29e4289'  --  Pompstation
+        --, 'e889caba-ad57-43e1-8b1a-7ad3b11dd57a'  --  Gassensor
+        --, 'fe26c074-edf3-4307-a4dc-1a9c18001325'  --  Lichtsensor
+        --, 'fbf9755a-5f67-4dc9-9637-03331aa0780b'  --  Tunnelverlichting
+        --, 'e67900b1-88fb-44da-9285-409f7f67147f'  --  BinnenverlichtingGroep
+        --, '7044685e-dfdb-421c-9825-2c268b7d2e2f'  --  Dynamisch Bord Externe Processing Unit
+        -- verweving oktober
+        --, '3f98f53a-b435-4a69-af3c-cede1cd373a7'  -- Camera
+        --, '788e72fa-24b8-4f4c-8ed7-d8448c9cd76f'  -- Cameragroep
+        --, '30a173e5-bb95-4391-b533-99adcdba033c'  -- Omvormer
+        --, '6e61fb1c-ebff-49e2-8fe0-45fc24626991'  -- Power over Ethernet (PoE) Injector
     )
 )
 -- whitelist van assets: niet-selectieve detectielus met een 'Sturing'-relatie naar een fietstelsysteem 
