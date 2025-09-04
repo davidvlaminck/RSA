@@ -39,21 +39,23 @@ class Report0031:
         self.report.run_report(sender=sender)
 
 # aql_query = """
-# FOR n IN assets
-#   FILTER n.assettype_key == "b6f86b8d"   // Netwerkelement
-#     AND n.AIMDBStatus_isActief == TRUE
-#     AND n.Netwerkelement_gebruik == 'https://wegenenverkeer.data.vlaanderen.be/id/concept/KlNetwerkelemGebruik/l2-switch'
+# LET netwerkelement_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Netwerkelement" LIMIT 1 RETURN at._key)
+# LET l2Access_key       = FIRST(FOR at IN assettypes FILTER at.short_uri == "installatie#L2AccessStructuur" LIMIT 1 RETURN at._key)
+# LET hoortBij_key       = FIRST(FOR rt IN relatietypes FILTER rt.short == "HoortBij" LIMIT 1 RETURN rt._key)
 #
-#   // Traverse 1 hop OUTBOUND to see if there is a HoortBij relation to an L2AccessStructuur
+# FOR n IN assets
+#   FILTER n.assettype_key == netwerkelement_key
+#     AND n.AIMDBStatus_isActief
+#     AND n.Netwerkelement_gebruik == "https://wegenenverkeer.data.vlaanderen.be/id/concept/KlNetwerkelemGebruik/l2-switch"
+#
 #   LET heeftRelatie = FIRST(
 #     FOR v, rel IN OUTBOUND n assetrelaties
-#       FILTER rel.relatietype_key == "812d" // HoortBij
-#         AND v.assettype_key == "30b571a9" // L2AccessStructuur
-#         AND v.AIMDBStatus_isActief == TRUE
+#       FILTER rel.relatietype_key == hoortBij_key
+#         AND v.assettype_key == l2Access_key
+#         AND v.AIMDBStatus_isActief
 #       LIMIT 1
 #       RETURN 1
 #   )
-#
 #   FILTER heeftRelatie != 1
 #
 #   RETURN {
