@@ -20,14 +20,15 @@ class Report0193:
             , a.toestand 
             , a.naam 
             , at."label" 
-            , g.wkt_string 
+            , l.geometrie 
         from assets a
         left join assettypes at on a.assettype = at."uuid"
-        left join geometrie g on a."uuid" = g.assetuuid
+        left join locatie l on a."uuid" = l.assetuuid 
         where
             a.actief is true
             and a.assettype = 'f625b904-befc-4685-9dd8-15a20b23a58b' -- SegmentController (Legacy)
-            and g.geometry is null
+            and l.geometry is null
+        order by a.toestand, a.naam
         """
 
     def run_report(self, sender):

@@ -20,14 +20,15 @@ class Report0194:
             , a.toestand 
             , a.naam 
             , at."label" 
-            , g.wkt_string 
+            , l.geometrie  
         from assets a
         left join assettypes at on a.assettype = at."uuid"
-        left join geometrie g on a."uuid" = g.assetuuid
+        left join locatie l on a."uuid" = l.assetuuid
         where
             a.actief is true
             and a.assettype = '8eda4230-e7dc-4b72-b02b-26d81aa1f45e' -- Afstandsbewaking (Legacy)
-            and g.geometry is null
+            and l.geometry is null
+        order by a.toestand, a.naam
         """
 
     def run_report(self, sender):
