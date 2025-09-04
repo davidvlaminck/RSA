@@ -45,15 +45,16 @@ class Report0031:
 #     AND n.Netwerkelement_gebruik == 'https://wegenenverkeer.data.vlaanderen.be/id/concept/KlNetwerkelemGebruik/l2-switch'
 #
 #   // Traverse 1 hop OUTBOUND to see if there is a HoortBij relation to an L2AccessStructuur
-#   LET heeftRelatie = LENGTH(
+#   LET heeftRelatie = FIRST(
 #     FOR v, rel IN OUTBOUND n assetrelaties
 #       FILTER rel.relatietype_key == "812d" // HoortBij
-#         AND v.assettype_key == "30b571a9"   // L2AccessStructuur
+#         AND v.assettype_key == "30b571a9" // L2AccessStructuur
 #         AND v.AIMDBStatus_isActief == TRUE
+#       LIMIT 1
 #       RETURN 1
-#   ) > 0
+#   )
 #
-#   FILTER heeftRelatie == false
+#   FILTER heeftRelatie != 1
 #
 #   RETURN {
 #     uuid: n._key,
