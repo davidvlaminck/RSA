@@ -37,3 +37,27 @@ class Report0031:
             """
     def run_report(self, sender):
         self.report.run_report(sender=sender)
+
+# aql_query = """
+# FOR n IN assets
+#   FILTER n.assettype_key == "b6f86b8d"   // Netwerkelement
+#     AND n.AIMDBStatus_isActief == TRUE
+#     AND n.Netwerkelement_gebruik == 'https://wegenenverkeer.data.vlaanderen.be/id/concept/KlNetwerkelemGebruik/l2-switch'
+#
+#   // Traverse 1 hop OUTBOUND to see if there is a HoortBij relation to an L2AccessStructuur
+#   LET heeftRelatie = LENGTH(
+#     FOR v, rel IN OUTBOUND n assetrelaties
+#       FILTER rel.relatietype_key == "812d" // HoortBij
+#         AND v.assettype_key == "30b571a9"   // L2AccessStructuur
+#         AND v.AIMDBStatus_isActief == TRUE
+#       RETURN 1
+#   ) > 0
+#
+#   FILTER heeftRelatie == false
+#
+#   RETURN {
+#     uuid: n._key,
+#     naam: n.AIMNaamObject_naam,
+#     gebruik: n.Netwerkelement_gebruik
+#   }
+# """
