@@ -12,7 +12,7 @@ class Report0032:
                                datasource='Neo4J',
                                persistent_column='C')
 
-        self.report.result_query = """MATCH (n:Netwerkpoort {isActief:TRUE, type:'NNI'})-[:Bevestiging]-(e:Netwerkelement {isActief:TRUE})
+        self.report.result_query = """MATCH (n:Netwerkpoort {isActief:TRUE})-[:Bevestiging]-(e:Netwerkelement {isActief:TRUE})
         WHERE NOT e.merk IN ['NOKIA', 'Ciena']
         WITH n
         WHERE n.type IS NULL 
@@ -25,7 +25,6 @@ class Report0032:
 # FOR n IN assets
 #   FILTER n.assettype_key == "6b3dba37"
 #     AND n.AIMDBStatus_isActief == TRUE
-#     AND n.Netwerkpoort_type == "https://wegenenverkeer.data.vlaanderen.be/id/concept/KlNetwerkpoortType/UNI"
 #
 #   FOR v, rel IN ANY n assetrelaties
 #     FILTER rel.relatietype_key == "3ff9"
