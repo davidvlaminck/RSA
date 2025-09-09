@@ -10,7 +10,7 @@ class Report0140:
                                title='Bijhorende assets hebben een verschillende toezichtshouder (assettype = WVLichtmast)',
                                spreadsheet_id='1E2vu5AtwpnZbQeJY5sTWqEI8EYYJ6QdEh6yfjPaA-0Q',
                                datasource='PostGIS',
-                               persistent_column='R',
+                               persistent_column='Q',
                                link_type='eminfra'
                                )
 
@@ -67,8 +67,7 @@ class Report0140:
                         , a.naam as lgc_naam
                         , at.uri lgc_uri
                         , at.definitie as lgc_definitie
-                        , i.naam as lgc_toezichthouder_naam
-                        , i.voornaam as lgc_toezichthouder_voornaam
+                        , concat(i.naam, ' ', i.voornaam) as lgc_toezichter_naam
                         , i.gebruikersnaam as lgc_toezichthouder_gebruikersnaam
                         , t.naam as lgc_toezichtsgroep_naam
                         , t.typegroep as lgc_toezichtsgroep_typegroep
@@ -92,7 +91,7 @@ class Report0140:
                 inner join cte_asset_lgc lgc on rel.doeluuid = lgc.lgc_uuid
                 inner join cte_asset_otl otl on rel.bronuuid = otl.otl_uuid
                 where
-                    otl.otl_betrokkene_naam != concat(lgc.lgc_toezichthouder_voornaam, ' ', lgc.lgc_toezichthouder_naam)
+                    otl.otl_betrokkene_naam != lgc.lgc_toezichter_naam
                 --    and 
                 --    otl.otl_betrokkene_naam != lgc.lgc_toezichtsgroep_naam
                 """
