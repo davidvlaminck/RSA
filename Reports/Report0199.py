@@ -18,7 +18,7 @@ class Report0199:
                 select
                     a.uuid
                     , a.naam
-                    , g.geometry
+                    , st_astext(g.geometry) as geometry
                     , st_geometrytype(g.geometry) as "geometry_type"
                     , ST_area(g.geometry) as "oppervlakte"	
                 from assets a
@@ -27,6 +27,7 @@ class Report0199:
                  and a.actief is true
                 order by st_area(g.geometry) desc
             )
+            -- RSA-query
             select
                 uuid, naam, geometry, oppervlakte
             from cte_seinbrug
