@@ -67,7 +67,7 @@ class Report0140:
                         , a.naam as lgc_naam
                         , at.uri lgc_uri
                         , at.definitie as lgc_definitie
-                        , concat(i.naam, ' ', i.voornaam) as lgc_toezichter_naam
+                        , concat(i.voornaam, ' ', i.naam) as lgc_toezichter_naam
                         , i.gebruikersnaam as lgc_toezichthouder_gebruikersnaam
                         , t.naam as lgc_toezichtsgroep_naam
                         , t.typegroep as lgc_toezichtsgroep_typegroep
