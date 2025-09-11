@@ -10,7 +10,7 @@ class Report0194:
                                title='CabineControllers (Afstandsbewaking) hebben een (afgeleide) locatie',
                                spreadsheet_id='1P-6URGL4nQujCzeeuHq50GMLWYRpMCXaf9gjouYTLMU',
                                datasource='PostGIS',
-                               persistent_column='G',
+                               persistent_column='H',
                                link_type='eminfra')
 
         self.report.result_query = """
@@ -21,9 +21,11 @@ class Report0194:
             , a.naam 
             , at."label" 
             , l.geometrie  
+            , i.gebruikersnaam 
         from assets a
         left join assettypes at on a.assettype = at."uuid"
         left join locatie l on a."uuid" = l.assetuuid
+        left join identiteiten i on a.toezichter = i."uuid" 
         where
             a.actief is true
             and a.assettype = '8eda4230-e7dc-4b72-b02b-26d81aa1f45e' -- Afstandsbewaking (Legacy)

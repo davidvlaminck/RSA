@@ -10,7 +10,7 @@ class Report0193:
                                title='SegmentControllers hebben een (afgeleide) locatie',
                                spreadsheet_id='1O3e83o3Aa-b0eW3xMBjCZoG6b5vNfY9PAXmeULjo1as',
                                datasource='PostGIS',
-                               persistent_column='G',
+                               persistent_column='H',
                                link_type='eminfra')
 
         self.report.result_query = """
@@ -20,10 +20,12 @@ class Report0193:
             , a.toestand 
             , a.naam 
             , at."label" 
-            , l.geometrie 
+            , l.geometrie
+            , i.gebruikersnaam 
         from assets a
         left join assettypes at on a.assettype = at."uuid"
         left join locatie l on a."uuid" = l.assetuuid 
+        left join identiteiten i on a.toezichter = i."uuid" 
         where
             a.actief is true
             and a.assettype = 'f625b904-befc-4685-9dd8-15a20b23a58b' -- SegmentController (Legacy)
