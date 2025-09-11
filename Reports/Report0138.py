@@ -92,6 +92,8 @@ class Report0138:
             inner join cte_asset_otl otl on rel.bronuuid = otl.otl_uuid
             where
                     otl.otl_betrokkene_naam != lgc.lgc_toezichter_naam
+                    or
+                    lower(otl.otl_betrokkene_naam) != lower(lgc.lgc_toezichthouder_gebruikersnaam)
             --    and 
             --    otl.otl_betrokkene_naam != lgc.lgc_toezichtsgroep_naam
             """
