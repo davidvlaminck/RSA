@@ -93,7 +93,7 @@ class Report0139:
             where
                     otl.otl_betrokkene_naam != lgc.lgc_toezichter_naam
                     or
-                    lower(otl.otl_betrokkene_naam) != lower(lgc.lgc_toezichthouder_gebruikersnaam)
+                    (lower(otl.otl_betrokkene_naam) like 'lantis' and lower(lgc.lgc_toezichthouder_gebruikersnaam) like 'lantis')
             --    and 
             --    otl.otl_betrokkene_naam != lgc.lgc_toezichtsgroep_naam
             """
