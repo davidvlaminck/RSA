@@ -80,6 +80,8 @@ class Report0140:
                         at.uri ~ '^https://lgc.data.wegenenverkeer.be.*'
                         and
                         a.actief is true
+                        and
+                        a.assettype = '4dfad588-277c-480f-8cdc-0889cfaf9c78'  -- Lichtmast wegverlichting (Legacy)
                 )
                 -- main query:
                 -- Legacy en OTL-assets die via HoortBij-relatie aan elkaar zijn gekoppeld en die een verschillende toezichthouder kennen.
