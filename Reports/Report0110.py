@@ -8,7 +8,7 @@ class Report0110:
     def init_report(self):
         self.report = DQReport(name='report0110', title='Geometrie is geldig: Open Geospatial Consortium standaard',
                                spreadsheet_id='1s8IdTaTSo0tMNKU59hTj5SgrJFt3bTG1DbidwFrXIv0', datasource='PostGIS',
-                               persistent_column='E')
+                               persistent_column='F')
 
         self.report.result_query = """
             with cte_asset as (
@@ -29,6 +29,7 @@ class Report0110:
                 , assettype
                 , 'invalid geometry: ' || reason(st_isvaliddetail(geometry)) as info
                 , SUBSTRING("wkt_string" FROM '^(POINT Z|LINESTRING Z|POLYGON Z)') AS wkt_string_prefix
+                , wkt_string
             from cte_asset
             where
             not st_isvalid(geometry)
