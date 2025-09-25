@@ -45,6 +45,6 @@ FOR k IN assets
   RETURN {
     uuid: k._key,
     naam: k.AIMNaamObject_naam,
-    type: k.Kast_kastmateriaal
+    kastmateriaal: k.Kast_kastmateriaal
   }
 """
