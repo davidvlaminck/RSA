@@ -1,4 +1,5 @@
 from DQReport import DQReport
+from Reports.Report0032 import aql_query
 
 
 class Report0088:
@@ -18,3 +19,43 @@ RETURN k.uuid, k.naam, k.`afmeting.lengte`, k.`afmeting.breedte`, k.`afmeting.ho
 
     def run_report(self, sender):
         self.report.run_report(sender=sender)
+
+aql_query = """
+LET wegkantkast_key      = FIRST(FOR at IN assettypes   FILTER at.short_uri == "onderdeel#Wegkantkast"      LIMIT 1 RETURN at._key)
+LET verkeersregelaar_key = FIRST(FOR at IN assettypes   FILTER at.short_uri == "onderdeel#Verkeersregelaar" LIMIT 1 RETURN at._key)
+LET bevestiging_key      = FIRST(FOR rt IN relatietypes FILTER rt.short     == "Bevestiging"                LIMIT 1 RETURN rt._key)
+
+FOR k IN assets
+  FILTER
+    k.assettype_key            == wegkantkast_key
+    AND k.AIMDBStatus_isActief == true
+    AND (
+      k.Kast_afmeting.DtcAfmetingBxlxhInMm_breedte   == null
+      OR k.Kast_afmeting.DtcAfmetingBxlxhInMm_lengte == null
+      OR k.Kast_afmeting.DtcAfmetingBxlxhInMm_hoogte == null
+      OR NOT (
+        k.Kast_afmeting.DtcAfmetingBxlxhInMm_breedte < k.Kast_afmeting.DtcAfmetingBxlxhInMm_lengte
+        AND k.Kast_afmeting.DtcAfmetingBxlxhInMm_breedte < k.Kast_afmeting.DtcAfmetingBxlxhInMm_hoogte
+      )
+    )
+
+  LET vr = FIRST(
+    FOR v, rel IN ANY k assetrelaties
+      FILTER
+        rel.relatietype_key          == bevestiging_key
+        AND rel.AIMDBStatus_isActief == true
+        AND v.assettype_key          == verkeersregelaar_key
+        AND v.AIMDBStatus_isActief   == true
+      LIMIT 1
+      RETURN v
+  )
+  FILTER vr != null
+
+  RETURN {
+    uuid:    k._key,
+    naam:    k.AIMNaamObject_naam,
+    lengte:  k.Kast_afmeting.DtcAfmetingBxlxhInMm_lengte,
+    breedte: k.Kast_afmeting.DtcAfmetingBxlxhInMm_breedte,
+    hoogte:  k.Kast_afmeting.DtcAfmetingBxlxhInMm_hoogte
+  }
+"""
