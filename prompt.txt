@@ -1,0 +1,16 @@
+I want you to create an AQL query, from an existing Cypher query.
+The ArangoDB datamodel can be found here:
+https://raw.githubusercontent.com/davidvlaminck/InfraDbToArangoDb/refs/heads/master/datamodel.png
+
+You can find some example of AQL queries here:
+https://raw.githubusercontent.com/davidvlaminck/RSA/refs/heads/master/Reports/Report0031.py
+https://raw.githubusercontent.com/davidvlaminck/RSA/refs/heads/master/Reports/Report0032.py
+https://raw.githubusercontent.com/davidvlaminck/RSA/refs/heads/master/Reports/Report0098.py
+https://raw.githubusercontent.com/davidvlaminck/RSA/refs/heads/master/Reports/Report0099.py
+
+You can download and analyze these files because they are not changing often.
+
+The Cypher query is:
+MATCH (k:Wegkantkast {isActief:TRUE})-[:Bevestiging]-(vr:Verkeersregelaar {isActief:TRUE})
+WHERE vr IS NOT NULL AND (k.toestand IS NULL OR k.toestand = 'in-ontwerp')
+RETURN k.uuid, k.naam
