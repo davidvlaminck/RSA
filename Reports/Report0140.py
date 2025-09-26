@@ -93,11 +93,11 @@ class Report0140:
                 inner join cte_asset_lgc lgc on rel.doeluuid = lgc.lgc_uuid
                 inner join cte_asset_otl otl on rel.bronuuid = otl.otl_uuid
                 where
-                    otl.otl_betrokkene_naam != lgc.lgc_toezichter_naam
+                    -- alle use-cases van toezichters
+                    (lower(otl.otl_betrokkene_naam) not like 'lantis' and otl.otl_betrokkene_naam != lgc.lgc_toezichter_naam)
                     or
+                    -- use-case LANTIS
                     (lower(otl.otl_betrokkene_naam) like 'lantis' and lower(lgc.lgc_toezichthouder_gebruikersnaam) not like 'lantis')
-                --    and 
-                --    otl.otl_betrokkene_naam != lgc.lgc_toezichtsgroep_naam
                 """
 
     def run_report(self, sender):
