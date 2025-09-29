@@ -5,12 +5,22 @@ https://raw.githubusercontent.com/davidvlaminck/InfraDbToArangoDb/refs/heads/mas
 You can find some example of AQL queries here:
 https://raw.githubusercontent.com/davidvlaminck/RSA/refs/heads/master/Reports/Report0031.py
 https://raw.githubusercontent.com/davidvlaminck/RSA/refs/heads/master/Reports/Report0032.py
+https://raw.githubusercontent.com/davidvlaminck/RSA/refs/heads/master/Reports/Report0089.py
+https://raw.githubusercontent.com/davidvlaminck/RSA/refs/heads/master/Reports/Report0090.py
+https://raw.githubusercontent.com/davidvlaminck/RSA/refs/heads/master/Reports/Report0091.py
+https://raw.githubusercontent.com/davidvlaminck/RSA/refs/heads/master/Reports/Report0092.py
+https://raw.githubusercontent.com/davidvlaminck/RSA/refs/heads/master/Reports/Report0093.py
+https://raw.githubusercontent.com/davidvlaminck/RSA/refs/heads/master/Reports/Report0094.py
+https://raw.githubusercontent.com/davidvlaminck/RSA/refs/heads/master/Reports/Report0095.py
+https://raw.githubusercontent.com/davidvlaminck/RSA/refs/heads/master/Reports/Report0096.py
+https://raw.githubusercontent.com/davidvlaminck/RSA/refs/heads/master/Reports/Report0097.py
 https://raw.githubusercontent.com/davidvlaminck/RSA/refs/heads/master/Reports/Report0098.py
 https://raw.githubusercontent.com/davidvlaminck/RSA/refs/heads/master/Reports/Report0099.py
+The idea is to make similar queries when it comes to structure.
 
 You can download and analyze these files because they are not changing often.
 
 The Cypher query is:
 MATCH (k:Wegkantkast {isActief:TRUE})-[:Bevestiging]-(vr:Verkeersregelaar {isActief:TRUE})
-WHERE vr IS NOT NULL AND (k.toestand IS NULL OR k.toestand = 'in-ontwerp')
-RETURN k.uuid, k.naam
+WHERE vr IS NOT NULL AND (k.`afmeting.lengte` IS NULL OR k.`afmeting.breedte` IS NULL OR k.`afmeting.hoogte` IS NULL OR (CASE WHEN k.`afmeting.breedte` < k.`afmeting.lengte` AND k.`afmeting.breedte`< k.`afmeting.hoogte` THEN TRUE ELSE FALSE END) = FALSE)
+RETURN k.uuid, k.naam, k.`afmeting.lengte`, k.`afmeting.breedte`, k.`afmeting.hoogte`
