@@ -34,6 +34,12 @@ class Report0196:
                 a.actief = true
                 and
                 g.geometry is null
+                and
+                -- whitelist mobiele trajectcontrole
+                a.uuid not in (
+                    'eaa33c8b-edae-4ae6-8e27-ec70124ec412'::uuid
+                    , '824a9543-8fbf-4723-aa63-b36e62f4ca26'::uuid
+                )
             order by
                 a.naampad
             """
