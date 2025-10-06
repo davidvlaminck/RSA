@@ -78,7 +78,7 @@ with cte_assets_verweven1 as (
         --, 'fe26c074-edf3-4307-a4dc-1a9c18001325'  --  Lichtsensor
         --, 'fbf9755a-5f67-4dc9-9637-03331aa0780b'  --  Tunnelverlichting
         --, 'e67900b1-88fb-44da-9285-409f7f67147f'  --  BinnenverlichtingGroep
-        --, '7044685e-dfdb-421c-9825-2c268b7d2e2f'  --  Dynamisch Bord Externe Processing Unit
+        , '7044685e-dfdb-421c-9825-2c268b7d2e2f'  --  Dynamisch Bord Externe Processing Unit
         -- verweving oktober
         --, '3f98f53a-b435-4a69-af3c-cede1cd373a7'  -- Camera
         --, '788e72fa-24b8-4f4c-8ed7-d8448c9cd76f'  -- Cameragroep
