@@ -10,7 +10,8 @@ class Report0144:
                                title='Assets (legacy) met ingevuld kenmerk: "elektrische aansluiting"',
                                spreadsheet_id='1jXwjdnox1cb-uh-tJMP2BuZwrrxCL0StjZspjVw9MGQ',
                                datasource='PostGIS',
-                               persistent_column='I'
+                               persistent_column='I',
+                               link_type='eminfra'
                                )
 
         self.report.result_query = """
