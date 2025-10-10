@@ -72,13 +72,14 @@ with cte_assets_verweven1 as (
         --, 'f815c084-ac38-4f9b-8bc3-a501ef6c227f'  -- Ventilatiecluster
         --, '69462525-65de-4951-8442-57cbc24fe598'  -- Ventilator
         --, '015f6cc2-7daa-4578-a360-01c810feaff6'  --  Tunneluitrusting
-        --, '10088403-228d-43f7-9aa6-66469d2e7760'  --  Pomp
-        --, '855812a3-a32f-4968-9238-46dbe29e4289'  --  Pompstation
-        --, 'e889caba-ad57-43e1-8b1a-7ad3b11dd57a'  --  Gassensor
-        --, 'fe26c074-edf3-4307-a4dc-1a9c18001325'  --  Lichtsensor
-        --, 'fbf9755a-5f67-4dc9-9637-03331aa0780b'  --  Tunnelverlichting
-        --, 'e67900b1-88fb-44da-9285-409f7f67147f'  --  BinnenverlichtingGroep
-        , '7044685e-dfdb-421c-9825-2c268b7d2e2f'  --  Dynamisch Bord Externe Processing Unit
+        --, '10088403-228d-43f7-9aa6-66469d2e7760'  -- Pomp
+        --, '855812a3-a32f-4968-9238-46dbe29e4289'  -- Pompstation
+        --, 'e889caba-ad57-43e1-8b1a-7ad3b11dd57a'  -- Gassensor
+        --, 'fe26c074-edf3-4307-a4dc-1a9c18001325'  -- Lichtsensor
+        --, 'fbf9755a-5f67-4dc9-9637-03331aa0780b'  -- Tunnelverlichting
+        --, 'e67900b1-88fb-44da-9285-409f7f67147f'  -- BinnenverlichtingGroep
+        , '7044685e-dfdb-421c-9825-2c268b7d2e2f'  -- Dynamisch Bord Externe Processing Unit
+        , '79ecb22b-e1ff-4032-a95b-a33c69d15135'  -- Cabine
         -- verweving oktober
         --, '3f98f53a-b435-4a69-af3c-cede1cd373a7'  -- Camera
         --, '788e72fa-24b8-4f4c-8ed7-d8448c9cd76f'  -- Cameragroep
