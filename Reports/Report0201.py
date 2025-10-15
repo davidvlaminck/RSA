@@ -110,7 +110,7 @@ set
 	count_null = c.count_empty, 
 	count_invalid = c.count_wrong
 from combined c
-where regex.uri = c.uri
+where regex.uri = c.uri;
 
 
 /*
