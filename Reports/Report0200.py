@@ -21,6 +21,7 @@ class Report0200:
                 where a."uuid" in (
                     'cb7be547-0f62-4e6b-bb0e-f42d59bfe37d'  -- Martin Van Leuven
                     , 'bf1fa78e-c0fc-459d-82f5-369d3f4a704a'  -- Maurits Van Overloop
+                    , '1bf4b50d-8c94-454f-9546-7af1901180a5'   -- Hedwig Van Langeghem (gepensioneerd)
                 )
             )
             -- main query
