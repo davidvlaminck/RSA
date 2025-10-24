@@ -14,15 +14,27 @@ class Report0114:
                                link_type='eminfra')
 
         self.report.result_query = """
-        // EAN wordt gecontroleerd door een regex match met 18 digits, starting with 54
-        MATCH (a {isActief:true})
-        where
-            a.notitie =~ '^.*54\d{16}.*$'
-        OPTIONAL MATCH (a {isActief:true})-[:HoortBij]-(b:DNBHoogspanning|DNBLaagspanning)
-        where
-            a.notitie =~ '^.*54\d{16}.*$'
-        RETURN a.uuid as uuid, a.naampad as naampad, a.typeURI as typeURI, a.isActief as isActief, a.toestand as toestand, a.notitie as commentaar, b.eanNummer as eanNummer_bijhorendeAsset
-        ORDER BY typeURI, uuid
+        // Find active assets whose note contains an EAN (18 digits starting with 54)
+        MATCH (a {isActief: true})
+        WHERE a.notitie =~ '.*54\\d{16}.*'
+        
+        // Explore possible connection paths to DNB nodes
+        OPTIONAL MATCH path = (a)
+          -[:Voedt*0..5]-
+          (:Asset)
+          -[:HoortBij]-
+          (b:DNBHoogspanning|DNBLaagspanning)
+        
+        RETURN 
+          a.uuid AS uuid,
+          a.naampad AS naampad,
+          a.typeURI AS typeURI,
+          a.isActief AS isActief,
+          a.toestand AS toestand,
+          a.notitie AS commentaar,
+          b.eanNummer AS eanNummer_bijhorendeAsset
+        ORDER BY 
+          typeURI, uuid
         """
 
     def run_report(self, sender):
