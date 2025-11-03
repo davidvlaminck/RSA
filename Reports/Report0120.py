@@ -81,9 +81,9 @@ with cte_assets_verweven1 as (
         , '7044685e-dfdb-421c-9825-2c268b7d2e2f'  -- Dynamisch Bord Externe Processing Unit
         , '79ecb22b-e1ff-4032-a95b-a33c69d15135'  -- Cabine
         -- verweving oktober
-        --, '3f98f53a-b435-4a69-af3c-cede1cd373a7'  -- Camera
-        --, '788e72fa-24b8-4f4c-8ed7-d8448c9cd76f'  -- Cameragroep
-        --, '30a173e5-bb95-4391-b533-99adcdba033c'  -- Omvormer
+        , '3f98f53a-b435-4a69-af3c-cede1cd373a7'  -- Camera
+        , '788e72fa-24b8-4f4c-8ed7-d8448c9cd76f'  -- Cameragroep
+        , '30a173e5-bb95-4391-b533-99adcdba033c'  -- Omvormer
         --, '6e61fb1c-ebff-49e2-8fe0-45fc24626991'  -- Power over Ethernet (PoE) Injector
     )
 )
