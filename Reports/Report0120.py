@@ -23,12 +23,14 @@ with cte_assets_verweven1 as (
 		a.actief = true
 		and
 	    a.assettype in (
+	    -- 18/02/2025
         'efb995df-057b-4ab8-baa8-4f9918f8ec5e'  -- fietstelinstallatie
         , '8d42ee56-17d3-455e-bd9c-1eb1aad3c1ec'  -- fietsteldisplay
         , 'c0def180-e2a5-40eb-abdd-c752cbab48af'  -- fietstelsysteem
         , '7a175f2f-d195-4fb6-bdb3-84f398629e39'  -- zoutbijlaadplaats
-        , 'c575f03c-83c1-41c0-9dc6-3d1232bebe99'  -- silo
         , 'cdcd6d8b-0e73-4f87-a62d-be8744e075db'  -- tank
+        , 'c575f03c-83c1-41c0-9dc6-3d1232bebe99'  -- silo
+        -- 29/04/2025
         , '27db1214-a622-45f8-b124-384598b210f4'  -- ASTRID installatie
         , '9baa5c87-a56e-4ece-9fd0-a0d82a3dc7ec'  -- Radioheruitzend installatie
         , '97b7c30a-f5e9-4008-a3e8-19064146c0c3'  -- Datakabel
@@ -38,22 +40,37 @@ with cte_assets_verweven1 as (
         , 'a88493ab-3748-4636-96ed-9c8e8460260d'  -- Toegangscontroller
         , '4e12c432-1546-4bbd-95d9-8fc9bc1e0e02'  -- MIV Meetpunt
         , '7f59b64e-9d6c-4ac9-8de7-a279973c9210'  -- MIV-module
+        -- 02/06/2025
         , 'b6f86b8d-543d-4525-8458-36b498333416'  -- Netwerkelement
+        -- 13/06/2025
         , '50f7400a-2e67-4550-b135-08cde6f6d64f'  -- DynBordVMS
         , '0515e9bc-1778-43ae-81a9-44df3e2b7c21'  -- DynBordRVMS
         , '4aabd323-5480-4771-b33f-28d5c6d46cee'  -- DynBordPK
         , 'fcc947c6-5923-4d56-96fc-73ce4b0bae7f'  -- DynBordGroep
         , '87ef5c66-1f50-4010-a47c-90027ad72421'  -- Hoogtedetectie
+        -- 17/06/2025
         , '9826b683-02fa-4d97-8680-fbabc91a417f'  -- DynBordRSS
         , 'fcc947c6-5923-4d56-96fc-73ce4b0bae7f'  -- DynBordGroep
+        -- 20/06/2025
         , '40b2e487-f4b8-48a2-be9d-e68263bab75a'  -- Seinbrug
         , '615356ae-64eb-4a7d-8f40-6e496ec5b8d7'  -- Galgpaal
+        -- 24/06/2025
         , '6d7544da-2688-4e87-b9e1-305a9009ba18'  -- Z30Groep
         , '4afb0d67-bf8f-4e0e-8544-6af1f296f6bf'  -- DynBordZ30
+        -- 27/06/2025
         , '8d9f83fa-0e19-47ec-902f-ac2c538dd6d9'  -- Lichtmast
+        -- extra
         , '6d518126-d229-4446-89ee-1ae2a9be4318'  -- Stralende Kabel
         , '48afe679-1483-46dd-ac5e-b3f2f97506bf'  -- Zuil toegangscontrole
-        -- verweving september
+        -- verweving 2/10/2025 en 3/10/2025
+        , '7044685e-dfdb-421c-9825-2c268b7d2e2f'  -- Dynamisch Bord Externe Processing Unit
+        , '79ecb22b-e1ff-4032-a95b-a33c69d15135'  -- Cabine
+        -- verweving 23/10/2025
+        , '3f98f53a-b435-4a69-af3c-cede1cd373a7'  -- Camera
+        , '788e72fa-24b8-4f4c-8ed7-d8448c9cd76f'  -- Cameragroep
+        , '30a173e5-bb95-4391-b533-99adcdba033c'  -- Omvormer
+        , '6e61fb1c-ebff-49e2-8fe0-45fc24626991'  -- Power over Ethernet (PoE) Injector
+        -- verweving november
         --, 'df9f19eb-5eb3-49d9-b782-6b22cfb8993b'  -- Bel
         --, 'be55ecdf-aa99-4dac-b00a-6ad4f9f6b615'  -- Calamiteitendoorsteek
         --, '0f55b669-2b77-4812-ae6f-867749fc76ac'  -- Slagboom
@@ -71,20 +88,27 @@ with cte_assets_verweven1 as (
         --, '6e9010da-507f-426c-a4c5-f3a49baacb8a'  -- Kokerventilatie
         --, 'f815c084-ac38-4f9b-8bc3-a501ef6c227f'  -- Ventilatiecluster
         --, '69462525-65de-4951-8442-57cbc24fe598'  -- Ventilator
-        --, '015f6cc2-7daa-4578-a360-01c810feaff6'  --  Tunneluitrusting
+        --, '015f6cc2-7daa-4578-a360-01c810feaff6'  -- Tunneluitrusting
         --, '10088403-228d-43f7-9aa6-66469d2e7760'  -- Pomp
         --, '855812a3-a32f-4968-9238-46dbe29e4289'  -- Pompstation
         --, 'e889caba-ad57-43e1-8b1a-7ad3b11dd57a'  -- Gassensor
         --, 'fe26c074-edf3-4307-a4dc-1a9c18001325'  -- Lichtsensor
         --, 'fbf9755a-5f67-4dc9-9637-03331aa0780b'  -- Tunnelverlichting
         --, 'e67900b1-88fb-44da-9285-409f7f67147f'  -- BinnenverlichtingGroep
-        , '7044685e-dfdb-421c-9825-2c268b7d2e2f'  -- Dynamisch Bord Externe Processing Unit
-        , '79ecb22b-e1ff-4032-a95b-a33c69d15135'  -- Cabine
-        -- verweving oktober
-        , '3f98f53a-b435-4a69-af3c-cede1cd373a7'  -- Camera
-        , '788e72fa-24b8-4f4c-8ed7-d8448c9cd76f'  -- Cameragroep
-        , '30a173e5-bb95-4391-b533-99adcdba033c'  -- Omvormer
-        --, '6e61fb1c-ebff-49e2-8fe0-45fc24626991'  -- Power over Ethernet (PoE) Injector
+        -- verweving november/december
+        --, '217ba1cb-43a7-464c-a968-ac2582e45207' -- Flitsgroep
+        --, '4cd16712-1ee7-460f-9729-08da0c87e947' -- Flitspaal
+        --, '3e8bd99a-8e6f-4653-aab4-b5be694ccb10' -- Flitscamera
+        --, '' -- UitleesapparatuurFlitscamera
+        -- verweving Q1 2026 (in overleg met Edison)
+        --, '' -- WegverlichtingGroep
+        --, '478add39-e6fb-4b0b-b090-9c65e836f3a0' -- WVLichtmast
+        --, 'e78ce094-565b-4e8c-a956-88c105367a4f' -- WVConsole
+        --, '' -- WVBevestigd
+        --, '6c1883d1-7e50-441a-854c-b53552001e5f' -- Segmentcontroller
+        --, '9e557bed-608b-4704-b1dd-54ad0bb64d7a' -- VerlichteOversteekplaatsGroep
+        --, '622ac17d-2ea7-46bb-9c36-c47794404ef2' -- Punctuele verlichtingsmast
+        --, 'c3601915-3b66-4bde-9728-25c1bbf2f374' -- Wegkantkast
     )
 )
 -- whitelist van assets: niet-selectieve detectielus met een 'Sturing'-relatie naar een fietstelsysteem 
