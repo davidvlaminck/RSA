@@ -32,7 +32,10 @@ class Report0114:
           a.isActief AS isActief,
           a.toestand AS toestand,
           a.notitie AS commentaar,
-          b.eanNummer AS eanNummer_bijhorendeAsset
+          b.eanNummer AS eanNummer_bijhorendeAsset,
+          a.`tz:toezichter.tz:voornaam`,
+          a.`tz:toezichter.tz:naam`,
+          a.`tz:toezichter.tz:email`
         ORDER BY 
           typeURI, uuid
         """
