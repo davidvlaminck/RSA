@@ -16,8 +16,8 @@ class Report0114:
         self.report.result_query = """
         // Find active assets whose note contains an EAN (18 digits starting with 54)
         MATCH (a {isActief: true})
-        WHERE a.notitie =~ '.*54\\d{16}.*'
-          AND a.typeURI <> 'https://lgc.data.wegenenverkeer.be/ns/installatie#SeinbrugRR'
+        WHERE a.notitie =~ ".*54\\d{16}.*"
+          AND a.typeURI <> "https://lgc.data.wegenenverkeer.be/ns/installatie#SeinbrugRR"
           
         // Explore possible connection paths to DNB nodes
         OPTIONAL MATCH path = (a)
