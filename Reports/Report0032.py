@@ -21,18 +21,18 @@ class Report0032:
     def run_report(self, sender):
         self.report.run_report(sender=sender)
 
-# aql_query = """
-# FOR n IN assets
-#  FILTER n.assettype_key == "6b3dba37"
-#    AND n.AIMDBStatus_isActief == TRUE
-#    AND n.Netwerkpoort_type == null
-#
-#  FOR v, rel IN ANY n assetrelaties
-#    FILTER rel.relatietype_key == "3ff9"
-#      AND v.assettype_key == "b6f86b8d"
-#      AND v.AIMDBStatus_isActief == TRUE
-#      AND v.Netwerkelement_merk NOT IN ["https://wegenenverkeer.data.vlaanderen.be/id/concept/KlNetwerkMerk/NOKIA",
-#        "https://wegenenverkeer.data.vlaanderen.be/id/concept/KlNetwerkMerk/Ciena"]
-#
-#  RETURN { uuid: n._key, naam: n.AIMNaamObject_naam }
-# """
+aql_query = """
+FOR n IN assets
+ FILTER n.assettype_key == "6b3dba37"
+   AND n.AIMDBStatus_isActief == TRUE
+   AND n.Netwerkpoort_type == null
+
+ FOR v, rel IN ANY n assetrelaties
+   FILTER rel.relatietype_key == "3ff9"
+     AND v.assettype_key == "b6f86b8d"
+     AND v.AIMDBStatus_isActief == TRUE
+     AND v.Netwerkelement_merk NOT IN ["https://wegenenverkeer.data.vlaanderen.be/id/concept/KlNetwerkMerk/NOKIA",
+       "https://wegenenverkeer.data.vlaanderen.be/id/concept/KlNetwerkMerk/Ciena"]
+
+ RETURN { uuid: n._key, naam: n.AIMNaamObject_naam }
+"""

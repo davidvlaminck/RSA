@@ -1,5 +1,4 @@
 from DQReport import DQReport
-from Reports.Report0032 import aql_query
 
 
 class Report0098:

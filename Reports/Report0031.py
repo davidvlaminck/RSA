@@ -38,29 +38,29 @@ class Report0031:
     def run_report(self, sender):
         self.report.run_report(sender=sender)
 
-# aql_query = """
-# LET netwerkelement_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Netwerkelement" LIMIT 1 RETURN at._key)
-# LET l2Access_key       = FIRST(FOR at IN assettypes FILTER at.short_uri == "installatie#L2AccessStructuur" LIMIT 1 RETURN at._key)
-# LET hoortBij_key       = FIRST(FOR rt IN relatietypes FILTER rt.short == "HoortBij" LIMIT 1 RETURN rt._key)
-#
-# FOR n IN assets
-#   FILTER n.assettype_key == netwerkelement_key
-#     AND n.AIMDBStatus_isActief
-#     AND n.Netwerkelement_gebruik == "https://wegenenverkeer.data.vlaanderen.be/id/concept/KlNetwerkelemGebruik/l2-switch"
-#
-#   LET heeftRelatie = FIRST(
-#     FOR v, rel IN OUTBOUND n assetrelaties
-#       FILTER rel.relatietype_key == hoortBij_key
-#         AND v.assettype_key == l2Access_key
-#         AND v.AIMDBStatus_isActief
-#       LIMIT 1
-#       RETURN 1
-#   )
-#   FILTER heeftRelatie != 1
-#
-#   RETURN {
-#     uuid: n._key,
-#     naam: n.AIMNaamObject_naam,
-#     gebruik: n.Netwerkelement_gebruik
-#   }
-# """
+aql_query = """
+LET netwerkelement_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Netwerkelement" LIMIT 1 RETURN at._key)
+LET l2Access_key       = FIRST(FOR at IN assettypes FILTER at.short_uri == "installatie#L2AccessStructuur" LIMIT 1 RETURN at._key)
+LET hoortBij_key       = FIRST(FOR rt IN relatietypes FILTER rt.short == "HoortBij" LIMIT 1 RETURN rt._key)
+
+FOR n IN assets
+  FILTER n.assettype_key == netwerkelement_key
+    AND n.AIMDBStatus_isActief
+    AND n.Netwerkelement_gebruik == "https://wegenenverkeer.data.vlaanderen.be/id/concept/KlNetwerkelemGebruik/l2-switch"
+
+  LET heeftRelatie = FIRST(
+    FOR v, rel IN OUTBOUND n assetrelaties
+      FILTER rel.relatietype_key == hoortBij_key
+        AND v.assettype_key == l2Access_key
+        AND v.AIMDBStatus_isActief
+      LIMIT 1
+      RETURN 1
+  )
+  FILTER heeftRelatie != 1
+
+  RETURN {
+    uuid: n._key,
+    naam: n.AIMNaamObject_naam,
+    gebruik: n.Netwerkelement_gebruik
+  }
+"""
