@@ -1,12 +1,12 @@
 from DQReport import DQReport
 
 
-class Report0214:
+class Report0215:
     def __init__(self):
         self.report = None
 
     def init_report(self):
-        self.report = DQReport(name='report0214',
+        self.report = DQReport(name='report0215',
                                title='Actieve assets (Legacy) wiens assettype inactief is',
                                spreadsheet_id='1gmrHAnR-t459u8jY9hfoidWo3hRWg7zRY6aRDSgW2lM',
                                datasource='PostGIS',
