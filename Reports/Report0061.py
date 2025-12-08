@@ -10,7 +10,8 @@ class Report0061:
                                title='Het EAN nummer van een DNBLaagspanning of DNBHoogspanning is geldig (checksum).',
                                spreadsheet_id='1M8NE8RxnEJdG-8suCjKOzh96O6pGUcfmFi83ePO3glc',
                                datasource='Neo4J',
-                               persistent_column='L')
+                               persistent_column='L',
+                               link_type='eminfra')
 
         self.report.result_query = """
             MATCH (a:Asset {isActief: TRUE})
