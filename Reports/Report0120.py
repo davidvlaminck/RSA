@@ -101,17 +101,18 @@ with cte_assets_verweven1 as (
         , 'fe26c074-edf3-4307-a4dc-1a9c18001325'  -- Lichtsensor
         , 'd9904200-b625-433f-8f3e-2eb8d5db091c'  -- Luchtkwaliteitssensor
         , 'fbf9755a-5f67-4dc9-9637-03331aa0780b'  -- Tunnelverlichting
-        -- verweving december 2025 week 1
-        --, '217ba1cb-43a7-464c-a968-ac2582e45207' -- Flitsgroep
-        --, '4cd16712-1ee7-460f-9729-08da0c87e947' -- Flitspaal
-        --, '3e8bd99a-8e6f-4653-aab4-b5be694ccb10' -- Flitscamera
-        --, '47777ce0-09c3-42ca-a9bb-a685717ace57' -- UitleesapparatuurFlitscamera        
-        -- verweving december 2025 week 2
-        --, 'ba0e8976-aff6-43d6-8c3e-db65f096f251'  -- BiFlash
-        --, '800f0a16-773c-473e-82a3-e471a3c7246f'  -- BiFlashInstallatie
-        --, 'd93fb220-f0e5-40cd-9f5d-2416140cb19e'  -- DynBordOpMaat
-        --, '40b2e487-f4b8-48a2-be9d-e68263bab75a'  -- Seinbrug -- al eerder verweven
-        -- verweving Q1 2026 (in overleg met Edison)
+        -- verweving 4/12/2025
+        , '217ba1cb-43a7-464c-a968-ac2582e45207' -- Flitsgroep
+        , '4cd16712-1ee7-460f-9729-08da0c87e947' -- Flitspaal
+        , '3e8bd99a-8e6f-4653-aab4-b5be694ccb10' -- Flitscamera
+        , '47777ce0-09c3-42ca-a9bb-a685717ace57' -- UitleesapparatuurFlitscamera        
+		-- verweving 9/12/2025
+        , 'd93fb220-f0e5-40cd-9f5d-2416140cb19e'  -- DynBordOpMaat
+        , '40b2e487-f4b8-48a2-be9d-e68263bab75a'  -- Seinbrug
+        -- verweving 12/12/2025
+        , 'ba0e8976-aff6-43d6-8c3e-db65f096f251'  -- BiFlash
+        , '800f0a16-773c-473e-82a3-e471a3c7246f'  -- BiFlashInstallatie
+        -- verweving Q1 2026
         --, '83552f3c-4944-40d8-8e63-33e48533210b'  -- Laagspanningsbord
         --, 'b4ee4ea9-edd1-4093-bce1-d58918aee281'  -- DNBLaagspanning
         --, 'ffb9a236-fb9e-406f-a602-271b68e62afc'  -- Forfaitaire aansluiting
