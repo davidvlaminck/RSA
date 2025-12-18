@@ -7,7 +7,7 @@ class Report0216:
 
     def init_report(self):
         self.report = DQReport(name='report0216',
-                               title='Verweven assets hebben een naampad (zijn in een boomstructuur op EM-infra gesitueerd)',
+                               title='Verweven assets hebben geen naampad (zijn niet in een boomstructuur op EM-infra gesitueerd)',
                                spreadsheet_id='17MTZ2N_jVsUyc53zbzPwFGhDS8u1X6xrrexU-Li-OkU',
                                datasource='PostGIS',
                                persistent_column='H',
