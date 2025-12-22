@@ -7,7 +7,7 @@ class Report0120:
 
     def init_report(self):
         self.report = DQReport(name='report0120',
-                               title='OTL installaties en onderdelen types mogen niet voorkomen in "legacy" boomstructuren',
+                               title='Niet-verweven OTL-assets hebben alsnog een naampad.',
                                spreadsheet_id='1sBJEGOpcGfrjvBWGAkBU_vnWirsGwq2cL8faX3vdapI',
                                datasource='PostGIS',
                                persistent_column='F',
