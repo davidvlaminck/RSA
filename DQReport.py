@@ -37,6 +37,15 @@ class DQReport(Report):
     def run_report(self, startcell: str = 'A1', sender: MailSender = None):
         logging.info(f'start running report {self.name}: {self.title}')
 
+         # testing connection first before proceeding with the report
+        if self.datasource == 'Neo4J':
+            connector = SingleNeo4JConnector.get_connector()
+            with connector.driver.session(database=connector.db) as session:
+                query_result: DateTime = session.run('MATCH (p:Params) RETURN p.last_update_utc').single()[0]
+        elif self.datasource == 'PostGIS':
+            connector = SinglePostGISConnector.get_connector()
+            params = connector.get_params(connector.main_connection)
+
         sheets_wrapper = SingleSheetsWrapper.get_wrapper()
         start_sheetcell = SheetsCell(startcell)
 
