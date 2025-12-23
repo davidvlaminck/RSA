@@ -18,3 +18,43 @@ class Report0041:
 
     def run_report(self, sender):
         self.report.run_report(sender=sender)
+
+
+aql_query = """
+LET energiemeterdnb_key        = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#EnergiemeterDNB" LIMIT 1 RETURN at._key)
+LET forfaitaireaansluiting_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#ForfaitaireAansluiting" LIMIT 1 RETURN at._key)
+LET ls_key                     = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#LS" LIMIT 1 RETURN at._key)
+LET hs_key                     = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#HS" LIMIT 1 RETURN at._key)
+LET hoortbij_key               = FIRST(FOR rt IN relatietypes FILTER rt.short == "HoortBij" LIMIT 1 RETURN rt._key)
+
+FOR x IN assets
+  FILTER
+    x.AIMDBStatus_isActief == true
+    AND (x.assettype_key == energiemeterdnb_key OR x.assettype_key == forfaitaireaansluiting_key)
+
+  LET ls = FIRST(
+    FOR l, rel IN OUTBOUND x assetrelaties
+      FILTER
+        rel.relatietype_key == hoortbij_key
+        AND l.assettype_key == ls_key
+        AND l.AIMDBStatus_isActief == true
+      LIMIT 1
+      RETURN l
+  )
+  LET hs = FIRST(
+    FOR h, rel IN OUTBOUND x assetrelaties
+      FILTER
+        rel.relatietype_key == hoortbij_key
+        AND h.assettype_key == hs_key
+        AND h.AIMDBStatus_isActief == true
+      LIMIT 1
+      RETURN h
+  )
+  FILTER ls == null AND hs == null
+
+  RETURN {
+    uuid: x._key,
+    naam: x.AIMNaamObject_naam,
+    typeURI: x.typeURI
+  }
+"""

@@ -23,33 +23,44 @@ class Report0040:
     def run_report(self, sender):
         self.report.run_report(sender=sender)
 
-# SPARQL query
-# PREFIX inst: <https://lgc.data.wegenenverkeer.be/ns/installatie#>
-# PREFIX imel: <https://wegenenverkeer.data.vlaanderen.be/ns/implementatieelement#>
-# PREFIX ond: <https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#>
-# PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-#
-# SELECT ?asset ?naam ?type
-# WHERE {
-#     {
-#         ?asset a ond:DNBLaagspanning ;
-#             imel:AIMDBStatus.isActief "true"^^xsd:boolean ;
-#             imel:AIMNaamObject.naam ?naam ;
-#             a ?type .
-#         FILTER(NOT EXISTS{
-#             ?hoortbij a ond:HoortBij .
-#             ?hoortbij imel:RelatieObject.doel ?legacy .
-#             ?hoortbij imel:RelatieObject.bron ?asset .
-#             ?legacy a inst:LS  })
-#     } UNION {
-#         ?asset a ond:DNBHoogspanning ;
-#             imel:AIMDBStatus.isActief "true"^^xsd:boolean ;
-#             imel:AIMNaamObject.naam ?naam ;
-#             a ?type .
-#         FILTER(NOT EXISTS{
-#             ?hoortbij a ond:HoortBij .
-#             ?hoortbij imel:RelatieObject.doel ?legacy .
-#             ?hoortbij imel:RelatieObject.bron ?asset .
-#             ?legacy a inst:HS  })
-#     }
-# }
+
+aql_query = """
+LET dnlaagspanning_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#DNBLaagspanning" LIMIT 1 RETURN at._key)
+LET dnbhoogspanning_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#DNBHoogspanning" LIMIT 1 RETURN at._key)
+LET ls_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#LS" LIMIT 1 RETURN at._key)
+LET hs_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#HS" LIMIT 1 RETURN at._key)
+LET hoortbij_key = FIRST(FOR rt IN relatietypes FILTER rt.short == "HoortBij" LIMIT 1 RETURN rt._key)
+
+FOR a IN assets
+  FILTER
+    a.AIMDBStatus_isActief == true
+    AND (
+      (a.assettype_key == dnlaagspanning_key AND
+        LENGTH(
+          FOR l, rel IN OUTBOUND a assetrelaties
+            FILTER
+              rel.relatietype_key == hoortbij_key
+              AND l.assettype_key == ls_key
+              AND l.AIMDBStatus_isActief == true
+            RETURN l
+        ) == 0
+      )
+      OR
+      (a.assettype_key == dnbhoogspanning_key AND
+        LENGTH(
+          FOR h, rel IN OUTBOUND a assetrelaties
+            FILTER
+              rel.relatietype_key == hoortbij_key
+              AND h.assettype_key == hs_key
+              AND h.AIMDBStatus_isActief == true
+            RETURN h
+        ) == 0
+      )
+    )
+
+  RETURN {
+    uuid: a._key,
+    naam: a.AIMNaamObject_naam,
+    typeURI: a.typeURI
+  }
+"""
