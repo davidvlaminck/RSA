@@ -25,29 +25,40 @@ class Report0038:
     def run_report(self, sender):
         self.report.run_report(sender=sender)
 
-# sparql equivalent:
-# PREFIX geo: <http://www.opengis.net/ont/geosparql#>
-# PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
-# PREFIX inst: <https://lgc.data.wegenenverkeer.be/ns/installatie#>
-# PREFIX imel: <https://wegenenverkeer.data.vlaanderen.be/ns/implementatieelement#>
-# PREFIX ond: <https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#>
-# PREFIX abs: <https://wegenenverkeer.data.vlaanderen.be/ns/abstracten#>
-# PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-# PREFIX toezicht: <https://wegenenverkeer.data.vlaanderen.be/oef/toezicht/>
-#
-# SELECT ?ip ?ip_naampad ?toezichter_naam ?tt ?tt_naampad
-# WHERE {
-#     ?ip a inst:IP ;
-#         imel:NaampadObject.naampad ?ip_naampad ;
-#         imel:AIMDBStatus.isActief "true"^^xsd:boolean ;
-#         toezicht:Toezicht.toezichter ?toezichter .
-#     ?toezichter toezicht:DtcToezichter.gebruikersnaam ?toezichter_naam
-#     BIND (STRBEFORE(?ip_naampad, "/") AS ?beh).
-#     FILTER (STRENDS(?ip_naampad, ".AS1" )).
-#     FILTER (NOT EXISTS {?tt a inst:TT .
-#         ?tt imel:AIMDBStatus.isActief "true"^^xsd:boolean ;
-#             imel:NaampadObject.naampad ?tt_naampad .
-#         FILTER (STRENDS(?tt_naampad, ".ODF" ) &&
-#             STRSTARTS(?tt_naampad, ?beh) )
-# 	})
-# }
+
+aql_query = """
+LET ip_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "lgc:installatie#IP" LIMIT 1 RETURN at._key)
+LET tt_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "lgc:installatie#TT" LIMIT 1 RETURN at._key)
+
+FOR i IN assets
+  FILTER
+    i.assettype_key == ip_key
+    AND i.AIMDBStatus_isActief == true
+    AND CONTAINS(i.AIMNaamObject_naam, ".AS1")
+
+  LET splitted = SPLIT(i.AIMNaamObject_naampad, "/")
+  LET naampad_beh = (
+    LENGTH(splitted) > 1 ?
+      CONCAT_SEPARATOR("/", SLICE(splitted, 0, LENGTH(splitted) - 1)) + "/" :
+      i.AIMNaamObject_naampad
+  )
+
+  LET tt_exists = LENGTH(
+    FOR t IN assets
+      FILTER
+        t.assettype_key == tt_key
+        AND t.AIMDBStatus_isActief == true
+        AND CONTAINS(t.AIMNaamObject_naampad, naampad_beh)
+        AND CONTAINS(t.AIMNaamObject_naam, "ODF")
+      LIMIT 1
+      RETURN t
+  ) > 0
+
+  FILTER NOT tt_exists
+
+  RETURN {
+    uuid: i._key,
+    naampad: i.AIMNaamObject_naampad,
+    toezichter: i["tz:toezichter.tz:gebruikersnaam"]
+  }
+"""
