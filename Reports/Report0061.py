@@ -39,3 +39,55 @@ class Report0061:
 
     def run_report(self, sender):
         self.report.run_report(sender=sender)
+
+
+aql_query = """
+LET dnbhoogspanning_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#DNBHoogspanning" LIMIT 1 RETURN at._key)
+LET dnlaagspanning_key  = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#DNBLaagspanning" LIMIT 1 RETURN at._key)
+
+FOR a IN assets
+  FILTER
+    a.AIMDBStatus_isActief == true
+    AND (a.assettype_key == dnbhoogspanning_key OR a.assettype_key == dnlaagspanning_key)
+    AND a.eanNummer != null
+
+  LET ean_str = a.eanNummer
+  LET ean_arr = SPLIT(ean_str, "")
+  LET ean_len = LENGTH(ean_arr)
+  LET last_digit = TO_NUMBER(ean_arr[ean_len - 1])
+  LET running_sums = (
+    FOR i IN 0..(ean_len - 2)
+      LET n = TO_NUMBER(ean_arr[i])
+      RETURN {
+        idx: i,
+        even_sum: (i % 2 == 0 ? n : 0),
+        odd_sum: (i % 2 == 1 ? n : 0)
+      }
+  )
+  LET even_sum = SUM(running_sums[*].even_sum)
+  LET odd_sum  = SUM(running_sums[*].odd_sum)
+  LET is_valid_ean = ((3 * odd_sum + even_sum + last_digit) % 10) == 0
+
+  FILTER
+    NOT REGEX_TEST(ean_str, "^54\\d{16}$") AND NOT REGEX_TEST(ean_str, "^54\\d{10}$")
+    OR NOT is_valid_ean
+
+  LET reason_invalid =
+    ean_str[LENGTH(ean_str)-1] == " " ? "trailing whitespace(s)" :
+    ean_str[0] == " " ? "leading whitespace(s)" :
+    "invalid EAN"
+
+  RETURN {
+    uuid: a._key,
+    naam: a.AIMNaamObject_naam,
+    typeURI: a.typeURI,
+    toestand: a.toestand,
+    eanNummer: a.eanNummer,
+    reason_invalid: reason_invalid,
+    tz_voornaam: a["tz:toezichter.tz:voornaam"],
+    tz_naam: a["tz:toezichter.tz:naam"],
+    tz_email: a["tz:toezichter.tz:email"],
+    tzg_naam: a["tz:toezichtgroep.tz:naam"],
+    tzg_referentie: a["tz:toezichtgroep.tz:referentie"]
+  }
+"""
