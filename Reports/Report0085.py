@@ -1,4 +1,5 @@
 from DQReport import DQReport
+from Reports.Report0089 import aql_query
 
 
 class Report0085:
@@ -18,3 +19,17 @@ RETURN a.uuid, a.naam"""
 
     def run_report(self, sender):
         self.report.run_report(sender=sender)
+
+aql_query = """
+LET verkeersregelaar_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Verkeersregelaar" LIMIT 1 RETURN at._key)
+
+FOR a IN assets
+  FILTER
+    a.assettype_key            == verkeersregelaar_key
+    AND a.AIMDBStatus_isActief == true
+    AND a.AIMObject_theoretischeLevensduur == null
+  RETURN {
+    uuid: a._key,
+    naam: a.AIMNaamObject_naam
+  }
+"""

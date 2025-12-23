@@ -1,4 +1,5 @@
 from DQReport import DQReport
+from Reports.Report0082 import aql_query
 
 
 class Report0081:
@@ -13,8 +14,29 @@ class Report0081:
                                persistent_column='C')
 
         self.report.result_query = """MATCH (a:Verkeersregelaar {isActief:TRUE}) 
-WHERE a.naam is NULL OR NOT (a.naam =~ '^\d{3}[ACG]\d$' OR a.naam =~ '^W[WO]\d{4}$')
+WHERE a.naam is NULL OR NOT (a.naam =~ '^\d{3}[ACG]\d.VR$' OR a.naam =~ '^W[WO]\d{4}.VR$')
 RETURN a.uuid, a.naam"""
 
     def run_report(self, sender):
         self.report.run_report(sender=sender)
+
+
+aql_query = """
+LET verkeersregelaar_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Verkeersregelaar" LIMIT 1 RETURN at._key)
+
+FOR a IN assets
+  FILTER
+    a.assettype_key            == verkeersregelaar_key
+    AND a.AIMDBStatus_isActief == true
+    AND (
+      a.AIMNaamObject_naam == null
+      OR NOT (
+        REGEX_TEST(a.AIMNaamObject_naam, "^\\d{3}[ACG]\\d.VR$")
+        OR REGEX_TEST(a.AIMNaamObject_naam, "^W[WO]\\d{4}.VR$")
+      )
+    )
+  RETURN {
+    uuid: a._key,
+    naam: a.AIMNaamObject_naam
+  }
+"""

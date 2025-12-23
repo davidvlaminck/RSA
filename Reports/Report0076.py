@@ -18,3 +18,30 @@ class Report0076:
 
     def run_report(self, sender):
         self.report.run_report(sender=sender)
+
+aql_query = """
+LET verkeersregelaar_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Verkeersregelaar" LIMIT 1 RETURN at._key)
+LET agent_key            = FIRST(FOR at IN assettypes FILTER at.short_uri == "betrokkene#Agent" LIMIT 1 RETURN at._key)
+LET heeftbetrokkene_key  = FIRST(FOR rt IN relatietypes FILTER rt.short == "HeeftBetrokkene" LIMIT 1 RETURN rt._key)
+
+FOR a IN assets
+  FILTER
+    a.assettype_key            == verkeersregelaar_key
+    AND a.AIMDBStatus_isActief == true
+
+  LET betrokkene = FIRST(
+    FOR b, rel IN OUTBOUND a assetrelaties
+      FILTER
+        rel.relatietype_key == heeftbetrokkene_key
+        AND rel.rol == "installatieverantwoordelijke"
+        AND b.assettype_key == agent_key
+      LIMIT 1
+      RETURN b
+  )
+  FILTER betrokkene == null
+
+  RETURN {
+    uuid: a._key,
+    naam: a.AIMNaamObject_naam
+  }
+"""
