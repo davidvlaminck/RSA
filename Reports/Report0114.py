@@ -9,36 +9,31 @@ class Report0114:
         self.report = DQReport(name='report0114',
                                title='EAN Nummer niet als commentaar gedocumenteerd',
                                spreadsheet_id='188xxFUa1uZ8GPgwB9a2c0gtkrdtacg5ft5TkODanatk',
-                               datasource='Neo4J',
-                               persistent_column='H',
+                               datasource='PostGIS',
+                               persistent_column='J',
                                link_type='eminfra')
 
         self.report.result_query = """
-        // Find active assets whose note contains an EAN (18 digits starting with 54)
-        MATCH (a {isActief: true})
-        WHERE a.notitie =~ ".*54\\d{16}.*"
-          AND a.typeURI <> "https://lgc.data.wegenenverkeer.be/ns/installatie#SeinbrugRR"
-          
-        // Explore possible connection paths to DNB nodes
-        OPTIONAL MATCH path = (a)
-          -[:Voedt*0..5]-
-          (:Asset)
-          -[:HoortBij]-
-          (b:DNBHoogspanning|DNBLaagspanning)
-        
-        RETURN 
-          a.uuid AS uuid,
-          a.naampad AS naampad,
-          a.typeURI AS typeURI,
-          a.isActief AS isActief,
-          a.toestand AS toestand,
-          a.notitie AS commentaar,
-          b.eanNummer AS eanNummer_bijhorendeAsset,
-          a.`tz:toezichter.tz:voornaam`,
-          a.`tz:toezichter.tz:naam`,
-          a.`tz:toezichter.tz:email`
-        ORDER BY 
-          typeURI, uuid
+            select
+                a."uuid",
+                a.naampad,
+                at.uri,
+                a.actief, 
+                a.toestand,
+                a.commentaar,
+                i.voornaam,
+                i.naam, 
+                i.gebruikersnaam 
+            from assets a
+            left join assettypes at on a.assettype = at."uuid"
+            left join identiteiten i on a.toezichter = i."uuid"
+            where
+                a.actief is true
+                and
+                a.assettype not in ('92240246-a6b7-49ee-9726-a6d145e79c86')
+                and
+                a.commentaar ~ '54[0-9]{16}'
+            order by at.uri, a.uuid
         """
 
     def run_report(self, sender):

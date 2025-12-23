@@ -10,7 +10,8 @@ class Report0061:
                                title='Het EAN nummer van een DNBLaagspanning of DNBHoogspanning is geldig (checksum).',
                                spreadsheet_id='1M8NE8RxnEJdG-8suCjKOzh96O6pGUcfmFi83ePO3glc',
                                datasource='Neo4J',
-                               persistent_column='L')
+                               persistent_column='L',
+                               link_type='eminfra')
 
         self.report.result_query = """
             MATCH (a:Asset {isActief: TRUE})
@@ -28,7 +29,8 @@ class Report0061:
                 a.uuid as uuid, a.naam as naam, a.typeURI as typeURI, a.toestand as toestand, 
                 a.eanNummer as eanNummer, 
                 CASE 
-                    WHEN right(a.eanNummer, 1) = " " THEN "trailing space(s)" 
+                    WHEN right(a.eanNummer, 1) = " " THEN "trailing whitespace(s)" 
+                    WHEN left(a.eanNummer, 1) = " " THEN "leading whitespace(s)" 
                     ELSE "invalid EAN" 
                     END AS reason_invalid, 
                 a.`tz:toezichter.tz:voornaam` as tz_voornaam, a.`tz:toezichter.tz:naam` as tz_naam, a.`tz:toezichter.tz:email` as tz_email, 

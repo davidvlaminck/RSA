@@ -10,13 +10,15 @@ class Report0202:
                                title='VPLMast (Legacy) heeft meerdere bijhorende WVLichtmast (OTL)',
                                spreadsheet_id='1shR393J5PkEGkIRgnoNr-jzFQrvcYKkzTdg2zPEiEqk',
                                datasource='PostGIS',
-                               persistent_column='F',
+                               persistent_column='H',
                                link_type='eminfra')
 
         self.report.result_query = """
             with cte_vplmast_hoortbij_wvlichtmast as (
                 select
                     a1."uuid" as lgc_uuid
+                    , SPLIT_PART(a1.naampad, '/', 1) AS installatie_naam
+                    , a1.naampad as lgc_naampad
                     , a1.naam as lgc_naam
                     , a2."uuid" as otl_uuid
                     , a2."naam" as otl_naam
@@ -39,14 +41,16 @@ class Report0202:
             -- main query
             select
                 a.lgc_uuid
+                , a.installatie_naam 
+                , a.lgc_naampad
                 , a.lgc_naam
                 , count(a.lgc_uuid) as aantal_relaties
                 , string_agg(a.otl_uuid::text, '; ') as otl_uuid
                 , string_agg(a.otl_naam::text, '; ') as otl_naam
             from cte_vplmast_hoortbij_wvlichtmast a
-            group by a.lgc_uuid, a.lgc_naam
+            group by a.lgc_uuid, a.installatie_naam , a.lgc_naampad, a.lgc_naam
             having count(a.lgc_uuid) > 1
-            order by count(a.lgc_uuid) desc, a.lgc_naam asc;
+            order by a.installatie_naam asc, a.lgc_naam asc;
             """
 
     def run_report(self, sender):

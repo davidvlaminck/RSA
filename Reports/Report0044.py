@@ -15,9 +15,21 @@ class Report0044:
 
         otl_cursor = OTLCursorPool.get_cursor()
         deprecated_attributes = otl_cursor.execute("""
-            SELECT o_a.uri
-            FROM OSLOAttributen o_a
-            WHERE o_a.deprecated_version IS NOT NULL AND o_a.deprecated_version != ""
+            SELECT oa.uri
+            FROM OSLOAttributen oa
+            WHERE oa.deprecated_version IS NOT NULL AND oa.deprecated_version != ""
+            UNION
+            SELECT oca.uri
+            FROM OSLODatatypeComplexAttributen oca
+            WHERE oca.deprecated_version IS NOT NULL AND oca.deprecated_version != ""
+            UNION
+            SELECT opa.uri
+            FROM OSLODatatypePrimitiveAttributen opa
+            WHERE opa.deprecated_version IS NOT NULL AND opa.deprecated_version != ""
+            UNION
+            SELECT oua.uri
+            FROM OSLODatatypeUnionAttributen oua
+            WHERE oua.deprecated_version IS NOT NULL AND oua.deprecated_version != ""
         """).fetchall()
 
         self.report.result_query = """
