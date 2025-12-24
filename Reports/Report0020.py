@@ -21,3 +21,31 @@ class Report0020:
 
     def run_report(self, sender):
         self.report.run_report(sender=sender)
+
+
+aql_query = """
+LET zpad_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "installatie#Zpad" LIMIT 1 RETURN at._key)
+LET netwerkpoort_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Netwerkpoort" LIMIT 1 RETURN at._key)
+LET hoortbij_key = FIRST(FOR rt IN relatietypes FILTER rt.short == "HoortBij" LIMIT 1 RETURN rt._key)
+
+FOR z IN assets
+  FILTER
+    z.assettype_key == zpad_key
+    AND z.AIMDBStatus_isActief == true
+    AND z.toestand == "in-gebruik"
+
+  LET n_netwerkpoort = LENGTH(
+    FOR n, rel IN INBOUND z assetrelaties
+      FILTER
+        rel.relatietype_key == hoortbij_key
+        AND n.assettype_key == netwerkpoort_key
+        AND n.AIMDBStatus_isActief == true
+      RETURN n
+  )
+  FILTER n_netwerkpoort != 2
+
+  RETURN {
+    uuid: z._key,
+    naam: z.AIMNaamObject_naam
+  }
+"""
