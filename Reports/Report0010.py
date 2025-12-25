@@ -21,3 +21,45 @@ class Report0010:
 
     def run_report(self, sender):
         self.report.run_report(sender=sender)
+
+aql_query = """
+LET camera_key         = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Camera"        LIMIT 1 RETURN at._key)
+LET stroomkring_key    = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Stroomkring"   LIMIT 1 RETURN at._key)
+LET poe_injector_key   = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#PoEInjector"   LIMIT 1 RETURN at._key)
+
+LET voedt_key          = FIRST(FOR rt IN relatietypes FILTER rt.short == "Voedt"          LIMIT 1 RETURN rt._key)
+
+FOR c IN assets
+  FILTER
+    c.assettype_key == camera_key
+    AND c.AIMDBStatus_isActief == true
+
+  // no INBOUND Voedt from Stroomkring
+  LET has_stroomkring = LENGTH(
+    FOR s, rel IN INBOUND c assetrelaties
+      FILTER
+        rel.relatietype_key == voedt_key
+        AND s.assettype_key == stroomkring_key
+        AND s.AIMDBStatus_isActief == true
+      LIMIT 1
+      RETURN 1
+  ) > 0
+
+  // no INBOUND Voedt from PoEInjector
+  LET has_poe = LENGTH(
+    FOR p, rel IN INBOUND c assetrelaties
+      FILTER
+        rel.relatietype_key == voedt_key
+        AND p.assettype_key == poe_injector_key
+        AND p.AIMDBStatus_isActief == true
+      LIMIT 1
+      RETURN 1
+  ) > 0
+
+  FILTER NOT has_stroomkring AND NOT has_poe
+
+  RETURN {
+    uuid:       c._key,
+    naam:       c.AIMNaamObject_naam
+  }
+  """

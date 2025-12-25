@@ -38,3 +38,37 @@ WHERE relaties.uuid IS NULL;"""
 
     def run_report(self, sender):
         self.report.run_report(sender=sender)
+
+aql_query = """
+LET netwerkpoort_key    = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Netwerkpoort"   LIMIT 1 RETURN at._key)
+LET netwerkelement_key  = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Netwerkelement" LIMIT 1 RETURN at._key)
+LET netwerkkaart_key    = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Netwerkkaart"   LIMIT 1 RETURN at._key)
+LET bevestiging_key     = FIRST(FOR rt IN relatietypes FILTER rt.short == "Bevestiging"                LIMIT 1 RETURN rt._key)
+
+FOR p IN assets
+  FILTER
+    p.assettype_key == netwerkpoort_key
+    AND p.AIMDBStatus_isActief == true
+    AND p.AIMNaamObject_naam != null
+
+  LET has_bevestiging = LENGTH(
+    FOR other, rel IN ANY p assetrelaties
+      FILTER
+        rel.relatietype_key == bevestiging_key
+        AND other.AIMDBStatus_isActief == true
+        AND (
+          other.assettype_key == netwerkelement_key
+          OR other.assettype_key == netwerkkaart_key
+        )
+      LIMIT 1
+      RETURN 1
+  ) > 0
+
+  FILTER NOT has_bevestiging
+
+  RETURN {
+    uuid: p._key,
+    naam: p.AIMNaamObject_naam,
+    actief: p.AIMDBStatus_isActief
+  }
+"""
