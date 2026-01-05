@@ -18,3 +18,25 @@ class Report0023:
 
     def run_report(self, sender):
         self.report.run_report(sender=sender)
+
+aql_query = """
+LET camera_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Camera" LIMIT 1 RETURN at._key)
+
+FOR c IN assets
+  FILTER
+    c.assettype_key == camera_key
+    AND c.AIMDBStatus_isActief == true
+
+  LET toezichter = FIRST(
+    FOR v, e IN 1..1 OUTBOUND c._id betrokkenerelaties
+      FILTER e.rol == "toezichter"
+      RETURN v
+  )
+
+  FILTER toezichter == null
+
+  RETURN {
+    uuid: c._key,
+    naam: c.AIMNaamObject_naam
+  }
+"""
