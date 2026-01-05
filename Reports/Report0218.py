@@ -7,7 +7,7 @@ class Report0218:
 
     def init_report(self):
         self.report = DQReport(name='report0218',
-                               title='Locatie ontbreekt voor voeding-assets (LS, LSDeel, HS, HSDeel, HSCabine)',
+                               title='Locatie ontbreekt voor voeding-assets (LS, LSDeel, HS, HSDeel, HSCabine, SegmentController, Afstandsbewaking)',
                                spreadsheet_id='1wxPYC35mwexrhWDEX6FQ_xcr_ZdLX6D4PY0g11nwl1U',
                                datasource='PostGIS',
                                persistent_column='F',
@@ -26,7 +26,9 @@ with cte_assets_voeding as (
 			'b4361a72-e1d5-41c5-bfcc-d48f459f4048', -- Laagspanningsgedeelte (Legacy)
 			'46dcd9b1-f660-4c8c-8e3e-9cf794b4de75', -- Hoogspanning (Legacy)
 			'a9655f50-3de7-4c18-aa25-181c372486b1', -- Hoogspanningsgedeelte (Legacy)
-			'1cf24e76-5bf3-44b0-8332-a47ab126b87e' -- Hoogspanningscabine (Legacy)
+			'1cf24e76-5bf3-44b0-8332-a47ab126b87e', -- Hoogspanningscabine (Legacy)
+			'f625b904-befc-4685-9dd8-15a20b23a58b', -- Segment controller (Legacy)
+			'8eda4230-e7dc-4b72-b02b-26d81aa1f45e' -- Afstandsbewaking (Legacy)
 		)
 )
 -- main query
