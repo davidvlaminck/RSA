@@ -18,3 +18,52 @@ class Report0005:
 
     def run_report(self, sender):
         self.report.run_report(sender=sender)
+
+aql_query = """
+LET verkeersregelaar_key = FIRST(
+  FOR at IN assettypes
+    FILTER at.short_uri == "onderdeel#Verkeersregelaar"
+    LIMIT 1
+    RETURN at._key
+)
+LET tlcfipoort_key = FIRST(
+  FOR at IN assettypes
+    FILTER at.short_uri == "onderdeel#TLCfiPoort"
+    LIMIT 1
+    RETURN at._key
+)
+LET vrlegacy_key = FIRST(
+  FOR at IN assettypes
+    FILTER at.short_uri == "lgc:installatie#VRLegacy"
+    LIMIT 1
+    RETURN at._key
+)
+LET hoortbij_key = FIRST(
+  FOR rt IN relatietypes
+    FILTER rt.short == "HoortBij"
+    LIMIT 1
+    RETURN rt._key
+)
+
+FOR a IN assets
+  FILTER
+    a.AIMDBStatus_isActief == true
+    AND (a.assettype_key == verkeersregelaar_key OR a.assettype_key == tlcfipoort_key)
+
+  LET vrlegacy = FIRST(
+    FOR v, rel IN OUTBOUND a assetrelaties
+      FILTER
+        rel.relatietype_key == hoortbij_key
+        AND v.assettype_key == vrlegacy_key
+        AND v.AIMDBStatus_isActief == true
+      LIMIT 1
+      RETURN v
+  )
+  FILTER vrlegacy == null
+
+  RETURN {
+    uuid:   a._key,
+    naam:   a.AIMNaamObject_naam,
+    typeURI: a.typeURI
+  }
+"""

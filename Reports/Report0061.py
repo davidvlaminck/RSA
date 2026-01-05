@@ -49,27 +49,37 @@ FOR a IN assets
   FILTER
     a.AIMDBStatus_isActief == true
     AND (a.assettype_key == dnbhoogspanning_key OR a.assettype_key == dnlaagspanning_key)
-    AND a.eanNummer != null
+    AND a.DNB_eanNummer != null
 
-  LET ean_str = a.eanNummer
+  LET ean_str = a.DNB_eanNummer
   LET ean_arr = SPLIT(ean_str, "")
   LET ean_len = LENGTH(ean_arr)
   LET last_digit = TO_NUMBER(ean_arr[ean_len - 1])
+
+  // Cypher parity logic: index starts at 0, but Cypher increments before testing
   LET running_sums = (
     FOR i IN 0..(ean_len - 2)
       LET n = TO_NUMBER(ean_arr[i])
+      LET pos = i + 1
       RETURN {
-        idx: i,
-        even_sum: (i % 2 == 0 ? n : 0),
-        odd_sum: (i % 2 == 1 ? n : 0)
+        odd_sum:  (pos % 2 == 1 ? n : 0),   // matches Cypher's (acc[0] + 1) % 2
+        even_sum: (pos % 2 == 0 ? n : 0)
       }
   )
-  LET even_sum = SUM(running_sums[*].even_sum)
+
   LET odd_sum  = SUM(running_sums[*].odd_sum)
+  LET even_sum = SUM(running_sums[*].even_sum)
+
   LET is_valid_ean = ((3 * odd_sum + even_sum + last_digit) % 10) == 0
 
   FILTER
-    NOT REGEX_TEST(ean_str, "^54\\d{16}$") AND NOT REGEX_TEST(ean_str, "^54\\d{10}$")
+    (
+      NOT (
+        REGEX_TEST(ean_str, "^54\\d{16}$") 
+        OR 
+        REGEX_TEST(ean_str, "^54\\d{10}$")
+      )
+    )
     OR NOT is_valid_ean
 
   LET reason_invalid =
@@ -82,7 +92,7 @@ FOR a IN assets
     naam: a.AIMNaamObject_naam,
     typeURI: a.typeURI,
     toestand: a.toestand,
-    eanNummer: a.eanNummer,
+    eanNummer: a.DNB_eanNummer,
     reason_invalid: reason_invalid,
     tz_voornaam: a["tz:toezichter.tz:voornaam"],
     tz_naam: a["tz:toezichter.tz:naam"],

@@ -22,3 +22,40 @@ class Report0018:
 
     def run_report(self, sender):
         self.report.run_report(sender=sender)
+
+aql_query = """
+LET link_key          = FIRST(FOR at IN assettypes FILTER at.short_uri == "installatie#Link" LIMIT 1 RETURN at._key)
+LET netwerkpoort_key  = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Netwerkpoort" LIMIT 1 RETURN at._key)
+LET hoortbij_key      = FIRST(FOR rt IN relatietypes FILTER rt.short == "HoortBij" LIMIT 1 RETURN rt._key)
+
+/// First: find uuids of Links that have exactly 2 Netwerkpoorten
+LET good_links = (
+  FOR gl IN assets
+    FILTER
+      gl.assettype_key == link_key
+      AND gl.AIMDBStatus_isActief == true
+
+    LET aantal_poorten = LENGTH(
+      FOR p, rel IN INBOUND gl assetrelaties
+        FILTER
+          rel.relatietype_key == hoortbij_key
+          AND p.assettype_key == netwerkpoort_key
+          AND p.AIMDBStatus_isActief == true
+        RETURN 1
+    )
+    FILTER aantal_poorten == 2
+    RETURN gl._key
+)
+
+/// Then: all active Links whose uuid/_key is not in good_links
+FOR l IN assets
+  FILTER
+    l.assettype_key == link_key
+    AND l.AIMDBStatus_isActief == true
+    AND l._key NOT IN good_links
+
+  RETURN {
+    uuid: l._key,
+    naam: l.AIMNaamObject_naam
+  }
+"""

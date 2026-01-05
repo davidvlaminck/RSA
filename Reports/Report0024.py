@@ -21,3 +21,25 @@ class Report0024:
 
     def run_report(self, sender):
         self.report.run_report(sender=sender)
+
+aql_query = """
+LET netwerkelement_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Netwerkelement" LIMIT 1 RETURN at._key)
+
+FOR n IN assets
+  FILTER
+    n.assettype_key == netwerkelement_key
+    AND n.AIMDBStatus_isActief == true
+
+  COLLECT naam = n.AIMNaamObject_naam WITH COUNT INTO aantal
+  FILTER aantal > 1
+
+  FOR b IN assets
+    FILTER
+      b.assettype_key == netwerkelement_key
+      AND b.AIMDBStatus_isActief == true
+      AND b.AIMNaamObject_naam == naam
+    RETURN {
+      uuid: b._key,
+      naam: b.AIMNaamObject_naam
+    }
+"""

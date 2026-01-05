@@ -20,3 +20,31 @@ class Report0004:
 
     def run_report(self, sender):
         self.report.run_report(sender=sender)
+
+aql_query = """
+LET verkeersregelaar_key = FIRST(
+  FOR at IN assettypes
+    FILTER at.short_uri == "onderdeel#Verkeersregelaar"
+    LIMIT 1
+    RETURN at._key
+)
+
+FOR a IN assets
+  FILTER
+    a.assettype_key == verkeersregelaar_key
+    AND a.AIMDBStatus_isActief == true
+
+  COLLECT naam = a.AIMNaamObject_naam WITH COUNT INTO aantal
+  FILTER aantal > 1
+
+  FOR b IN assets
+    FILTER
+      b.assettype_key == verkeersregelaar_key
+      AND b.AIMDBStatus_isActief == true
+      AND b.AIMNaamObject_naam == naam
+
+    RETURN {
+      uuid: b._key,
+      naam: b.AIMNaamObject_naam
+    }
+"""
