@@ -23,11 +23,10 @@ class Report0009:
         self.report.run_report(sender=sender)
 
 aql_query = """
-LET omvormer_key      = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Omvormer"     LIMIT 1 RETURN at._key)
-LET wegkantkast_key   = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Wegkantkast"  LIMIT 1 RETURN at._key)
-LET montagekast_key   = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Montagekast"  LIMIT 1 RETURN at._key)
-
-LET bevestiging_key   = FIRST(FOR rt IN relatietypes FILTER rt.short == "Bevestiging"     LIMIT 1 RETURN rt._key)
+LET omvormer_key    = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Omvormer"    LIMIT 1 RETURN at._key)
+LET wegkantkast_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Wegkantkast" LIMIT 1 RETURN at._key)
+LET montagekast_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Montagekast" LIMIT 1 RETURN at._key)
+LET bevestiging_key = FIRST(FOR rt IN relatietypes FILTER rt.short == "Bevestiging"            LIMIT 1 RETURN rt._key)
 
 FOR o IN assets
   FILTER
@@ -58,6 +57,12 @@ FOR o IN assets
 
   FILTER NOT has_wegkantkast AND NOT has_montagekast
 
+  // OPTIONAL toezichter via betrokkenerelaties
+  LET toezichter = FIRST(
+    FOR v, e IN 1..1 OUTBOUND o._id betrokkenerelaties
+      FILTER e.rol == "toezichter"
+      RETURN v
+  )
 
   // OPTIONAL Bevestiging -> any actief onderdeel as behuizing
   LET behuizing = FIRST(
@@ -72,6 +77,7 @@ FOR o IN assets
   RETURN {
     uuid:           o._key,
     naam:           o.AIMNaamObject_naam,
+    toezichter:     toezichter ? toezichter.purl.Agent_naam : null,
     behuizing_type: behuizing ? behuizing.typeURI : null
   }
 """

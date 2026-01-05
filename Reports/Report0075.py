@@ -21,23 +21,18 @@ class Report0075:
 
 aql_query = """
 LET verkeersregelaar_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Verkeersregelaar" LIMIT 1 RETURN at._key)
-LET agent_key            = FIRST(FOR at IN assettypes FILTER at.short_uri == "betrokkene#Agent" LIMIT 1 RETURN at._key)
-LET heeftbetrokkene_key  = FIRST(FOR rt IN relatietypes FILTER rt.short == "HeeftBetrokkene" LIMIT 1 RETURN rt._key)
 
 FOR a IN assets
   FILTER
-    a.assettype_key            == verkeersregelaar_key
+    a.assettype_key == verkeersregelaar_key
     AND a.AIMDBStatus_isActief == true
 
   LET toezichter = FIRST(
-    FOR b, rel IN OUTBOUND a assetrelaties
-      FILTER
-        rel.relatietype_key == heeftbetrokkene_key
-        AND rel.rol == "toezichter"
-        AND b.assettype_key == agent_key
-      LIMIT 1
-      RETURN b
+    FOR v, e IN 1..1 OUTBOUND a._id betrokkenerelaties
+      FILTER e.rol == "toezichter"
+      RETURN v
   )
+
   FILTER toezichter == null
 
   RETURN {
