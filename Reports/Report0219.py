@@ -42,7 +42,7 @@ from (
 	from cte_assets_eannummer a
 )
 where aantal > 1
-order by aantal desc, eannummer asc, toestand;
+order by aantal desc, eannummer asc, toestand
         """
 
     def run_report(self, sender):

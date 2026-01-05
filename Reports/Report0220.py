@@ -33,7 +33,7 @@ class Report0220:
 		and
 		aw.waarde is null)
 -- main query
-select * from cte_assets_eannummer;
+select * from cte_assets_eannummer
         """
 
     def run_report(self, sender):
