@@ -14,7 +14,7 @@ class Report0219:
                                link_type='eminfra')
 
         self.report.result_query = """
-        with cte_assets_eannummer as (
+with cte_assets_eannummer as (
 	select
 		a.uuid,
 		case
@@ -32,18 +32,19 @@ class Report0219:
 		and
 		a.actief = true
 		and
-		aw.waarde is not null)
--- main query
-select *
-from (
+		aw.waarde is not null),
+cte_assets_eannummer_aantallen as (
 	select
-		*,
-		count(*) over (partition by a.eannummer) as aantal
+		a.*,
+		count(a.*) over (partition by a.eannummer) as aantal
 	from cte_assets_eannummer a
 )
+-- main query
+select *
+from cte_assets_eannummer_aantallen
 where aantal > 1
 order by aantal desc, eannummer asc, toestand
-        """
+    """
 
     def run_report(self, sender):
         self.report.run_report(sender=sender)
