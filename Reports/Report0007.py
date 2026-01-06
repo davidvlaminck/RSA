@@ -23,11 +23,10 @@ class Report0007:
 
 
 aql_query = """
-LET camera_key        = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Camera"       LIMIT 1 RETURN at._key)
-LET netwerkpoort_key  = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Netwerkpoort" LIMIT 1 RETURN at._key)
-LET omvormer_key      = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Omvormer"     LIMIT 1 RETURN at._key)
-
-LET sturing_key       = FIRST(FOR rt IN relatietypes FILTER rt.short == "Sturing"         LIMIT 1 RETURN rt._key)
+LET camera_key       = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Camera"       LIMIT 1 RETURN at._key)
+LET netwerkpoort_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Netwerkpoort" LIMIT 1 RETURN at._key)
+LET omvormer_key     = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Omvormer"     LIMIT 1 RETURN at._key)
+LET sturing_key      = FIRST(FOR rt IN relatietypes FILTER rt.short == "Sturing"                  LIMIT 1 RETURN rt._key)
 
 FOR c IN assets
   FILTER
@@ -58,8 +57,16 @@ FOR c IN assets
 
   FILTER NOT has_np AND NOT has_omvormer
 
+  // OPTIONAL toezichter via betrokkenerelaties
+  LET toezichter = FIRST(
+    FOR v, e IN 1..1 OUTBOUND c._id betrokkenerelaties
+      FILTER e.rol == "toezichter"
+      RETURN v
+  )
+
   RETURN {
     uuid:       c._key,
-    naam:       c.AIMNaamObject_naam
+    naam:       c.AIMNaamObject_naam,
+    toezichter: toezichter ? toezichter.purl.Agent_naam : null
   }
 """

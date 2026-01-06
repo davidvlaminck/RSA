@@ -23,11 +23,10 @@ class Report0010:
         self.report.run_report(sender=sender)
 
 aql_query = """
-LET camera_key         = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Camera"        LIMIT 1 RETURN at._key)
-LET stroomkring_key    = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Stroomkring"   LIMIT 1 RETURN at._key)
-LET poe_injector_key   = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#PoEInjector"   LIMIT 1 RETURN at._key)
-
-LET voedt_key          = FIRST(FOR rt IN relatietypes FILTER rt.short == "Voedt"          LIMIT 1 RETURN rt._key)
+LET camera_key       = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Camera"      LIMIT 1 RETURN at._key)
+LET stroomkring_key  = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Stroomkring" LIMIT 1 RETURN at._key)
+LET poe_injector_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#PoEInjector" LIMIT 1 RETURN at._key)
+LET voedt_key        = FIRST(FOR rt IN relatietypes FILTER rt.short == "Voedt"                   LIMIT 1 RETURN rt._key)
 
 FOR c IN assets
   FILTER
@@ -58,8 +57,16 @@ FOR c IN assets
 
   FILTER NOT has_stroomkring AND NOT has_poe
 
+  // OPTIONAL toezichter via betrokkenerelaties
+  LET toezichter = FIRST(
+    FOR v, e IN 1..1 OUTBOUND c._id betrokkenerelaties
+      FILTER e.rol == "toezichter"
+      RETURN v
+  )
+
   RETURN {
     uuid:       c._key,
-    naam:       c.AIMNaamObject_naam
+    naam:       c.AIMNaamObject_naam,
+    toezichter: toezichter ? toezichter.purl.Agent_naam : null
   }
   """
