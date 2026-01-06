@@ -33,3 +33,45 @@ class Report0060:
 
     def run_report(self, sender):
         self.report.run_report(sender=sender)
+
+# rapport om te vormen naar EAN nummers zijn uniek binnen DNBHoogspanning en DNBLaagspanning
+# forfaitaire aansluitingen moeten niet worden meegenomen (staat nog niet in de query)
+aql_query = """
+LET dnb_keys = (
+  FOR at IN assettypes
+    FILTER at.short_uri IN ["onderdeel#DNBHoogspanning","onderdeel#DNBLaagspanning"]
+    RETURN at._key
+)
+
+LET duplicateEans = (
+  FOR a IN assets
+    FILTER a.AIMDBStatus_isActief == true
+      AND a.DNB_eanNummer != null
+      AND a.DNB_eanNummer != ""
+    COLLECT ean = a.DNB_eanNummer WITH COUNT INTO cnt
+    FILTER cnt > 1
+    RETURN ean
+)
+
+FOR d IN assets
+  FILTER
+    d.AIMDBStatus_isActief == true
+    AND d.assettype_key IN dnb_keys
+    AND d.DNB_eanNummer IN duplicateEans
+
+  LET toezichter = FIRST(
+    FOR v, e IN 1..1 OUTBOUND d._id betrokkenerelaties
+      FILTER e.rol == "toezichter"
+      RETURN v.purl.Agent_naam
+  )
+  
+  SORT d.DNB_eanNummer ASC, d._key ASC
+
+  RETURN DISTINCT {
+    uuid:        d._key,
+    naam:        d.AIMNaamObject_naam,
+    ean:         d.DNB_eanNummer,
+    toestand:    d.toestand,
+    toezichter:  toezichter ? toezichter : null
+  }
+"""
