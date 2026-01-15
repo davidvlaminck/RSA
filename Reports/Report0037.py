@@ -7,7 +7,7 @@ class Report0037:
 
     def init_report(self):
         self.report = DQReport(name='report0037',
-                               title="L2 switches horen bij een asset die gevoed wordt",
+                               title="L2 switches worden gevoed",
                                spreadsheet_id='1mPx2y3XvOGNCRoYPLTHv6Xb5kn4bQCt3Aii0zT7ZdUc',
                                datasource='Neo4J',
                                persistent_column='C')
@@ -19,3 +19,31 @@ class Report0037:
     def run_report(self, sender):
         self.report.run_report(sender=sender)
 
+aql_query = """
+LET netwerkelement_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Netwerkelement" LIMIT 1 RETURN at._key)
+LET voedt_key = FIRST(FOR rt IN relatietypes FILTER rt.short == "Voedt" LIMIT 1 RETURN rt._key)
+
+FOR n IN assets
+  FILTER
+    n.assettype_key == netwerkelement_key
+    AND n.AIMDBStatus_isActief == true
+    AND n.toestand == "in-gebruik"
+    AND n.Netwerkelement_gebruik == "https://wegenenverkeer.data.vlaanderen.be/id/concept/KlNetwerkelemGebruik/l2-switch"
+
+  LET voedt_from = FIRST(
+    FOR v, rel IN INBOUND n assetrelaties
+      FILTER
+        rel.relatietype_key == voedt_key
+        AND v.AIMDBStatus_isActief == true
+      LIMIT 1
+      RETURN v
+  )
+
+  FILTER voedt_from == null
+
+  RETURN {
+    uuid: n._key,
+    naampad: n.NaampadObject_naampad,
+    gebruik: n.Netwerkelement_gebruik
+  }
+"""
