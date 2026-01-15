@@ -138,6 +138,7 @@ class DQReport(Report):
 
         # get and format data
         result = []
+        query_time = None
         if self.datasource == 'Neo4J':
             connector = SingleNeo4JConnector.get_connector()
             start = time.time()
@@ -303,6 +304,16 @@ class DQReport(Report):
                                            start_cell='C' + str(rowFound + 1),
                                            data=[[self.last_data_update, len(result_data)]])
 
+        # also write the query execution time into column H for this report's summary row
+        try:
+            sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.summary_sheet_id,
+                                               sheet_name='Overzicht',
+                                               start_cell='H' + str(rowFound + 1),
+                                               data=[[query_time]])
+        except Exception:
+            # if query_time is not available for some reason, skip silently to avoid breaking the report
+            pass
+
         if mail_receivers is not None:
             self.send_mails(sender=sender, named_range=mail_receivers, previous_result=previous_result,
                             result=len(result_data), latest_data_sync=self.last_data_update)
@@ -447,6 +458,10 @@ class DQReport(Report):
                 value = cls.make_list_into_strings(value, sep = f'|{sep}')
                 data[index] = value
         return sep.join([str(d) for d in data])
+
+
+
+
 
 
 

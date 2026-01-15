@@ -68,6 +68,7 @@ class LegacyReport(Report):
 
         # get and format data
         result = []
+        query_time = None
         if self.datasource == 'Neo4J':
             connector = SingleNeo4JConnector.get_connector()
             start = time.time()
@@ -131,6 +132,16 @@ class LegacyReport(Report):
                                            sheet_name='Overzicht',
                                            start_cell='C' + str(rowFound + 1),
                                            data=[[datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), None]])
+
+        # also write the query execution time into column H for this report's summary row
+        try:
+            sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.summary_sheet_id,
+                                               sheet_name='Overzicht',
+                                               start_cell='H' + str(rowFound + 1),
+                                               data=[[query_time]])
+        except Exception:
+            # if query_time is not available for some reason, skip silently to avoid breaking the report
+            pass
 
         logging.info(f'finished report {self.name}')
 
