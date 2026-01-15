@@ -19,3 +19,32 @@ class Report0012:
 
     def run_report(self, sender):
         self.report.run_report(sender=sender)
+
+aql_query = """
+LET camera_assettype_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Camera" LIMIT 1 RETURN at._key)
+LET bevestiging_key = FIRST(FOR rt IN relatietypes FILTER rt.short == "Bevestiging" LIMIT 1 RETURN rt._key)
+
+FOR c IN assets
+  FILTER
+    c.assettype_key == camera_assettype_key
+    AND c.AIMDBStatus_isActief == true
+
+  LET has_bevestiging = LENGTH(
+    FOR v, e IN 1..1 ANY c._id assetrelaties
+      FILTER
+        e.relatietype_key == bevestiging_key
+        AND v.AIMDBStatus_isActief == true
+      LIMIT 1
+      RETURN 1
+  ) > 0
+
+  FILTER NOT has_bevestiging
+    AND NOT CONTAINS(LOWER(TO_STRING(c.NaampadObject_naampad)), "tunnel")
+
+  RETURN {
+    camera_uuid: c._key,
+    camera_naam: c.AIMNaamObject_naam,
+    camera_naampad: c.NaampadObject_naampad,
+    camera_typeURI: c.typeURI
+  }
+"""
