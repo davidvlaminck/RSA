@@ -25,34 +25,86 @@ class Report0059:
 
 # to verify
 aql_query = """
-LET voedt_key = FIRST(FOR rt IN relatietypes FILTER rt.short == "Voedt" LIMIT 1 RETURN rt._key)
-LET upsl_key  = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#UPSLegacy" LIMIT 1 RETURN at._key)
-
-FOR x IN assets
-  FILTER x.AIMDBStatus_isActief == true
-
-  FOR v, e, p IN 1..10 OUTBOUND x assetrelaties
-    OPTIONS { order: "bfs", uniqueVertices: "global", uniqueVertices: "path" }
-    FILTER e.relatietype_key == voedt_key
-    FILTER v._id == x._id
-      AND (
-          FOR n IN p.vertices
-            FILTER n.assettype_key == upsl_key
-            LIMIT 1
-            RETURN 1
-        ) == []
-    
-    LET path_loop = (
-      FOR n IN p.vertices
-        RETURN [n._key, n.typeURI]
-    )
-
-    RETURN DISTINCT {
-      uuid: x._key,
-      naampad: x.AIMNaamObject_naampad,
-      typeURI: x.typeURI,
-      toestand: x.toestand,
-      path_loop: path_loop
-    }
-
+[
+  {
+    "uuid": "29058156-e67e-4479-be68-a912020d6e9a",
+    "naampad": null,
+    "typeURI": "https://lgc.data.wegenenverkeer.be/ns/installatie#LSDeel",
+    "toestand": "in-gebruik",
+    "path_loop": [
+      [
+        "29058156-e67e-4479-be68-a912020d6e9a",
+        "https://lgc.data.wegenenverkeer.be/ns/installatie#LSDeel"
+      ],
+      [
+        "8a5665c4-8892-419d-ad60-c1469d872ccc",
+        "https://lgc.data.wegenenverkeer.be/ns/installatie#LSDeel"
+      ],
+      [
+        "29058156-e67e-4479-be68-a912020d6e9a",
+        "https://lgc.data.wegenenverkeer.be/ns/installatie#LSDeel"
+      ]
+    ]
+  },
+  {
+    "uuid": "3def25cc-fcb9-479d-a2ef-65c0d0a93e55",
+    "naampad": null,
+    "typeURI": "https://lgc.data.wegenenverkeer.be/ns/installatie#LSDeel",
+    "toestand": "in-gebruik",
+    "path_loop": [
+      [
+        "3def25cc-fcb9-479d-a2ef-65c0d0a93e55",
+        "https://lgc.data.wegenenverkeer.be/ns/installatie#LSDeel"
+      ],
+      [
+        "9c973aba-80eb-45d3-8ee7-dab79ec34157",
+        "https://lgc.data.wegenenverkeer.be/ns/installatie#LSDeel"
+      ],
+      [
+        "3def25cc-fcb9-479d-a2ef-65c0d0a93e55",
+        "https://lgc.data.wegenenverkeer.be/ns/installatie#LSDeel"
+      ]
+    ]
+  },
+  {
+    "uuid": "8a5665c4-8892-419d-ad60-c1469d872ccc",
+    "naampad": null,
+    "typeURI": "https://lgc.data.wegenenverkeer.be/ns/installatie#LSDeel",
+    "toestand": "in-gebruik",
+    "path_loop": [
+      [
+        "8a5665c4-8892-419d-ad60-c1469d872ccc",
+        "https://lgc.data.wegenenverkeer.be/ns/installatie#LSDeel"
+      ],
+      [
+        "29058156-e67e-4479-be68-a912020d6e9a",
+        "https://lgc.data.wegenenverkeer.be/ns/installatie#LSDeel"
+      ],
+      [
+        "8a5665c4-8892-419d-ad60-c1469d872ccc",
+        "https://lgc.data.wegenenverkeer.be/ns/installatie#LSDeel"
+      ]
+    ]
+  },
+  {
+    "uuid": "9c973aba-80eb-45d3-8ee7-dab79ec34157",
+    "naampad": null,
+    "typeURI": "https://lgc.data.wegenenverkeer.be/ns/installatie#LSDeel",
+    "toestand": "in-gebruik",
+    "path_loop": [
+      [
+        "9c973aba-80eb-45d3-8ee7-dab79ec34157",
+        "https://lgc.data.wegenenverkeer.be/ns/installatie#LSDeel"
+      ],
+      [
+        "3def25cc-fcb9-479d-a2ef-65c0d0a93e55",
+        "https://lgc.data.wegenenverkeer.be/ns/installatie#LSDeel"
+      ],
+      [
+        "9c973aba-80eb-45d3-8ee7-dab79ec34157",
+        "https://lgc.data.wegenenverkeer.be/ns/installatie#LSDeel"
+      ]
+    ]
+  }
+]
 """
