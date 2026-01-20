@@ -63,14 +63,14 @@ FILTER
 
 LET assettype = FIRST(FOR at IN assettypes FILTER at._key == a.assettype_key LIMIT 1 RETURN at)
 
-SORT a.AIMNaamObject_naampad ASC
+SORT a.NaampadObject_naampad ASC
 
 RETURN 
   {
     uuid: a._key, 
     assettype: assettype ? assettype.label : null,
     toestand: a.toestand, 
-    naampad: a.AIMNaamObject_naampad, 
+    naampad: a.NaampadObject_naampad, 
     naam: a.AIMNaamObject_naam, 
 //    geometry: a.geometry
   } 

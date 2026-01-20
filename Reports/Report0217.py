@@ -62,7 +62,7 @@ LET assettype = FIRST(FOR at IN assettypes FILTER at._key == a.assettype_key LIM
 LET toezichter = FIRST(FOR t IN identiteiten FILTER t._key == a.toezichter_key LIMIT 1 RETURN t)
 LET toezichtgroep = FIRST(FOR tg IN identiteiten FILTER tg._key == a.toezichtgroep_key LIMIT 1 RETURN tg)
 
-SORT a.AIMNaamObject_naampad ASC
+SORT a.NaampadObject_naampad ASC
 
 RETURN 
   {
@@ -70,7 +70,7 @@ RETURN
     assettype: assettype ? assettype.label : null,
     toestand: a.toestand, 
     naampad: a.AIMNaamObject_naampad, 
-    naam: a.AIMNaamObject_naam, 
+    naam: a.NaampadObject_naampad, 
     toezichter: toezichter.voornaam && toezichter.naam ? concat(toezichter.voornaam, " ", toezichter.naam) : null,
     toezichtgroep: toezichtgroep.naam
     } 
