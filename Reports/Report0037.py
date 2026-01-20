@@ -21,20 +21,15 @@ class Report0037:
 
 aql_query = """
 LET netwerkelement_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Netwerkelement" LIMIT 1 RETURN at._key)
-LET voedt_key = FIRST(FOR rt IN relatietypes FILTER rt.short == "Voedt" LIMIT 1 RETURN rt._key)
 
 FOR n IN assets
-  FILTER
-    n.assettype_key == netwerkelement_key
-    AND n.AIMDBStatus_isActief == true
-    AND n.toestand == "in-gebruik"
-    AND n.Netwerkelement_gebruik == "https://wegenenverkeer.data.vlaanderen.be/id/concept/KlNetwerkelemGebruik/l2-switch"
+  FILTER n.assettype_key == netwerkelement_key
+  FILTER n.AIMDBStatus_isActief == true
+  FILTER n.toestand == "in-gebruik"
+  FILTER n.Netwerkelement_gebruik == "https://wegenenverkeer.data.vlaanderen.be/id/concept/KlNetwerkelemGebruik/l2-switch"
 
   LET voedt_from = FIRST(
-    FOR v, rel IN INBOUND n assetrelaties
-      FILTER
-        rel.relatietype_key == voedt_key
-        AND v.AIMDBStatus_isActief == true
+    FOR v, rel IN INBOUND n voedt_relaties
       LIMIT 1
       RETURN v
   )

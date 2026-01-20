@@ -21,22 +21,17 @@ class Report0042:
 
 
 aql_query = """
-LET energiemeterdnb_key      = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#EnergiemeterDNB" LIMIT 1 RETURN at._key)
-LET forfaitaireaansluiting_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#ForfaitaireAansluiting" LIMIT 1 RETURN at._key)
-LET dnlaagspanning_key       = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#DNBLaagspanning" LIMIT 1 RETURN at._key)
-LET voedt_key                = FIRST(FOR rt IN relatietypes FILTER rt.short == "Voedt" LIMIT 1 RETURN rt._key)
+LET energiemeterdnb_key         = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#EnergiemeterDNB" LIMIT 1 RETURN at._key)
+LET forfaitaireaansluiting_key  = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#ForfaitaireAansluiting" LIMIT 1 RETURN at._key)
+LET dnlaagspanning_key          = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#DNBLaagspanning" LIMIT 1 RETURN at._key)
 
 FOR x IN assets
-  FILTER
-    x.AIMDBStatus_isActief == true
-    AND (x.assettype_key == energiemeterdnb_key OR x.assettype_key == forfaitaireaansluiting_key)
+  FILTER x.AIMDBStatus_isActief == true
+  FILTER (x.assettype_key == energiemeterdnb_key OR x.assettype_key == forfaitaireaansluiting_key)
 
   LET dnb = FIRST(
-    FOR v, rel IN INBOUND x assetrelaties
-      FILTER
-        rel.relatietype_key == voedt_key
-        AND v.assettype_key == dnlaagspanning_key
-        AND v.AIMDBStatus_isActief == true
+    FOR v, rel IN INBOUND x voedt_relaties
+      FILTER v.assettype_key == dnlaagspanning_key
       LIMIT 1
       RETURN v
   )

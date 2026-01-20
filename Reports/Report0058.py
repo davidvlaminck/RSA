@@ -29,22 +29,14 @@ class Report0058:
 
 # to verify
 aql_query = """
-LET voedt_key = FIRST(FOR rt IN relatietypes FILTER rt.short == "Voedt" LIMIT 1 RETURN rt._key)
-
 FOR a IN assets
   FILTER a.AIMDBStatus_isActief == true
 
   LET voeders = (
-    FOR rel IN assetrelaties
-      FILTER
-        rel._to == a._id
-        AND rel.relatietype_key == voedt_key
-      FOR v IN assets
-        FILTER
-          v._id == rel._from
-          AND v.AIMDBStatus_isActief == true
-        RETURN v
+    FOR v, rel IN INBOUND a voedt_relaties
+      RETURN v
   )
+
   FILTER LENGTH(voeders) > 1
 
   RETURN DISTINCT {
@@ -58,3 +50,4 @@ FOR a IN assets
     tzg_referentie: a["tz:toezichtgroep.tz:referentie"]
   }
 """
+

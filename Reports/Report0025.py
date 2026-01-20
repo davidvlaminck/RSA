@@ -20,21 +20,16 @@ class Report0025:
         self.report.run_report(sender=sender)
 
 aql_query = """
-LET link_key   = FIRST(FOR at IN assettypes FILTER at.short_uri == "installatie#Link" LIMIT 1 RETURN at._key)
-LET pad_key    = FIRST(FOR at IN assettypes FILTER at.short_uri == "installatie#Pad" LIMIT 1 RETURN at._key)
-LET hoortbij_key = FIRST(FOR rt IN relatietypes FILTER rt.short == "HoortBij" LIMIT 1 RETURN rt._key)
+LET link_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "installatie#Link" LIMIT 1 RETURN at._key)
+LET pad_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "installatie#Pad" LIMIT 1 RETURN at._key)
 
 FOR a IN assets
-  FILTER
-    a.assettype_key == link_key
-    AND a.AIMDBStatus_isActief == true
+  FILTER a.assettype_key == link_key
+  FILTER a.AIMDBStatus_isActief == true
 
   LET pad = FIRST(
-    FOR p, rel IN OUTBOUND a assetrelaties
-      FILTER
-        rel.relatietype_key == hoortbij_key
-        AND p.assettype_key == pad_key
-        AND p.AIMDBStatus_isActief == true
+    FOR p IN OUTBOUND a hoortbij_relaties
+      FILTER p.assettype_key == pad_key
       LIMIT 1
       RETURN p
   )

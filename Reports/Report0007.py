@@ -23,34 +23,26 @@ class Report0007:
 
 
 aql_query = """
-LET camera_key       = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Camera"       LIMIT 1 RETURN at._key)
+LET camera_key       = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Camera" LIMIT 1 RETURN at._key)
 LET netwerkpoort_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Netwerkpoort" LIMIT 1 RETURN at._key)
-LET omvormer_key     = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Omvormer"     LIMIT 1 RETURN at._key)
-LET sturing_key      = FIRST(FOR rt IN relatietypes FILTER rt.short == "Sturing"                  LIMIT 1 RETURN rt._key)
+LET omvormer_key     = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Omvormer" LIMIT 1 RETURN at._key)
 
 FOR c IN assets
-  FILTER
-    c.assettype_key == camera_key
-    AND c.AIMDBStatus_isActief == true
+  FILTER c.assettype_key == camera_key
+  FILTER c.AIMDBStatus_isActief == true
 
   // no Sturing to Netwerkpoort
   LET has_np = LENGTH(
-    FOR o, rel IN ANY c assetrelaties
-      FILTER
-        rel.relatietype_key == sturing_key
-        AND o.assettype_key == netwerkpoort_key
-        AND o.AIMDBStatus_isActief == true
+    FOR o, rel IN ANY c sturing_relaties
+      FILTER o.assettype_key == netwerkpoort_key
       LIMIT 1
       RETURN 1
   ) > 0
 
   // no Sturing to Omvormer
   LET has_omvormer = LENGTH(
-    FOR o, rel IN ANY c assetrelaties
-      FILTER
-        rel.relatietype_key == sturing_key
-        AND o.assettype_key == omvormer_key
-        AND o.AIMDBStatus_isActief == true
+    FOR o, rel IN ANY c sturing_relaties
+      FILTER o.assettype_key == omvormer_key
       LIMIT 1
       RETURN 1
   ) > 0
@@ -70,3 +62,4 @@ FOR c IN assets
     toezichter: toezichter ? toezichter.purl.Agent_naam : null
   }
 """
+
