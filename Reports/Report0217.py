@@ -48,11 +48,11 @@ class Report0217:
         self.report.run_report(sender=sender)
 
 aql_query = """
- LET at_80fdf1b4 = FIRST(FOR at IN assettypes FILTER at.uuid == "80fdf1b4-e311-4270-92ba-6367d2a42d47" LIMIT 1 RETURN at._key)
- LET at_b4361a72 = FIRST(FOR at IN assettypes FILTER at.uuid == "b4361a72-e1d5-41c5-bfcc-d48f459f4048" LIMIT 1 RETURN at._key)
- LET at_46dcd9b1 = FIRST(FOR at IN assettypes FILTER at.uuid == "46dcd9b1-f660-4c8c-8e3e-9cf794b4de75" LIMIT 1 RETURN at._key)
- LET at_a9655f50 = FIRST(FOR at IN assettypes FILTER at.uuid == "a9655f50-3de7-4c18-aa25-181c372486b1" LIMIT 1 RETURN at._key)
- LET at_1cf24e76 = FIRST(FOR at IN assettypes FILTER at.uuid == "1cf24e76-5bf3-44b0-8332-a47ab126b87e" LIMIT 1 RETURN at._key)
+ LET at_80fdf1b4 = FIRST(FOR at IN assettypes FILTER at.short_uri == "lgc:installatie#LS" LIMIT 1 RETURN at._key)
+ LET at_b4361a72 = FIRST(FOR at IN assettypes FILTER at.short_uri == "lgc:installatie#HS" LIMIT 1 RETURN at._key)
+ LET at_46dcd9b1 = FIRST(FOR at IN assettypes FILTER at.short_uri == "lgc:installatie#HSDeel" LIMIT 1 RETURN at._key)
+ LET at_a9655f50 = FIRST(FOR at IN assettypes FILTER at.short_uri == "lgc:installatie#LSDeel" LIMIT 1 RETURN at._key)
+ LET at_1cf24e76 = FIRST(FOR at IN assettypes FILTER at.short_uri == "lgc:installatie#HSCabineLegacy" LIMIT 1 RETURN at._key)
 
 FOR a IN assets
 FILTER
