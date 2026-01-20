@@ -26,3 +26,28 @@ class Report0132:
 
     def run_report(self, sender):
         self.report.run_report(sender=sender)
+
+# AQL equivalent (documentation / future migration)
+# Cypher:
+# MATCH (asset:Asset {isActief: True})
+# WHERE asset.toestand in ['verwijderd', 'geannuleerd', 'in-ontwerp', 'gepland']
+# RETURN asset.uuid, asset.type, asset.isActief, asset.toestand
+# ORDER BY asset.type, asset.toestand
+
+aql_query = """
+LET bad_toestanden = ["verwijderd", "geannuleerd", "in-ontwerp", "gepland"]
+
+FOR asset IN assets
+  FILTER asset.AIMDBStatus_isActief == true
+  FILTER asset.toestand IN bad_toestanden
+
+  SORT asset['@type'], asset.toestand
+
+  RETURN {
+    uuid: asset._key,
+    assettype: asset['@type'],
+    isActief: asset.AIMDBStatus_isActief,
+    AIMToestand: asset.toestand
+  }
+"""
+

@@ -30,3 +30,61 @@ class Report0043:
 
     def run_report(self, sender):
         self.report.run_report(sender=sender)
+
+
+aql_query = """
+LET deprecated_keys = (
+  FOR at IN assettypes
+    FILTER at.uri IN [
+      "https://wegenenverkeer.data.vlaanderen.be/ns/abstracten#ContainerBuis",
+      "https://wegenenverkeer.data.vlaanderen.be/ns/abstracten#Deur",
+      "https://wegenenverkeer.data.vlaanderen.be/ns/abstracten#Betonfundering",
+      "https://wegenenverkeer.data.vlaanderen.be/ns/implementatieelement#Bijlage",
+      "https://wegenenverkeer.data.vlaanderen.be/ns/installatie#MIVInstallatie",
+      "https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Trappentoren",
+      "https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Meetstation",
+      "https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Matrixbord",
+      "https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Baanlichaam",
+      "https://wegenenverkeer.data.vlaanderen.be/ns/installatie#Wegberm",
+      "https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VRBAZ",
+      "https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Damwand",
+      "https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#GeluidswerendeConstructie",
+      "https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VRCommunicatiekaart",
+      "https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VRBatterijICU",
+      "https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Vluchtdeur",
+      "https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Doorgang",
+      "https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Bovenbouw",
+      "https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#FieldOfView",
+      "https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Mantelbuis",
+      "https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Toegangscontrole",
+      "https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#OpgaandeBoom",
+      "https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VRHandbediening",
+      "https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#ANPRCamera",
+      "https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#VRStuurkaart",
+      "https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Exoten",
+      "https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefVoertuigOverhelling",
+      "https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefSchokindexMVP",
+      "https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefSchokindex",
+      "https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefKerendVermogen",
+      "https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefPerformantieniveau",
+      "https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefBoomtoestand",
+      "https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefWerkingsbreedteMVP",
+      "https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefPerformantieklasse",
+      "https://wegenenverkeer.data.vlaanderen.be/ns/proefenmeting#ProefWerkingsbreedteGC"]
+    RETURN at._key
+)
+
+FOR a IN assets
+  FILTER a.AIMDBStatus_isActief == true
+    AND a.assettype_key IN deprecated_keys
+
+  LET at = FIRST(FOR t IN assettypes FILTER t._key == a.assettype_key LIMIT 1 RETURN t)
+
+  SORT at.uri asc
+
+  RETURN {
+    asset_uuid: a._key,
+    assettype_uri: at ? at.uri : null,
+    asset_toestand: a.toestand
+  }
+"""

@@ -19,3 +19,34 @@ class Report0100:
 
     def run_report(self, sender):
         self.report.run_report(sender=sender)
+
+# AQL equivalent (documentation / future migration)
+# Cypher:
+# MATCH (a:Verkeersregelaar {isActief:TRUE})
+# WHERE NOT EXISTS ((a)-[:Sturing]-(:TLCfiPoort {isActief:TRUE}))
+# RETURN a.uuid, a.naam
+aql_query = """
+LET verkeersregelaar_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Verkeersregelaar" LIMIT 1 RETURN at._key)
+LET tlcfipoort_key       = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#TLCfiPoort"       LIMIT 1 RETURN at._key)
+
+FOR a IN assets
+  FILTER a.AIMDBStatus_isActief == true
+  FILTER a.assettype_key == verkeersregelaar_key
+
+  // Use derived Sturing-only edges between active assets (see fill_sturing_relaties -> sturing_relaties).
+  // Cypher used an undirected pattern: (a)-[:Sturing]-(:TLCfiPoort)
+  // So we use ANY here (both INBOUND and OUTBOUND).
+  LET has_sturing_to_tlc = LENGTH(
+    FOR v, rel IN ANY a sturing_relaties
+      FILTER v.assettype_key == tlcfipoort_key
+      LIMIT 1
+      RETURN 1
+  ) > 0
+
+  FILTER NOT has_sturing_to_tlc
+
+  RETURN {
+    uuid: a._key,
+    naam: a.AIMNaamObject_naam
+  }
+"""

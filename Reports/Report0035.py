@@ -29,24 +29,39 @@ ORDER BY s.eindDatum, naampad, bestekkoppelingen.eindDatum;"""
     def run_report(self, sender):
         self.report.run_report(sender=sender)
 
+aql_query = """
+LET now = DATE_NOW()
+LET upper = now + 30 * 24 * 60 * 60 * 1000 /* 30 days in milliseconds */
 
+FOR bk IN bestekkoppelingen
+  LET status = SUBSTRING(bk.DtcBestekkoppeling_status, 69)
+  FILTER status IN ["actief", "toekomstig"]
 
+  LET start_ts = bk.DtcBestekkoppeling_actiefVan ? DATE_TIMESTAMP(bk.DtcBestekkoppeling_actiefVan) : null  
+  LET eind_ts = bk.DtcBestekkoppeling_actiefTot ? DATE_TIMESTAMP(bk.DtcBestekkoppeling_actiefTot) : null
+  
+  FILTER eind_ts != null and (eind_ts > now AND eind_ts < upper)
 
-# WITH actieve_koppelingen AS (
-# 	SELECT assetUuid, sum(CASE WHEN lower(koppelingstatus)  IN ('actief', 'toekomstig') THEN 1 ELSE 0 END) AS aantal
-# 	FROM bestekkoppelingen
-# 	GROUP BY assetUuid),
-# s AS (
-# 	SELECT ((NOW()- INTERVAL '30 DAYS') < date(eindDatum) AND date(eindDatum) < NOW()) AS reeds_verlopen, eindDatum,
-# 	bestekkoppelingen.assetUuid
-# 	FROM bestekkoppelingen
-# 		LEFT JOIN assets ON assets.uuid = bestekkoppelingen.assetUuid
-# 		LEFT JOIN actieve_koppelingen ON assets.uuid = actieve_koppelingen.assetUuid
-# 	WHERE assets.actief = TRUE AND actieve_koppelingen.aantal = 0)
-# SELECT assets.uuid, assets.naampad, assets.actief, assets.toestand, TO_CHAR(bestekkoppelingen.startDatum, 'YYYY-MM-DD HH24:MI:SS OF') AS startDatum, TO_CHAR(bestekkoppelingen.eindDatum, 'YYYY-MM-DD HH24:MI:SS OF') AS eindDatum, bestekkoppelingen.koppelingstatus, bestekken.eDeltaBesteknummer, bestekken.eDeltaDossiernummer
-# FROM s
-# 	LEFT JOIN assets ON s.assetUuid = assets.uuid
-# 	LEFT JOIN bestekkoppelingen ON assets.uuid = bestekkoppelingen.assetUuid
-# 	LEFT JOIN bestekken ON bestekKoppelingen.bestekUuid = bestekken.uuid
-# WHERE reeds_verlopen = TRUE
-# ORDER BY s.eindDatum DESC, naampad, bestekkoppelingen.eindDatum;
+  LET start_ts_formatted = start_ts ? DATE_FORMAT(start_ts, "%d-%m-%y") : null
+  LET eind_ts_formatted = eind_ts ? DATE_FORMAT(eind_ts, "%d-%m-%y"): null
+
+  LET asset = bk._from ? DOCUMENT(bk._from) : null
+  FILTER asset != null AND asset.AIMDBStatus_isActief == true
+  
+  LET bestek = bk._to ? DOCUMENT(bk._to) : null
+
+SORT eind_ts asc, asset.NaampadObject_naampad
+
+RETURN {
+  uuid: asset._key,
+  naampad: asset.NaampadObject_naampad,
+  actief: asset.AIMDBStatus_isActief,
+  toestand: asset.toestand,
+  bestekkoppeling_start_datum: start_ts_formatted,
+  bestekkoppeling_eind_datum: eind_ts_formatted,
+  bestekkoppeling_status: status,
+  bestek_uuid: bestek.uuid,
+  bestek_eDeltaBesteknummer: bestek ? bestek.eDeltaBesteknummer : null,
+  bestek_eDeltaDossiernummer: bestek ? bestek.eDeltaDossiernummer : null
+}
+"""

@@ -32,3 +32,21 @@ class Report0030:
 
     def run_report(self, sender):
         self.report.run_report(sender=sender)
+
+aql_query = """
+LET netwerkelement_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Netwerkelement" LIMIT 1 RETURN at._key)
+
+FOR a IN assets
+  FILTER
+    a.AIMDBStatus_isActief == true
+    AND a.assettype_key == netwerkelement_key
+    AND (a.geometry == null OR LENGTH(a.geometry) == 0)
+
+  RETURN {
+    uuid: a._key,
+    actief: a.AIMDBStatus_isActief,
+    toestand: a.toestand,
+    naam: a.AIMNaamObject_naam,
+    geometry: a.geometry
+  }
+"""
