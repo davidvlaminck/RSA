@@ -46,3 +46,32 @@ class Report0217:
 
     def run_report(self, sender):
         self.report.run_report(sender=sender)
+
+aql_query = """
+ LET at_80fdf1b4 = FIRST(FOR at IN assettypes FILTER at.uuid == "80fdf1b4-e311-4270-92ba-6367d2a42d47" LIMIT 1 RETURN at._key)
+ LET at_b4361a72 = FIRST(FOR at IN assettypes FILTER at.uuid == "b4361a72-e1d5-41c5-bfcc-d48f459f4048" LIMIT 1 RETURN at._key)
+ LET at_46dcd9b1 = FIRST(FOR at IN assettypes FILTER at.uuid == "46dcd9b1-f660-4c8c-8e3e-9cf794b4de75" LIMIT 1 RETURN at._key)
+ LET at_a9655f50 = FIRST(FOR at IN assettypes FILTER at.uuid == "a9655f50-3de7-4c18-aa25-181c372486b1" LIMIT 1 RETURN at._key)
+ LET at_1cf24e76 = FIRST(FOR at IN assettypes FILTER at.uuid == "1cf24e76-5bf3-44b0-8332-a47ab126b87e" LIMIT 1 RETURN at._key)
+
+FOR a IN assets
+FILTER
+  a.AIMDBStatus_isActief == true AND a.assettype_key IN [ at_80fdf1b4, at_b4361a72, at_46dcd9b1, at_a9655f50, at_1cf24e76 ] AND a.toezichtgroep_key == null
+
+LET assettype = FIRST(FOR at IN assettypes FILTER at._key == a.assettype_key LIMIT 1 RETURN at)
+LET toezichter = FIRST(FOR t IN identiteiten FILTER t._key == a.toezichter_key LIMIT 1 RETURN t)
+LET toezichtgroep = FIRST(FOR tg IN identiteiten FILTER tg._key == a.toezichtgroep_key LIMIT 1 RETURN tg)
+
+SORT a.AIMNaamObject_naampad ASC
+
+RETURN 
+  {
+    uuid: a._key, 
+    assettype: assettype ? assettype.label : null,
+    toestand: a.toestand, 
+    naampad: a.AIMNaamObject_naampad, 
+    naam: a.AIMNaamObject_naam, 
+    toezichter: toezichter.voornaam && toezichter.naam ? concat(toezichter.voornaam, " ", toezichter.naam) : null,
+    toezichtgroep: toezichtgroep.naam
+    } 
+"""
