@@ -47,3 +47,31 @@ order by a.naampad
 
     def run_report(self, sender):
         self.report.run_report(sender=sender)
+
+aql_query = """
+ LET at_80fdf1b4 = FIRST(FOR at IN assettypes FILTER at.short_uri == "lgc:installatie#LS" LIMIT 1 RETURN at._key)
+ LET at_b4361a72 = FIRST(FOR at IN assettypes FILTER at.short_uri == "lgc:installatie#HS" LIMIT 1 RETURN at._key)
+ LET at_46dcd9b1 = FIRST(FOR at IN assettypes FILTER at.short_uri == "lgc:installatie#HSDeel" LIMIT 1 RETURN at._key)
+ LET at_a9655f50 = FIRST(FOR at IN assettypes FILTER at.short_uri == "lgc:installatie#LSDeel" LIMIT 1 RETURN at._key)
+ LET at_1cf24e76 = FIRST(FOR at IN assettypes FILTER at.short_uri == "lgc:installatie#HSCabineLegacy" LIMIT 1 RETURN at._key)
+ LET at_f625b904 = FIRST(FOR at IN assettypes FILTER at.short_uri == "lgc:installatie#SegC" LIMIT 1 RETURN at._key)
+ LET at_8eda4230 = FIRST(FOR at IN assettypes FILTER at.short_uri == "lgc:installatie#AB" LIMIT 1 RETURN at._key)
+
+FOR a IN assets
+FILTER
+  a.AIMDBStatus_isActief == true AND a.assettype_key IN [ at_80fdf1b4, at_b4361a72, at_46dcd9b1, at_a9655f50, at_1cf24e76, at_f625b904, at_8eda4230 ] AND a.geometry == null
+
+LET assettype = FIRST(FOR at IN assettypes FILTER at._key == a.assettype_key LIMIT 1 RETURN at)
+
+SORT a.AIMNaamObject_naampad ASC
+
+RETURN 
+  {
+    uuid: a._key, 
+    assettype: assettype ? assettype.label : null,
+    toestand: a.toestand, 
+    naampad: a.AIMNaamObject_naampad, 
+    naam: a.AIMNaamObject_naam, 
+//    geometry: a.geometry
+  } 
+"""
