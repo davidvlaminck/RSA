@@ -19,3 +19,25 @@ class Report0112:
 
     def run_report(self, sender):
         self.report.run_report(sender=sender)
+
+
+# AQL equivalent (documentation / future migration)
+# Cypher:
+# MATCH (a:Verkeersregelaar {isActief:TRUE})
+# WHERE a.vplanDatum is null
+# RETURN a.uuid, a.naam, a.vplanNummer, a.vplanDatum
+aql_query = """
+LET verkeersregelaar_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Verkeersregelaar" LIMIT 1 RETURN at._key)
+
+FOR a IN assets
+  FILTER a.assettype_key == verkeersregelaar_key
+  FILTER a.AIMDBStatus_isActief == true
+  FILTER a.Verkeersregelaar_vplanDatum == null
+
+  RETURN {
+    uuid: a._key,
+    naam: a.AIMNaamObject_naam,
+    vplanNummer: a.Verkeersregelaar_vplanNummer,
+    vplanDatum: a.Verkeersregelaar_vplanDatum
+  }
+"""

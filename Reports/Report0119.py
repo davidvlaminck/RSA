@@ -21,3 +21,29 @@ class Report0119:
 
     def run_report(self, sender):
         self.report.run_report(sender=sender)
+
+# AQL equivalent (documentation / future migration)
+# Cypher:
+# MATCH (a:DNBHoogspanning|DNBLaagspanning {isActief:TRUE})-[r:HeeftBetrokkene]->(b:Agent)
+# WHERE r.rol <> 'installatieverantwoordelijke'
+# RETURN a.uuid, a.naam, a.typeURI, r.rol as relatie_rol, b.naam as agent_naam
+
+aql_query = """
+LET dnblaagspanning_key  = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#DNBLaagspanning" LIMIT 1 RETURN at._key)
+LET dnbhoogspanning_key  = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#DNBHoogspanning" LIMIT 1 RETURN at._key)
+
+FOR a IN assets
+  FILTER a.AIMDBStatus_isActief == true
+  FILTER a.assettype_key IN [dnbhoogspanning_key, dnblaagspanning_key]
+
+  FOR b, r IN 1..1 OUTBOUND a._id betrokkenerelaties
+    FILTER r.rol != "installatieverantwoordelijke"
+
+    RETURN {
+      uuid: a._key,
+      naam: a.AIMNaamObject_naam,
+      typeURI: a['@type'],
+      relatie_rol: r.rol,
+      agent_naam: b ? b.purl.Agent_naam : null
+    }
+"""
