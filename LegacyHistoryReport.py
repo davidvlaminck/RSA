@@ -1,7 +1,7 @@
 import decimal
 import logging
 import time
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, UTC
 
 from neo4j.time import DateTime
 
@@ -89,7 +89,7 @@ class LegacyHistoryReport(Report):
         lastest_sheetname = None
         if len(sheet_names) > 0:
             lastest_sheetname = sheet_names[0]
-        new_sheetname = datetime.utcnow().strftime('%d/%m/%Y')
+        new_sheetname = datetime.now(UTC).strftime('%d/%m/%Y')
 
         if len(sheet_names) > self.sheets_to_keep:
             for delete_name in sheet_names[self.sheets_to_keep:]:
@@ -132,7 +132,7 @@ class LegacyHistoryReport(Report):
                 query_result: DateTime = session.run('MATCH (p:Params) RETURN p.last_update_utc').single()[0]
 
             self.last_data_update = query_result.to_native().strftime("%Y-%m-%d %H:%M:%S")
-            self.now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+            self.now = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S")
 
             report_made_lines = [[f'Rapport gemaakt op {self.now} met data uit:'],
                                  [f'{self.datasource}, laatst gesynchroniseerd op {self.last_data_update}']]
@@ -146,7 +146,7 @@ class LegacyHistoryReport(Report):
             params = connector.get_params(connector.main_connection)
 
             self.last_data_update = params['last_update_utc_assets'].strftime("%Y-%m-%d %H:%M:%S")
-            self.now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+            self.now = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S")
 
             report_made_lines = [[f'Rapport gemaakt op {self.now} met data uit:'],
                                  [f'{self.datasource}, laatst gesynchroniseerd op {self.last_data_update}']]

@@ -1,7 +1,7 @@
 import logging
 import smtplib
 import time
-from datetime import datetime
+from datetime import datetime, UTC
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
@@ -70,7 +70,7 @@ class MailSender:
                     mail_counter = 0
                     time.sleep(300) # avoid spam limit
                 for mail_content in mails:
-                    mail_content.mail_sent = datetime.utcnow()
+                    mail_content.mail_sent = datetime.now(UTC)
                 self.sent_mails.extend(mails)
             except:
                 logging.error(f'Could not send an email to {receiver}')

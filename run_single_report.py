@@ -7,7 +7,7 @@ import logging
 import os
 import time
 import traceback
-from datetime import datetime
+from datetime import datetime, UTC
 
 from MailContent import MailContent
 from MailSender import MailSender
@@ -51,10 +51,11 @@ class SingleReportLoopRunner:
         started_running_date = None
 
         while True:
-            if started_running_date is None or started_running_date != (datetime.utcnow()).date():
+            now_utc = datetime.now(UTC)
+            if started_running_date is None or started_running_date != now_utc.date():
                 # start running reports at midnight
-                logging.info(f'{datetime.utcnow()}: let\'s run the reports now')
-                started_running_date = (datetime.utcnow()).date()
+                logging.info(f'{now_utc}: let\'s run the reports now')
+                started_running_date = now_utc.date()
 
                 # detect reports in Reports directory
                 self.reports = [report]
@@ -76,16 +77,21 @@ class SingleReportLoopRunner:
                             traceback.print_exc()
                             logging.error(f'failed completing report {report_name}')
                     logging.info(
-                        f'{datetime.utcnow()}: done running report loop {reports_run}. Reports left to do: {len(reports_to_do)}')
+                        f'{datetime.now(UTC)}: done running report loop {reports_run}. Reports left to do: {len(reports_to_do)}')
 
-                logging.info(f'{datetime.utcnow()}: done running the reports')
+                logging.info(f'{datetime.now(UTC)}: done running the reports')
 
-                self.mail_sender.send_all_mails()
-                self.adjust_mailed_info_in_sheets(sender=self.mail_sender)
+                try:
+                    self.mail_sender.send_all_mails()
+                    self.adjust_mailed_info_in_sheets(sender=self.mail_sender)
+                    logging.info(
+                        f'{datetime.now(UTC)}: sent all mails_to_send ({len(self.mail_sender.mails_to_send)})')
+                except Exception as ex:
+                    logging.info(f"mail sending failed: {ex}")
+                    logging.exception(ex)
 
-                logging.info(f'{datetime.utcnow()}: sent all mails_to_send ({len(self.mail_sender.mails_to_send)})')
             else:
-                logging.info(f'{datetime.utcnow()}: not yet the right time to run reports.')
+                logging.info(f'{datetime.now(UTC)}: not yet the right time to run reports.')
                 time.sleep(60)
 
     @staticmethod
@@ -126,6 +132,6 @@ class SingleReportLoopRunner:
 
 if __name__ == '__main__':
     reportlooprunner = SingleReportLoopRunner(
-        settings_path=r'/home/davidlinux/Documents/AWV/resources/settings_RSA.json')
+        settings_path=r'/home/davidlinux/Documenten/AWV/resources/settings_RSA.json')
     # reportlooprunner = SingleReportLoopRunner(settings_path=r'C:\resources\settings_RSA.json')
-    reportlooprunner.run(report='Report0064')
+    reportlooprunner.run(report='Report0000')

@@ -1,7 +1,7 @@
 import decimal
 import logging
 import time
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, UTC
 
 from googleapiclient.errors import HttpError
 from neo4j.time import DateTime
@@ -131,7 +131,7 @@ class LegacyReport(Report):
         sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.summary_sheet_id,
                                            sheet_name='Overzicht',
                                            start_cell='C' + str(rowFound + 1),
-                                           data=[[datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), None]])
+                                           data=[[datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S"), None]])
 
         # also write the query execution time into column H for this report's summary row
         try:
