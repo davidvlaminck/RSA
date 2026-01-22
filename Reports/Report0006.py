@@ -22,20 +22,15 @@ class Report0006:
 aql_query = """
 LET wegkantkast_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Wegkantkast" LIMIT 1 RETURN at._key)
 LET kast_key        = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Kast"        LIMIT 1 RETURN at._key)
-LET hoortbij_key    = FIRST(FOR rt IN relatietypes FILTER rt.short     == "HoortBij"            LIMIT 1 RETURN rt._key)
 
 
 FOR a IN assets
-  FILTER
-    a.assettype_key == wegkantkast_key
-    AND a.AIMDBStatus_isActief == true
+  FILTER a.assettype_key == wegkantkast_key
+  FILTER a.AIMDBStatus_isActief == true
 
   LET kast = FIRST(
-    FOR k, rel IN OUTBOUND a assetrelaties
-      FILTER
-        rel.relatietype_key == hoortbij_key
-        AND k.assettype_key == kast_key
-        AND k.AIMDBStatus_isActief == true
+    FOR k, rel IN OUTBOUND a hoortbij_relaties
+      FILTER k.assettype_key == kast_key
       LIMIT 1
       RETURN k
   )

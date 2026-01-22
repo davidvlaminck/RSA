@@ -21,36 +21,16 @@ class Report0002:
         self.report.run_report(sender=sender)
 
 aql_query = """
-LET tlcfipoort_key      = FIRST(
-  FOR at IN assettypes
-    FILTER at.short_uri == "onderdeel#TLCfiPoort"
-    LIMIT 1
-    RETURN at._key
-)
-LET verkeersregelaar_key = FIRST(
-  FOR at IN assettypes
-    FILTER at.short_uri == "onderdeel#Verkeersregelaar"
-    LIMIT 1
-    RETURN at._key
-)
-LET sturing_key = FIRST(
-  FOR rt IN relatietypes
-    FILTER rt.short == "Sturing"
-    LIMIT 1
-    RETURN rt._key
-)
+LET tlcfipoort_key      = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#TLCfiPoort" LIMIT 1 RETURN at._key)
+LET verkeersregelaar_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Verkeersregelaar" LIMIT 1 RETURN at._key)
 
 FOR a IN assets
-  FILTER
-    a.assettype_key == tlcfipoort_key
-    AND a.AIMDBStatus_isActief == true
+  FILTER a.assettype_key == tlcfipoort_key
+  FILTER a.AIMDBStatus_isActief == true
 
   LET vr = FIRST(
-    FOR v, rel IN ANY a assetrelaties
-      FILTER
-        rel.relatietype_key == sturing_key
-        AND v.assettype_key == verkeersregelaar_key
-        AND v.AIMDBStatus_isActief == true
+    FOR v, rel IN ANY a sturing_relaties
+      FILTER v.assettype_key == verkeersregelaar_key
       LIMIT 1
       RETURN v
   )

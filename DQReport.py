@@ -257,7 +257,7 @@ class DQReport(Report):
         # make columns fit to the data
         sheets_wrapper.automatic_resize_columns(spreadsheet_id=self.spreadsheet_id,
                                                 sheet_name='Resultaat',
-                                                number_of_columns=len(result_keys))
+                                                number_of_columns=(len(result_keys) + (1 if self.persistent_column != '' else 0)))
 
         # hyperlink the first column
         start_sheetcell.update_row_by_adding_number(1)
@@ -333,12 +333,13 @@ class DQReport(Report):
                 row = list(row)
 
             if isinstance(row, list):
-                all_none = True
+                # treat a row as empty if all columns are None or ''
+                all_empty = True
                 for column in row:
-                    if column is not None or column != '':
-                        all_none = False
+                    if column is not None and column != '':
+                        all_empty = False
                         break
-                if all_none:
+                if all_empty:
                     continue
 
             new_row = []
@@ -458,6 +459,8 @@ class DQReport(Report):
                 value = cls.make_list_into_strings(value, sep = f'|{sep}')
                 data[index] = value
         return sep.join([str(d) for d in data])
+
+
 
 
 

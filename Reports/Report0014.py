@@ -21,25 +21,17 @@ class Report0014:
 
 
 aql_query = """
-LET stroomkring_key        = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Stroomkring"        LIMIT 1 RETURN at._key)
-LET laagspanningsbord_key  = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Laagspanningsbord"  LIMIT 1 RETURN at._key)
-LET lsdeel_key             = FIRST(FOR at IN assettypes FILTER at.short_uri == "lgc:installatie#LSDeel"          LIMIT 1 RETURN at._key)
-LET hoortbij_key           = FIRST(FOR rt IN relatietypes FILTER rt.short == "HoortBij"                      LIMIT 1 RETURN rt._key)
+LET stroomkring_key       = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Stroomkring" LIMIT 1 RETURN at._key)
+LET laagspanningsbord_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Laagspanningsbord" LIMIT 1 RETURN at._key)
+LET lsdeel_key            = FIRST(FOR at IN assettypes FILTER at.short_uri == "lgc:installatie#LSDeel" LIMIT 1 RETURN at._key)
 
 FOR s IN assets
-  FILTER
-    s.AIMDBStatus_isActief == true
-    AND (
-      s.assettype_key == stroomkring_key
-      OR s.assettype_key == laagspanningsbord_key
-    )
+  FILTER s.AIMDBStatus_isActief == true
+  FILTER (s.assettype_key == stroomkring_key OR s.assettype_key == laagspanningsbord_key)
 
   LET lsdeel = FIRST(
-    FOR l, rel IN OUTBOUND s assetrelaties
-      FILTER
-        rel.relatietype_key == hoortbij_key
-        AND l.assettype_key == lsdeel_key
-        AND l.AIMDBStatus_isActief == true
+    FOR l, rel IN OUTBOUND s hoortbij_relaties
+      FILTER l.assettype_key == lsdeel_key
       LIMIT 1
       RETURN l
   )

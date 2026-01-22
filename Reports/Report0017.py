@@ -20,21 +20,16 @@ class Report0017:
         self.report.run_report(sender=sender)
 
 aql_query = """
-LET netwerkkaart_key   = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Netwerkkaart"    LIMIT 1 RETURN at._key)
-LET netwerkelement_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Netwerkelement"  LIMIT 1 RETURN at._key)
-LET bevestiging_key    = FIRST(FOR rt IN relatietypes FILTER rt.short == "Bevestiging"                 LIMIT 1 RETURN rt._key)
+LET netwerkkaart_key   = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Netwerkkaart" LIMIT 1 RETURN at._key)
+LET netwerkelement_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Netwerkelement" LIMIT 1 RETURN at._key)
 
 FOR n IN assets
-  FILTER
-    n.assettype_key == netwerkkaart_key
-    AND n.AIMDBStatus_isActief == true
+  FILTER n.assettype_key == netwerkkaart_key
+  FILTER n.AIMDBStatus_isActief == true
 
   LET ne = FIRST(
-    FOR e, rel IN ANY n assetrelaties
-      FILTER
-        rel.relatietype_key == bevestiging_key
-        AND e.assettype_key == netwerkelement_key
-        AND e.AIMDBStatus_isActief == true
+    FOR e, rel IN ANY n bevestiging_relaties
+      FILTER e.assettype_key == netwerkelement_key
       LIMIT 1
       RETURN e
   )
