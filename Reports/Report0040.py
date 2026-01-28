@@ -6,25 +6,7 @@ class Report0040:
         self.report = None
 
     def init_report(self):
-        self.report = DQReport(name='report0040',
-                               title='DNBLaagspanning/DNBHoogspanning hebben een HoortBij relatie naar LS/HS respectievelijk',
-                               spreadsheet_id='1WLXykE5pX9wiBqnSgJ1HTE8dtkjRydMxAnccLV3T1_U',
-                               datasource='Neo4J',
-                               persistent_column='D')
-
-        self.report.result_query = """MATCH (dnbl:DNBLaagspanning {isActief: TRUE})
-            WHERE NOT EXISTS((dnbl)-[:HoortBij]->(:LS {isActief: TRUE}))
-            RETURN dnbl.uuid as uuid, dnbl.naam as naam, dnbl.typeURI as typeURI
-            UNION
-            MATCH (dnbh:DNBHoogspanning {isActief: TRUE})
-            WHERE NOT EXISTS((dnbh)-[:HoortBij]->(:HS {isActief: TRUE}))
-            RETURN dnbh.uuid as uuid, dnbh.naam as naam, dnbh.typeURI as typeURI"""
-
-    def run_report(self, sender):
-        self.report.run_report(sender=sender)
-
-
-aql_query = """
+        aql_query = """
 LET dnlaagspanning_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#DNBLaagspanning" LIMIT 1 RETURN at._key)
 LET dnbhoogspanning_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#DNBHoogspanning" LIMIT 1 RETURN at._key)
 LET ls_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#LS" LIMIT 1 RETURN at._key)
@@ -64,3 +46,14 @@ FOR a IN assets
     typeURI: a.typeURI
   }
 """
+        self.report = DQReport(name='report0040',
+                               title='DNBLaagspanning/DNBHoogspanning hebben een HoortBij relatie naar LS/HS respectievelijk',
+                               spreadsheet_id='1WLXykE5pX9wiBqnSgJ1HTE8dtkjRydMxAnccLV3T1_U',
+                               datasource='ArangoDB',
+                               persistent_column='D')
+
+        self.report.result_query = aql_query
+        self.report.cypher_query = """MATCH (dnbl:DNBLaagspanning {isActief: TRUE})\n            WHERE NOT EXISTS((dnbl)-[:HoortBij]->(:LS {isActief: TRUE}))\n            RETURN dnbl.uuid as uuid, dnbl.naam as naam, dnbl.typeURI as typeURI\n            UNION\n            MATCH (dnbh:DNBHoogspanning {isActief: TRUE})\n            WHERE NOT EXISTS((dnbh)-[:HoortBij]->(:HS {isActief: TRUE}))\n            RETURN dnbh.uuid as uuid, dnbh.naam as naam, dnbh.typeURI as typeURI"""
+
+    def run_report(self, sender):
+        self.report.run_report(sender=sender)

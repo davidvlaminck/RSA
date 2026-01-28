@@ -6,21 +6,7 @@ class Report0087:
         self.report = None
 
     def init_report(self):
-        self.report = DQReport(name='report0087',
-                               title='VRI Wegkantkasten hebben een ingevulde datum oprichting object',
-                               spreadsheet_id='13Y1AmHPji5z-Zy-uDF6-YstSF0DKDx2oKUHCs7iU6mU',
-                               datasource='Neo4J',
-                               persistent_column='C')
-
-        self.report.result_query = """MATCH (k:Wegkantkast {isActief:TRUE})-[:Bevestiging]-(vr:Verkeersregelaar {isActief:TRUE}) 
-WHERE k.datumOprichtingObject IS NULL AND vr IS NOT NULL
-RETURN k.uuid, k.naam"""
-
-    def run_report(self, sender):
-        self.report.run_report(sender=sender)
-
-
-aql_query = """
+        aql_query = """
 LET wegkantkast_key      = FIRST(FOR at IN assettypes   FILTER at.short_uri == "onderdeel#Wegkantkast"      LIMIT 1 RETURN at._key)
 LET verkeersregelaar_key = FIRST(FOR at IN assettypes   FILTER at.short_uri == "onderdeel#Verkeersregelaar" LIMIT 1 RETURN at._key)
 LET bevestiging_key      = FIRST(FOR rt IN relatietypes FILTER rt.short     == "Bevestiging"                LIMIT 1 RETURN rt._key)
@@ -48,3 +34,14 @@ FOR k IN assets
     naam:    k.AIMNaamObject_naam,
   }
 """
+        self.report = DQReport(name='report0087',
+                               title='VRI Wegkantkasten hebben een ingevulde datum oprichting object',
+                               spreadsheet_id='13Y1AmHPji5z-Zy-uDF6-YstSF0DKDx2oKUHCs7iU6mU',
+                               datasource='ArangoDB',
+                               persistent_column='C')
+
+        self.report.result_query = aql_query
+        self.report.cypher_query = """MATCH (k:Wegkantkast {isActief:TRUE})-[:Bevestiging]-(vr:Verkeersregelaar {isActief:TRUE}) \nWHERE k.datumOprichtingObject IS NULL AND vr IS NOT NULL\nRETURN k.uuid, k.naam"""
+
+    def run_report(self, sender):
+        self.report.run_report(sender=sender)

@@ -6,29 +6,7 @@ class Report0119:
         self.report = None
 
     def init_report(self):
-        self.report = DQReport(name='report0119',
-                               title='DNBHoogspanning en DNBLaagspanning hebben een installatieverantwoordelijke',
-                               spreadsheet_id='1hGwws9A8U8F5dQZChGNDH4YOtiuB8LVq7Ovh93DmD2c',
-                               datasource='Neo4J',
-                               persistent_column='F')
-
-        self.report.result_query = """
-                MATCH (a:DNBHoogspanning|DNBLaagspanning {isActief:TRUE})-[r:HeeftBetrokkene]->(b:Agent)
-                WHERE r.rol <> 'installatieverantwoordelijke'
-                RETURN a.uuid, a.naam, a.typeURI, r.rol as relatie_rol, b.naam as agent_naam
-                
-                """
-
-    def run_report(self, sender):
-        self.report.run_report(sender=sender)
-
-# AQL equivalent (documentation / future migration)
-# Cypher:
-# MATCH (a:DNBHoogspanning|DNBLaagspanning {isActief:TRUE})-[r:HeeftBetrokkene]->(b:Agent)
-# WHERE r.rol <> 'installatieverantwoordelijke'
-# RETURN a.uuid, a.naam, a.typeURI, r.rol as relatie_rol, b.naam as agent_naam
-
-aql_query = """
+n 1        aql_query = """
 LET dnblaagspanning_key  = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#DNBLaagspanning" LIMIT 1 RETURN at._key)
 LET dnbhoogspanning_key  = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#DNBHoogspanning" LIMIT 1 RETURN at._key)
 
@@ -38,7 +16,6 @@ FOR a IN assets
 
   FOR b, r IN 1..1 OUTBOUND a._id betrokkenerelaties
     FILTER r.rol != "installatieverantwoordelijke"
-
     RETURN {
       uuid: a._key,
       naam: a.AIMNaamObject_naam,
@@ -47,3 +24,19 @@ FOR a IN assets
       agent_naam: b ? b.purl.Agent_naam : null
     }
 """
+        self.report = DQReport(name='report0119',
+                               title='DNBHoogspanning en DNBLaagspanning hebben een installatieverantwoordelijke',
+                               spreadsheet_id='1hGwws9A8U8F5dQZChGNDH4YOtiuB8LVq7Ovh93DmD2c',
+                               datasource='ArangoDB',
+                               persistent_column='F')
+
+        self.report.result_query = aql_query
+        self.report.cypher_query = """
+                MATCH (a:DNBHoogspanning|DNBLaagspanning {isActief:TRUE})-[r:HeeftBetrokkene]->(b:Agent)
+                WHERE r.rol <> 'installatieverantwoordelijke'
+                RETURN a.uuid, a.naam, a.typeURI, r.rol as relatie_rol, b.naam as agent_naam
+                
+                """
+
+    def run_report(self, sender):
+        self.report.run_report(sender=sender)
