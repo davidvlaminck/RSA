@@ -23,6 +23,7 @@
 | Report0024.py | Yes | Yes |
 | Report0025.py | Yes | Yes |
 | Report0026.py | Yes | Yes |
+| Report0027.py | No | No |
 | Report0032.py | Yes | Yes |
 | Report0033.py | Yes | Yes |
 | Report0034.py | Yes | Yes |
@@ -34,11 +35,21 @@
 | Report0042.py | Yes | Yes |
 | Report0045.py | Yes | Yes |
 | Report0046.py | Yes | Yes |
+| Report0049.py | No | No |
+| Report0050.py | No | No |
+| Report0051.py | No | No |
+| Report0052.py | No | No |
+| Report0053.py | No | No |
+| Report0054.py | No | No |
+| Report0055.py | No | No |
+| Report0056.py | No | No |
 | Report0058.py | Yes | Yes |
 | Report0059.py | Yes | Yes |
 | Report0060.py | Yes | Yes |
 | Report0061.py | Yes | Yes |
 | Report0075.py | Yes | Yes |
+| Report0076.py | No | No |
+| Report0077.py | Yes | No |
 | Report0078.py | Yes | Yes |
 | Report0079.py | Yes | Yes |
 | Report0080.py | Yes | Yes |
@@ -78,3 +89,5 @@
 - Files with only documentation comments about AQL (not actual queries) are not included.
 - All reports with AQL queries are now listed. Refactor status is 'No' for newly found reports unless already refactored.
 - Report0043 is PostGIS-based and not refactored to AQL. Skipped for now because it dynamically builds its query using PostGIS and OTL, not a static AQL report. Porting would require a full rewrite and more context.
+- Reports 0027, 0049, 0050, 0051, 0052, 0053, 0054, 0055, 0056, 0076 do not have an AQL query present.
+- Report0077 has an AQL query but is not yet refactored.
