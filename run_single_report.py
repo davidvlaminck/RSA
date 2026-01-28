@@ -42,6 +42,16 @@ class SingleReportLoopRunner:
                                     user=postgis_settings['user'], password=postgis_settings['password'],
                                     database=postgis_settings['database'])
 
+        arango_settings = self.settings['databases']['ArangoDB']
+        from datasources.arango import SingleArangoConnector
+        SingleArangoConnector.init(
+            host=arango_settings['host'],
+            port=arango_settings['port'],
+            user=arango_settings['user'],
+            password=arango_settings['password'],
+            database=arango_settings['database']
+        )
+
         self.reports = None
 
         self.dir_path = os.path.abspath(os.path.join(os.sep, ROOT_DIR, 'Reports'))
@@ -63,7 +73,7 @@ class SingleReportLoopRunner:
                 reports_to_do = sorted(self.reports)
                 reports_run = 0
 
-                while reports_run < 5 and len(reports_to_do) > 0:
+                while reports_run < 1 and len(reports_to_do) > 0:
                     reports_run += 1
                     for report_name in sorted(reports_to_do):
                         try:
@@ -134,4 +144,6 @@ if __name__ == '__main__':
     reportlooprunner = SingleReportLoopRunner(
         settings_path=r'/home/davidlinux/Documenten/AWV/resources/settings_RSA.json')
     # reportlooprunner = SingleReportLoopRunner(settings_path=r'C:\resources\settings_RSA.json')
-    reportlooprunner.run(report='Report0000')
+    reportlooprunner.run(report='Report0002')
+# 0002 simple ArangoDB
+# 0035 simple PostGIS

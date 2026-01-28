@@ -12,8 +12,9 @@ def make_datasource(name: str):
     if name == 'PostGIS':
         return PostGISDatasource()
     if name == 'ArangoDB':
-        from datasources.arango import ArangoDatasource
-        return ArangoDatasource()
+        from datasources.arango import SingleArangoConnector, ArangoDatasource
+        db = SingleArangoConnector.get_db()
+        return ArangoDatasource.from_existing_connection(db)
     raise ValueError(f"Unsupported datasource: {name}")
 
 

@@ -46,6 +46,17 @@ class ReportLoopRunner:
                                     user=postgis_settings['user'], password=postgis_settings['password'],
                                     database=postgis_settings['database'])
 
+        # Initialize ArangoDB connection (singleton style)
+        arango_settings = self.settings['databases']['ArangoDB']
+        from datasources.arango import SingleArangoConnector
+        SingleArangoConnector.init(
+            host=arango_settings['host'],
+            port=arango_settings['port'],
+            user=arango_settings['user'],
+            password=arango_settings['password'],
+            database=arango_settings['database']
+        )
+
         self.reports = None
 
         self.dir_path = os.path.abspath(os.path.join(os.sep, ROOT_DIR, 'Reports'))
@@ -142,6 +153,16 @@ class ReportLoopRunner:
         reports_to_do = sorted(self.reports)
         reports_run = 0
 
+        # Remove duplicate header rows if present in the report output
+        # This is a post-processing step to ensure only one header row is present
+        def clean_report_headers(report_rows):
+            if not report_rows:
+                return report_rows
+            # If the first two rows are identical, remove the second
+            if len(report_rows) > 1 and report_rows[0] == report_rows[1]:
+                return [report_rows[0]] + report_rows[2:]
+            return report_rows
+
         while reports_run < 5 and len(reports_to_do) > 0:
             reports_run += 1
             for report_name in sorted(reports_to_do):
@@ -155,6 +176,9 @@ class ReportLoopRunner:
                         if hasattr(report_instance.report, 'output_settings'):
                             report_instance.report.output_settings = self.output_settings
                     report_instance.run_report(sender=self.mail_sender)
+                    # Clean up duplicate headers in the report output if possible
+                    if hasattr(report_instance.report, 'rows'):
+                        report_instance.report.rows = clean_report_headers(report_instance.report.rows)
                     reports_to_do.remove(report_name)
                 except Exception as ex:
                     logging.info(f"exception happened in report {report_name}: {ex}")
