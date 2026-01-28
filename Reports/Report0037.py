@@ -6,20 +6,7 @@ class Report0037:
         self.report = None
 
     def init_report(self):
-        self.report = DQReport(name='report0037',
-                               title="L2 switches worden gevoed",
-                               spreadsheet_id='1mPx2y3XvOGNCRoYPLTHv6Xb5kn4bQCt3Aii0zT7ZdUc',
-                               datasource='Neo4J',
-                               persistent_column='C')
-
-        self.report.result_query = """MATCH (n:Netwerkelement {isActief:TRUE, toestand:'in-gebruik', gebruik:'l2-switch'})
-        WHERE NOT EXISTS ((n)-[:HoortBij]-(:Asset {isActief:TRUE})<-[:Voedt]-(:Asset {isActief:TRUE}))
-        RETURN n.uuid, n.naam"""
-
-    def run_report(self, sender):
-        self.report.run_report(sender=sender)
-
-aql_query = """
+        aql_query = """
 LET netwerkelement_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Netwerkelement" LIMIT 1 RETURN at._key)
 
 FOR n IN assets
@@ -42,3 +29,14 @@ FOR n IN assets
     gebruik: n.Netwerkelement_gebruik
   }
 """
+        self.report = DQReport(name='report0037',
+                               title="L2 switches worden gevoed",
+                               spreadsheet_id='1mPx2y3XvOGNCRoYPLTHv6Xb5kn4bQCt3Aii0zT7ZdUc',
+                               datasource='ArangoDB',
+                               persistent_column='D')
+
+        self.report.result_query = aql_query
+        self.report.cypher_query = """MATCH (n:Netwerkelement {isActief:TRUE, toestand:'in-gebruik', gebruik:'l2-switch'})\n        WHERE NOT EXISTS ((n)-[:HoortBij]-(:Asset {isActief:TRUE})<-[:Voedt]-(:Asset {isActief:TRUE}))\n        RETURN n.uuid, n.naam"""
+
+    def run_report(self, sender):
+        self.report.run_report(sender=sender)
