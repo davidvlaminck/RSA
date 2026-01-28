@@ -78,6 +78,37 @@ class ReportLoopRunner:
             return start_s <= now_s <= end_s
         return now_s >= start_s or now_s <= end_s
 
+    @staticmethod
+    def _parse_hms_to_seconds(hms: str) -> int:
+        """Parse HH:MM:SS into seconds since midnight."""
+        parts = (hms or "").split(":")
+        if len(parts) != 3:
+            raise ValueError(f"Invalid time format '{hms}', expected HH:MM:SS")
+        h, m, s = (int(p) for p in parts)
+        if not (0 <= h <= 23 and 0 <= m <= 59 and 0 <= s <= 59):
+            raise ValueError(f"Invalid time value '{hms}', expected HH:MM:SS within normal ranges")
+        return h * 3600 + m * 60 + s
+
+    def _get_run_window(self) -> tuple[int, int]:
+        """Return (start_seconds, end_seconds) from settings. Defaults keep existing behavior."""
+        time_cfg = self.settings.get('time', {}) if isinstance(self.settings, dict) else {}
+
+        # Backward-compatible defaults:
+        # - old behavior: don't start until 03:00, no explicit end.
+        start_hms = time_cfg.get('start', '03:00:00')
+        end_hms = time_cfg.get('end', '23:59:59')
+
+        return self._parse_hms_to_seconds(start_hms), self._parse_hms_to_seconds(end_hms)
+
+    def _is_within_run_window(self, now: datetime) -> bool:
+        start_s, end_s = self._get_run_window()
+        now_s = now.hour * 3600 + now.minute * 60 + now.second
+
+        # Support windows that cross midnight (e.g. 23:00 -> 02:00)
+        if start_s <= end_s:
+            return start_s <= now_s <= end_s
+        return now_s >= start_s or now_s <= end_s
+
     def start(self, run_right_away: bool):
         last_run_date = datetime.now(tz=BRUSSELS).date()
 
