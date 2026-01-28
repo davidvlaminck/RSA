@@ -6,20 +6,7 @@ class Report0005:
         self.report = None
 
     def init_report(self):
-        self.report = DQReport(name='report0005',
-                               title='Verkeersregelaars en TLCfiPoorten hebben een HoortBij relatie naar VRLegacy objecten',
-                               spreadsheet_id='1daDivHkKfMRamwgpty9swGF4Kz68MBjJlSE5SR2GqFQ',
-                               datasource='Neo4J',
-                               persistent_column='D')
-
-        self.report.result_query = """MATCH (a:onderdeel {isActief:TRUE}) 
-        WHERE (a:Verkeersregelaar OR a:TLCfiPoort) AND NOT EXISTS ((a)-[:HoortBij]->(:VRLegacy {isActief:TRUE}))
-        RETURN a.uuid, a.naam, a.typeURI"""
-
-    def run_report(self, sender):
-        self.report.run_report(sender=sender)
-
-aql_query = """
+        aql_query = """
 LET verkeersregelaar_key = FIRST(
   FOR at IN assettypes
     FILTER at.short_uri == "onderdeel#Verkeersregelaar"
@@ -67,3 +54,14 @@ FOR a IN assets
     typeURI: a.typeURI
   }
 """
+        self.report = DQReport(name='report0005',
+                               title='Verkeersregelaars en TLCfiPoorten hebben een HoortBij relatie naar VRLegacy objecten',
+                               spreadsheet_id='1daDivHkKfMRamwgpty9swGF4Kz68MBjJlSE5SR2GqFQ',
+                               datasource='ArangoDB',
+                               persistent_column='D')
+
+        self.report.result_query = aql_query
+        self.report.cypher_query = """MATCH (a:onderdeel {isActief:TRUE}) \n        WHERE (a:Verkeersregelaar OR a:TLCfiPoort) AND NOT EXISTS ((a)-[:HoortBij]->(:VRLegacy {isActief:TRUE}))\n        RETURN a.uuid, a.naam, a.typeURI"""
+
+    def run_report(self, sender):
+        self.report.run_report(sender=sender)

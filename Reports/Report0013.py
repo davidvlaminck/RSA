@@ -6,24 +6,10 @@ class Report0013:
         self.report = None
 
     def init_report(self):
-        self.report = DQReport(name='report0013',
-                               title='Stroomkringen hebben een Bevestiging relatie met een Laagspanningsbord',
-                               spreadsheet_id='1az4rh44wIf0KkILgQqV0iJeb47SbRW-dgq_DP3GDDeo',
-                               datasource='Neo4J',
-                               persistent_column='C')
-
-        self.report.result_query = """MATCH (s:Stroomkring {isActief:TRUE}) 
-        WHERE NOT EXISTS ((s)-[:Bevestiging]-(:Laagspanningsbord {isActief:TRUE}))
-        RETURN s.uuid, s.naam"""
-
-    def run_report(self, sender):
-        self.report.run_report(sender=sender)
-
-
-aql_query = """
-LET stroomkring_key       = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Stroomkring"       LIMIT 1 RETURN at._key)
-LET laagspanningsbord_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Laagspanningsbord" LIMIT 1 RETURN at._key)
-LET bevestiging_key       = FIRST(FOR rt IN relatietypes FILTER rt.short == "Bevestiging"                   LIMIT 1 RETURN rt._key)
+        aql_query = """
+LET stroomkring_key       = FIRST(FOR at IN assettypes FILTER at.short_uri == \"onderdeel#Stroomkring\"       LIMIT 1 RETURN at._key)
+LET laagspanningsbord_key = FIRST(FOR at IN assettypes FILTER at.short_uri == \"onderdeel#Laagspanningsbord\" LIMIT 1 RETURN at._key)
+LET bevestiging_key       = FIRST(FOR rt IN relatietypes FILTER rt.short == \"Bevestiging\"                   LIMIT 1 RETURN rt._key)
 
 FOR s IN assets
   FILTER
@@ -46,3 +32,14 @@ FOR s IN assets
     naam: s.AIMNaamObject_naam
   }
 """
+        self.report = DQReport(name='report0013',
+                               title='Stroomkringen hebben een Bevestiging relatie met een Laagspanningsbord',
+                               spreadsheet_id='1az4rh44wIf0KkILgQqV0iJeb47SbRW-dgq_DP3GDDeo',
+                               datasource='ArangoDB',
+                               persistent_column='C')
+
+        self.report.result_query = aql_query
+        self.report.cypher_query = """MATCH (s:Stroomkring {isActief:TRUE}) \n        WHERE NOT EXISTS ((s)-[:Bevestiging]-(:Laagspanningsbord {isActief:TRUE}))\n        RETURN s.uuid, s.naam"""
+
+    def run_report(self, sender):
+        self.report.run_report(sender=sender)

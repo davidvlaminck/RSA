@@ -6,22 +6,7 @@ class Report0015:
         self.report = None
 
     def init_report(self):
-        self.report = DQReport(name='report0015',
-                               title='Camera\'s hebben een unieke naam',
-                               spreadsheet_id='1GM6mBwfsLkEELjroSw-df6A2HXSQnOFAeudUzTybMQE',
-                               datasource='Neo4J',
-                               persistent_column='C')
-
-        self.report.result_query = """MATCH (a:Camera {isActief:TRUE})
-        WITH a.naam AS naam, COUNT(a.naam) AS aantal
-        WHERE aantal > 1
-        MATCH (b:Camera {isActief:TRUE, naam:naam})
-        RETURN b.uuid, b.naam"""
-
-    def run_report(self, sender):
-        self.report.run_report(sender=sender)
-
-aql_query = """
+        aql_query = """
 LET camera_key = FIRST(
   FOR at IN assettypes
     FILTER at.short_uri == "onderdeel#Camera"
@@ -48,3 +33,18 @@ FOR a IN assets
       naam: b.AIMNaamObject_naam
     }
 """
+        self.report = DQReport(name='report0015',
+                               title='Camera\'s hebben een unieke naam',
+                               spreadsheet_id='1GM6mBwfsLkEELjroSw-df6A2HXSQnOFAeudUzTybMQE',
+                               datasource='ArangoDB',
+                               persistent_column='C')
+
+        self.report.result_query = aql_query
+        self.report.cypher_query = """MATCH (a:Camera {isActief:TRUE})
+        WITH a.naam AS naam, COUNT(a.naam) AS aantal
+        WHERE aantal > 1
+        MATCH (b:Camera {isActief:TRUE, naam:naam})
+        RETURN b.uuid, b.naam"""
+
+    def run_report(self, sender):
+        self.report.run_report(sender=sender)

@@ -6,24 +6,7 @@ class Report0020:
         self.report = None
 
     def init_report(self):
-        self.report = DQReport(name='report0020',
-                               title='Zpaden zijn het doel van exact 2 HoortBij relaties komende van Netwerkpoorten',
-                               spreadsheet_id='1dudUqdNZTf1lPcAFbv_kSTI0gIBvAkX0TUumvwR-O7M',
-                               datasource='Neo4J',
-                               persistent_column='C')
-
-        self.report.result_query = """MATCH (z:Zpad {isActief:TRUE})
-        WHERE z.toestand = "in-gebruik"
-        OPTIONAL MATCH (z)<-[:HoortBij]-(n:Netwerkpoort {isActief:TRUE})
-        WITH z, count(n) AS n_netwerkpoort
-        WHERE n_netwerkpoort <> 2
-        RETURN z.uuid, z.naam"""
-
-    def run_report(self, sender):
-        self.report.run_report(sender=sender)
-
-
-aql_query = """
+        aql_query = """
 LET zpad_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "installatie#Zpad" LIMIT 1 RETURN at._key)
 LET netwerkpoort_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Netwerkpoort" LIMIT 1 RETURN at._key)
 LET hoortbij_key = FIRST(FOR rt IN relatietypes FILTER rt.short == "HoortBij" LIMIT 1 RETURN rt._key)
@@ -49,3 +32,14 @@ FOR z IN assets
     naam: z.AIMNaamObject_naam
   }
 """
+        self.report = DQReport(name='report0020',
+                               title='Zpaden zijn het doel van exact 2 HoortBij relaties komende van Netwerkpoorten',
+                               spreadsheet_id='1dudUqdNZTf1lPcAFbv_kSTI0gIBvAkX0TUumvwR-O7M',
+                               datasource='ArangoDB',
+                               persistent_column='C')
+
+        self.report.result_query = aql_query
+        self.report.cypher_query = """MATCH (z:Zpad {isActief:TRUE})\n        WHERE z.toestand = \"in-gebruik\"\n        OPTIONAL MATCH (z)<-[:HoortBij]-(n:Netwerkpoort {isActief:TRUE})\n        WITH z, count(n) AS n_netwerkpoort\n        WHERE n_netwerkpoort <> 2\n        RETURN z.uuid, z.naam"""
+
+    def run_report(self, sender):
+        self.report.run_report(sender=sender)
