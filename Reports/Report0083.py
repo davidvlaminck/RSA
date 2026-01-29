@@ -1,5 +1,4 @@
 from DQReport import DQReport
-from Reports.Report0089 import aql_query
 
 
 class Report0083:
@@ -7,21 +6,8 @@ class Report0083:
         self.report = None
 
     def init_report(self):
-        self.report = DQReport(name='report0083',
-                               title='Verkeersregelaars hebben een voltage lampen die 42 of 230 is',
-                               spreadsheet_id='1KQU0DrpB-LmU-DNOSzshYSA14aRmeomYcMF1xTm2Zek',
-                               datasource='Neo4J',
-                               persistent_column='D')
-
-        self.report.result_query = """MATCH (a:Verkeersregelaar {isActief:TRUE}) 
-WHERE a.voltageLampen IS NULL OR NOT a.voltageLampen IN ['42', '230']
-RETURN a.uuid, a.naam, a.voltageLampen"""
-
-    def run_report(self, sender):
-        self.report.run_report(sender=sender)
-
-aql_query = """
-LET verkeersregelaar_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Verkeersregelaar" LIMIT 1 RETURN at._key)
+        aql_query = """
+LET verkeersregelaar_key = FIRST(FOR at IN assettypes FILTER at.short_uri == \"onderdeel#Verkeersregelaar\" LIMIT 1 RETURN at._key)
 
 FOR a IN assets
   FILTER
@@ -37,3 +23,14 @@ FOR a IN assets
     voltageLampen: a.Verkeersregelaar_voltageLampen
   }
 """
+        self.report = DQReport(name='report0083',
+                               title='Verkeersregelaars hebben een voltage lampen die 42 of 230 is',
+                               spreadsheet_id='1KQU0DrpB-LmU-DNOSzshYSA14aRmeomYcMF1xTm2Zek',
+                               datasource='ArangoDB',
+                               persistent_column='D')
+
+        self.report.result_query = aql_query
+        self.report.cypher_query = """MATCH (a:Verkeersregelaar {isActief:TRUE}) \nWHERE a.voltageLampen IS NULL OR NOT a.voltageLampen IN ['42', '230']\nRETURN a.uuid, a.naam, a.voltageLampen"""
+
+    def run_report(self, sender):
+        self.report.run_report(sender=sender)

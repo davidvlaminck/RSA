@@ -102,6 +102,13 @@ class DQReport(Report):
         query_time = qr.query_time_seconds
         self.last_data_update = qr.last_data_update or ''
 
+        # For ArangoDB, if keys is empty and rows are dicts, infer keys from first row
+        if self.datasource == 'ArangoDB' and hasattr(qr, 'rows') and isinstance(qr.rows, list) and len(qr.rows) > 0:
+            if hasattr(qr, 'keys') and (not qr.keys or len(qr.keys) == 0):
+                if isinstance(qr.rows[0], dict):
+                    # Create a new QueryResult with inferred keys, since the original is frozen
+                    qr = type(qr)(rows=qr.rows, keys=list(qr.rows[0].keys()), query_time_seconds=qr.query_time_seconds, last_data_update=qr.last_data_update)
+
         # write output via output adapter
         ctx = OutputWriteContext(
             spreadsheet_id=self.spreadsheet_id,

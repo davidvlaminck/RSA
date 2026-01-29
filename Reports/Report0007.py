@@ -6,26 +6,10 @@ class Report0007:
         self.report = None
 
     def init_report(self):
-        self.report = DQReport(name='report0007',
-                               title='Camera\'s hebben een Sturing relatie met een Netwerkpoort of Omvormer',
-                               spreadsheet_id='1NKB8J6is9xTrIrDcZAP_IraBqs65JhTpoCLDMaT881A',
-                               datasource='Neo4J',
-                               persistent_column='D')
-
-        self.report.result_query = """MATCH (c:Camera {isActief:TRUE}) 
-        WHERE NOT EXISTS ((c)-[:Sturing]-(:onderdeel :Netwerkpoort {isActief:TRUE})) AND NOT EXISTS ((c)-[:Sturing]-(:onderdeel :Omvormer {isActief:TRUE}))
-        WITH c
-        OPTIONAL MATCH (c)-[:HeeftBetrokkene {rol:'toezichter'}]->(a:Agent)
-        RETURN c.uuid, c.naam, a.naam as toezichter"""
-
-    def run_report(self, sender):
-        self.report.run_report(sender=sender)
-
-
-aql_query = """
-LET camera_key       = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Camera" LIMIT 1 RETURN at._key)
-LET netwerkpoort_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Netwerkpoort" LIMIT 1 RETURN at._key)
-LET omvormer_key     = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Omvormer" LIMIT 1 RETURN at._key)
+        aql_query = """
+LET camera_key       = FIRST(FOR at IN assettypes FILTER at.short_uri == \"onderdeel#Camera\" LIMIT 1 RETURN at._key)
+LET netwerkpoort_key = FIRST(FOR at IN assettypes FILTER at.short_uri == \"onderdeel#Netwerkpoort\" LIMIT 1 RETURN at._key)
+LET omvormer_key     = FIRST(FOR at IN assettypes FILTER at.short_uri == \"onderdeel#Omvormer\" LIMIT 1 RETURN at._key)
 
 FOR c IN assets
   FILTER c.assettype_key == camera_key
@@ -52,7 +36,7 @@ FOR c IN assets
   // OPTIONAL toezichter via betrokkenerelaties
   LET toezichter = FIRST(
     FOR v, e IN 1..1 OUTBOUND c._id betrokkenerelaties
-      FILTER e.rol == "toezichter"
+      FILTER e.rol == \"toezichter\"
       RETURN v
   )
 
@@ -62,4 +46,14 @@ FOR c IN assets
     toezichter: toezichter ? toezichter.purl.Agent_naam : null
   }
 """
+        self.report = DQReport(name='report0007',
+                               title="Camera's hebben een Sturing relatie met een Netwerkpoort of Omvormer",
+                               spreadsheet_id='1NKB8J6is9xTrIrDcZAP_IraBqs65JhTpoCLDMaT881A',
+                               datasource='ArangoDB',
+                               persistent_column='D')
 
+        self.report.result_query = aql_query
+        self.report.cypher_query = """MATCH (c:Camera {isActief:TRUE}) \n        WHERE NOT EXISTS ((c)-[:Sturing]-(:onderdeel :Netwerkpoort {isActief:TRUE})) AND NOT EXISTS ((c)-[:Sturing]-(:onderdeel :Omvormer {isActief:TRUE}))\n        WITH c\n        OPTIONAL MATCH (c)-[:HeeftBetrokkene {rol:'toezichter'}]->(a:Agent)\n        RETURN c.uuid, c.naam, a.naam as toezichter"""
+
+    def run_report(self, sender):
+        self.report.run_report(sender=sender)

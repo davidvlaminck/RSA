@@ -6,24 +6,10 @@ class Report0042:
         self.report = None
 
     def init_report(self):
-        self.report = DQReport(name='report0042',
-                               title='EnergiemeterDNB en ForfaitaireAansluiting worden gevoed door een DNBLaagspanning',
-                               spreadsheet_id='1QloH-HeEqyMpg2hnbAPSv8tLpxsLDOaXcPMywTj_Oi4',
-                               datasource='Neo4J',
-                               persistent_column='D')
-
-        self.report.result_query = """MATCH (x {isActief: TRUE})
-            WHERE (x:EnergiemeterDNB OR x:ForfaitaireAansluiting) AND NOT EXISTS((x)<-[:Voedt]-(:DNBLaagspanning {isActief: TRUE}))
-            RETURN x.uuid as uuid, x.naam as naam, x.typeURI as typeURI"""
-
-    def run_report(self, sender):
-        self.report.run_report(sender=sender)
-
-
-aql_query = """
-LET energiemeterdnb_key         = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#EnergiemeterDNB" LIMIT 1 RETURN at._key)
-LET forfaitaireaansluiting_key  = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#ForfaitaireAansluiting" LIMIT 1 RETURN at._key)
-LET dnlaagspanning_key          = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#DNBLaagspanning" LIMIT 1 RETURN at._key)
+        aql_query = """
+LET energiemeterdnb_key         = FIRST(FOR at IN assettypes FILTER at.short_uri == \"onderdeel#EnergiemeterDNB\" LIMIT 1 RETURN at._key)
+LET forfaitaireaansluiting_key  = FIRST(FOR at IN assettypes FILTER at.short_uri == \"onderdeel#ForfaitaireAansluiting\" LIMIT 1 RETURN at._key)
+LET dnlaagspanning_key          = FIRST(FOR at IN assettypes FILTER at.short_uri == \"onderdeel#DNBLaagspanning\" LIMIT 1 RETURN at._key)
 
 FOR x IN assets
   FILTER x.AIMDBStatus_isActief == true
@@ -43,3 +29,14 @@ FOR x IN assets
     typeURI: x.typeURI
   }
 """
+        self.report = DQReport(name='report0042',
+                               title='EnergiemeterDNB en ForfaitaireAansluiting worden gevoed door een DNBLaagspanning',
+                               spreadsheet_id='1QloH-HeEqyMpg2hnbAPSv8tLpxsLDOaXcPMywTj_Oi4',
+                               datasource='ArangoDB',
+                               persistent_column='D')
+
+        self.report.result_query = aql_query
+        self.report.cypher_query = """MATCH (x {isActief: TRUE})\n            WHERE (x:EnergiemeterDNB OR x:ForfaitaireAansluiting) AND NOT EXISTS((x)<-[:Voedt]-(:DNBLaagspanning {isActief: TRUE}))\n            RETURN x.uuid as uuid, x.naam as naam, x.typeURI as typeURI"""
+
+    def run_report(self, sender):
+        self.report.run_report(sender=sender)

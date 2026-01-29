@@ -6,44 +6,9 @@ class Report0061:
         self.report = None
 
     def init_report(self):
-        self.report = DQReport(name='report0061',
-                               title='Het EAN nummer van een DNBLaagspanning of DNBHoogspanning is geldig (checksum).',
-                               spreadsheet_id='1M8NE8RxnEJdG-8suCjKOzh96O6pGUcfmFi83ePO3glc',
-                               datasource='Neo4J',
-                               persistent_column='L',
-                               link_type='eminfra')
-
-        self.report.result_query = """
-            MATCH (a:Asset {isActief: TRUE})
-            WITH a, split(a.eanNummer, "") as split_ean
-            WITH a, split_ean, reduce(
-                acc = [0, 0, 0], 
-                n IN split_ean[0..-1] | [acc[0] + 1, acc[1] + ((acc[0] + 1) % 2) * toInteger(n), acc[2] + (acc[0] % 2) * toInteger(n)]
-                ) as running_sums
-            WITH a, ((3 * running_sums[1] + running_sums[2] + toInteger(last(split_ean))) % 10) = 0 as is_valid_ean
-            WHERE 
-                (a:DNBLaagspanning OR a:DNBHoogspanning)
-                AND (a.eanNummer IS NOT NULL) 
-                AND (NOT (a.eanNummer =~ '^54\d{16}$' OR a.eanNummer =~ '^54\d{10}$') OR NOT is_valid_ean)
-            RETURN 
-                a.uuid as uuid, a.naam as naam, a.typeURI as typeURI, a.toestand as toestand, 
-                a.eanNummer as eanNummer, 
-                CASE 
-                    WHEN right(a.eanNummer, 1) = " " THEN "trailing whitespace(s)" 
-                    WHEN left(a.eanNummer, 1) = " " THEN "leading whitespace(s)" 
-                    ELSE "invalid EAN" 
-                    END AS reason_invalid, 
-                a.`tz:toezichter.tz:voornaam` as tz_voornaam, a.`tz:toezichter.tz:naam` as tz_naam, a.`tz:toezichter.tz:email` as tz_email, 
-                a.`tz:toezichtgroep.tz:naam` as tzg_naam,  a.`tz:toezichtgroep.tz:referentie` as tzg_referentie
-        """
-
-    def run_report(self, sender):
-        self.report.run_report(sender=sender)
-
-
-aql_query = """
-LET dnbhoogspanning_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#DNBHoogspanning" LIMIT 1 RETURN at._key)
-LET dnlaagspanning_key  = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#DNBLaagspanning" LIMIT 1 RETURN at._key)
+        aql_query = """
+LET dnbhoogspanning_key = FIRST(FOR at IN assettypes FILTER at.short_uri == \"onderdeel#DNBHoogspanning\" LIMIT 1 RETURN at._key)
+LET dnlaagspanning_key  = FIRST(FOR at IN assettypes FILTER at.short_uri == \"onderdeel#DNBLaagspanning\" LIMIT 1 RETURN at._key)
 
 FOR a IN assets
   FILTER
@@ -94,10 +59,44 @@ FOR a IN assets
     toestand: a.toestand,
     eanNummer: a.DNB_eanNummer,
     reason_invalid: reason_invalid,
-    tz_voornaam: a["tz:toezichter.tz:voornaam"],
-    tz_naam: a["tz:toezichter.tz:naam"],
-    tz_email: a["tz:toezichter.tz:email"],
-    tzg_naam: a["tz:toezichtgroep.tz:naam"],
-    tzg_referentie: a["tz:toezichtgroep.tz:referentie"]
+    tz_voornaam: a[\"tz:toezichter.tz:voornaam\"],
+    tz_naam: a[\"tz:toezichter.tz:naam\"],
+    tz_email: a[\"tz:toezichter.tz:email\"],
+    tzg_naam: a[\"tz:toezichtgroep.tz:naam\"],
+    tzg_referentie: a[\"tz:toezichtgroep.tz:referentie\"]
   }
 """
+        self.report = DQReport(name='report0061',
+                               title='Het EAN nummer van een DNBLaagspanning of DNBHoogspanning is geldig (checksum).',
+                               spreadsheet_id='1M8NE8RxnEJdG-8suCjKOzh96O6pGUcfmFi83ePO3glc',
+                               datasource='ArangoDB',
+                               persistent_column='L',
+                               link_type='eminfra')
+
+        self.report.result_query = aql_query
+        self.report.cypher_query = """
+            MATCH (a:Asset {isActief: TRUE})
+            WITH a, split(a.eanNummer, "") as split_ean
+            WITH a, split_ean, reduce(
+                acc = [0, 0, 0], 
+                n IN split_ean[0..-1] | [acc[0] + 1, acc[1] + ((acc[0] + 1) % 2) * toInteger(n), acc[2] + (acc[0] % 2) * toInteger(n)]
+                ) as running_sums
+            WITH a, ((3 * running_sums[1] + running_sums[2] + toInteger(last(split_ean))) % 10) = 0 as is_valid_ean
+            WHERE 
+                (a:DNBLaagspanning OR a:DNBHoogspanning)
+                AND (a.eanNummer IS NOT NULL) 
+                AND (NOT (a.eanNummer =~ '^54\\d{16}$' OR a.eanNummer =~ '^54\\d{10}$') OR NOT is_valid_ean)
+            RETURN 
+                a.uuid as uuid, a.naam as naam, a.typeURI as typeURI, a.toestand as toestand, 
+                a.eanNummer as eanNummer, 
+                CASE 
+                    WHEN right(a.eanNummer, 1) = " " THEN "trailing whitespace(s)" 
+                    WHEN left(a.eanNummer, 1) = " " THEN "leading whitespace(s)" 
+                    ELSE "invalid EAN" 
+                    END AS reason_invalid, 
+                a.`tz:toezichter.tz:voornaam` as tz_voornaam, a.`tz:toezichter.tz:naam` as tz_naam, a.`tz:toezichter.tz:email` as tz_email, 
+                a.`tz:toezichtgroep.tz:naam` as tzg_naam,  a.`tz:toezichtgroep.tz:referentie` as tzg_referentie
+        """
+
+    def run_report(self, sender):
+        self.report.run_report(sender=sender)

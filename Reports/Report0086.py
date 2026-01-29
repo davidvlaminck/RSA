@@ -1,5 +1,4 @@
 from DQReport import DQReport
-from Reports.Report0089 import aql_query
 
 
 class Report0086:
@@ -7,22 +6,8 @@ class Report0086:
         self.report = None
 
     def init_report(self):
-        self.report = DQReport(name='report0086',
-                               title='Verkeersregelaars hebben een ingevulde toestand',
-                               spreadsheet_id='1EJjhp70-7bbrHaTbqPuZdn86rrXw30TEUYns7Kvi1dQ',
-                               datasource='Neo4J',
-                               persistent_column='D')
-
-        self.report.result_query = """MATCH (a:Verkeersregelaar {isActief:TRUE}) 
-WHERE a.toestand IS NULL OR a.toestand = 'in-ontwerp'
-RETURN a.uuid, a.naam, a.toestand"""
-
-    def run_report(self, sender):
-        self.report.run_report(sender=sender)
-
-
-aql_query = """
-LET verkeersregelaar_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Verkeersregelaar" LIMIT 1 RETURN at._key)
+        aql_query = """
+LET verkeersregelaar_key = FIRST(FOR at IN assettypes FILTER at.short_uri == \"onderdeel#Verkeersregelaar\" LIMIT 1 RETURN at._key)
 
 FOR a IN assets
   FILTER
@@ -30,7 +15,7 @@ FOR a IN assets
     AND a.AIMDBStatus_isActief == true
     AND (
       a.toestand == null
-      OR a.toestand == "in-ontwerp"
+      OR a.toestand == \"in-ontwerp\"
     )
   RETURN {
     uuid: a._key,
@@ -38,3 +23,14 @@ FOR a IN assets
     toestand: a.toestand
   }
 """
+        self.report = DQReport(name='report0086',
+                               title='Verkeersregelaars hebben een ingevulde toestand',
+                               spreadsheet_id='1EJjhp70-7bbrHaTbqPuZdn86rrXw30TEUYns7Kvi1dQ',
+                               datasource='ArangoDB',
+                               persistent_column='D')
+
+        self.report.result_query = aql_query
+        self.report.cypher_query = """MATCH (a:Verkeersregelaar {isActief:TRUE}) \nWHERE a.toestand IS NULL OR a.toestand = 'in-ontwerp'\nRETURN a.uuid, a.naam, a.toestand"""
+
+    def run_report(self, sender):
+        self.report.run_report(sender=sender)

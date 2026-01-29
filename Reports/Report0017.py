@@ -6,37 +6,37 @@ class Report0017:
         self.report = None
 
     def init_report(self):
-        self.report = DQReport(name='report0017',
-                               title='Netwerkkaarten hebben een Bevestiging relatie met een Netwerkelement',
-                               spreadsheet_id='1UfYhxcM0z8uq9-GwfDJhHNVpuhoWtUprrPGMfPSXeGk',
-                               datasource='Neo4J',
-                               persistent_column='C')
-
-        self.report.result_query = """MATCH (n:Netwerkkaart {isActief:TRUE})
-        WHERE NOT EXISTS ((n)-[:Bevestiging]-(:Netwerkelement {isActief:TRUE}))
-        RETURN n.uuid, n.naam"""
-
-    def run_report(self, sender):
-        self.report.run_report(sender=sender)
-
-aql_query = """
-LET netwerkkaart_key   = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Netwerkkaart" LIMIT 1 RETURN at._key)
+        aql_query = """
 LET netwerkelement_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Netwerkelement" LIMIT 1 RETURN at._key)
+LET netwerkkaart_key   = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Netwerkkaart" LIMIT 1 RETURN at._key)
+LET bevestiging_key    = FIRST(FOR rt IN relatietypes FILTER rt.short == "Bevestiging" LIMIT 1 RETURN rt._key)
 
 FOR n IN assets
-  FILTER n.assettype_key == netwerkkaart_key
+  FILTER n.assettype_key == netwerkelement_key
   FILTER n.AIMDBStatus_isActief == true
 
-  LET ne = FIRST(
-    FOR e, rel IN ANY n bevestiging_relaties
-      FILTER e.assettype_key == netwerkelement_key
+  LET kaart = FIRST(
+    FOR k, rel IN ANY n assetrelaties
+      FILTER rel.relatietype_key == bevestiging_key
+      FILTER k.assettype_key == netwerkkaart_key
       LIMIT 1
-      RETURN e
+      RETURN k
   )
-  FILTER ne == null
+  FILTER kaart == null
 
   RETURN {
     uuid: n._key,
     naam: n.AIMNaamObject_naam
   }
 """
+        self.report = DQReport(name='report0017',
+                               title='Netwerkelementen hebben een Bevestiging relatie met een Netwerkkaart',
+                               spreadsheet_id='1b2b1b2b1b2b1b2b1b2b1b2b1b2b1b2b1b2b1b2b1b2b',
+                               datasource='ArangoDB',
+                               persistent_column='C')
+
+        self.report.result_query = aql_query
+        self.report.cypher_query = """MATCH (n:Netwerkelement {isActief:TRUE}) \n        WHERE NOT EXISTS ((n)-[:Bevestiging]-(:Netwerkkaart {isActief:TRUE}))\n        RETURN n.uuid, n.naam"""
+
+    def run_report(self, sender):
+        self.report.run_report(sender=sender)

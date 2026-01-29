@@ -6,29 +6,9 @@ class Report0038:
         self.report = None
 
     def init_report(self):
-        self.report = DQReport(name='report0038',
-                               title="IP AS1 elementen hebben een .ODF TT tegenhanger",
-                               spreadsheet_id='1rDCUE7kj0ZcCVtFe2EiIqKMz7fdR5J6mtpU6lRpzpbI',
-                               datasource='Neo4J',
-                               persistent_column='D')
-
-        self.report.result_query = """MATCH (i:IP {isActief:TRUE})
-        WHERE i.naam contains '.AS1'
-        WITH i, split(i.naampad,'/') AS splitted
-        WITH i, apoc.text.join(reverse(tail(reverse(splitted))),'/') + '/' AS naampad_beh
-        OPTIONAL MATCH (t:TT {isActief:TRUE})
-        WHERE t.naampad contains naampad_beh AND t.naam contains 'ODF'
-        WITH i, t
-        WHERE t.uuid IS NULL
-        RETURN i.uuid, i.naampad, i.`tz:toezichter.tz:gebruikersnaam` AS toezichter"""
-
-    def run_report(self, sender):
-        self.report.run_report(sender=sender)
-
-
-aql_query = """
-LET ip_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "lgc:installatie#IP" LIMIT 1 RETURN at._key)
-LET tt_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "lgc:installatie#TT" LIMIT 1 RETURN at._key)
+        aql_query = """
+LET ip_key = FIRST(FOR at IN assettypes FILTER at.short_uri == \"lgc:installatie#IP\" LIMIT 1 RETURN at._key)
+LET tt_key = FIRST(FOR at IN assettypes FILTER at.short_uri == \"lgc:installatie#TT\" LIMIT 1 RETURN at._key)
 
 FOR i IN assets
   FILTER
@@ -59,6 +39,17 @@ FOR i IN assets
   RETURN {
     uuid: i._key,
     naampad: i.AIMNaamObject_naampad,
-    toezichter: i["tz:toezichter.tz:gebruikersnaam"]
+    toezichter: i[\"tz:toezichter.tz:gebruikersnaam\"]
   }
 """
+        self.report = DQReport(name='report0038',
+                               title="IP AS1 elementen hebben een .ODF TT tegenhanger",
+                               spreadsheet_id='1rDCUE7kj0ZcCVtFe2EiIqKMz7fdR5J6mtpU6lRpzpbI',
+                               datasource='ArangoDB',
+                               persistent_column='D')
+
+        self.report.result_query = aql_query
+        self.report.cypher_query = """MATCH (i:IP {isActief:TRUE})\n        WHERE i.naam contains '.AS1'\n        WITH i, split(i.naampad,'/') AS splitted\n        WITH i, apoc.text.join(reverse(tail(reverse(splitted))),'/') + '/' AS naampad_beh\n        OPTIONAL MATCH (t:TT {isActief:TRUE})\n        WHERE t.naampad contains naampad_beh AND t.naam contains 'ODF'\n        WITH i, t\n        WHERE t.uuid IS NULL\n        RETURN i.uuid, i.naampad, i.`tz:toezichter.tz:gebruikersnaam` AS toezichter"""
+
+    def run_report(self, sender):
+        self.report.run_report(sender=sender)
