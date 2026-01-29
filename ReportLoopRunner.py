@@ -78,7 +78,7 @@ class ReportLoopRunner:
     def _get_run_window(self) -> tuple[int, int]:
         """Return (start_seconds, end_seconds) from settings."""
         time_cfg = self.settings.get('time', {}) if isinstance(self.settings, dict) else {}
-        start_hms = time_cfg.get('start', '03:00:00')
+        start_hms = time_cfg.get('start', '05:00:00')
         end_hms = time_cfg.get('end', '23:59:59')
         return self._parse_hms_to_seconds(start_hms), self._parse_hms_to_seconds(end_hms)
 
