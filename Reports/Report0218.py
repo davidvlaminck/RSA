@@ -62,6 +62,8 @@ FILTER
   a.AIMDBStatus_isActief == true AND a.assettype_key IN [ at_80fdf1b4, at_b4361a72, at_46dcd9b1, at_a9655f50, at_1cf24e76, at_f625b904, at_8eda4230 ] AND a.geometry == null
 
 LET assettype = FIRST(FOR at IN assettypes FILTER at._key == a.assettype_key LIMIT 1 RETURN at)
+LET toezichter = FIRST(FOR t IN identiteiten FILTER t._key == a.toezichter_key LIMIT 1 RETURN t)
+LET toezichtgroep = FIRST(FOR tg IN identiteiten FILTER tg._key == a.toezichtgroep_key LIMIT 1 RETURN tg)
 
 SORT a.NaampadObject_naampad ASC
 
