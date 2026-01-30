@@ -72,6 +72,8 @@ RETURN
     toestand: a.toestand, 
     naampad: a.NaampadObject_naampad, 
     naam: a.AIMNaamObject_naam, 
+    toezichter: toezichter.voornaam && toezichter.naam ? concat(toezichter.voornaam, " ", toezichter.naam) : null,
+    toezichtgroep: toezichtgroep.naam
 //    geometry: a.geometry
   } 
 """
