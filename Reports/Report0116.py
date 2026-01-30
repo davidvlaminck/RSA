@@ -6,15 +6,35 @@ class Report0116:
         self.report = None
 
     def init_report(self):
+        aql_query = """
+LET dnblaagspanning_key  = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#DNBLaagspanning"  LIMIT 1 RETURN at._key)
+LET dnbhoogspanning_key  = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#DNBHoogspanning"  LIMIT 1 RETURN at._key)
+
+FOR a IN assets
+  FILTER a.AIMDBStatus_isActief == true
+  FILTER a.assettype_key IN [dnbhoogspanning_key, dnblaagspanning_key]
+
+  FOR b, rel IN OUTBOUND a hoortbij_relaties
+    LET eerste_deel = FIRST(SPLIT(b.NaampadObject_naampad, "/"))
+    FILTER a.AIMNaamObject_naam != eerste_deel
+    SORT b.typeURI, b._key
+    RETURN {
+      uuid: b._key,
+      typeURI: b.typeURI,
+      legacy_naampad: b.NaampadObject_naampad,
+      otl_uuid: a._key,
+      otl_naam: a.AIMNaamObject_naam
+    }
+"""
         self.report = DQReport(name='report0116',
                                title='De naam van de assets (DNBHoogSpanning of DNBLaagSpanning) is gelijk aan het eerste deel van het naampad van de installatie',
                                spreadsheet_id='11tU64Fc9Xh1IIlmufZ5yJ9Q99Sw4oP1kzCO0LrMbOn0',
-                               datasource='Neo4J',
+                               datasource='ArangoDB',
                                persistent_column='F',
-                               link_type='eminfra'
-                               )
+                               link_type='eminfra')
 
-        self.report.result_query = """
+        self.report.result_query = aql_query
+        self.report.cypher_query = """
         //De naam van de assets (DNBHoogSpanning of DNBLaagSpanning) is gelijk aan het eerste deel van het naampad van de installatie
         MATCH (a:DNBHoogspanning|DNBLaagspanning {isActief:true}) -[r:HoortBij {isActief:TRUE}]->(b:installatie {isActief:true})
         WHERE NOT a.naam = head(split(b.naampad, '/'))
@@ -29,34 +49,3 @@ class Report0116:
 
     def run_report(self, sender):
         self.report.run_report(sender=sender)
-
-# AQL equivalent (documentation / future migration)
-# Cypher:
-# MATCH (a:DNBHoogspanning|DNBLaagspanning {isActief:true}) -[r:HoortBij {isActief:TRUE}]->(b:installatie {isActief:true})
-# WHERE NOT a.naam = head(split(b.naampad, '/'))
-# RETURN b.uuid, b.typeURI, b.naampad, a.uuid, a.naam
-# ORDER BY typeURI, uuid
-aql_query = """
-LET dnblaagspanning_key  = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#DNBLaagspanning"  LIMIT 1 RETURN at._key)
-LET dnbhoogspanning_key  = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#DNBHoogspanning"  LIMIT 1 RETURN at._key)
-
-FOR a IN assets
-  FILTER a.AIMDBStatus_isActief == true
-  FILTER a.assettype_key IN [dnbhoogspanning_key, dnblaagspanning_key]
-
-  // Use derived HoortBij-only edges between active assets (see fill_hoortbij_relaties -> hoortbij_relaties).
-  FOR b, rel IN OUTBOUND a hoortbij_relaties
-
-    LET eerste_deel = FIRST(SPLIT(b.NaampadObject_naampad, "/"))
-    FILTER a.AIMNaamObject_naam != eerste_deel
-
-    SORT b.typeURI, b._key
-
-    RETURN {
-      uuid: b._key,
-      typeURI: b.typeURI,
-      legacy_naampad: b.NaampadObject_naampad,
-      otl_uuid: a._key,
-      otl_naam: a.AIMNaamObject_naam
-    }
-"""

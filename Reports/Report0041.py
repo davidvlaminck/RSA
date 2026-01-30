@@ -6,21 +6,7 @@ class Report0041:
         self.report = None
 
     def init_report(self):
-        self.report = DQReport(name='report0041',
-                               title='EnergiemeterDNB en ForfaitaireAansluiting hebben een HoortBij relatie naar een LS of HS',
-                               spreadsheet_id='1_3NxUvqS6v_j9d7K4QzWBvN3ISveJ-poxW4_0XYEYFM',
-                               datasource='Neo4J',
-                               persistent_column='D')
-
-        self.report.result_query = """MATCH (x {isActief: TRUE})
-            WHERE (x:EnergiemeterDNB OR x:ForfaitaireAansluiting) AND NOT EXISTS((x)-[:HoortBij]->(:LS {isActief: TRUE})) AND NOT EXISTS((x)-[:HoortBij]->(:HS {isActief: TRUE}))
-            RETURN x.uuid as uuid, x.naam as naam, x.typeURI as typeURI"""
-
-    def run_report(self, sender):
-        self.report.run_report(sender=sender)
-
-
-aql_query = """
+        aql_query = """
 LET energiemeterdnb_key        = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#EnergiemeterDNB" LIMIT 1 RETURN at._key)
 LET forfaitaireaansluiting_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#ForfaitaireAansluiting" LIMIT 1 RETURN at._key)
 LET ls_key                     = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#LS" LIMIT 1 RETURN at._key)
@@ -58,3 +44,14 @@ FOR x IN assets
     typeURI: x.typeURI
   }
 """
+        self.report = DQReport(name='report0041',
+                               title='EnergiemeterDNB en ForfaitaireAansluiting hebben een HoortBij relatie naar een LS of HS',
+                               spreadsheet_id='1_3NxUvqS6v_j9d7K4QzWBvN3ISveJ-poxW4_0XYEYFM',
+                               datasource='ArangoDB',
+                               persistent_column='D')
+
+        self.report.result_query = aql_query
+        self.report.cypher_query = """MATCH (x {isActief: TRUE})\n            WHERE (x:EnergiemeterDNB OR x:ForfaitaireAansluiting) AND NOT EXISTS((x)-[:HoortBij]->(:LS {isActief: TRUE})) AND NOT EXISTS((x)-[:HoortBij]->(:HS {isActief: TRUE}))\n            RETURN x.uuid as uuid, x.naam as naam, x.typeURI as typeURI"""
+
+    def run_report(self, sender):
+        self.report.run_report(sender=sender)

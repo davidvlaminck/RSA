@@ -6,28 +6,8 @@ class Report0112:
         self.report = None
 
     def init_report(self):
-        self.report = DQReport(name='report0112', title='Verkeersregelaars hebben een vplanDatum',
-                               spreadsheet_id='1701KVEMJAco3NPxfgOtHP0byI9_MQ1yhb1EQ3ujvU9I', datasource='Neo4J',
-                               persistent_column='E')
-
-        self.report.result_query = """
-        // Verkeersregelaars hebben een vplanDatum
-        MATCH (a:Verkeersregelaar {isActief:TRUE}) 
-        WHERE a.vplanDatum is null
-        RETURN a.uuid, a.naam, a.vplanNummer, a.vplanDatum
-	    """
-
-    def run_report(self, sender):
-        self.report.run_report(sender=sender)
-
-
-# AQL equivalent (documentation / future migration)
-# Cypher:
-# MATCH (a:Verkeersregelaar {isActief:TRUE})
-# WHERE a.vplanDatum is null
-# RETURN a.uuid, a.naam, a.vplanNummer, a.vplanDatum
-aql_query = """
-LET verkeersregelaar_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Verkeersregelaar" LIMIT 1 RETURN at._key)
+        aql_query = """
+LET verkeersregelaar_key = FIRST(FOR at IN assettypes FILTER at.short_uri == \"onderdeel#Verkeersregelaar\" LIMIT 1 RETURN at._key)
 
 FOR a IN assets
   FILTER a.assettype_key == verkeersregelaar_key
@@ -41,3 +21,16 @@ FOR a IN assets
     vplanDatum: a.Verkeersregelaar_vplanDatum
   }
 """
+        self.report = DQReport(name='report0112', title='Verkeersregelaars hebben een vplanDatum',
+                               spreadsheet_id='1701KVEMJAco3NPxfgOtHP0byI9_MQ1yhb1EQ3ujvU9I', datasource='ArangoDB',
+                               persistent_column='E')
+
+        self.report.result_query = aql_query
+        self.report.cypher_query = """
+        MATCH (a:Verkeersregelaar {isActief:TRUE}) 
+        WHERE a.vplanDatum is null
+        RETURN a.uuid, a.naam, a.vplanNummer, a.vplanDatum
+        """
+
+    def run_report(self, sender):
+        self.report.run_report(sender=sender)

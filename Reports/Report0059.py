@@ -6,25 +6,8 @@ class Report0059:
         self.report = None
 
     def init_report(self):
-        self.report = DQReport(name='report0059',
-                               title='Er zijn geen assets die zichzelf direct of indirect voeden (geen lussen in voeding).',
-                               spreadsheet_id='15z-3mTVmjg63EepO1uaN5R5dgFARcfiyrRBbXa3TzUQ',
-                               datasource='Neo4J',
-                               persistent_column='F')
-
-        self.report.result_query = """
-            MATCH p=(x:Asset {isActief: True})-[:Voedt*]->(x)
-            WHERE all(n in nodes(p) WHERE NOT (n:UPSLegacy))
-            WITH x, reduce(path_loop = [], n IN nodes(p) | path_loop + [[n.uuid, n.typeURI]]) as path_loop
-            RETURN DISTINCT x.uuid AS uuid, x.naampad AS naampad, x.typeURI AS typeURI, x.toestand as toestand, path_loop
-        """
-
-    def run_report(self, sender):
-        self.report.run_report(sender=sender)
-
-
-# to verify
-aql_query = """LET ups_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#UPS" LIMIT 1 RETURN at._key)
+        aql_query = """
+LET ups_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#UPS" LIMIT 1 RETURN at._key)
 LET maxDepth = 10
 
 FOR x IN assets
@@ -61,5 +44,20 @@ FOR x IN assets
       toestand: x.toestand,
       path_loop: path_loop
     }
-
 """
+        self.report = DQReport(name='report0059',
+                               title='Er zijn geen assets die zichzelf direct of indirect voeden (geen lussen in voeding).',
+                               spreadsheet_id='15z-3mTVmjg63EepO1uaN5R5dgFARcfiyrRBbXa3TzUQ',
+                               datasource='ArangoDB',
+                               persistent_column='F')
+
+        self.report.result_query = aql_query
+        self.report.cypher_query = """
+            MATCH p=(x:Asset {isActief: True})-[:Voedt*]->(x)
+            WHERE all(n in nodes(p) WHERE NOT (n:UPSLegacy))
+            WITH x, reduce(path_loop = [], n IN nodes(p) | path_loop + [[n.uuid, n.typeURI]]) as path_loop
+            RETURN DISTINCT x.uuid AS uuid, x.naampad AS naampad, x.typeURI AS typeURI, x.toestand as toestand, path_loop
+        """
+
+    def run_report(self, sender):
+        self.report.run_report(sender=sender)

@@ -6,27 +6,11 @@ class Report0009:
         self.report = None
 
     def init_report(self):
-        self.report = DQReport(name='report0009',
-                               title='Omvormers hebben een Bevestiging relatie met een Behuizing',
-                               spreadsheet_id='1A4kata3Eg9fMjsUE8Za5XEtcF7JEm_-IftHhGz6SnJo',
-                               datasource='Neo4J',
-                               persistent_column='E')
-
-        self.report.result_query = """MATCH (o:Omvormer {isActief:TRUE})
-        WHERE NOT EXISTS ((o)-[:Bevestiging]-(:Wegkantkast {isActief:TRUE})) AND NOT EXISTS ((o)-[:Bevestiging]-(:Montagekast {isActief:TRUE}))
-        WITH o
-        OPTIONAL MATCH (o)-[:HeeftBetrokkene {rol:'toezichter'}]->(a:Agent)
-        OPTIONAL MATCH (o)-[:Bevestiging]->(b:onderdeel {isActief:TRUE})
-        RETURN o.uuid, o.naam, a.naam as toezichter, b.typeURI as behuizing_type"""
-
-    def run_report(self, sender):
-        self.report.run_report(sender=sender)
-
-aql_query = """
-LET omvormer_key    = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Omvormer"    LIMIT 1 RETURN at._key)
-LET wegkantkast_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Wegkantkast" LIMIT 1 RETURN at._key)
-LET montagekast_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Montagekast" LIMIT 1 RETURN at._key)
-LET bevestiging_key = FIRST(FOR rt IN relatietypes FILTER rt.short == "Bevestiging"            LIMIT 1 RETURN rt._key)
+        aql_query = """
+LET omvormer_key    = FIRST(FOR at IN assettypes FILTER at.short_uri == \"onderdeel#Omvormer\"    LIMIT 1 RETURN at._key)
+LET wegkantkast_key = FIRST(FOR at IN assettypes FILTER at.short_uri == \"onderdeel#Wegkantkast\" LIMIT 1 RETURN at._key)
+LET montagekast_key = FIRST(FOR at IN assettypes FILTER at.short_uri == \"onderdeel#Montagekast\" LIMIT 1 RETURN at._key)
+LET bevestiging_key = FIRST(FOR rt IN relatietypes FILTER rt.short == \"Bevestiging\"            LIMIT 1 RETURN rt._key)
 
 FOR o IN assets
   FILTER
@@ -60,7 +44,7 @@ FOR o IN assets
   // OPTIONAL toezichter via betrokkenerelaties
   LET toezichter = FIRST(
     FOR v, e IN 1..1 OUTBOUND o._id betrokkenerelaties
-      FILTER e.rol == "toezichter"
+      FILTER e.rol == \"toezichter\"
       RETURN v
   )
 
@@ -81,3 +65,14 @@ FOR o IN assets
     behuizing_type: behuizing ? behuizing.typeURI : null
   }
 """
+        self.report = DQReport(name='report0009',
+                               title='Omvormers hebben een Bevestiging relatie met een Behuizing',
+                               spreadsheet_id='1A4kata3Eg9fMjsUE8Za5XEtcF7JEm_-IftHhGz6SnJo',
+                               datasource='ArangoDB',
+                               persistent_column='E')
+
+        self.report.result_query = aql_query
+        self.report.cypher_query = """MATCH (o:Omvormer {isActief:TRUE})\n        WHERE NOT EXISTS ((o)-[:Bevestiging]-(:Wegkantkast {isActief:TRUE})) AND NOT EXISTS ((o)-[:Bevestiging]-(:Montagekast {isActief:TRUE}))\n        WITH o\n        OPTIONAL MATCH (o)-[:HeeftBetrokkene {rol:'toezichter'}]->(a:Agent)\n        OPTIONAL MATCH (o)-[:Bevestiging]->(b:onderdeel {isActief:TRUE})\n        RETURN o.uuid, o.naam, a.naam as toezichter, b.typeURI as behuizing_type"""
+
+    def run_report(self, sender):
+        self.report.run_report(sender=sender)

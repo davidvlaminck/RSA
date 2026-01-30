@@ -29,6 +29,8 @@
   - robust **logging**
   - clear **error handling**
   - repeatable, file-based deployment (git update + run)
+- Ensure that data in the Resultaat sheet is only wiped if new data can be written. If anything goes wrong during the update, the previous version of the sheet must be automatically restored (fallback/revert functionality).
+- Only one summary email should be sent per run, not multiple.
 
 ## 3. Scope
 
@@ -96,6 +98,10 @@
   - upload status (where the files were uploaded)
 - Email sending must work for both the current and target use cases.
 
+### FR8 — Resultaat sheet data integrity and fallback
+- The system must only clear (wipe) the Resultaat sheet if new data is available and can be written successfully.
+- If any error occurs during the update, the system must automatically revert the sheet to its previous version to prevent data loss.
+
 ## 6. Non-functional requirements
 
 ### NFR1 — Logging
@@ -123,6 +129,9 @@
 ### NFR4 — Configuration
 - Credentials and endpoints must not be hard-coded.
 - Configuration should support environment-based deployment (dev/test/prod).
+
+### NFR5 — Notification uniqueness
+- The system must ensure that only one summary email is sent per report run, and must not send duplicate notifications for the same run.
 
 ## 7. Data flow (high level)
 1) **Arango refresh job**

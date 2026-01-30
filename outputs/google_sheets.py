@@ -57,8 +57,14 @@ class GoogleSheetsOutput:
                                     new_sheet_name='Resultaat')
 
         # report header lines
+        # If last_data_update is empty, try to fill it with current UTC time as fallback
+        from datetime import datetime, UTC
+        if not result.last_data_update:
+            result_last_data_update = datetime.now(UTC).strftime('%Y-%m-%d %H:%M:%S')
+        else:
+            result_last_data_update = result.last_data_update
         report_made_lines = [[f'Rapport gemaakt op {ctx.now_utc} met data uit:'],
-                             [f'{ctx.datasource_name}, laatst gesynchroniseerd op {result.last_data_update or ""}']]
+                             [f'{ctx.datasource_name}, laatst gesynchroniseerd op {result_last_data_update}']]
         sheets_wrapper.write_data_to_sheet(spreadsheet_id=ctx.spreadsheet_id, sheet_name='Resultaat', start_cell=startcell,
                                            data=self._json_safe_table(report_made_lines))
         start_sheetcell.update_row_by_adding_number(len(report_made_lines))
@@ -75,7 +81,11 @@ class GoogleSheetsOutput:
         # rows
         persistent_dict = persistent_dict or {}
         for row in result.rows:
-            out_row: list[Any] = list(row)
+            # Convert dict rows to lists using header keys if needed
+            if isinstance(row, dict):
+                out_row = [row.get(key, '') for key in result.keys]
+            else:
+                out_row = list(row)
             if persistent_column:
                 if out_row and out_row[0] in persistent_dict:
                     out_row.append(persistent_dict[out_row[0]])
