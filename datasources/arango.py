@@ -29,18 +29,41 @@ class ArangoDatasource:
             raise RuntimeError("No ArangoDB connection or factory available.")
 
     def execute(self, query: str) -> QueryResult:
-        if not self.connection:
+        if not hasattr(self, 'connection') or not self.connection:
             raise RuntimeError("No active ArangoDB connection.")
         try:
             import time
             start_time = time.time()
             cursor = self.connection.aql.execute(query)
             result = list(cursor)
-            keys = cursor.keys() if hasattr(cursor, 'keys') else []
-            query_time_seconds = time.time() - start_time
-            # Try to get last_data_update from the cursor or set to None
+
+            # Try to obtain ordered keys. Some cursors don't expose keys(); infer from first row if possible.
+            keys = []
+            try:
+                if hasattr(cursor, 'keys'):
+                    keys = cursor.keys() or []
+            except Exception:
+                keys = []
+
+            if (not keys) and len(result) > 0 and isinstance(result[0], dict):
+                # preserve insertion order of dict
+                keys = list(result[0].keys())
+
+            query_time_seconds = round(time.time() - start_time, 2)
+
+            # Try to get last_data_update from the cursor or from params collection
             last_data_update = getattr(cursor, 'last_data_update', None)
-            return QueryResult(rows=result, keys=keys, query_time_seconds=query_time_seconds, last_data_update=last_data_update)
+            if not last_data_update:
+                try:
+                    params_col = self.connection.collection('params')
+                    doc = params_col.get('finished_at')
+                    if doc and 'value' in doc:
+                        last_data_update = doc['value']
+                except Exception:
+                    # ignore failures reading params
+                    last_data_update = last_data_update
+
+            return QueryResult(keys=keys, rows=result, query_time_seconds=query_time_seconds, last_data_update=last_data_update)
         except Exception as e:
             logging.error(f"❌ Query execution failed: {e}")
             raise
@@ -48,6 +71,8 @@ class ArangoDatasource:
     @classmethod
     def from_existing_connection(cls, connection):
         obj = cls.__new__(cls)
+        # keep compatibility with test_connection checks that look for a 'factory' attribute
+        obj.factory = None
         obj.connection = connection
         return obj
 
@@ -60,8 +85,12 @@ class SingleArangoConnector:
         if cls._instance is None:
             cls._instance = cls()
             client = ArangoClient(hosts=f'http://{host}:{port}')
-            # Connect to ArangoDB server as root user
-            sys_db = client.db('_system', username=user, password=password)
+            # Connect to ArangoDB server
+            try:
+                _ = client.db('_system', username=user, password=password)
+            except Exception:
+                # if system DB connect fails, continue and let later calls surface the error
+                pass
             # Connect to the actual database
             cls._db = client.db(database, username=user, password=password)
 
