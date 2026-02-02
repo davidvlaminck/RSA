@@ -1,7 +1,6 @@
 import logging
 from types import NoneType
 
-import psycopg2  # == psycopg2-binary==2.9.3
 from psycopg2 import Error
 from psycopg2.pool import ThreadedConnectionPool
 import time
@@ -74,7 +73,14 @@ class PostGISConnector:
         while attempt <= retries:
             conn = self.pool.getconn()
             orig_autocommit = getattr(conn, 'autocommit', False)
+            backend_pid = None
             try:
+                try:
+                    backend_pid = conn.get_backend_pid()
+                except Exception:
+                    backend_pid = None
+                logging.debug(f"[PostGISConnector] _run_with_connection attempt={attempt} backend_pid={backend_pid} autocommit_for_read={autocommit_for_read}")
+
                 # for read-only queries allow autocommit to avoid implicit transaction
                 if autocommit_for_read:
                     conn.autocommit = True
@@ -85,9 +91,13 @@ class PostGISConnector:
                     if not conn.autocommit:
                         try:
                             conn.commit()
-                        except Exception:
+                        except Exception as commit_exc:
+                            logging.debug(f"[PostGISConnector] commit failed on backend_pid={backend_pid}: {commit_exc}")
                             # if commit fails, ensure rollback next
-                            conn.rollback()
+                            try:
+                                conn.rollback()
+                            except Exception as rb_exc:
+                                logging.debug(f"[PostGISConnector] rollback after failed commit also failed: {rb_exc}")
                     return result
                 finally:
                     try:
@@ -99,24 +109,27 @@ class PostGISConnector:
                 # If connection in aborted state, rollback to reset transaction state
                 try:
                     conn.rollback()
-                except Exception:
-                    pass
+                    logging.debug(f"[PostGISConnector] rollback executed on backend_pid={backend_pid}")
+                except Exception as rb_exc:
+                    logging.debug(f"[PostGISConnector] rollback failed on backend_pid={backend_pid}: {rb_exc}")
                 # simple heuristic: retry on transaction-aborted or connection-related transient errors
                 msg = getattr(exc, 'pgerror', str(exc))
+                logging.debug(f"[PostGISConnector] caught Error on backend_pid={backend_pid}: attempt={attempt} exc={exc} pgerror={msg}")
                 if 'current transaction is aborted' in msg.lower() or 'terminating connection' in msg.lower() or 'could not receive data from server' in msg.lower():
                     attempt += 1
                     time.sleep(retry_backoff * attempt)
                     # put connection back and try again
                     try:
                         self.pool.putconn(conn, close=False)
-                    except Exception:
-                        pass
+                    except Exception as put_exc:
+                        logging.debug(f"[PostGISConnector] putconn failed (close=False) on backend_pid={backend_pid}: {put_exc}")
+                    logging.debug(f"[PostGISConnector] retrying (attempt {attempt}) after transient error")
                     continue
                 # non-retryable: put connection back and reraise
                 try:
                     self.pool.putconn(conn, close=False)
-                except Exception:
-                    pass
+                except Exception as put_exc:
+                    logging.debug(f"[PostGISConnector] putconn failed (close=False) on backend_pid={backend_pid}: {put_exc}")
                 raise
             finally:
                 # restore autocommit flag and return connection to pool if not already returned
@@ -127,8 +140,8 @@ class PostGISConnector:
                 try:
                     # putconn may have been called already, but putconn with close=False is idempotent-ish
                     self.pool.putconn(conn)
-                except Exception:
-                    pass
+                except Exception as put_exc:
+                    logging.debug(f"[PostGISConnector] putconn final failed on backend_pid={backend_pid}: {put_exc}")
         # exhausted retries
         raise last_exc
 

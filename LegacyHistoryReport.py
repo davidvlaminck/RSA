@@ -143,9 +143,26 @@ class LegacyHistoryReport(Report):
         elif self.datasource == 'PostGIS':
             connector = SinglePostGISConnector.get_connector()
 
-            params = connector.get_params(connector.main_connection)
+            # get params using a pooled connection
+            params = None
+            try:
+                conn_for_params = connector.get_connection(autocommit=True)
+                try:
+                    params = connector.get_params(conn_for_params)
+                finally:
+                    connector.kill_connection(conn_for_params)
+            except Exception as e:
+                logging.error(f'Could not read params via pooled connection: {e}')
+                params = None
 
-            self.last_data_update = params['last_update_utc_assets'].strftime("%Y-%m-%d %H:%M:%S")
+            if params and 'last_update_utc_assets' in params and params['last_update_utc_assets'] is not None:
+                try:
+                    self.last_data_update = params['last_update_utc_assets'].strftime("%Y-%m-%d %H:%M:%S")
+                except Exception:
+                    self.last_data_update = ''
+            else:
+                self.last_data_update = ''
+
             self.now = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S")
 
             report_made_lines = [[f'Rapport gemaakt op {self.now} met data uit:'],
@@ -174,10 +191,16 @@ class LegacyHistoryReport(Report):
             connector = SinglePostGISConnector.get_connector()
 
             start = time.time()
-            with connector.main_connection.cursor() as cursor:
-                cursor.execute(self.result_query)
-                result_data = cursor.fetchall()
-                result_keys = list(map(lambda col: col.name, cursor.description))
+
+            def _fn(cur, conn):
+                cur.execute(self.result_query)
+                result_rows = cur.fetchall()
+                desc = cur.description
+                return result_rows, desc
+
+            result_rows, desc = connector._run_with_connection(_fn, autocommit_for_read=True)
+            result_data = result_rows
+            result_keys = list(map(lambda col: col.name, (desc or [])))
 
             end = time.time()
             query_time = round(end - start, 2)

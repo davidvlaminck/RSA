@@ -2,11 +2,10 @@ from __future__ import annotations
 
 import time
 from datetime import datetime, UTC
-from typing import Any, Sequence
 
 from PostGISConnector import SinglePostGISConnector
 
-from .base import Datasource, QueryResult
+from .base import QueryResult
 
 
 class PostGISDatasource:
@@ -16,17 +15,25 @@ class PostGISDatasource:
         self._connector = SinglePostGISConnector.get_connector()
 
     def test_connection(self) -> None:
-        # A cheap operation that validates the connection.
-        with self._connector.main_connection.cursor() as cursor:
-            cursor.execute("SELECT 1")
-            cursor.fetchone()
+        # Use pooled connection to validate connectivity instead of reusing main_connection
+        def _fn(cur, conn):
+            cur.execute("SELECT 1")
+            return cur.fetchone()
+
+        self._connector._run_with_connection(_fn, autocommit_for_read=True)
 
     def execute(self, query: str) -> QueryResult:
         start = time.time()
-        with self._connector.main_connection.cursor() as cursor:
-            cursor.execute(query)
-            rows: list[Sequence[Any]] = cursor.fetchall()
-            keys = [col.name for col in cursor.description]
+
+        def _fn(cur, conn):
+            cur.execute(query)
+            rows = cur.fetchall()
+            desc = cur.description
+            return rows, desc
+
+        rows, desc = self._connector._run_with_connection(_fn, autocommit_for_read=True)
+        keys = [col.name for col in (desc or [])]
+
         query_time = round(time.time() - start, 2)
 
         # Set last_data_update to current UTC time as fallback

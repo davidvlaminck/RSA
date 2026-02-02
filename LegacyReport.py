@@ -85,10 +85,16 @@ class LegacyReport(Report):
             connector = SinglePostGISConnector.get_connector()
 
             start = time.time()
-            with connector.main_connection.cursor() as cursor:
-                cursor.execute(self.result_query)
-                result_data = cursor.fetchall()
-                result_keys = list(map(lambda col: col.name, cursor.description))
+
+            def _fn(cur, conn):
+                cur.execute(self.result_query)
+                result_rows = cur.fetchall()
+                desc = cur.description
+                return result_rows, desc
+
+            result_rows, desc = connector._run_with_connection(_fn, autocommit_for_read=True)
+            result_data = result_rows
+            result_keys = list(map(lambda col: col.name, (desc or [])))
 
             end = time.time()
             query_time = round(end - start, 2)
