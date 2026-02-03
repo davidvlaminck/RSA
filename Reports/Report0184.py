@@ -6,7 +6,7 @@ class Report0184:
         self.report = None
 
     def init_report(self):
-        self.report = DQReport(name='report0184', title='Laagspanningsaansluiting (Legacy) keuringsinfo',
+        self.report = DQReport(name='report0184', title='Laagspanningsaansluiting (Legacy) of Kast (Legacy) keuringsinfo',
                                spreadsheet_id='1tFLD_Ah9V3S6V3RcFsToEs7OWW5U26q6TIuOW5jLHrI', datasource='PostGIS',
                                persistent_column='S', link_type='eminfra')
 
@@ -31,7 +31,10 @@ cte_laagspanningsaansluiting as (
 	where
 		a.actief is true
 		and
-		a.assettype = '80fdf1b4-e311-4270-92ba-6367d2a42d47'  -- Laagspanningsaansluiting (Legacy)
+		a.assettype in (
+		    '80fdf1b4-e311-4270-92ba-6367d2a42d47',  -- Laagspanningsaansluiting (Legacy)
+   			'10377658-776f-4c21-a294-6c740b9f655e'  -- Kast (Legacy)
+		)
 )
 , cte_attribuutwaarden_grouped as (
 	SELECT 
@@ -78,6 +81,7 @@ from cte_laagspanningsaansluiting ls
 left join identiteiten i on ls.toezichter = i.uuid and i.actief = true
 left join toezichtgroepen tg on ls.toezichtgroep = tg.uuid and tg.actief = true
 left join cte_attribuutwaarden_grouped aw on ls.uuid = aw.assetuuid
+where aw.assetuuid is not null
 order by bevat_keuringsinfo desc, aantal_resterende_dagen_tot_vervaldag_keuring
 	    """
 
