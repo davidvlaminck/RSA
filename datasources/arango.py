@@ -4,6 +4,7 @@ from .base import QueryResult
 
 from .ArangoDBConnectionFactory import ArangoDBConnectionFactory
 from arango import ArangoClient
+from datetime import datetime, timezone
 
 class ArangoDatasource:
     """ArangoDB datasource (AQL)."""
@@ -14,6 +15,46 @@ class ArangoDatasource:
         self.factory = ArangoDBConnectionFactory(db_name, username, password)
         self.connection = None
         self.test_connection()
+
+    def _normalize_last_data_update(self, v):
+        """Normalize various datetime/string representations to '%Y-%m-%d %H:%M:%S'.
+        Accepts: datetime (aware or naive), ISO string with offset, or other string.
+        Returns formatted string or None if cannot parse.
+        """
+        if v is None:
+            return None
+        # If it's already a datetime
+        if isinstance(v, datetime):
+            # ensure timezone-aware in UTC for consistent formatting
+            if v.tzinfo is None:
+                v = v.replace(tzinfo=timezone.utc)
+            else:
+                v = v.astimezone(timezone.utc)
+            return v.strftime("%Y-%m-%d %H:%M:%S")
+        # If it's a string, try to parse ISO formats
+        if isinstance(v, str):
+            try:
+                # Python 3.11+ supports fromisoformat with offset; use it and fallback
+                dt = datetime.fromisoformat(v)
+                if dt.tzinfo is None:
+                    dt = dt.replace(tzinfo=timezone.utc)
+                else:
+                    dt = dt.astimezone(timezone.utc)
+                return dt.strftime("%Y-%m-%d %H:%M:%S")
+            except Exception:
+                # Try a few common formats
+                for fmt in ("%Y-%m-%d %H:%M:%S.%f%z", "%Y-%m-%dT%H:%M:%S.%f%z", "%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S"):
+                    try:
+                        dt = datetime.strptime(v, fmt)
+                        if dt.tzinfo is None:
+                            dt = dt.replace(tzinfo=timezone.utc)
+                        else:
+                            dt = dt.astimezone(timezone.utc)
+                        return dt.strftime("%Y-%m-%d %H:%M:%S")
+                    except Exception:
+                        continue
+        # Can't parse
+        return None
 
     def test_connection(self) -> None:
         if hasattr(self, "factory") and self.factory is not None:
@@ -53,12 +94,22 @@ class ArangoDatasource:
 
             # Try to get last_data_update from the cursor or from params collection
             last_data_update = getattr(cursor, 'last_data_update', None)
-            if not last_data_update:
+
+            # Normalize if it's present
+            normalized = self._normalize_last_data_update(last_data_update)
+            if normalized:
+                last_data_update = normalized
+            else:
+                # fallback: try params collection
                 try:
                     params_col = self.connection.collection('params')
                     doc = params_col.get('finished_at')
                     if doc and 'value' in doc:
-                        last_data_update = doc['value']
+                        normalized = self._normalize_last_data_update(doc['value'])
+                        if normalized:
+                            last_data_update = normalized
+                        else:
+                            last_data_update = doc['value']
                 except Exception:
                     # ignore failures reading params
                     last_data_update = last_data_update
