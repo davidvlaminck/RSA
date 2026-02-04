@@ -17,6 +17,7 @@ Belangrijke classes / scripts
 - `LegacyReport`: oudere, meer directe implementatie voor Neo4j/PostGIS-queries; bouwt resultaatsets als lijsten en schrijft direct naar een opgegeven sheet.
 - `LegacyHistoryReport`: variant van `LegacyReport` die per run een nieuw tabblad (historiek) aanmaakt en historiek en samenvatting bijhoudt.
 - `KladRapport.py`: een klein runnable script dat met `DQReport` (of andere report-klasse) een test-run opstart; gebruikt lokale connectorinitialisatie (o.a. Neo4j, Sheets).
+- `OTLCursorPool`: singleton helper die op aanvraag de meest recente OTL SQLite-database ophaalt en read-only sqlite3 connections/cursors levert.
 
 Hoofdtypen rapporten (op basis van implementatie)
 
@@ -44,6 +45,16 @@ Hoofdtypen rapporten (op basis van implementatie)
 3) Klad / Dev-rapporten
 - Script-achtige entries zoals `KladRapport.py` die lokaal connectoren initialiseren en een `DQReport` of ander rapport draaien.
 - Handig voor debugging en ad-hoc runs, niet per se conform library-initialisatie-conventies.
+
+4) OTLCursorPool
+- Class: `OTLCursorPool`
+- Doel: Levert read-only sqlite3 connections/cursors voor de meest recente OTL SQLite-database.
+- Gebruik:
+  - Singleton patroon; gebruik `OTLCursorPool.get_instance()` om de instantie te verkrijgen.
+  - Roep `cursor = OTLCursorPool().get_cursor()` aan om een cursor te krijgen.
+- Onderhoud:
+  - Zorg dat de OTL database up-to-date is; de cursor pool haalt altijd de meest recente versie op.
+  - Bij wijzigingen in de database structuur, controleer of de cursor aanroep compatibel is.
 
 Levenscyclus / run flow (samengevat)
 
@@ -80,3 +91,6 @@ Wat je terugvindt in de code (praktische herkenningspunten)
   - `LegacyHistoryReport` voegt extra logica voor sheet-rolling en persistent column.
 - `KladRapport.py`:
   - Voorbeelden van hoe je connectors initieert en `DQReport` configureert voor een ad-hoc run.
+- `OTLCursorPool`:
+  - Singleton gebruik via `OTLCursorPool.get_instance()`.
+  - Cursor verkrijgen met `OTLCursorPool().get_cursor()`.
