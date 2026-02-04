@@ -1,0 +1,3 @@
+// AQL query:
+FOR p IN params
+  REMOVE { _key: p._key } IN params
