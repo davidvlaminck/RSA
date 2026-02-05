@@ -78,14 +78,14 @@ class GoogleSheetsOutput:
 
         table: list[list[Any]] = [headerrow]
 
-        # rows
+        # rows - use QueryResult helper for unified dict/tuple handling
         persistent_dict = persistent_dict or {}
-        for row in result.rows:
-            # Convert dict rows to lists using header keys if needed
-            if isinstance(row, dict):
-                out_row = [row.get(key, '') for key in result.keys]
-            else:
-                out_row = list(row)
+
+        # For small to medium resultsets, use to_rows_list()
+        # For very large sets (>10K), consider using iter_rows() with batched writes
+        normalized_rows = result.to_rows_list()
+
+        for out_row in normalized_rows:
             if persistent_column:
                 if out_row and out_row[0] in persistent_dict:
                     out_row.append(persistent_dict[out_row[0]])

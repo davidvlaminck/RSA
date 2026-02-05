@@ -73,14 +73,56 @@ Dit document beschrijft de functionele en niet-functionele eisen voor de refacto
 
 ## 3. Data contracts en QueryResult
 
-**TODO: bespreek met AI**
+**Beslissing: QueryResult als lightweight unified interface (GEEN DataFrame)**
 
-**QueryResult object (contract returned by datasource.execute):**
+### Rationale
+- Performance: vermijd overhead van DataFrame conversie bij grote resultsets
+- Simpliciteit: alleen tabelvormige doorgeef nodig, geen analyse/transformatie
+- Memory efficiency: geen data-duplicatie
+- Lightweight: geen zware dependencies (pandas)
 
-- `rows`: list[dict] of list[values] — resultaat-rijen; voor ArangoDB perfer dicts {key: value}.
-- `keys`: list[str] — header keys (kan leeg zijn voor ArangoDB maar `DQReport` zal infereren keys uit `rows[0]`).
-- `query_time_seconds`: float — uitvoeringstijd in seconden.
-- `last_data_update`: str | None — ISO timestamp van de laatste synchronisatie van die datasource (kan uit `params` komen).
+### QueryResult interface
+
+**Verplichte attributen:**
+- `rows`: list[dict] | list[tuple] | list[list] — resultaat-rijen
+  - ArangoDB: list[dict] met {key: value}
+  - PostGIS: list[tuple] of list[list]
+- `keys`: list[str] — kolomnamen/headers (MOET altijd gevuld zijn na datasource.execute)
+  - Datasources moeten dit zelf afleiden als het origineel ontbreekt
+  - Voor ArangoDB: `keys = list(rows[0].keys())` indien rows dicts zijn
+  - Voor PostGIS: `keys = [col.name for col in cursor.description]`
+- `query_time_seconds`: float — uitvoeringstijd in seconden
+- `last_data_update`: str | None — ISO timestamp van laatste sync
+
+**Helper methods (aanbevolen implementatie):**
+```python
+def to_rows_list(self) -> list[list]:
+    """Normaliseer naar list[list] voor output adapters.
+    Converteert dicts naar lists op basis van keys volgorde."""
+    if not self.rows:
+        return []
+    if isinstance(self.rows[0], dict):
+        return [[row.get(k) for k in self.keys] for row in self.rows]
+    return [list(row) for row in self.rows]
+
+def iter_rows(self):
+    """Memory-efficient iterator voor grote resultsets."""
+    for row in self.rows:
+        if isinstance(row, dict):
+            yield [row.get(k) for k in self.keys]
+        else:
+            yield list(row)
+```
+
+**Verantwoordelijkheden:**
+- **Datasource adapters**: MOETEN `keys` correct vullen bij execute()
+- **QueryResult**: biedt normalisatie-helpers voor output adapters
+- **Output adapters**: kunnen kiezen tussen `to_rows_list()` (in-memory) of `iter_rows()` (streaming)
+
+**Conversie naar andere formaten (optioneel, outside core):**
+- Als een specifiek rapport pandas nodig heeft: conversie gebeurt in het rapport zelf
+- `pd.DataFrame(qr.to_rows_list(), columns=qr.keys)` — eenvoudig en expliciet
+- Output adapters blijven pandas-vrij
 
 ## 4. Configuratie en settings
 
@@ -93,21 +135,58 @@ Dit document beschrijft de functionele en niet-functionele eisen voor de refacto
 
 ## 5. Implementatie notes / aanbevolen aanpak
 
+- **QueryResult implementatie:**
+  - Maak een `@dataclass` of simple class in een shared module (bijv. `datasources/base.py`)
+  - Implementeer de helper methods `to_rows_list()` en `iter_rows()`
+  - Datasources MOETEN altijd `keys` vullen (niet leeg laten zoals voorheen)
+  - Voorbeeld skeleton:
+    ```python
+    @dataclass
+    class QueryResult:
+        rows: list
+        keys: list[str]
+        query_time_seconds: float
+        last_data_update: str | None = None
+        
+        def to_rows_list(self) -> list[list]:
+            if not self.rows:
+                return []
+            if isinstance(self.rows[0], dict):
+                return [[row.get(k) for k in self.keys] for row in self.rows]
+            return [list(row) for row in self.rows]
+        
+        def iter_rows(self):
+            for row in self.rows:
+                if isinstance(row, dict):
+                    yield [row.get(k) for k in self.keys]
+                else:
+                    yield list(row)
+    ```
+
 - **Datasource adapters:**
   - `ArangoDatasource`:
     - Implement `test_connection()` and `execute(aql_string)` returning QueryResult.
     - When executing long traversals prefer using derived edge collections such as `voedt_relaties`.
     - Populate `last_data_update` from `params` collection (`finished_at`).
+    - **Belangrijk**: Vul `keys` altijd: `keys = list(rows[0].keys())` wanneer rows dicts zijn.
   - `PostGISDatasource`:
     - Implement connection pooling (existing `SinglePostGISConnector`) and safe transaction handling.
     - Implement reset/rollback strategy when encountering `current transaction is aborted` errors.
+    - **Belangrijk**: Vul `keys` altijd: `keys = [col.name for col in cursor.description]`.
 
 - **Output adapters:**
-  - `GoogleSheetsOutput` (existing)
-  - `ExcelOutput`:
-    - Generate `.xlsx` file locally (e.g., with openpyxl or xlsxwriter).
+  - `GoogleSheetsOutput` (existing):
+    - Update to use `qr.to_rows_list()` voor kleine tot middelgrote resultsets.
+    - Voor zeer grote resultsets (>10K rows): overweeg `qr.iter_rows()` met batched writes.
+    - Verwacht altijd dat `qr.keys` gevuld is (geen inferentie meer in DQReport nodig na deze refactor).
+  - `ExcelOutput` (nieuw):
+    - Generate `.xlsx` file locally (e.g., with openpyxl of xlsxwriter).
+    - Gebruik `qr.iter_rows()` voor memory-efficient schrijven (row-by-row).
     - Upload to OneDrive/SharePoint using available corporate API or an upload helper (configurable).
     - Keep the same OutputWriteContext contract so `DQReport` can call `out.write_report(...)` unchanged.
+  - **Algemene richtlijn**: 
+    - Kleine resultsets (<1000 rows): `qr.to_rows_list()` is fine
+    - Grote resultsets (>1000 rows): gebruik `qr.iter_rows()` om memory overhead te vermijden
 
 
 - **Logging and upload:**

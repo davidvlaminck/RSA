@@ -78,15 +78,17 @@ class ArangoDatasource:
             cursor = self.connection.aql.execute(query)
             result = list(cursor)
 
-            # Try to obtain ordered keys. Some cursors don't expose keys(); infer from first row if possible.
-            keys = []
+            # Always provide keys: try cursor metadata first, then infer from rows
+            keys: list[str] = []
             try:
                 if hasattr(cursor, 'keys'):
-                    keys = cursor.keys() or []
+                    cursor_keys = cursor.keys()
+                    if cursor_keys:
+                        keys = list(cursor_keys)
             except Exception:
                 keys = []
 
-            if (not keys) and len(result) > 0 and isinstance(result[0], dict):
+            if not keys and len(result) > 0 and isinstance(result[0], dict):
                 # preserve insertion order of dict
                 keys = list(result[0].keys())
 

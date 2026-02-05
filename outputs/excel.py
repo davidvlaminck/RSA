@@ -56,8 +56,7 @@ class ExcelOutput:
         ws.append(headers)
 
         persistent_dict = persistent_dict or {}
-        for row in result.rows:
-            out_row: list[Any] = list(row)
+        for out_row in result.iter_rows():
             if persistent_column:
                 if out_row and out_row[0] in persistent_dict:
                     out_row.append(persistent_dict[out_row[0]])
