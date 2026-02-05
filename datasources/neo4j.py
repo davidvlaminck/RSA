@@ -5,7 +5,7 @@ from typing import Any, Sequence
 
 from neo4j.time import DateTime
 
-from Neo4JConnector import SingleNeo4JConnector
+from lib.connectors.Neo4JConnector import SingleNeo4JConnector
 
 from .base import QueryResult
 

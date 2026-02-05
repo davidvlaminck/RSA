@@ -1,7 +1,7 @@
 import logging
 
 from lib.mail.MailSender import MailSender
-from Neo4JConnector import SingleNeo4JConnector
+from lib.connectors.Neo4JConnector import SingleNeo4JConnector
 from Reports.Report0016 import Report0016
 from outputs.sheets_wrapper import SingleSheetsWrapper
 

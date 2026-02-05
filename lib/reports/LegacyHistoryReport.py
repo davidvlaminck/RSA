@@ -7,7 +7,7 @@ from neo4j.time import DateTime
 
 from lib.mail.MailSender import MailSender
 from Neo4JConnector import SingleNeo4JConnector
-from PostGISConnector import SinglePostGISConnector
+from lib.connectors.PostGISConnector import SinglePostGISConnector
 from lib.reports.Report import Report
 from outputs.sheets_cell import SheetsCell
 from outputs.sheets_wrapper import SingleSheetsWrapper

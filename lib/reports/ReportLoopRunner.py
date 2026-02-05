@@ -14,8 +14,8 @@ import pytz
 
 from lib.mail.MailContent import MailContent
 from lib.mail.MailSender import MailSender
-from Neo4JConnector import SingleNeo4JConnector
-from PostGISConnector import SinglePostGISConnector
+from lib.connectors.Neo4JConnector import SingleNeo4JConnector
+from lib.connectors.PostGISConnector import SinglePostGISConnector
 from SettingsManager import SettingsManager
 from outputs.sheets_wrapper import SingleSheetsWrapper
 

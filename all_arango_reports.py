@@ -7,8 +7,8 @@ from datetime import datetime, UTC
 from lib.mail.MailSender import MailSender
 from SettingsManager import SettingsManager
 from outputs.sheets_wrapper import SingleSheetsWrapper
-from Neo4JConnector import SingleNeo4JConnector
-from PostGISConnector import SinglePostGISConnector
+from lib.connectors.Neo4JConnector import SingleNeo4JConnector
+from lib.connectors.PostGISConnector import SinglePostGISConnector
 
 ROOT_DIR = (os.path.dirname(os.path.abspath(__file__)))
 

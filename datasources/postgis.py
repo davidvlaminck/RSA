@@ -3,7 +3,7 @@ from __future__ import annotations
 import time
 from datetime import datetime, UTC
 
-from PostGISConnector import SinglePostGISConnector
+from lib.connectors.PostGISConnector import SinglePostGISConnector
 
 from .base import QueryResult
 

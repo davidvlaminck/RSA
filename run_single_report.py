@@ -11,8 +11,7 @@ from datetime import datetime, UTC
 
 from lib.mail.MailContent import MailContent
 from lib.mail.MailSender import MailSender
-from Neo4JConnector import SingleNeo4JConnector
-from PostGISConnector import SinglePostGISConnector
+from lib.connectors.PostGISConnector import SinglePostGISConnector
 from SettingsManager import SettingsManager
 from outputs.sheets_wrapper import SingleSheetsWrapper
 
@@ -39,6 +38,7 @@ class SingleReportLoopRunner:
 
         try:
             neo4j_settings = self.settings['databases']['Neo4j']
+            from Neo4JConnector import SingleNeo4JConnector
             SingleNeo4JConnector.init(uri=neo4j_settings['uri'], user=neo4j_settings['user'],
                                       password=neo4j_settings['password'], database=neo4j_settings['database'])
         except Exception as e:

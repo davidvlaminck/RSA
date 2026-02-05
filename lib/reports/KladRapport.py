@@ -1,5 +1,5 @@
 from lib.reports.DQReport import DQReport
-from Neo4JConnector import SingleNeo4JConnector
+from lib.connectors.Neo4JConnector import SingleNeo4JConnector
 from outputs.sheets_wrapper import SingleSheetsWrapper
 
 if __name__ == '__main__':
