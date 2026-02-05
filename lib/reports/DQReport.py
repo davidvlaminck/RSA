@@ -189,4 +189,121 @@ class DQReport(Report):
                 if all_empty:
                     continue
 
-        ...existing code...
+            new_row = []
+            for column in row:
+                if column is None:
+                    new_row.append(None)
+                elif not isinstance(column, str):
+                    if isinstance(column, datetime):
+                        new_row.append(column.strftime('%Y-%m-%d %H:%M:%S'))
+                    elif isinstance(column, date):
+                        new_row.append(column.strftime('%Y-%m-%d'))
+                    elif isinstance(column, list):
+                        new_row.append(DQReport.make_list_into_strings(column))
+                    else:
+                        new_row.append(str(column))
+                else:
+                    new_row.append(column)
+            row = new_row
+
+            new_result_data.append(row)
+        return new_result_data
+
+    def send_mails(self, sender: MailSender, named_range: list[list[Any]], previous_result: int, result: int,
+                   latest_data_sync: str = ''):
+        if len(named_range) == 0:
+            return
+
+        for line in named_range:
+            if line is None or len(line) < 2 or line[0] == '' or line[0] is None:
+                continue
+            if line[1] == 'Wijziging':
+                if previous_result != result:
+                    sender.add_mail(receiver=line[0], report_name=self.title, spreadsheet_id=self.spreadsheet_id,
+                                    count=result, latest_sync=latest_data_sync, frequency=line[1],
+                                    previous = previous_result)
+                    # add frequency
+            elif line[1] in ['Dagelijks', 'Wekelijks', 'Maandelijks', 'Jaarlijks']:
+                if len(line) < 3 or line[2] == '' or line[2] is None:
+                    sender.add_mail(receiver=line[0], report_name=self.title, spreadsheet_id=self.spreadsheet_id,
+                                    count=result, latest_sync=latest_data_sync, frequency=line[1],
+                                    previous = previous_result)
+                else:
+                    dt = datetime.strptime(line[2], '%Y-%m-%d %H:%M:%S')
+                    last_sent = dt.date()
+                    if line[1] == 'Dagelijks':
+                        diff_days = date.today() - last_sent
+                        if diff_days >= timedelta(days=1):
+                            sender.add_mail(receiver=line[0], report_name=self.title, spreadsheet_id=self.spreadsheet_id,
+                                            count=result, latest_sync=latest_data_sync, frequency=line[1])
+                    elif line[1] == 'Wekelijks':
+                        diff_days = date.today() - last_sent
+                        if diff_days >= timedelta(days=7):
+                            sender.add_mail(receiver=line[0], report_name=self.title, spreadsheet_id=self.spreadsheet_id,
+                                            count=result, latest_sync=latest_data_sync, frequency=line[1])
+                    elif line[1] == 'Maandelijks':
+                        current_month = date.today().month
+                        if current_month != last_sent.month:
+                            sender.add_mail(receiver=line[0], report_name=self.title, spreadsheet_id=self.spreadsheet_id,
+                                            count=result, latest_sync=latest_data_sync, frequency=line[1])
+                    elif line[1] == 'Jaarlijks':
+                        current_month = date.today().year
+                        if current_month != last_sent.year:
+                            sender.add_mail(receiver=line[0], report_name=self.title, spreadsheet_id=self.spreadsheet_id,
+                                            count=result, latest_sync=latest_data_sync, frequency=line[1])
+
+    def get_historiek_record_info(self, sheets_wrapper: SheetsWrapper) -> tuple[int | None, str]:
+        results = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='Historiek',
+                                                      sheetrange='B2:C2')
+
+        if len(results) == 0:
+            return None, ''
+        latest_sync = results[0][0]
+        previous_count = results[0][1]
+        return int(previous_count), latest_sync
+
+    def transform_raw_to_dict(self, mail_receivers_raw) -> list[dict[str, Any]]:
+        mail_dicts = []
+        sheetrange = mail_receivers_raw['range'].split('!')[1]
+        cells = sheetrange.split(':')
+        startcell = SheetsCell(cells[0])
+        startcell.update_column_by_adding_number(2)
+        if 'values' not in mail_receivers_raw:
+            return mail_dicts
+        for list_element in mail_receivers_raw['values']:
+            if len(list_element) < 2:
+                if len(list_element) > 0 and list_element[0] == '':
+                    continue
+                raise ValueError("not correctly configured mailing template")
+
+            mail_dict = {}
+            mail_dicts.append(mail_dict)
+            mail_dict['mail'] = list_element[0]
+            mail_dict['frequency'] = list_element[1]
+            mail_dict['cell'] = startcell.cell
+            if len(list_element) > 2:
+                mail_dict['last_update'] = list_element[2]
+
+            startcell.row += 1
+
+        return mail_dicts
+
+    def clean_query(self, query):
+        query_lines = query.split('\n')
+        new_q = []
+        for line in query_lines:
+            if '//' not in line:
+                new_q.append(line)
+            else:
+                new_q.append(line.split('//')[0])
+        return '\n'.join(new_q)
+
+    @classmethod
+    def make_list_into_strings(cls, data: list, sep: str = '|'):
+        if not isinstance(data, list):
+            return data
+        for index, value in enumerate(data):
+            if isinstance(value, list):
+                value = cls.make_list_into_strings(value, sep = f'|{sep}')
+                data[index] = value
+        return sep.join([str(d) for d in data])
