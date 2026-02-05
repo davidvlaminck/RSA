@@ -168,13 +168,19 @@ class DQReport(Report):
         logging.info(f'finished report {self.name}')
 
     @staticmethod
-    def clean(result_data, headerrow: list[str]):
-        """Removes the empty rows in the results, converts lists, decimals and dates to strings """
+    def clean(result_data, headerrow: list[str] | None = None):
+        """Removes the empty rows in the results, converts lists, decimals and dates to strings.
+
+        Backwards compatible: headerrow is optional. If present and a row is a dict, use headerrow to
+        order dict values; if headerrow is None and row is a dict, use the dict's keys iteration order.
+        """
         new_result_data = []
 
         for row in result_data:
             if isinstance(row, dict):
-                row = [row.get(key, '') for key in headerrow]
+                # if no headerrow provided, derive an order from dict keys
+                cols = headerrow if headerrow is not None else list(row.keys())
+                row = [row.get(key, '') for key in cols]
 
             if isinstance(row, tuple):
                 row = list(row)
