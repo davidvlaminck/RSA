@@ -4,10 +4,10 @@ from typing import Any
 
 from googleapiclient.errors import HttpError
 
-from MailSender import MailSender
-from Report import Report
-from SheetsCell import SheetsCell
-from SheetsWrapper import SingleSheetsWrapper, SheetsWrapper
+from lib.mail.MailSender import MailSender
+from lib.reports.Report import Report
+from outputs.sheets_cell import SheetsCell
+from outputs.sheets_wrapper import SingleSheetsWrapper, SheetsWrapper
 from factories import make_datasource, make_output
 from outputs.base import OutputWriteContext
 

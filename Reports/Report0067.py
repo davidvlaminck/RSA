@@ -1,4 +1,4 @@
-from LegacyHistoryReport import LegacyHistoryReport
+from lib.reports.LegacyHistoryReport import LegacyHistoryReport
 
 
 class Report0067:

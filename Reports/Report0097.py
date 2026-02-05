@@ -1,4 +1,4 @@
-from DQReport import DQReport
+from lib.reports.DQReport import DQReport
 
 
 class Report0097:

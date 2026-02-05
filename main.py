@@ -1,4 +1,4 @@
-from ReportLoopRunner import ReportLoopRunner
+from lib.reports.ReportLoopRunner import ReportLoopRunner
 
 if __name__ == '__main__':
     reportlooprunner = ReportLoopRunner(settings_path=r'/home/davidllinux/Documenten/AWV/resources/settings_RSA.json')

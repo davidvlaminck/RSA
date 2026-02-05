@@ -2,8 +2,8 @@ import unittest
 from datetime import datetime, date
 from unittest import mock
 
-from DQReport import DQReport
-from MailSender import MailSender
+from lib.reports.DQReport import DQReport
+from lib.mail.MailSender import MailSender
 
 
 class DQReportTests(unittest.TestCase):

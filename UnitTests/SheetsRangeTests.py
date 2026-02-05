@@ -1,6 +1,6 @@
 import unittest
 
-from SheetsCell import SheetsCell
+from outputs.sheets_cell import SheetsCell
 
 
 class SheetsRangeTests(unittest.TestCase):

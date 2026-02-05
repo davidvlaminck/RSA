@@ -1,7 +1,7 @@
 import unittest
 
-from SheetsCell import SheetsCell
-from SheetsWrapper import SheetsWrapper
+from outputs.sheets_cell import SheetsCell
+from outputs.sheets_wrapper import SheetsWrapper
 
 
 class SheetsWrapperTests(unittest.TestCase):

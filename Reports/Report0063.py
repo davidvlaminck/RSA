@@ -1,5 +1,5 @@
-from DQReport import DQReport
-from LegacyReport import LegacyReport
+from lib.reports.DQReport import DQReport
+from lib.reports.LegacyReport import LegacyReport
 
 
 class Report0063:

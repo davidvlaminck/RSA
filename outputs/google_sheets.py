@@ -3,8 +3,8 @@ from __future__ import annotations
 from typing import Any, Sequence
 import decimal
 
-from SheetsCell import SheetsCell
-from SheetsWrapper import SingleSheetsWrapper
+from outputs.sheets_cell import SheetsCell
+from outputs.sheets_wrapper import SingleSheetsWrapper
 
 from datasources.base import QueryResult
 from .base import OutputWriteContext
