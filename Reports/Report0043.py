@@ -1,5 +1,5 @@
 from lib.reports.DQReport import DQReport
-from OTLCursorPool import OTLCursorPool
+from lib.connectors.OTLCursorPool import OTLCursorPool
 
 
 class Report0043:
