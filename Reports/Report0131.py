@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0131:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0131(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0131',
                                title='Geometrie Polygoon heeft 3 of meer identieke punten en is visueel een punt.',
                                spreadsheet_id='1H2g6_SGcGPqRIDKxGavSQtZRFUCGpOddgvm6vJyxvEI',
@@ -42,5 +40,5 @@ class Report0131:
             order by assettype_label asc;
             """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

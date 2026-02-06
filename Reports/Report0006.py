@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0006:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0006(BaseReport):
+    def init_report(self) -> None:
         aql_query = """
 LET wegkantkast_key = FIRST(FOR at IN assettypes FILTER at.short_uri == \"onderdeel#Wegkantkast\" LIMIT 1 RETURN at._key)
 LET kast_key        = FIRST(FOR at IN assettypes FILTER at.short_uri == \"onderdeel#Kast\"        LIMIT 1 RETURN at._key)
@@ -37,5 +35,5 @@ FOR a IN assets
         self.report.result_query = aql_query
         self.report.cypher_query = """MATCH (a:Asset :Wegkantkast {isActief:TRUE}) \n        WHERE NOT EXISTS ((a)-[:HoortBij]->(:Kast {isActief:TRUE}))\n        RETURN a.uuid, a.naam"""
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

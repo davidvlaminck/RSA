@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0186:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0186(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0186', title='Bevestigingsrelatie bestaat tussen PTVerwerkingseenheid en PTDemodulatoren',
                                spreadsheet_id='1wZ4Z9wNQG95zK_Bj5Z3d5jsHTfJWC9OrlvWJ4ulhVeM', datasource='PostGIS',
                                persistent_column='N', link_type='eminfra')
@@ -69,5 +67,5 @@ class Report0186:
         order by assetversie_context
 	    """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

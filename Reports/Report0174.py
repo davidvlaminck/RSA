@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0174:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0174(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0174',
                                title='Assets van bepaalde assettypes hebben een unieke naam',
                                spreadsheet_id='103WXbUchfGVpKN0eGTHc1X8-PJSq5rf2Ydz6FhePGFs',
@@ -63,5 +61,5 @@ class Report0174:
             , a1.aantal 
 	"""
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

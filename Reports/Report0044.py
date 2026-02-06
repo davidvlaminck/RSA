@@ -1,12 +1,10 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 from lib.connectors.OTLCursorPool import OTLCursorPool
 
 
-class Report0044:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0044(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0044',
                                title='Ingevulde deprecated attributen',
                                spreadsheet_id='1GFfEoWVvi0-BpFvrPQUG6w5AuMcoyVk9Kutf9ux8bOE',
@@ -41,5 +39,5 @@ class Report0044:
             WHERE a.actief = TRUE AND a_w.NOTNULL
         """.format(",".join(["('{}')".format(d[0]) for d in deprecated_attributes]))
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

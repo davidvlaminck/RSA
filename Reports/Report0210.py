@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0210:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0210(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0210',
                                title='HSCabineLegacy (Legacy) ontbreekt een Bevestiging-relatie naar een Hoogspanningsdeel',
                                spreadsheet_id='14djKCmoRIQsKSlcPb2oJCw-PoQfRn0oDqfj2QGtnqEU',
@@ -62,5 +60,5 @@ class Report0210:
         select * from cte_hscabine_bevestigingsrelatie_hsdeel_ontbreekt order by hscab_uuid
             """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

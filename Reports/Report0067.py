@@ -1,11 +1,9 @@
 from lib.reports.LegacyHistoryReport import LegacyHistoryReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0067:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0067(BaseReport):
+    def init_report(self) -> None:
         self.report = LegacyHistoryReport(name='report0067',
                                           title="Detailrapport invulgraad legacy installaties TOV",
                                           spreadsheet_id='1T1lgCb8FMmfUaYo_-G0oQWPgpt7MoKOACYC2yqQiOX4',
@@ -47,5 +45,5 @@ FROM records
 WHERE zonder_toezichter = '1' OR zonder_bestek = '1' OR zonder_locatie = '1' OR zonder_beheerder = '1' OR zonder_voeding = '1';
 """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

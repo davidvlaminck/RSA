@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0136:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0136(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0136',
                                title='Straatkolk heeft betrokkene relaties beheerder en verantwoordelijke-reiniging',
                                spreadsheet_id='1uYTd1vGSKMxxWbkbTjgpSo969ntXGj_-xXebBGXPdVY',
@@ -65,5 +63,5 @@ class Report0136:
             order by ident2, ident8, ag1.naam, ag2.naam asc;
             """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

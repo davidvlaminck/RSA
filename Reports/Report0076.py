@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0076:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0076(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0076',
                                title='Verkeersregelaars hebben een installatieverantwoordelijke',
                                spreadsheet_id='1JGhVFeXXejMHRupSqqKgSEaz384vf4NNrJ8OyDs4NeM',
@@ -16,7 +14,7 @@ class Report0076:
         WHERE NOT EXISTS ((a)-[:HeeftBetrokkene {rol:'installatieverantwoordelijke'}]->(:Agent))
         RETURN a.uuid, a.naam"""
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)
 
 aql_query = """

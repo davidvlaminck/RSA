@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0077:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0077(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0077',
                                title='Verkeersregelaars hebben een ingevulde datum oprichting object',
                                spreadsheet_id='10K9cwkJIJQ2sXb71rvqm1MqtSj5k2M5FKtYUhE4mf2E',
@@ -16,7 +14,7 @@ class Report0077:
 WHERE a.datumOprichtingObject IS NULL
 RETURN a.uuid, a.naam"""
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)
 
 aql_query = """

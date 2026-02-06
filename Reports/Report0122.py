@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0122:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0122(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0122',
                                title='Netwerkpoorten hebben een naam',
                                spreadsheet_id='1kOEWxEfBVrft7bxM3F6YiQrNk3YFRXeZmr2edsvhuwQ',
@@ -46,5 +44,5 @@ class Report0122:
             order by uuid
             """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0111:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0111(BaseReport):
+    def init_report(self) -> None:
         aql_query = """
 LET verkeersregelaar_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Verkeersregelaar" LIMIT 1 RETURN at._key)
 
@@ -33,5 +31,5 @@ FOR a IN assets
         MATCH (a:Verkeersregelaar {isActief:TRUE}) \n        WHERE NOT a.vplanNummer =~ '^[Vv]\\d{5,6}[vVwWsSxX]\\d{2}$'\n        RETURN a.uuid, a.naam, a.vplanNummer
 	    """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

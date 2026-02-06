@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0106:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0106(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0106', title='Geometrie is consistent met GeometrieArtefact',
                                spreadsheet_id='1x9g0b_wQtLgkxnAwR_lffzVLdS3PElb3mLWtqItqkig', datasource='PostGIS',
                                persistent_column='K')
@@ -320,5 +318,5 @@ class Report0106:
             order by naam, otl_actuele_geometrie, toestand
 	"""
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

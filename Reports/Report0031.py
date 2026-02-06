@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0031:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0031(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0031',
                                title="Netwerkelementen met gebruik 'L2-switch' hebben een hoortbij relatie naar installatie L2AccesStructuur",
                                spreadsheet_id='1k5uUwLmf5IFVhftY7klBmylWtuEBwP8URjYPMcAB71w',
@@ -35,7 +33,7 @@ class Report0031:
             LEFT JOIN relaties ON elementen.uuid = relaties.bronuuid
             WHERE relaties.uuid IS NULL;  -- Hoortbij Relatie ontbreekt
             """
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)
 
 aql_query = """

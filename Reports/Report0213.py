@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0213:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0213(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0213',
                                title='Laagspanning (LS) is bevestigd aan een Kast (Legacy)',
                                spreadsheet_id='1JK1zb3RP-mwDgcbenxjfSAcbWjCrMaq0vluRdhKIwQs',
@@ -45,5 +43,5 @@ class Report0213:
                 )
             """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

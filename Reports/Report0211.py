@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0211:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0211(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0211',
                                title='Dubbele niet-gerichte relatie tussen assets',
                                spreadsheet_id='1AztJXPe2irCDmu3dJuRB9TMvCXOrU-y9qnrnFR4vnhg',
@@ -44,5 +42,5 @@ class Report0211:
             order by rel1.relatie, rel1."bronuuid";
             """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

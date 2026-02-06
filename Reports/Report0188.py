@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0188:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0188(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0188', title='Toezichtsgroep EMT_VHS bevat geen assets (Legacy)',
                                spreadsheet_id='1PvWx9ksfXI0iUemdm_tI0gs2t4EfhVQtZXsFf4M_cqs', datasource='PostGIS',
                                persistent_column='G', link_type='eminfra')
@@ -34,5 +32,5 @@ class Report0188:
         order by assettype asc;
 	    """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

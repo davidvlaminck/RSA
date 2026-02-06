@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0156:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0156(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0156',
                                title='Assets met dubbele Betrokkene-relatie naar dezelfe rol',
                                spreadsheet_id='19CqxgnN3XzlVv6yIAi7Dh5JEykr0k-YBYNH4q4tcNu0',
@@ -39,5 +37,5 @@ class Report0156:
         order by aantal_rollen desc
         """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

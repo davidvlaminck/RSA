@@ -1,12 +1,10 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 from lib.connectors.OTLCursorPool import OTLCursorPool
 
 
-class Report0043:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0043(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0043',
                                title='Instanties van deprecated classes',
                                spreadsheet_id='1rpYt_EKa5YOCDBdzmrAcV6vwoy3hccblR6_spaV2ziI',
@@ -28,7 +26,7 @@ class Report0043:
             WHERE a.actief = TRUE
         """.format(",".join(["('{}')".format(d[0]) for d in deprecated_classes]))
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)
 
 

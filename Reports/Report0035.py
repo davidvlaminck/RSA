@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0035:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0035(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0035',
                                title="Bestekkoppelingen die bijna vervallen (komende 30 dagen)",
                                spreadsheet_id='1DfUOm6Z38BYR7R809wiUDNrd8Fj4O-dC59ylHn99iqE',
@@ -26,7 +24,7 @@ FROM s
 WHERE bijna_verlopen = TRUE AND lower(bestekkoppelingen.koppelingstatus) IN ('actief', 'toekomstig')
 ORDER BY s.eindDatum, naampad, bestekkoppelingen.eindDatum;"""
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)
 
 aql_query = """

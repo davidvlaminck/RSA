@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0219:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0219(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0219',
                                title='Identieke (niet-unieke) EAN-nummers bij meerdere assets (assettypes: DNBLaagspanning en DNBHoogspanning)',
                                spreadsheet_id='1gUDGRCTpwUK-ygXBigM0Jeyo05RpbKhiGWsEzL0MWgk',
@@ -46,5 +44,5 @@ where aantal > 1
 order by aantal desc, eannummer asc, toestand
     """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

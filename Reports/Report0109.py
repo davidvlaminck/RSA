@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0109:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0109(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0109', title='Geometrie is geldig: geen opeenvolgende punten',
                                spreadsheet_id='1AmtcjAkh5H95O_lXtd4p_MHeoqFpQKQlIRfQk3MxGQ4', datasource='PostGIS',
                                persistent_column='G')
@@ -46,5 +44,5 @@ class Report0109:
             order by aantal_dubbele_punten desc
         	"""
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

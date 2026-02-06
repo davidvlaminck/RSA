@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0129:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0129(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0129',
                                title='Geometrie Linestring heeft identieke eindpunten en bevat maximum 2 punten',
                                spreadsheet_id='1bLfrHp7ETT6ZJwWshIiZRG81ID58LqaADks2ymPY_mM',
@@ -38,5 +36,5 @@ class Report0129:
         order by assettype_label asc
         """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

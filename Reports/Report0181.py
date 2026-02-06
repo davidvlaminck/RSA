@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0181:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0181(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0181', title='Wetenschappelijke notaties komen niet voor',
                                spreadsheet_id='1GDwzQP9TxQuMDc6_B57tx8ct_gjkoTQhvNQcil5iETo', datasource='PostGIS',
                                persistent_column='G', link_type='eminfra')
@@ -28,5 +26,5 @@ class Report0181:
         order by assettype, naampad, naam
 	    """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

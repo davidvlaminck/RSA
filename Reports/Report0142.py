@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0142:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0142(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0142',
                                title='Dubbele Aanvullende Geometrie',
                                spreadsheet_id='124_Y-L0kp2pM67TY6jL4M1eHfZBl_6Nh8xFyFYnhK30',
@@ -80,5 +78,5 @@ class Report0142:
             order by aantal desc, uuid asc
         """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

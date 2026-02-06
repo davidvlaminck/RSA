@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0192:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0192(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0192', title='Overzicht van het aantal Bezoekt-relaties per bron- en doelassettype',
                                spreadsheet_id='1vcrJrrS3kXC4hiP9QiDY2WbxCm40CwCW_nEKCP4Q55o', datasource='PostGIS',
                                persistent_column='D', link_type='eminfra')
@@ -39,5 +37,5 @@ class Report0192:
         order by doel_assettype asc
 	    """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

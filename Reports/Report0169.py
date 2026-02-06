@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0169:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0169(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0169',
                                title='Seinbruggen zijn 90 graden geöriënteerd',
                                spreadsheet_id='1nJCGkb1-RbNkU6B7vNMM2p26pbIeToCBVkaD9LSP71Y',
@@ -44,5 +42,5 @@ class Report0169:
             orientatie::numeric % 90 = 0  -- Geen rest na deling door 90°
         """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

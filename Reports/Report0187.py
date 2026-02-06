@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0187:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0187(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0187', title='Toezichtsgroepen bevatten geen Legacy-assets: AWV_EW_AN; AWV_EW_VB; AWV_EW_OW; AWV_EW_WV; AWV_EW_LB',
                                spreadsheet_id='1R4M4Q4dPXeEh4kvnu8sN_EcfX2DNdvV2VsU6kCuQA7k', datasource='PostGIS',
                                persistent_column='G', link_type='eminfra')
@@ -38,5 +36,5 @@ class Report0187:
         order by assettype asc;
 	    """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

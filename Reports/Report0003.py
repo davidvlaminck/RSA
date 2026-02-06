@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0003:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0003(BaseReport):
+    def init_report(self) -> None:
         aql_query = """
 LET verkeersregelaar_key = FIRST(
   FOR at IN assettypes
@@ -56,5 +54,5 @@ FOR a IN assets
         self.report.result_query = aql_query
         self.report.cypher_query = """MATCH (a:Verkeersregelaar {isActief:TRUE}) \n        WHERE NOT EXISTS ((a)-[:Bevestiging]-(:Wegkantkast {isActief:TRUE}))\n        RETURN a.uuid, a.naam"""
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

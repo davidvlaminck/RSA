@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0060:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0060(BaseReport):
+    def init_report(self) -> None:
         aql_query = """
 LET dnb_keys = (
   FOR at IN assettypes
@@ -50,5 +48,5 @@ FOR d IN assets
         self.report.cypher_query = """
             MATCH (x:Asset{isActief: True})-[:HoortBij]-(y{isActief: True}) \n            WHERE ((y:DNBHoogspanning) OR (y:DNBLaagspanning)) AND  x.eanNummer <> y.eanNummer\n            RETURN \n                x.uuid as uuid, x.naampad as naampad, x.toestand as toestand, \n                x.`tz:toezichter.tz:voornaam` as tz_voornaam, x.`tz:toezichter.tz:naam` as tz_naam, x.`tz:toezichter.tz:email` as tz_email,\n                x.`tz:toezichtgroep.tz:naam` as tzg_naam,  x.`tz:toezichtgroep.tz:referentie` as tzg_referentie\n            UNION \n            MATCH (x:Asset{isActief: True})-[:HoortBij]-(y{isActief: True}) \n            WHERE (y:DNBHoogspanning) OR (y:DNBLaagspanning)\n            WITH x, count(DISTINCT y.eanNummer) as ean_count \n            WHERE ean_count > 1\n            RETURN \n                x.uuid as uuid, x.naampad as naampad, x.toestand as toestand, \n                x.`tz:toezichter.tz:voornaam` as tz_voornaam, x.`tz:toezichter.tz:naam` as tz_naam, x.`tz:toezichter.tz:email` as tz_email,\n                x.`tz:toezichtgroep.tz:naam` as tzg_naam,  x.`tz:toezichtgroep.tz:referentie` as tzg_referentie\n        """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

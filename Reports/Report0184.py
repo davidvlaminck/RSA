@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0184:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0184(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0184', title='Laagspanningsaansluiting (Legacy) of Kast (Legacy) keuringsinfo',
                                spreadsheet_id='1tFLD_Ah9V3S6V3RcFsToEs7OWW5U26q6TIuOW5jLHrI', datasource='PostGIS',
                                persistent_column='S', link_type='eminfra')
@@ -85,5 +83,5 @@ where aw.assetuuid is not null
 order by bevat_keuringsinfo desc, aantal_resterende_dagen_tot_vervaldag_keuring
 	    """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

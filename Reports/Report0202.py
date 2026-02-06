@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0202:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0202(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0202',
                                title='VPLMast (Legacy) heeft meerdere bijhorende WVLichtmast (OTL)',
                                spreadsheet_id='1shR393J5PkEGkIRgnoNr-jzFQrvcYKkzTdg2zPEiEqk',
@@ -53,5 +51,5 @@ class Report0202:
             order by a.installatie_naam asc, a.lgc_naam asc;
             """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

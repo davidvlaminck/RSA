@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0058:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0058(BaseReport):
+    def init_report(self) -> None:
         aql_query = """
 FOR a IN assets
   FILTER a.AIMDBStatus_isActief == true
@@ -43,5 +41,5 @@ FOR a IN assets
                 a.`tz:toezichtgroep.tz:naam` as tzg_naam,  a.`tz:toezichtgroep.tz:referentie` as tzg_referentie
         """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

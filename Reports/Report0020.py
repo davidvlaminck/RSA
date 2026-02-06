@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0020:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0020(BaseReport):
+    def init_report(self) -> None:
         aql_query = """
 LET zpad_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "installatie#Zpad" LIMIT 1 RETURN at._key)
 LET netwerkpoort_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Netwerkpoort" LIMIT 1 RETURN at._key)
@@ -41,5 +39,5 @@ FOR z IN assets
         self.report.result_query = aql_query
         self.report.cypher_query = """MATCH (z:Zpad {isActief:TRUE})\n        WHERE z.toestand = \"in-gebruik\"\n        OPTIONAL MATCH (z)<-[:HoortBij]-(n:Netwerkpoort {isActief:TRUE})\n        WITH z, count(n) AS n_netwerkpoort\n        WHERE n_netwerkpoort <> 2\n        RETURN z.uuid, z.naam"""
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0175:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0175(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0175',
                                title='SegmentControllers (SegC (OTL) - [HoortBij] - SegC (LGC)) hebben identieke serienummers.',
                                spreadsheet_id='1qoXaCy5U2H-HloAHNojkuraN4Du1D0gWy6yr4nY2BjQ',
@@ -78,5 +76,5 @@ class Report0175:
         ;
 	"""
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

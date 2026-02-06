@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0059:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0059(BaseReport):
+    def init_report(self) -> None:
         aql_query = """
 LET ups_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#UPS" LIMIT 1 RETURN at._key)
 LET maxDepth = 10
@@ -59,5 +57,5 @@ FOR x IN assets
             RETURN DISTINCT x.uuid AS uuid, x.naampad AS naampad, x.typeURI AS typeURI, x.toestand as toestand, path_loop
         """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

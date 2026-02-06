@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0123:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0123(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0123',
                                title='Geometrie is geldig: realistische grootte',
                                spreadsheet_id='1gbwsmeKicH0_IJVfK05JD4RC93RkWa9zVUO1TEpLqxA',
@@ -55,5 +53,5 @@ class Report0123:
         order by naam asc, oppervlakte desc        
         """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

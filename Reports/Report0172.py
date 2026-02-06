@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0172:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0172(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0172',
                                title='Assets zitten volledig omvat in een andere asset van hetzelfde assettype (donut)',
                                spreadsheet_id='1TfxlJgBUJvRS5xY29ZVIjqHD_2-jpXJrfY1VILuPJhk',
@@ -53,5 +51,5 @@ class Report0172:
         order by a1.assettype
         """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

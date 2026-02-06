@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0034:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0034(BaseReport):
+    def init_report(self) -> None:
         aql_query = """
 LET netwerkpoort_key     = FIRST(FOR at IN assettypes FILTER at.short_uri == \"onderdeel#Netwerkpoort\" LIMIT 1 RETURN at._key)
 LET netwerkelement_key   = FIRST(FOR at IN assettypes FILTER at.short_uri == \"onderdeel#Netwerkelement\" LIMIT 1 RETURN at._key)
@@ -49,5 +47,5 @@ FOR n IN assets
         self.report.result_query = aql_query
         self.report.cypher_query = """MATCH (n:Netwerkpoort {isActief:TRUE, type:'NNI'})-[:Bevestiging]-(:Netwerkelement {isActief:TRUE, gebruik:'l2-switch'}) \n        WHERE NOT EXISTS ((n)-[:Sturing]-(:Netwerkpoort {isActief:TRUE, type:'NNI'}))\n        RETURN n.uuid, n.naam"""
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

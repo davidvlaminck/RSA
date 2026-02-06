@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0160:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0160(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0160',
                                title='Ontbrekende gegevens installaties Telematica',
                                spreadsheet_id='1VyZLJl1H98VHsVLX-qPCWBlfcvK0EtxMJ5ySiy-1ixI',
@@ -47,5 +45,5 @@ class Report0160:
         WHERE zonder_toezichter = '1' OR zonder_bestek = '1' OR zonder_locatie = '1' OR zonder_beheerder = '1' OR zonder_voeding = '1';
         """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

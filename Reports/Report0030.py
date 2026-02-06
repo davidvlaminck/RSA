@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0030:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0030(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0030',
                                title='Netwerkelementen hebben een (afgeleide) locatie',
                                spreadsheet_id='1ZAZ8chzMbLEyGd-cbZM6S7Uw4aNOrBmAE1KWnbyvdK4',
@@ -30,7 +28,7 @@ class Report0030:
             and g.geometry is null
         """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)
 
 aql_query = """

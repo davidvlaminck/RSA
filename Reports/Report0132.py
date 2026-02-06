@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0132:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0132(BaseReport):
+    def init_report(self) -> None:
         aql_query = """
 LET bad_toestanden = ["verwijderd", "geannuleerd", "in-ontwerp", "gepland"]
 
@@ -38,5 +36,5 @@ FOR asset IN assets
             ORDER BY asset.type, asset.toestand
             """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0045:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0045(BaseReport):
+    def init_report(self) -> None:
         aql_query = """
 LET bitumineuzelaag_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#BitumineuzeLaag" LIMIT 1 RETURN at._key)
 LET onderbouw_key       = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Onderbouw" LIMIT 1 RETURN at._key)
@@ -43,5 +41,5 @@ FOR b IN assets
             RETURN b.uuid AS uuid, b.toestand AS toestand
         """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

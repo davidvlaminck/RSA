@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0173:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0173(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0173',
                                title='Legacy assets ontbreken een naampad',
                                spreadsheet_id='1Lu1nSafM08GgwY1FHd4vnEN6qbS0Z4lI-H96gZzV8Z0',
@@ -33,5 +31,5 @@ class Report0173:
             at.uri ~ '^https://lgc.data.wegenenverkeer.be'
         """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

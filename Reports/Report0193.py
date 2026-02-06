@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0193:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0193(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0193',
                                title='SegmentControllers hebben een (afgeleide) locatie',
                                spreadsheet_id='1O3e83o3Aa-b0eW3xMBjCZoG6b5vNfY9PAXmeULjo1as',
@@ -33,5 +31,5 @@ class Report0193:
         order by a.toestand, a.naam
         """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

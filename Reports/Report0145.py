@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0145:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0145(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0145',
                                title='Dubbele bomen (West-Vlaanderen)',
                                spreadsheet_id='1rqDPhMkGU1Y0gwOoJ6HHHaH055hu0DNSaAZOXp3896w',
@@ -161,5 +159,5 @@ inner join cte_boom_incl_gemeente b2 on  -- inner join: enkel de dubbele bomen, 
 order by b1.uuid, b2.uuid;
         """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

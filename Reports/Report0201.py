@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0201:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0201(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0201',
                                title='Naamgeving overzicht',
                                spreadsheet_id='1VNme4tAQ0KJ5TZpyK3DikNfX7yftgCeKM6y8VLvEc9g',
@@ -130,5 +128,5 @@ select
 from regex 
             """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

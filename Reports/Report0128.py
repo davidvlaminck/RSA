@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0128:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0128(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0128',
                                title='Afstand tussen legacy en OTL-voorstelling van de asset "Mast" is aanvaardbaar',
                                spreadsheet_id='1037M4_aDq9pF3ntRZhClYEB_GZxAdz5b82qH5WaeZv0',
@@ -40,5 +38,5 @@ class Report0128:
         order by distance desc;
         """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

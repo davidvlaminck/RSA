@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0125:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0125(BaseReport):
+    def init_report(self) -> None:
         aql_query = """
 LET kabelnettoegang_key = FIRST(FOR at IN assettypes FILTER at.short_uri == \"onderdeel#KabelnetToegang\" LIMIT 1 RETURN at._key)
 
@@ -44,5 +42,5 @@ FOR n IN assets
         RETURN n.uuid as uuid, n.toestand as toestand, n.isActief as isActief
         """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

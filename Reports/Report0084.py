@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0084:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0084(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='Report0084',
                                title='Verkeersregelaars hebben een vplannummer en vplandatum dat overeenkomt met het legacy vplan',
                                spreadsheet_id='1pGZUOMXLeWRo0Ykzshxt9PJN2tCbznsBxQf0mgh7Zos',
@@ -74,5 +72,5 @@ where
 	(vr_otl.vplandatum <> vr_lgc.indienstdatum)
 """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

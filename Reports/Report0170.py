@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0170:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0170(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0170',
                                title='Actieve assets hebben een inactieve parent-asset',
                                spreadsheet_id='1XHAWkGnKse2bmZth1d0PybcvyWNDO-cv3QjokT1aOic',
@@ -53,5 +51,5 @@ class Report0170:
         inner join cte_asset_child chi on par.naampad = chi.naampad_parent
         """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

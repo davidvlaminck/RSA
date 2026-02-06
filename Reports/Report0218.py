@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0218:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0218(BaseReport):
+    def init_report(self) -> None:
         aql_query = """
  LET at_80fdf1b4 = FIRST(FOR at IN assettypes FILTER at.short_uri == \"lgc:installatie#LS\" LIMIT 1 RETURN at._key)
  LET at_b4361a72 = FIRST(FOR at IN assettypes FILTER at.short_uri == \"lgc:installatie#HS\" LIMIT 1 RETURN at._key)
@@ -76,5 +74,5 @@ where l.geometry is null
 order by a.naampad
         """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

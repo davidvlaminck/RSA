@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0062:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0062(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0062',
                                title="Failover assets",
                                spreadsheet_id='1hX4KW6lRgUWb-uhtmdmBVeHUb-7xDs1Mg5sCvMZ-jhA',
@@ -40,5 +38,5 @@ FROM failovertypes
 	LEFT JOIN identiteiten ON b.toezichter = identiteiten.uuid;
 """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0195:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0195(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0195',
                                title='Kast (Legacy) hebben een locatie',
                                spreadsheet_id='1xFCTQpOty0ur3Tgn-rYmHs4jonZkA5l794Neid1kaCw',
@@ -35,5 +33,5 @@ class Report0195:
             a.toestand, i.gebruikersnaam 
         """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

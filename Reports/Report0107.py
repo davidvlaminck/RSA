@@ -1,11 +1,9 @@
 from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0107:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0107(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0107', title='Geometrie is geldig: in Vlaanderen gelegen',
                                spreadsheet_id='1aUVoYhqKe1k4KwuAyNcfWXkH9uwj1Cls_ufH2j37gNg', datasource='PostGIS',
                                persistent_column='D')
@@ -53,5 +51,5 @@ class Report0107:
             ;
             """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

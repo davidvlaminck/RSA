@@ -6,7 +6,7 @@ Checklist (high level)
 - [x] 1) Make `Reports` a package and switch the runner to `importlib.import_module("Reports.ReportXXXX")` + discover with `pkgutil.iter_modules`.
 - [ ] 2) Add a registry decorator so reports can register themselves on import; fallback to filename==classname stays supported.
 - [ ] 3) Run each report in process isolation with timeouts (ProcessPoolExecutor or multiprocessing) and graceful termination handling.
-- [ ] 4) Move heavy init out of import-time into `init_report()`; add audit tooling to locate violations.
+- [x] 4) Move heavy init out of import-time into `init_report()`; add audit tooling to locate violations.
 
 How we'll work
 - I will implement these tasks one at a time in the order you choose. Each numbered section below contains:
@@ -191,6 +191,32 @@ Estimated effort
 
 Risks
 - Some reports may assume shared, long-lived in-process connectors. The new pattern requires re-instantiation per child process or using external shared connectors.
+
+Changes made for step 4:
+- Added `scripts/find_import_side_effects.py` audit script that scans all Report files for suspicious patterns:
+  - DB calls (execute, query, connect, cursor, session, driver)
+  - API client instantiation (EMInfraClient, EMSONClient, connectors)
+  - Top-level file I/O and HTTP requests
+  - Large data structure loading (pandas, JSON, YAML)
+- Ran the audit on all 200+ reports.
+
+Audit results: ✅ **CLEAN** — No import-time side effects detected!
+
+All reports follow best practices:
+- Module level: imports, class definition only
+- init_report(): all DQReport instantiation, query definition, setup
+- run_report(): report execution
+
+This means:
+- Fast discovery: importing Reports directory is quick
+- Safe for multi-process: child processes import cleanly
+- Ready for hot-reload: no state pollution at import time
+- No prerequisites for step 3 (process isolation)
+
+You can use the audit script anytime to check for regressions:
+```bash
+python scripts/find_import_side_effects.py
+```
 
 ----------------------------------------------------------------
 Order and dependencies
