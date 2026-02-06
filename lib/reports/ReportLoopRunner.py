@@ -1,9 +1,3 @@
-import importlib
-import pkgutil
-import importlib.util
-# initialize a SheetsWrapper through SingleSheetsWrapper
-# same for Neo4JConnector and other connectors
-# then run reports that use the Single version of the class to get the initialized version
 import logging
 import os
 import time
@@ -128,30 +122,23 @@ class ReportLoopRunner:
         # start running reports now and at midnight
         logging.info(f"{datetime.now(tz=BRUSSELS)}: let's run the reports now")
 
-        # detect reports in Reports package via pkgutil.iter_modules
-        self.reports = []
-        try:
-            import Reports
-            for finder, name, ispkg in pkgutil.iter_modules(Reports.__path__):
-                # only consider python modules (files) that look like ReportXXXX
-                if name.endswith('.py') and name.startswith('Report'):
-                    self.reports.append(name[:-3])
-                else:
-                    self.reports.append(name)
-        except Exception:
-            # fallback: scan directory (legacy behavior)
-            for file in os.listdir(self.dir_path):
-                if file.endswith('.py'):
-                    self.reports.append(file[:-3])
+        # detect reports in Reports package using the shared discovery helper
+        from lib.reports.instantiator import discover_and_instantiate_reports
+        report_instances = discover_and_instantiate_reports()
 
-        reports_to_do = sorted(self.reports)
+        if not report_instances:
+            logging.warning("No reports found to execute.")
+            return
+
+        # Map instances to their class names for tracking
+        reports_to_do = {type(inst).__name__: inst for inst in report_instances}
         reports_run = 0
 
         while reports_run < RETRIES and len(reports_to_do) > 0:
             reports_run += 1
-            for report_name in sorted(reports_to_do):
+            for report_name in sorted(reports_to_do.keys()):
                 try:
-                    report_instance = self.dynamic_create_instance_from_name(report_name)
+                    report_instance = reports_to_do[report_name]
                     report_instance.init_report()
                     # set pipeline-wide defaults (reports can override)
                     if hasattr(report_instance, 'report') and report_instance.report is not None:
@@ -163,7 +150,7 @@ class ReportLoopRunner:
                     # Clean up duplicate headers in the report output if possible
                     if hasattr(report_instance.report, 'rows'):
                         report_instance.report.rows = self._clean_report_headers(report_instance.report.rows)
-                    reports_to_do.remove(report_name)
+                    del reports_to_do[report_name]
                 except Exception as ex:
                     logging.info(f"exception happened in report {report_name}: {ex}")
                     logging.exception(ex)
@@ -181,12 +168,6 @@ class ReportLoopRunner:
         logging.info(f'{datetime.now(tz=pytz.timezone("Europe/Brussels"))}: '
                      f'sent all mails_to_send ({len(list(self.mail_sender.mails_to_send))})')
 
-    # Delegates report module import/instantiation to a shared helper so single-report runner
-    # and the loop-runner use identical behavior.
-    @staticmethod
-    def dynamic_create_instance_from_name(report_name):
-        from lib.reports.instantiator import create_report_instance
-        return create_report_instance(report_name)
 
     @staticmethod
     def adjust_mailed_info_in_sheets(sender: MailSender):
