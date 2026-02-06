@@ -134,7 +134,7 @@ class ReportLoopRunner:
         reports_to_do = {type(inst).__name__: inst for inst in report_instances}
         reports_run = 0
 
-        while reports_run < RETRIES and len(reports_to_do) > 0:
+        while reports_run < RETRIES and reports_to_do:
             reports_run += 1
             for report_name in sorted(reports_to_do.keys()):
                 try:
