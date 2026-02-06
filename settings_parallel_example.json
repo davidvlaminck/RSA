@@ -1,0 +1,59 @@
+{
+  "_comment": "Sample configuration for parallel report execution by datasource",
+
+  "report_execution": {
+    "mode": "parallel_by_datasource",
+    "max_concurrent": 2,
+    "timeout_seconds": 1800,
+    "_mode_options": ["sequential", "parallel_by_datasource"],
+    "_notes": {
+      "mode": "Choose 'sequential' for traditional one-at-a-time execution, or 'parallel_by_datasource' to run reports from different databases concurrently",
+      "max_concurrent": "Maximum reports running at once. Recommended: 2 for 8GB RAM, 3 for 16GB RAM",
+      "timeout_seconds": "Kill reports that run longer than this (1800 = 30 minutes)"
+    }
+  },
+
+  "_example_full_settings": {
+    "google_api": {
+      "credentials_path": "/path/to/credentials.json"
+    },
+    "smtp_options": {
+      "host": "smtp.example.com",
+      "port": 587
+    },
+    "databases": {
+      "PostGIS": {
+        "host": "localhost",
+        "port": "5432",
+        "user": "user",
+        "password": "pass",
+        "database": "awvinfra"
+      },
+      "ArangoDB": {
+        "host": "localhost",
+        "port": "8529",
+        "user": "root",
+        "password": "pass",
+        "database": "awvinfra"
+      },
+      "Neo4j": {
+        "uri": "bolt://localhost:7687",
+        "user": "neo4j",
+        "password": "pass",
+        "database": "neo4j"
+      }
+    },
+    "time": {
+      "start": "05:00:00",
+      "end": "23:59:59"
+    },
+    "output": {
+      "type": "GoogleSheets"
+    },
+    "report_execution": {
+      "mode": "parallel_by_datasource",
+      "max_concurrent": 2,
+      "timeout_seconds": 1800
+    }
+  }
+}

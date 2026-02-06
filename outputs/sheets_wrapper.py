@@ -21,9 +21,16 @@ class SheetsWrapper:
         if readonly_scope is None:
             raise ValueError('set readonly_scope to True or False')
 
+    def _build_service(self, credentials: Credentials):
+        """Build the Google Sheets service without discovery caching.
+
+        Avoids the noisy warning: file_cache is only supported with oauth2client<4.0.0
+        """
+        return build('sheets', 'v4', credentials=credentials, cache_discovery=False)
+
     def create_sheet(self, spreadsheet_id: str, sheet_name: str):
         credentials = self.authenticate()
-        service = build('sheets', 'v4', credentials=credentials)
+        service = self._build_service(credentials)
 
         sheets = self.get_sheets_in_spreadsheet(spreadsheet_id)
 
@@ -36,7 +43,7 @@ class SheetsWrapper:
 
     def delete_sheet(self, spreadsheet_id: str, sheet_name: str):
         credentials = self.authenticate()
-        service = build('sheets', 'v4', credentials=credentials)
+        service = self._build_service(credentials)
 
         sheets = self.get_sheets_in_spreadsheet(spreadsheet_id)
         if sheet_name not in sheets:
@@ -51,7 +58,7 @@ class SheetsWrapper:
 
     def clear_filter(self, spreadsheet_id: str, sheet_name: str):
         credentials = self.authenticate()
-        service = build('sheets', 'v4', credentials=credentials)
+        service = self._build_service(credentials)
 
         sheets = self.get_sheets_in_spreadsheet(spreadsheet_id)
 
@@ -63,7 +70,7 @@ class SheetsWrapper:
 
     def create_basic_filter(self, spreadsheet_id: str, sheet_name: str, range: str):
         credentials = self.authenticate()
-        service = build('sheets', 'v4', credentials=credentials)
+        service = self._build_service(credentials)
 
         sheets = self.get_sheets_in_spreadsheet(spreadsheet_id)
         start = SheetsCell(range.split(':')[0])
@@ -85,7 +92,7 @@ class SheetsWrapper:
 
     def get_sheets_in_spreadsheet(self, spreadsheet_id: str):
         credentials = self.authenticate()
-        service = build('sheets', 'v4', credentials=credentials)
+        service = self._build_service(credentials)
         spreadsheet = service.spreadsheets().get(spreadsheetId=spreadsheet_id).execute()
         sheets = spreadsheet.get('sheets')
         sheets_dict = {}
@@ -97,7 +104,7 @@ class SheetsWrapper:
                             value_input_option: str = 'RAW'):
         credentials = self.authenticate()
         cell_range = self.calculate_cell_range_by_data(SheetsCell(start_cell), data)
-        service = build('sheets', 'v4', credentials=credentials)
+        service = self._build_service(credentials)
         service.spreadsheets().values().update(
             spreadsheetId=spreadsheet_id,
             valueInputOption=value_input_option,
@@ -115,7 +122,7 @@ class SheetsWrapper:
 
     def read_celldata_from_sheet(self, spreadsheet_id: str, sheet_name: str, sheetrange: str):
         credentials = self.authenticate()
-        service = build('sheets', 'v4', credentials=credentials)
+        service = self._build_service(credentials)
         result = service.spreadsheets().get(
             spreadsheetId=spreadsheet_id,
             ranges=[sheet_name + '!' + sheetrange], includeGridData=True
@@ -125,7 +132,7 @@ class SheetsWrapper:
     def read_data_from_sheet(self, spreadsheet_id: str, sheet_name: str, sheetrange: str,
                              return_raw_results: bool = False, value_render_option: str ='FORMATTED_VALUE'):
         credentials = self.authenticate()
-        service = build('sheets', 'v4', credentials=credentials)
+        service = self._build_service(credentials)
         result = service.spreadsheets().values().get(
             spreadsheetId=spreadsheet_id, valueRenderOption=value_render_option,
             range=sheet_name + '!' + sheetrange
@@ -144,7 +151,7 @@ class SheetsWrapper:
         row = [''] * columns
         data = [row] * rows
 
-        service = build('sheets', 'v4', credentials=credentials)
+        service = self._build_service(credentials)
         service.spreadsheets().values().update(
             spreadsheetId=spreadsheet_id,
             valueInputOption='RAW',
@@ -255,7 +262,7 @@ class SheetsWrapper:
     def automatic_resize_columns(self, spreadsheet_id: str = '', sheet_name: str = '', number_of_columns: int = 1):
 
         credentials = self.authenticate()
-        service = build('sheets', 'v4', credentials=credentials)
+        service = self._build_service(credentials)
 
         sheets = self.get_sheets_in_spreadsheet(spreadsheet_id)
 
@@ -275,7 +282,7 @@ class SheetsWrapper:
             return
 
         credentials = self.authenticate()
-        service = build('sheets', 'v4', credentials=credentials)
+        service = self._build_service(credentials)
 
         sheets = self.get_sheets_in_spreadsheet(spreadsheet_id)
         start = SheetsCell(start_cell)
@@ -307,7 +314,7 @@ class SheetsWrapper:
             return
 
         credentials = self.authenticate()
-        service = build('sheets', 'v4', credentials=credentials)
+        service = self._build_service(credentials)
 
         sheets = self.get_sheets_in_spreadsheet(spreadsheet_id)
         start = SheetsCell(start_cell)
@@ -345,7 +352,7 @@ class SheetsWrapper:
 
     def insert_empty_rows(self, spreadsheet_id, sheet_name, start_cell, number_of_rows: int):
         credentials = self.authenticate()
-        service = build('sheets', 'v4', credentials=credentials)
+        service = self._build_service(credentials)
 
         sheets = self.get_sheets_in_spreadsheet(spreadsheet_id)
         startsheetscell = SheetsCell(start_cell)
@@ -366,7 +373,7 @@ class SheetsWrapper:
 
     def freeze_top_rows(self, spreadsheet_id, sheet_name, rows: int):
         credentials = self.authenticate()
-        service = build('sheets', 'v4', credentials=credentials)
+        service = self._build_service(credentials)
 
         sheets = self.get_sheets_in_spreadsheet(spreadsheet_id)
         service.spreadsheets().batchUpdate(
@@ -385,7 +392,7 @@ class SheetsWrapper:
 
     def rename_sheet(self, spreadsheet_id, sheet_name, new_sheet_name):
         credentials = self.authenticate()
-        service = build('sheets', 'v4', credentials=credentials)
+        service = self._build_service(credentials)
 
         sheets = self.get_sheets_in_spreadsheet(spreadsheet_id)
         service.spreadsheets().batchUpdate(
