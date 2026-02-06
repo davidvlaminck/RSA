@@ -3,7 +3,7 @@ Plan & checklist
 I will write a step-by-step plan (one step at a time) for each of the four improvements you requested. After you pick which one to run first, I will implement it and run tests.
 
 Checklist (high level)
-- [ ] 1) Make `Reports` a package and switch the runner to `importlib.import_module("Reports.ReportXXXX")` + discover with `pkgutil.iter_modules`.
+- [x] 1) Make `Reports` a package and switch the runner to `importlib.import_module("Reports.ReportXXXX")` + discover with `pkgutil.iter_modules`.
 - [ ] 2) Add a registry decorator so reports can register themselves on import; fallback to filename==classname stays supported.
 - [ ] 3) Run each report in process isolation with timeouts (ProcessPoolExecutor or multiprocessing) and graceful termination handling.
 - [ ] 4) Move heavy init out of import-time into `init_report()`; add audit tooling to locate violations.
@@ -57,6 +57,14 @@ Estimated effort
 
 Risks
 - If some reports rely on module-level side-effects or global state, switching imports may behave differently. Keep fallback loader and a quick audit for top-level work (covered in step 4).
+
+Changes made for step 1:
+- Added `Reports/__init__.py` to mark `Reports` as a package.
+- Updated `lib/reports/ReportLoopRunner.py` to use `pkgutil.iter_modules(Reports.__path__)` for discovery and prefer `importlib.import_module` when loading report modules. Keeps legacy fallback.
+- Updated `run_single_report.py` to prefer `importlib.import_module('Reports.<name>')` with fallback to the previous loader.
+Notes:
+- Import-time side effects in report modules may still occur; step 4 will address moving heavy init into `init_report()`.
+- I ran basic smoke imports for `Reports.Report0002` and the dynamic loader works locally.
 
 ----------------------------------------------------------------
 2) Registry decorator (reports register themselves)

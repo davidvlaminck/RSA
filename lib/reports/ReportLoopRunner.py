@@ -1,4 +1,5 @@
 import importlib
+import pkgutil
 import importlib.util
 # initialize a SheetsWrapper through SingleSheetsWrapper
 # same for Neo4JConnector and other connectors
@@ -90,6 +91,18 @@ class ReportLoopRunner:
             return start_s <= now_s <= end_s
         return now_s >= start_s or now_s <= end_s
 
+    @staticmethod
+    def _clean_report_headers(report_rows):
+        """Utility: remove duplicate header row if the first two rows are identical.
+
+        Kept as a staticmethod to avoid nesting functions inside `run()`.
+        """
+        if not report_rows:
+            return report_rows
+        # If the first two rows are identical, remove the second
+        if len(report_rows) > 1 and report_rows[0] == report_rows[1]:
+            return [report_rows[0]] + report_rows[2:]
+        return report_rows
 
     def start(self, run_right_away: bool):
         last_run_date = datetime.now(tz=BRUSSELS).date()
@@ -115,24 +128,24 @@ class ReportLoopRunner:
         # start running reports now and at midnight
         logging.info(f"{datetime.now(tz=BRUSSELS)}: let's run the reports now")
 
-        # detect reports in Reports directory
+        # detect reports in Reports package via pkgutil.iter_modules
         self.reports = []
-        for file in os.listdir(self.dir_path):
-            if file.endswith('.py'):
-                self.reports.append(file[:-3])
+        try:
+            import Reports
+            for finder, name, ispkg in pkgutil.iter_modules(Reports.__path__):
+                # only consider python modules (files) that look like ReportXXXX
+                if name.endswith('.py') and name.startswith('Report'):
+                    self.reports.append(name[:-3])
+                else:
+                    self.reports.append(name)
+        except Exception:
+            # fallback: scan directory (legacy behavior)
+            for file in os.listdir(self.dir_path):
+                if file.endswith('.py'):
+                    self.reports.append(file[:-3])
 
         reports_to_do = sorted(self.reports)
         reports_run = 0
-
-        # Remove duplicate header rows if present in the report output
-        # This is a post-processing step to ensure only one header row is present
-        def clean_report_headers(report_rows):
-            if not report_rows:
-                return report_rows
-            # If the first two rows are identical, remove the second
-            if len(report_rows) > 1 and report_rows[0] == report_rows[1]:
-                return [report_rows[0]] + report_rows[2:]
-            return report_rows
 
         while reports_run < RETRIES and len(reports_to_do) > 0:
             reports_run += 1
@@ -149,7 +162,7 @@ class ReportLoopRunner:
                     report_instance.run_report(sender=self.mail_sender)
                     # Clean up duplicate headers in the report output if possible
                     if hasattr(report_instance.report, 'rows'):
-                        report_instance.report.rows = clean_report_headers(report_instance.report.rows)
+                        report_instance.report.rows = self._clean_report_headers(report_instance.report.rows)
                     reports_to_do.remove(report_name)
                 except Exception as ex:
                     logging.info(f"exception happened in report {report_name}: {ex}")
@@ -166,22 +179,19 @@ class ReportLoopRunner:
         self.adjust_mailed_info_in_sheets(sender=self.mail_sender)
 
         logging.info(f'{datetime.now(tz=pytz.timezone("Europe/Brussels"))}: '
-                     f'sent all mails_to_send ({len(self.mail_sender.mails_to_send)})')
+                     f'sent all mails_to_send ({len(list(self.mail_sender.mails_to_send))})')
 
+    # Delegates report module import/instantiation to a shared helper so single-report runner
+    # and the loop-runner use identical behavior.
     @staticmethod
     def dynamic_create_instance_from_name(report_name):
-        try:
-            module_spec = importlib.util.find_spec(f'Reports.{report_name}')
-            module = importlib.util.module_from_spec(module_spec)
-            module_spec.loader.exec_module(module)
-            class_ = getattr(module, report_name)
-            return class_()
-        except ModuleNotFoundError as exc:
-            logging.error(exc.msg)
+        from lib.reports.instantiator import create_report_instance
+        return create_report_instance(report_name)
 
     @staticmethod
     def adjust_mailed_info_in_sheets(sender: MailSender):
-        sent_mails = sender.sent_mails
+        # Normalize possibly lazy/iterable mail containers into lists to satisfy static checkers
+        sent_mails = list(sender.sent_mails)
         sheet_info = sender.sheet_info
         sheets_wrapper = SingleSheetsWrapper.get_wrapper()
 

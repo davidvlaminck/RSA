@@ -38,7 +38,7 @@ class SingleReportLoopRunner:
 
         try:
             neo4j_settings = self.settings['databases']['Neo4j']
-            from Neo4JConnector import SingleNeo4JConnector
+            from lib.connectors.Neo4JConnector import SingleNeo4JConnector
             SingleNeo4JConnector.init(uri=neo4j_settings['uri'], user=neo4j_settings['user'],
                                       password=neo4j_settings['password'], database=neo4j_settings['database'])
         except Exception as e:
@@ -122,16 +122,9 @@ class SingleReportLoopRunner:
 
     @staticmethod
     def dynamic_create_instance_from_name(report_name):
-        try:
-            module_spec = importlib.util.find_spec(f'Reports.{report_name}')
-            module = importlib.util.module_from_spec(module_spec)
-            module_spec.loader.exec_module(module)
-            class_ = getattr(module, report_name)
-            instance = class_()
-            return instance
-        except ModuleNotFoundError as exc:
-            logging.error(exc.msg)
-            pass
+        # Delegate to shared instantiator so both runners behave the same
+        from lib.reports.instantiator import create_report_instance
+        return create_report_instance(report_name)
 
     @staticmethod
     def adjust_mailed_info_in_sheets(sender: MailSender):
