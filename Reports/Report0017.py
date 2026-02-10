@@ -29,7 +29,7 @@ FOR n IN assets
 """
         self.report = DQReport(name='report0017',
                                title='Netwerkelementen hebben een Bevestiging relatie met een Netwerkkaart',
-                               spreadsheet_id='1b2b1b2b1b2b1b2b1b2b1b2b1b2b1b2b1b2b1b2b1b2b',
+                               spreadsheet_id='1UfYhxcM0z8uq9-GwfDJhHNVpuhoWtUprrPGMfPSXeGk',
                                datasource='ArangoDB',
                                persistent_column='C')
 
