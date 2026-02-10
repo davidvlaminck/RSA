@@ -1,5 +1,7 @@
+import json
 import logging
 import os
+import tempfile
 import time
 import traceback
 from datetime import datetime
@@ -7,12 +9,15 @@ from zoneinfo import ZoneInfo
 
 import pytz
 
-from lib.mail.MailContent import MailContent
-from lib.mail.MailSender import MailSender
+from datasources.arango import SingleArangoConnector
 from lib.connectors.Neo4JConnector import SingleNeo4JConnector
 from lib.connectors.PostGISConnector import SinglePostGISConnector
-from SettingsManager import SettingsManager
+from lib.mail.MailContent import MailContent
+from lib.mail.MailSender import MailSender
+from lib.reports.instantiator import create_report_instance, discover_and_instantiate_reports
+from lib.reports.pipeline_runner import run_pipelines_by_datasource
 from outputs.sheets_wrapper import SingleSheetsWrapper
+from SettingsManager import SettingsManager
 
 ROOT_DIR = (os.path.dirname(os.path.abspath(__file__)))
 BRUSSELS = ZoneInfo("Europe/Brussels")
@@ -21,6 +26,7 @@ RETRIES = 5
 
 class ReportLoopRunner:
     def __init__(self, settings_path):
+        self.settings_path = settings_path
         settings_manager = SettingsManager(settings_path=settings_path)
         self.settings = settings_manager.settings
 
@@ -44,7 +50,6 @@ class ReportLoopRunner:
 
         # Initialize ArangoDB connection (singleton style)
         arango_settings = self.settings['databases']['ArangoDB']
-        from datasources.arango import SingleArangoConnector
         SingleArangoConnector.init(
             host=arango_settings['host'],
             port=arango_settings['port'],
@@ -127,14 +132,27 @@ class ReportLoopRunner:
         else:
             self._run_sequential()
 
-    def _run_sequential(self):
+    def run_selected(self, report_names: list[str]):
+        """Run a specific list of reports using the configured execution mode."""
+        execution_mode = self.settings.get('report_execution', {}).get('mode', 'sequential')
+
+        if execution_mode == 'parallel_by_datasource':
+            self._run_parallel_by_datasource(report_names)
+        else:
+            self._run_sequential(report_names)
+
+    def _run_sequential(self, report_names: list[str] | None = None):
         """Run reports one at a time (original behavior)."""
         # start running reports now and at midnight
         logging.info(f"{datetime.now(tz=BRUSSELS)}: let's run the reports now")
 
-        # detect reports in Reports package using the shared discovery helper
-        from lib.reports.instantiator import discover_and_instantiate_reports
-        report_instances = discover_and_instantiate_reports()
+        # detect reports or use the provided list
+        if report_names is None:
+            report_instances = discover_and_instantiate_reports()
+        else:
+            report_instances = [
+                inst for inst in (create_report_instance(name) for name in report_names) if inst is not None
+            ]
 
         if not report_instances:
             logging.warning("No reports found to execute.")
@@ -178,7 +196,7 @@ class ReportLoopRunner:
         logging.info(f'{datetime.now(tz=pytz.timezone("Europe/Brussels"))}: '
                       f'sent all mails_to_send ({len(list(self.mail_sender.mails_to_send))})')
 
-    def _run_parallel_by_datasource(self):
+    def _run_parallel_by_datasource(self, report_names: list[str] | None = None):
         """Run reports in parallel, grouped by datasource to avoid DB contention.
 
         This mode:
@@ -187,36 +205,19 @@ class ReportLoopRunner:
         - Respects memory constraints (max 2-3 concurrent processes)
         - Provides timeout protection for stuck reports
         """
-        import subprocess
-        import json
-        import tempfile
-        from concurrent.futures import ThreadPoolExecutor, as_completed
-        from lib.reports.parallel_utils import group_reports_by_datasource, create_balanced_batches
-
         logging.info(f"{datetime.now(tz=BRUSSELS)}: starting parallel-by-datasource execution")
 
-        # Get configuration
-        execution_config = self.settings.get('report_execution', {})
-        max_concurrent = execution_config.get('max_concurrent', 2)
-        timeout_seconds = execution_config.get('timeout_seconds', 1800)  # 30 min default
+        # Discover all report names or use provided list
+        if report_names is None:
+            report_instances = discover_and_instantiate_reports()
+            if not report_instances:
+                logging.warning("No reports found to execute.")
+                return
+            report_names = [type(inst).__name__ for inst in report_instances]
+        else:
+            report_names = list(report_names)
 
-        # Discover all reports
-        from lib.reports.instantiator import discover_and_instantiate_reports
-        report_instances = discover_and_instantiate_reports()
-
-        if not report_instances:
-            logging.warning("No reports found to execute.")
-            return
-
-        # Get report names
-        all_report_names = [type(inst).__name__ for inst in report_instances]
-        logging.info(f"Found {len(all_report_names)} reports to execute")
-
-        # Group reports by datasource
-        report_groups = group_reports_by_datasource(all_report_names)
-
-        # Create balanced batches for parallel execution
-        batches = create_balanced_batches(report_groups, max_concurrent=max_concurrent)
+        logging.info(f"Found {len(report_names)} reports to execute")
 
         # Write settings to temp file for worker processes
         with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
@@ -224,112 +225,22 @@ class ReportLoopRunner:
             settings_path = f.name
 
         try:
-            # Track results
-            successful_reports = []
-            failed_reports = []
-            timed_out_reports = []
-
-            # Process each batch
-            for batch_idx, batch in enumerate(batches, 1):
-                logging.info(f"\n{'='*60}")
-                logging.info(f"Processing batch {batch_idx}/{len(batches)} ({len(batch)} reports)")
-                logging.info(f"{'='*60}")
-
-                # Run reports in this batch concurrently using ThreadPoolExecutor
-                # (threads are used to wait for subprocesses, not to run Python code)
-                with ThreadPoolExecutor(max_workers=len(batch)) as executor:
-                    # Submit all reports in batch
-                    future_to_report = {}
-                    for datasource, report_name in batch:
-                        future = executor.submit(
-                            self._run_report_subprocess,
-                            report_name,
-                            settings_path,
-                            timeout_seconds
-                        )
-                        future_to_report[future] = (datasource, report_name)
-
-                    # Wait for all reports in batch to complete
-                    for future in as_completed(future_to_report):
-                        datasource, report_name = future_to_report[future]
-                        try:
-                            result = future.result()
-                            if result['status'] == 'success':
-                                logging.info(f"✓ [{datasource}] {report_name} completed")
-                                successful_reports.append(report_name)
-                            elif result['status'] == 'timeout':
-                                logging.error(f"⏱ [{datasource}] {report_name} TIMED OUT after {timeout_seconds}s")
-                                timed_out_reports.append(report_name)
-                            else:
-                                logging.error(f"✗ [{datasource}] {report_name} FAILED: {result.get('error', 'Unknown')}")
-                                failed_reports.append(report_name)
-                        except Exception as e:
-                            logging.error(f"✗ [{datasource}] {report_name} EXCEPTION: {e}")
-                            failed_reports.append(report_name)
-
-            # Print summary
-            logging.info(f"\n{'='*60}")
-            logging.info("EXECUTION SUMMARY")
-            logging.info(f"{'='*60}")
-            logging.info(f"✓ Successful: {len(successful_reports)}/{len(all_report_names)}")
-            if failed_reports:
-                logging.info(f"✗ Failed: {len(failed_reports)} - {failed_reports[:5]}{'...' if len(failed_reports) > 5 else ''}")
-            if timed_out_reports:
-                logging.info(f"⏱ Timed out: {len(timed_out_reports)} - {timed_out_reports}")
-            logging.info(f"{'='*60}")
+            run_pipelines_by_datasource(
+                report_names,
+                self.settings,
+                settings_path,
+                stream_output=True,
+            )
 
         finally:
             # Clean up temp settings file
-            import os
             try:
                 os.unlink(settings_path)
             except Exception:
                 pass
 
-        # Send mails (note: mails are sent by worker processes, not collected here)
         logging.info(f'{datetime.now(tz=pytz.timezone("Europe/Brussels"))}: parallel execution complete')
 
-    @staticmethod
-    def _run_report_subprocess(report_name: str, settings_path: str, timeout_seconds: int) -> dict:
-        """Run a report in a subprocess with timeout protection.
-
-        Args:
-            report_name: Name of report to run (e.g., 'Report0002')
-            settings_path: Path to JSON settings file
-            timeout_seconds: Maximum execution time in seconds
-
-        Returns:
-            Dictionary with keys: 'status' ('success', 'timeout', 'error'), 'error' (if failed)
-        """
-        import subprocess
-
-        cmd = [
-            'python', '-m', 'lib.reports.worker',
-            '--report', report_name,
-            '--settings', settings_path
-        ]
-
-        try:
-            result = subprocess.run(
-                cmd,
-                timeout=timeout_seconds,
-                capture_output=True,
-                text=True
-            )
-
-            if result.returncode == 0:
-                return {'status': 'success'}
-            else:
-                return {
-                    'status': 'error',
-                    'error': result.stderr or 'Non-zero exit code'
-                }
-
-        except subprocess.TimeoutExpired:
-            return {'status': 'timeout'}
-
-        except Exception as e:
-            return {'status': 'error', 'error': str(e)}
 
     @staticmethod
     def adjust_mailed_info_in_sheets(sender: MailSender):
