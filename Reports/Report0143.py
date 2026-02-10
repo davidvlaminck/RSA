@@ -1,11 +1,9 @@
-from DQReport import DQReport
+from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0143:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0143(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0143',
                                title='Boom zonder naam',
                                spreadsheet_id='1Vnn-fHvk0NtnmIeDXtTYByzna5qy62qz6zTZDSCxFos',
@@ -31,5 +29,5 @@ class Report0143:
         order by naam asc
         """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

@@ -1,11 +1,9 @@
-from DQReport import DQReport
+from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0157:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0157(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0157',
                                title='Assets zonder geometrie gelinkt aan TV-Proximus Trafiroad (dossier: HVV.089; bestek: 2017-R3-043)',
                                spreadsheet_id='1CZFtjX0ANRfmEXc-6-ElJ-hgRuwY3FdHZBxeiJVKtxE',
@@ -46,5 +44,5 @@ class Report0157:
         order by a.at_label
         """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

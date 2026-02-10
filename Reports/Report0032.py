@@ -1,11 +1,9 @@
-from DQReport import DQReport
+from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0032:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0032(BaseReport):
+    def init_report(self) -> None:
         aql_query = """
 FOR n IN assets
   FILTER n.assettype_key == "6b3dba37"
@@ -34,5 +32,5 @@ FOR n IN assets
         WHERE n.type IS NULL 
         RETURN n.uuid, n.naam"""
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

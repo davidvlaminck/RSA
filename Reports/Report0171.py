@@ -1,11 +1,9 @@
-from DQReport import DQReport
+from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0171:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0171(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0171',
                                title='Assets conform naamconventies OTL EW-Infrastructuur',
                                spreadsheet_id='1t6s3fYOdRybNUOPXlI2O4sHACAb3tYcGlEHnelhogF4',
@@ -81,5 +79,5 @@ select * from cte_assets
 where naam_conform_naamconventie is false
         """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

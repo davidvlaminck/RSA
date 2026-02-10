@@ -1,11 +1,9 @@
-from DQReport import DQReport
+from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0182:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0182(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0182', title='Teletransmissieverbinding (TT) ODF zonder enige HoortBij-relatie naar een KabelnetToegang',
                                spreadsheet_id='1cQ9yN9I9UT2BAtTAcOJmZkO-A2zuxdSu_9zkP1j5LMs', datasource='PostGIS',
                                persistent_column='H', link_type='eminfra')
@@ -50,5 +48,5 @@ class Report0182:
         
 	    """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

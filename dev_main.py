@@ -1,9 +1,9 @@
 import logging
 
-from MailSender import MailSender
-from Neo4JConnector import SingleNeo4JConnector
+from lib.mail.MailSender import MailSender
+from lib.connectors.Neo4JConnector import SingleNeo4JConnector
 from Reports.Report0016 import Report0016
-from SheetsWrapper import SingleSheetsWrapper
+from outputs.sheets_wrapper import SingleSheetsWrapper
 
 if __name__ == '__main__':
     logging.info = print

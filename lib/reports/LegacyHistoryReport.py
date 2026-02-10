@@ -5,12 +5,12 @@ from datetime import datetime, date, timedelta, UTC
 
 from neo4j.time import DateTime
 
-from MailSender import MailSender
+from lib.mail.MailSender import MailSender
 from Neo4JConnector import SingleNeo4JConnector
-from PostGISConnector import SinglePostGISConnector
-from Report import Report
-from SheetsCell import SheetsCell
-from SheetsWrapper import SingleSheetsWrapper
+from lib.connectors.PostGISConnector import SinglePostGISConnector
+from lib.reports.Report import Report
+from outputs.sheets_cell import SheetsCell
+from outputs.sheets_wrapper import SingleSheetsWrapper
 
 
 class LegacyHistoryReport(Report):

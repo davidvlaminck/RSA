@@ -1,11 +1,9 @@
-from DQReport import DQReport
+from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0137:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0137(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0137',
                                title='Bijhorende assets hebben een verschillende toezichtshouder (assettype = Signaalkabel)',
                                spreadsheet_id='1HBOnmY6Q7ed3zeRMVlVL7EC6S9PiMa6gv80AWcdrve8',
@@ -98,5 +96,5 @@ class Report0137:
                     (lower(otl.otl_betrokkene_naam) like 'lantis' and lower(lgc.lgc_toezichthouder_gebruikersnaam) not like 'lantis')
                 """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

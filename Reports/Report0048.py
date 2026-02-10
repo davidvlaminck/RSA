@@ -1,11 +1,9 @@
-from DQReport import DQReport
+from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0048:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0048(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0048',
                                title='BitumineuzeLaag heeft steeds een LigtOp relatie naar een Onderbouw. Wanneer niet aan deze voorwaarde voldaan is, geeft dit rapport een aantal suggesties voor Onderbouwen adhv de geometrie.',
                                spreadsheet_id='1E2PjV5T7w1RGeZKEr3ad3L-CMKvtkzwdx53GuH5IxM0',
@@ -288,5 +286,5 @@ class Report0048:
             ) 
         """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

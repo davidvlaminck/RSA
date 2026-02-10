@@ -1,11 +1,9 @@
-from DQReport import DQReport
+from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0102:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0102(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0102', title='IMKLActivityComplex afgeleiden zonder toezichtgroep',
                                spreadsheet_id='1fbnP-heDtQnG9Q5kF1DA_cn3cY7egNFRgXMB4QaZKZk', datasource='PostGIS',
                                persistent_column='C')
@@ -24,5 +22,5 @@ WHERE imkl.assettype = 'b62ac453-ae96-4630-833a-895c57dbb666' -- IMKL activityco
 	AND imkl.actief = TRUE AND b.doeluuid IS NULL
 """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

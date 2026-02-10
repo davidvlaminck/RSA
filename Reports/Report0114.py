@@ -1,11 +1,9 @@
-from DQReport import DQReport
+from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0114:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0114(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0114',
                                title='EAN Nummer niet als commentaar gedocumenteerd',
                                spreadsheet_id='188xxFUa1uZ8GPgwB9a2c0gtkrdtacg5ft5TkODanatk',
@@ -36,5 +34,5 @@ class Report0114:
             order by at.uri, a.uuid
         """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

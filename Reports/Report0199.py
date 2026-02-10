@@ -1,11 +1,9 @@
-from DQReport import DQReport
+from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0199:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0199(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0199',
                                title='Seinbrug is een punt',
                                spreadsheet_id='1hxBCVXI5mTzZ9Xc6sz6nBRtnNMWVZ-lDslutSIw1UOs',
@@ -38,5 +36,5 @@ class Report0199:
             order by oppervlakte desc
             """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

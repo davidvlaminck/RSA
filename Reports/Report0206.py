@@ -1,11 +1,9 @@
-from DQReport import DQReport
+from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0206:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0206(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0206',
                                title='Kast (Legacy) ontbreekt een Bevestiging-relatie naar een Laagspanningsdeel',
                                spreadsheet_id='12za25MNv7MZoDXKr51OuywhzajmLuQybMCI1WmIBiUs',
@@ -62,5 +60,5 @@ class Report0206:
             select * from cte_kast_bevestigingsrelatie_lsdeel_ontbreekt order by k_uuid        
             """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

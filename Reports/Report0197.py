@@ -1,11 +1,9 @@
-from DQReport import DQReport
+from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0197:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0197(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0197',
                                title='Asset (Legacy) heeft een inactieve toezichter',
                                spreadsheet_id='1fyJRTZc_yDiC5h1BRzJvW0AxWJxaSVL5CK5ETbGdXc0',
@@ -40,5 +38,5 @@ class Report0197:
             where a.actief is true
             """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

@@ -1,11 +1,9 @@
-from DQReport import DQReport
+from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0023:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0023(BaseReport):
+    def init_report(self) -> None:
         aql_query = """
 LET camera_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Camera" LIMIT 1 RETURN at._key)
 
@@ -38,5 +36,5 @@ FOR c IN assets
         WHERE NOT EXISTS ((c)-[:HeeftBetrokkene {rol:'toezichter'}]->(:Agent))
         RETURN c.uuid, c.naam"""
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

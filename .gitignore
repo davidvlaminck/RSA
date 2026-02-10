@@ -1,3 +1,22 @@
 /venv/
 /.idea/
 logs.txt
+
+# Python cache
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.pyo
+
+# pytest
+.pytest_cache/
+
+# virtual env (alternate names)
+.venv/
+venv/
+ENV/
+.env/
+env/
+
+# OS files
+.DS_Store

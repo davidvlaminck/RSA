@@ -1,11 +1,9 @@
-from DQReport import DQReport
+from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0007:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0007(BaseReport):
+    def init_report(self) -> None:
         aql_query = """
 LET camera_key       = FIRST(FOR at IN assettypes FILTER at.short_uri == \"onderdeel#Camera\" LIMIT 1 RETURN at._key)
 LET netwerkpoort_key = FIRST(FOR at IN assettypes FILTER at.short_uri == \"onderdeel#Netwerkpoort\" LIMIT 1 RETURN at._key)
@@ -55,5 +53,5 @@ FOR c IN assets
         self.report.result_query = aql_query
         self.report.cypher_query = """MATCH (c:Camera {isActief:TRUE}) \n        WHERE NOT EXISTS ((c)-[:Sturing]-(:onderdeel :Netwerkpoort {isActief:TRUE})) AND NOT EXISTS ((c)-[:Sturing]-(:onderdeel :Omvormer {isActief:TRUE}))\n        WITH c\n        OPTIONAL MATCH (c)-[:HeeftBetrokkene {rol:'toezichter'}]->(a:Agent)\n        RETURN c.uuid, c.naam, a.naam as toezichter"""
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

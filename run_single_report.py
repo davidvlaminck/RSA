@@ -9,12 +9,11 @@ import time
 import traceback
 from datetime import datetime, UTC
 
-from MailContent import MailContent
-from MailSender import MailSender
-from Neo4JConnector import SingleNeo4JConnector
-from PostGISConnector import SinglePostGISConnector
+from lib.mail.MailContent import MailContent
+from lib.mail.MailSender import MailSender
+from lib.connectors.PostGISConnector import SinglePostGISConnector
 from SettingsManager import SettingsManager
-from SheetsWrapper import SingleSheetsWrapper
+from outputs.sheets_wrapper import SingleSheetsWrapper
 
 ROOT_DIR = (os.path.dirname(os.path.abspath(__file__)))
 
@@ -39,6 +38,7 @@ class SingleReportLoopRunner:
 
         try:
             neo4j_settings = self.settings['databases']['Neo4j']
+            from lib.connectors.Neo4JConnector import SingleNeo4JConnector
             SingleNeo4JConnector.init(uri=neo4j_settings['uri'], user=neo4j_settings['user'],
                                       password=neo4j_settings['password'], database=neo4j_settings['database'])
         except Exception as e:
@@ -122,16 +122,9 @@ class SingleReportLoopRunner:
 
     @staticmethod
     def dynamic_create_instance_from_name(report_name):
-        try:
-            module_spec = importlib.util.find_spec(f'Reports.{report_name}')
-            module = importlib.util.module_from_spec(module_spec)
-            module_spec.loader.exec_module(module)
-            class_ = getattr(module, report_name)
-            instance = class_()
-            return instance
-        except ModuleNotFoundError as exc:
-            logging.error(exc.msg)
-            pass
+        # Delegate to shared instantiator so both runners behave the same
+        from lib.reports.instantiator import create_report_instance
+        return create_report_instance(report_name)
 
     @staticmethod
     def adjust_mailed_info_in_sheets(sender: MailSender):

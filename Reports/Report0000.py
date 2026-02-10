@@ -1,11 +1,9 @@
-from DQReport import DQReport
+from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0000:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0000(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0000',
                                title="testsheet (dev only)",
                                spreadsheet_id='1SK0UVeKnJe0eQaktKMFjeJSg16wZ4SAW-W8wz16x3Tg',
@@ -24,5 +22,5 @@ class Report0000:
         CASE WHEN col2 IS NOT NULL THEN col2::NUMERIC
 			ELSE 1::NUMERIC END AS aantal_verlichtingstoestellen_getal FROM t ;"""
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

@@ -4,11 +4,11 @@ import logging
 import os
 import traceback
 from datetime import datetime, UTC
-from MailSender import MailSender
+from lib.mail.MailSender import MailSender
 from SettingsManager import SettingsManager
-from SheetsWrapper import SingleSheetsWrapper
-from Neo4JConnector import SingleNeo4JConnector
-from PostGISConnector import SinglePostGISConnector
+from outputs.sheets_wrapper import SingleSheetsWrapper
+from lib.connectors.Neo4JConnector import SingleNeo4JConnector
+from lib.connectors.PostGISConnector import SinglePostGISConnector
 
 ROOT_DIR = (os.path.dirname(os.path.abspath(__file__)))
 

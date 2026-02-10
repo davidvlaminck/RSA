@@ -1,11 +1,9 @@
-from DQReport import DQReport
+from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0039:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0039(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0039',
                                title="Lichtmast LED",
                                spreadsheet_id='1DZjg3zbcoY7_9Q0qj74KkgLL3eOwWa7e4_0SlbLMM5o',
@@ -157,5 +155,5 @@ SELECT
 FROM cte_opkuis2
 """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

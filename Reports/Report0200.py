@@ -1,11 +1,9 @@
-from DQReport import DQReport
+from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0200:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0200(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0200',
                                title='Assets hebben foutieve toezichters',
                                spreadsheet_id='1A0CqgpEDRN0Zdet0QFQM8T90VFTpQ6_qL2GqHc9i3J0',
@@ -37,5 +35,5 @@ class Report0200:
             inner join cte_agents age on br.doeluuid = age."uuid" 
             """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

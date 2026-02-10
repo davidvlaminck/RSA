@@ -1,11 +1,9 @@
-from DQReport import DQReport
+from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0191:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0191(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0191', title='Laagspanningsgedeelte (Legacy) keuringsinfo',
                                spreadsheet_id='1zupt-USHoNmNI1xFuv5fkBNpiucbyH_19NnIOQ90sfk', datasource='PostGIS',
                                persistent_column='S', link_type='eminfra')
@@ -83,5 +81,5 @@ left join cte_attribuutwaarden_grouped aw on lsdeel.uuid = aw.assetuuid
 order by bevat_keuringsinfo desc, aantal_resterende_dagen_tot_vervaldag_keuring
 	    """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

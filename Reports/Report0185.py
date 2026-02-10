@@ -1,11 +1,9 @@
-from DQReport import DQReport
+from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0185:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0185(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0185', title='IP Netwerkelementen hebben dezelfde locatie als hun Bijhorende legacy object van type IP',
                                spreadsheet_id='1cR7109F1_7iW0OVc65zMIOkAj-qUKH7S_Z012VIQP5U', datasource='PostGIS',
                                persistent_column='I', link_type='eminfra')
@@ -68,5 +66,5 @@ class Report0185:
         order by afstand desc
 	    """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

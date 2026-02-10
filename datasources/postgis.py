@@ -3,7 +3,7 @@ from __future__ import annotations
 import time
 from datetime import datetime, UTC
 
-from PostGISConnector import SinglePostGISConnector
+from lib.connectors.PostGISConnector import SinglePostGISConnector
 
 from .base import QueryResult
 
@@ -33,7 +33,8 @@ class PostGISDatasource:
 
         rows, desc = self._connector._run_with_connection(_fn, autocommit_for_read=True)
         keys = [col.name for col in (desc or [])]
-
+        if not keys and rows and isinstance(rows[0], dict):
+            keys = list(rows[0].keys())
         query_time = round(time.time() - start, 2)
 
         # Set last_data_update to current UTC time as fallback

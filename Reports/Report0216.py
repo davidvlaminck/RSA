@@ -1,11 +1,9 @@
-from DQReport import DQReport
+from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0216:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0216(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0216',
                                title='Verweven assets hebben geen naampad (zijn niet in een boomstructuur op EM-infra gesitueerd)',
                                spreadsheet_id='17MTZ2N_jVsUyc53zbzPwFGhDS8u1X6xrrexU-Li-OkU',
@@ -141,5 +139,5 @@ where a.actief = true
 order by at.uri asc, a.naam asc
             """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

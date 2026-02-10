@@ -1,11 +1,9 @@
-from DQReport import DQReport
+from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0014:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0014(BaseReport):
+    def init_report(self) -> None:
         aql_query = """
 LET stroomkring_key       = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Stroomkring" LIMIT 1 RETURN at._key)
 LET laagspanningsbord_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Laagspanningsbord" LIMIT 1 RETURN at._key)
@@ -39,5 +37,5 @@ FOR s IN assets
         WHERE (s:Stroomkring OR s:Laagspanningsbord) AND NOT EXISTS ((s)-[:HoortBij]->(:LSDeel {isActief:TRUE}))
         RETURN s.uuid, s.naam"""
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

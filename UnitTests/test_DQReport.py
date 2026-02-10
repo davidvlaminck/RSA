@@ -1,7 +1,7 @@
 from datetime import date
 from unittest.mock import Mock
 
-from DQReport import DQReport
+from lib.reports.DQReport import DQReport
 
 bv_data = [('6e9c0d4f-73a9-4461-a01b-81436e26f112', '001A3', True, 'in-gebruik', 4.374456577708933, 51.124556377992405,
             'Aartselaar', 'Antwerpen', '1984-07-06', '1984-07-06', 'TV014026v01', 'TV01402', '', 'MDN/1504', 'YUNEX',

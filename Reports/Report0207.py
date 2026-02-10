@@ -1,11 +1,9 @@
-from DQReport import DQReport
+from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0207:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0207(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0207',
                                title='HSCabineLegacy (Legacy) heeft hoogstens één Hoogspanning via de Bevestiging-relatie',
                                spreadsheet_id='1jAsjLusMxrlyNb9IQlxo3IT70fLrfPoXtc5QplRAgGU',
@@ -65,5 +63,5 @@ class Report0207:
         select * from cte_hscabine_hs_duplicate order by hscab_uuid
             """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

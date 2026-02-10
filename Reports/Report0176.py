@@ -1,11 +1,9 @@
-from DQReport import DQReport
+from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0176:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0176(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0176', title='Dubbele assets op kruispunt: Galgpaal, Seinbrug, Boogpaal, Rechte Steun',
                                spreadsheet_id='1F9BXJrnr-hdoLnQ9L7UctGF16IyUQqlV7hRJzy1WlO0', datasource='PostGIS',
                                persistent_column='')
@@ -44,5 +42,5 @@ class Report0176:
         order by afstand desc
 	    """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

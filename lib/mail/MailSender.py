@@ -5,7 +5,7 @@ from datetime import datetime, UTC
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-from MailContent import MailContent
+from lib.mail.MailContent import MailContent
 
 
 class MailSender:

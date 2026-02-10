@@ -1,6 +1,6 @@
-from DQReport import DQReport
-from Neo4JConnector import SingleNeo4JConnector
-from SheetsWrapper import SingleSheetsWrapper
+from lib.reports.DQReport import DQReport
+from lib.connectors.Neo4JConnector import SingleNeo4JConnector
+from outputs.sheets_wrapper import SingleSheetsWrapper
 
 if __name__ == '__main__':
     SingleSheetsWrapper.init(service_cred_path='C:\\resources\\driven-wonder-149715-ca8bdf010930.json',

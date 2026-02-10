@@ -1,11 +1,9 @@
-from DQReport import DQReport
+from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0134:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0134(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0134',
                                title='Overlappende gebouwen',
                                spreadsheet_id='1_8Xqs3uVeOPrnWJfnOuXrDkuEzhC1TRd6ybWPKk3-m4',
@@ -62,5 +60,5 @@ class Report0134:
             order by g1.uuid, g2.uuid
             """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

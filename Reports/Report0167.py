@@ -1,11 +1,9 @@
-from DQReport import DQReport
+from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0167:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0167(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0167',
                                title='Ontbrekende gegevens installaties V&W-WW',
                                spreadsheet_id='1_PM7lSbX5mmpmYqQuIoE0KisV6lXncL0jZ-TO1h7pgw',
@@ -48,5 +46,5 @@ WHERE zonder_toezichter = '1' OR zonder_bestek = '1' OR zonder_locatie = '1' OR 
 
         """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

@@ -1,11 +1,9 @@
-from DQReport import DQReport
+from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0120:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0120(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0120',
                                title='Niet-verweven OTL-assets hebben alsnog een naampad.',
                                spreadsheet_id='1sBJEGOpcGfrjvBWGAkBU_vnWirsGwq2cL8faX3vdapI',
@@ -184,5 +182,5 @@ where
 order by at.uri, a.naampad
             """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

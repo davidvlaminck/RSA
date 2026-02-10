@@ -1,11 +1,9 @@
-from DQReport import DQReport
+from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0180:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0180(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0180', title='SegmentControllers hun serienummer volgt een bepaalde regex validatie',
                                spreadsheet_id='1CQgzLh1L0qEdVpjRz2NiKnZPkIuphc8BvOk1J8a1q_0', datasource='PostGIS',
                                persistent_column='F', link_type='eminfra')
@@ -41,5 +39,5 @@ class Report0180:
         ORDER BY naam, otl_vs_lgc;
 	    """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

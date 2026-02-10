@@ -1,159 +1,230 @@
-# Refactoring Specification: Reporting pipeline
+# Specificatie: refactoring en requirements
 
-## 1. Background
+## Doel
 
-### 1.1 Existing use case (current)
-- Generate **Google Sheets** with report data.
-- Data sources:
-  - **Neo4j** (some reports)
-  - **PostGIS** (most reports)
-- After a **full report run**, send email notifications with the outcome.
+Dit document beschrijft de functionele en niet-functionele eisen voor de refactor van de rapporteringsservice. De belangrijkste doelstellingen zijn: betere uitbreidbaarheid, betrouwbaarheid (nooit stilvallen bij fouten), ondersteuning voor meerdere output-backends (Google Sheets en Excel/OneDrive/SharePoint) en een heldere scheiding tussen datasource-implementaties (ArangoDB, PostGIS).
 
-### 1.2 Target use case (new)
-- Generate **Microsoft Excel workbooks (.xlsx)** with report data.
-- Data sources:
-  - **ArangoDB** (most reports)
-  - **PostGIS** (some reports; its own sync schedule)
-- Deliver the generated Excel files by uploading to:
-  - **OneDrive** and/or **SharePoint**
-- After a **full report run**, send email notifications with the outcome.
+## Scope
 
-## 2. Goals
-- Replace the current Google Sheets output with **Excel output**.
-- Replace Neo4j as a datasource with **ArangoDB**.
-- Provide a fully automated, scheduled process that:
-  1) refreshes ArangoDB from the API daily
-  2) generates and uploads Excel reports daily
-  3) sends a run summary email after the full run completes
-- Improve operational quality:
-  - robust **logging**
-  - clear **error handling**
-  - repeatable, file-based deployment (git update + run)
-- Ensure that data in the Resultaat sheet is only wiped if new data can be written. If anything goes wrong during the update, the previous version of the sheet must be automatically restored (fallback/revert functionality).
-- Only one summary email should be sent per run, not multiple.
+- Refactor van de core rapport-architectuur en datasources.
+- Output: Google Sheets (bestaand) + Excel-bestanden waarbij Excel-bestanden lokaal worden aangemaakt en geüpload/gesynchroniseerd via OneDrive/SharePoint.
+- Datasources: ArangoDB en PostGIS (onafhankelijk van elkaar). Neo4j is historisch aanwezig en wordt niet in scope gebracht tenzij expliciet gevraagd.
+- Robuuste uitvoer (retry, logging, foutafhandeling, notificatie).
 
-## 3. Scope
+## 1. Functionele eisen (FR)
 
-### 3.1 In scope
-- Running report queries against ArangoDB and PostGIS.
-- Generating Excel workbooks from report results.
-- Uploading workbooks to OneDrive/SharePoint.
-- Sending email notifications after a full report run.
-- Scheduling/automation of the refresh + reporting jobs.
-- Query migration where needed (Neo4j/Cypher → Arango/AQL).
-- Ensuring the **fixed “comments” column is always the last column** in exported spreadsheets.
+**FR1 - Meerdere output-backends**
 
-### 3.2 Out of scope / non-goals
-- Replacing the PostGIS upstream sync schedule and mechanism.
-- Building interactive dashboards (this is a batch export pipeline).
-- Manual spreadsheet editing workflows (the pipeline overwrites/uploads outputs).
+- De service moet Google Sheets blijven ondersteunen.
+- De service moet ook Excel-rapportage ondersteunen: het rapport wordt lokaal gerenderd als .xlsx en vervolgens geüpload naar een OneDrive/SharePoint-locatie of geplaatst op een bestandslocatie die door een sync-agent (vanuit de organisatie) geconsumeerd wordt.
+- Output-adapters moeten uitbreidbaar zijn (interface/abstract class).
 
-## 4. Terminology
-- **Report**: a named unit that produces a tabular dataset (rows + columns) using a query.
-- **Datasource**:
-  - **ArangoDB**: primary datasource for most reports.
-  - **PostGIS**: secondary datasource for some reports.
-- **Workbook**: a generated Excel `.xlsx` file containing one or more worksheets.
-- **Full report run**: execution of the complete configured set of reports for a scheduled run.
-- **Persistent/comment column**: a column reserved for human comments that must remain the **last** column.
+**FR2 - Datasource-abstractie**
 
-## 5. Functional requirements
+- Datasource-adapters voor ArangoDB en PostGIS moeten bestaan en onafhankelijk werken.
+- Elke adapter moet minimaal twee methoden bieden: `test_connection()` en `execute(query)`.
+- De `execute()` methode moet een eenduidig QueryResult-object retourneren met minimaal: `rows` (list), `keys` (list), `query_time_seconds` (float) en `last_data_update` (str, ISO).
 
-### FR1 — Datasources
-- The system must support querying:
-  - ArangoDB (AQL)
-  - PostGIS (SQL)
-- Each report must declare exactly one datasource.
+**FR3 - Tijdwindow run en pipeline script**
 
-### FR2 — Output format (Excel)
-- The system must create Excel `.xlsx` files.
-- Each report must map to a worksheet or a dedicated workbook (implementation choice), but the output must be Excel.
+- Er moet een CLI/script (vergelijkbaar met `ReportLoopRunner`) dat de rapport-run start. Daarnaast moet er een speciale run-mode die tussen configurable tijdsgrenzen (bv. tussen 03:01 en 05:00) een ander script uitvoert dat de database opnieuw vult.
+- De tijdwindow moet configureerbaar via een settings/config-bestand.
+- NB: Het verwijderen van params in ArangoDB gebeurt in een externe repo/pipeline, niet in deze repo.
 
-### FR3 — Upload destinations
-- The system must upload generated Excel files to **OneDrive** or **SharePoint**.
-- Upload must support overwrite or versioned uploads (choose one; default: overwrite).
+**FR4 - Retry en foutafhandeling**
 
-### FR4 — Scheduling / automation
-- The process must be automated and scheduled with the following daily sequence:
-  1. **03:01** — erase and reload ArangoDB from the API.
-  2. **05:00** — generate the Excel spreadsheets and upload them.
-- PostGIS syncing is external and has its own schedule.
+- Een rapport-run mag nooit stilvallen: bij fouten moet er een retry-mechanisme zijn met exponentiële backoff en een configureerbaar maximum aantal pogingen.
+- Als een rapport na N pogingen nog faalt, moeten de foutlogs worden geüpload naar een centrale opslag (S3 of alternatieve cloud opslag) en een notificatie worden gestuurd.
+- Fouten in één rapport mogen de andere rapporten in de batch niet stoppen (isolation/fail-fast per-report but continue overall).
 
-### FR5 — Query migration and column alignment
-- When converting existing reports from Neo4j/Cypher (or other formats) to ArangoDB/AQL:
-  - exported columns must be updated accordingly.
-  - the reserved “comments” column must always remain the **final** column in the worksheet.
+**FR5 - Mail-notificaties**
 
-### FR6 — Deployment model (git update + run)
-- The process must be runnable from a git checkout and support automated updates:
-  - pull/update code from a git repository
-  - run without manual editing
-- Code should be structured to be **importable as a module** (file-based, not only ad-hoc scripts).
+- Na een volledige run moeten e-mails worden gestuurd via de bestaande `MailSender`-functiealiteit.
+- Mailcontent bevat samenvatting: aantal resultaten per rapport en last_data_update per datasource.
 
-### FR7 — Email notifications after full run
-- After completing a full report run, the system must send an email containing at least:
-  - overall run status (success/failed/degraded)
-  - start/end timestamps and total duration
-  - per-report status (success/failure), row count, and runtime
-  - upload status (where the files were uploaded)
-- Email sending must work for both the current and target use cases.
+**FR6 - Historiek en samenvatting**
 
-### FR8 — Resultaat sheet data integrity and fallback
-- The system must only clear (wipe) the Resultaat sheet if new data is available and can be written successfully.
-- If any error occurs during the update, the system must automatically revert the sheet to its previous version to prevent data loss.
+- Historiek-sheet (`Historiek`) en summary (`Overzicht`) moeten bijgewerkt blijven met: now_utc, last_data_update en aantal rijen.
+- Voor ArangoDB-rapporten moet `last_data_update` afgeleid worden van `params` collectie (attribuut `finished_at`) wanneer die beschikbaar is.
+- Voor PostGIS-rapporten moet `last_data_update` afgeleid worden via `SinglePostGISConnector.get_params()` (attribuut `last_update_utc_assets`).
 
-## 6. Non-functional requirements
+## 2. Niet-functionele eisen (NFR)
 
-### NFR1 — Logging
-- The system must log:
-  - start/end of each scheduled job
-  - start/end of each report
-  - upload success/failure and destination
-  - email send attempt + success/failure
-  - row counts per report
-  - timing (duration) per major step
+**NFR1 - Betrouwbaarheid**
 
-### NFR2 — Error handling and reliability
-- Failures must be handled with clear behavior, at minimum:
-  - If the Arango refresh fails, the 05:00 reporting job should either:
-    - not run, or
-    - run in “best effort” mode using existing data (decision required; default: do not run).
-  - If a single report fails, other reports should still run (best effort).
-  - Upload failures should be retried (configurable retry count).
-  - If email sending fails, it must be logged clearly and must not silently pass.
+- Retries, transactie-rollback (indien relevant) en resource cleanup moeten gegarandeerd worden.
 
-### NFR3 — Idempotency
-- Re-running the same job should not create duplicated output.
-- Rebuild steps (e.g., Arango refresh) must be safely repeatable.
+**NFR2 - Observeerbaarheid**
 
-### NFR4 — Configuration
-- Credentials and endpoints must not be hard-coded.
-- Configuration should support environment-based deployment (dev/test/prod).
+- Alle belangrijke stappen (start/stop per rapport, fouten, retries, upload logs) moeten in logfiles met timestamp worden vastgelegd.
+- Bij upload van logs moet het upload-resultaat ook gelogd worden.
 
-### NFR5 — Notification uniqueness
-- The system must ensure that only one summary email is sent per report run, and must not send duplicate notifications for the same run.
+**NFR3 - Testbaarheid**
 
-## 7. Data flow (high level)
-1) **Arango refresh job**
-   - Clear ArangoDB data.
-   - Re-import from API.
+- Unit-tests en integratietests voor datasource-adapters (mocked DBs) en output-adapters moeten mogelijk zijn.
 
-2) **Report generation job**
-   - For each report:
-     - run query against its datasource
-     - normalize results to a tabular shape
-     - generate/update Excel worksheet
-     - ensure comments column is last
-   - Upload workbooks to OneDrive/SharePoint.
-   - Send a summary email after the full run completes.
+**NFR4 - Extensibility**
 
-## 8. Acceptance criteria
-- A daily scheduler triggers:
-  - Arango reload at 03:01
-  - report generation + upload at 05:00
-- Reports can pull data from ArangoDB (AQL) and PostGIS (SQL).
-- Output is valid `.xlsx` and contains all expected columns.
-- The comments/persistent column is always the last column after any query migration.
-- Upload to OneDrive/SharePoint succeeds and is logged.
-- After the full report run, a summary email is sent and is logged.
-- Failures are logged with actionable messages and do not silently pass.
+- Architectuur moet OOP en dependency-injection vriendelijk zijn: nieuwere adapters moeten zich eenvoudig implementeren door een interface te volgen.
+
+**NFR5 - Performance**
+
+- Gebruik afgeleide edge-collecties in ArangoDB voor grote traversals. Traversals op `assetrelaties` die niet gefilterd zijn zijn te traag en moeten vermeden worden.
+
+## 3. Data contracts en QueryResult
+
+**Beslissing: QueryResult als lightweight unified interface (GEEN DataFrame)**
+
+### Rationale
+- Performance: vermijd overhead van DataFrame conversie bij grote resultsets
+- Simpliciteit: alleen tabelvormige doorgeef nodig, geen analyse/transformatie
+- Memory efficiency: geen data-duplicatie
+- Lightweight: geen zware dependencies (pandas)
+
+### QueryResult interface
+
+**Verplichte attributen:**
+- `rows`: list[dict] | list[tuple] | list[list] — resultaat-rijen
+  - ArangoDB: list[dict] met {key: value}
+  - PostGIS: list[tuple] of list[list]
+- `keys`: list[str] — kolomnamen/headers (MOET altijd gevuld zijn na datasource.execute)
+  - Datasources moeten dit zelf afleiden als het origineel ontbreekt
+  - Voor ArangoDB: `keys = list(rows[0].keys())` indien rows dicts zijn
+  - Voor PostGIS: `keys = [col.name for col in cursor.description]`
+- `query_time_seconds`: float — uitvoeringstijd in seconden
+- `last_data_update`: str | None — ISO timestamp van laatste sync
+
+**Helper methods (aanbevolen implementatie):**
+```python
+def to_rows_list(self) -> list[list]:
+    """Normaliseer naar list[list] voor output adapters.
+    Converteert dicts naar lists op basis van keys volgorde."""
+    if not self.rows:
+        return []
+    if isinstance(self.rows[0], dict):
+        return [[row.get(k) for k in self.keys] for row in self.rows]
+    return [list(row) for row in self.rows]
+
+def iter_rows(self):
+    """Memory-efficient iterator voor grote resultsets."""
+    for row in self.rows:
+        if isinstance(row, dict):
+            yield [row.get(k) for k in self.keys]
+        else:
+            yield list(row)
+```
+
+**Verantwoordelijkheden:**
+- **Datasource adapters**: MOETEN `keys` correct vullen bij execute()
+- **QueryResult**: biedt normalisatie-helpers voor output adapters
+- **Output adapters**: kunnen kiezen tussen `to_rows_list()` (in-memory) of `iter_rows()` (streaming)
+
+**Conversie naar andere formaten (optioneel, outside core):**
+- Als een specifiek rapport pandas nodig heeft: conversie gebeurt in het rapport zelf
+- `pd.DataFrame(qr.to_rows_list(), columns=qr.keys)` — eenvoudig en expliciet
+- Output adapters blijven pandas-vrij
+
+## 4. Configuratie en settings
+
+- Centraal `settings.json` (of `.yaml`) met:
+  - databases: instellingen voor ArangoDB en PostGIS (host, user, password, dbname)
+  - output: Google Sheets credentials, OneDrive/SharePoint credentials (of upload target)
+  - scheduling: tijdwindows, frequency defaults
+  - retry policy: max_retries, backoff_base_seconds
+  - logging: remote_upload_target (S3 bucket or other), retention
+
+## 5. Implementatie notes / aanbevolen aanpak
+
+- **QueryResult implementatie:**
+  - Maak een `@dataclass` of simple class in een shared module (bijv. `datasources/base.py`)
+  - Implementeer de helper methods `to_rows_list()` en `iter_rows()`
+  - Datasources MOETEN altijd `keys` vullen (niet leeg laten zoals voorheen)
+  - Voorbeeld skeleton:
+    ```python
+    @dataclass
+    class QueryResult:
+        rows: list
+        keys: list[str]
+        query_time_seconds: float
+        last_data_update: str | None = None
+        
+        def to_rows_list(self) -> list[list]:
+            if not self.rows:
+                return []
+            if isinstance(self.rows[0], dict):
+                return [[row.get(k) for k in self.keys] for row in self.rows]
+            return [list(row) for row in self.rows]
+        
+        def iter_rows(self):
+            for row in self.rows:
+                if isinstance(row, dict):
+                    yield [row.get(k) for k in self.keys]
+                else:
+                    yield list(row)
+    ```
+
+- **Datasource adapters:**
+  - `ArangoDatasource`:
+    - Implement `test_connection()` and `execute(aql_string)` returning QueryResult.
+    - When executing long traversals prefer using derived edge collections such as `voedt_relaties`.
+    - Populate `last_data_update` from `params` collection (`finished_at`).
+    - **Belangrijk**: Vul `keys` altijd: `keys = list(rows[0].keys())` wanneer rows dicts zijn.
+  - `PostGISDatasource`:
+    - Implement connection pooling (existing `SinglePostGISConnector`) and safe transaction handling.
+    - Implement reset/rollback strategy when encountering `current transaction is aborted` errors.
+    - **Belangrijk**: Vul `keys` altijd: `keys = [col.name for col in cursor.description]`.
+
+- **Output adapters:**
+  - `GoogleSheetsOutput` (existing):
+    - Update to use `qr.to_rows_list()` voor kleine tot middelgrote resultsets.
+    - Voor zeer grote resultsets (>10K rows): overweeg `qr.iter_rows()` met batched writes.
+    - Verwacht altijd dat `qr.keys` gevuld is (geen inferentie meer in DQReport nodig na deze refactor).
+  - `ExcelOutput` (nieuw):
+    - Generate `.xlsx` file locally (e.g., with openpyxl of xlsxwriter).
+    - Gebruik `qr.iter_rows()` voor memory-efficient schrijven (row-by-row).
+    - Upload to OneDrive/SharePoint using available corporate API or an upload helper (configurable).
+    - Keep the same OutputWriteContext contract so `DQReport` can call `out.write_report(...)` unchanged.
+  - **Algemene richtlijn**: 
+    - Kleine resultsets (<1000 rows): `qr.to_rows_list()` is fine
+    - Grote resultsets (>1000 rows): gebruik `qr.iter_rows()` om memory overhead te vermijden
+
+
+- **Logging and upload:**
+  - Implement structured logging (JSON lines) and a log-archiver that, after N failed retries, uploads the collected logs to the configured remote target.
+
+## 6. Acceptance criteria
+
+- All existing reports still run and their outputs are equivalent (Google Sheets behavior preserved).
+- Excel output option implemented and verified for at least one report, including upload to the configured target.
+- ArangoDB adapter returns `QueryResult` objects with `rows` and `keys` inferred if missing; `last_data_update` populated from `params.finished_at` when available.
+- PostGIS adapter returns `QueryResult` objects with `last_data_update` populated from `SinglePostGISConnector.get_params()` (attribuut `last_update_utc_assets`).
+- Retry logic tested: simulate a failing report, verify retries and final log upload.
+- Mail notifications are sent after a full run with summary of results and last_data_update per datasource.
+
+## 7. Rollout plan (phased)
+
+**Phase 0: Tests and infra preparation**
+
+- Add unit tests for adapters and QueryResult contract.
+- Add/verify config schema and credentials placement.
+
+**Phase 1: Adapter & Output scaffolding**
+
+- Implement `ArangoDatasource` and `ExcelOutput` scaffolds.
+- Keep GoogleSheetsOutput unchanged.
+- Verify PostGIS adapter correctly populates `last_data_update` from `get_params()`.
+
+**Phase 2: Timed run mode**
+
+- Implement CLI/script with configurable timewindow support for triggering external database-fill scripts.
+- Test timewindow logic and integration with external pipeline.
+
+**Phase 3: Monitoring and hardening**
+
+- Implement log-archive upload and verify retry behaviors and notifications.
+- Finalize documentation and runbook.
+
+## 8. Toelichting / opmerkingen
+
+- Neo4j: veel oude code gebruikt Neo4j; behoud oude query-strings in `ArchivedReports/` for reference, but do not keep Neo4j in the primary runtime unless explicitly required.
+- Security: be careful with credential storage; use environment variables or a secure vault for production secrets.

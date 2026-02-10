@@ -1,11 +1,9 @@
-from DQReport import DQReport
+from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0081:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0081(BaseReport):
+    def init_report(self) -> None:
         aql_query = """
 LET verkeersregelaar_key = FIRST(FOR at IN assettypes FILTER at.short_uri == \"onderdeel#Verkeersregelaar\" LIMIT 1 RETURN at._key)
 
@@ -34,5 +32,5 @@ FOR a IN assets
         self.report.result_query = aql_query
         self.report.cypher_query = """MATCH (a:Verkeersregelaar {isActief:TRUE}) \nWHERE a.naam is NULL OR NOT (a.naam =~ '^\\d{3}[ACG]\\d.VR$' OR a.naam =~ '^W[WO]\\d{4}.VR$')\nRETURN a.uuid, a.naam"""
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

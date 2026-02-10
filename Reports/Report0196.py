@@ -1,11 +1,9 @@
-from DQReport import DQReport
+from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0196:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0196(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0196',
                                title='Lichtmast heeft een locatie',
                                spreadsheet_id='1dgAGfvuGBCnW4oWXm0eUJMqSv6PXbbtAEEmNNUdOmwk',
@@ -44,5 +42,5 @@ class Report0196:
                 a.naampad
             """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

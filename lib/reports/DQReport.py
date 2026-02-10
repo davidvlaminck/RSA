@@ -4,10 +4,10 @@ from typing import Any
 
 from googleapiclient.errors import HttpError
 
-from MailSender import MailSender
-from Report import Report
-from SheetsCell import SheetsCell
-from SheetsWrapper import SingleSheetsWrapper, SheetsWrapper
+from lib.mail.MailSender import MailSender
+from lib.reports.Report import Report
+from outputs.sheets_cell import SheetsCell
+from outputs.sheets_wrapper import SingleSheetsWrapper, SheetsWrapper
 from factories import make_datasource, make_output
 from outputs.base import OutputWriteContext
 
@@ -102,13 +102,6 @@ class DQReport(Report):
         query_time = qr.query_time_seconds
         self.last_data_update = qr.last_data_update or ''
 
-        # For ArangoDB, if keys is empty and rows are dicts, infer keys from first row
-        if self.datasource == 'ArangoDB' and hasattr(qr, 'rows') and isinstance(qr.rows, list) and len(qr.rows) > 0:
-            if hasattr(qr, 'keys') and (not qr.keys or len(qr.keys) == 0):
-                if isinstance(qr.rows[0], dict):
-                    # Create a new QueryResult with inferred keys, since the original is frozen
-                    qr = type(qr)(rows=qr.rows, keys=list(qr.rows[0].keys()), query_time_seconds=qr.query_time_seconds, last_data_update=qr.last_data_update)
-
         # write output via output adapter
         ctx = OutputWriteContext(
             spreadsheet_id=self.spreadsheet_id,
@@ -175,13 +168,19 @@ class DQReport(Report):
         logging.info(f'finished report {self.name}')
 
     @staticmethod
-    def clean(result_data, headerrow: list[str]):
-        """Removes the empty rows in the results, converts lists, decimals and dates to strings """
+    def clean(result_data, headerrow: list[str] | None = None):
+        """Removes the empty rows in the results, converts lists, decimals and dates to strings.
+
+        Backwards compatible: headerrow is optional. If present and a row is a dict, use headerrow to
+        order dict values; if headerrow is None and row is a dict, use the dict's keys iteration order.
+        """
         new_result_data = []
 
         for row in result_data:
             if isinstance(row, dict):
-                row = [row.get(key, '') for key in headerrow]
+                # if no headerrow provided, derive an order from dict keys
+                cols = headerrow if headerrow is not None else list(row.keys())
+                row = [row.get(key, '') for key in cols]
 
             if isinstance(row, tuple):
                 row = list(row)

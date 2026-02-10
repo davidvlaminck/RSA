@@ -1,11 +1,9 @@
-from DQReport import DQReport
+from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0105:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0105(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0105', title='Overzicht aantallen OTL assettypes',
                                spreadsheet_id='1E1KECv6Sm7BfAZX2Hoy84vPGzi7YNZXImSMbHgizpm8', datasource='PostGIS',
                                persistent_column='D')
@@ -690,5 +688,5 @@ SELECT column1 as naam, column2 as uri, CASE WHEN tussentabel.aantal IS NULL THE
 FROM otl_assettypes 
     LEFT JOIN tussentabel ON tussentabel.uri = column2"""
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

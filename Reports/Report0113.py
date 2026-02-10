@@ -1,11 +1,9 @@
-from DQReport import DQReport
+from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0113:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0113(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0113', title='Dubbele geometrie - Galgpaal',
                                spreadsheet_id='1QpiwBAmNRIi-GP4EDfIUxMI_LV-qMMnjwzzaYk-ZoBc', datasource='PostGIS',
                                persistent_column='J')
@@ -44,5 +42,5 @@ class Report0113:
         order by afstand desc
 	    """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

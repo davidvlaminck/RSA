@@ -1,11 +1,9 @@
-from DQReport import DQReport
+from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0026:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0026(BaseReport):
+    def init_report(self) -> None:
         aql_query = """
 LET pad_key   = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Pad" LIMIT 1 RETURN at._key)
 LET zpad_key  = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#Zpad" LIMIT 1 RETURN at._key)
@@ -41,5 +39,5 @@ FOR a IN assets
         self.report.result_query = aql_query
         self.report.cypher_query = """MATCH (a:Asset:Pad {isActief:TRUE}) \n        WHERE NOT EXISTS ((a)-[:HoortBij]->(:Asset:Zpad {isActief:TRUE}))\n        RETURN a.uuid, a.naam"""
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

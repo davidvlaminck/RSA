@@ -1,11 +1,9 @@
-from DQReport import DQReport
+from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0009:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0009(BaseReport):
+    def init_report(self) -> None:
         aql_query = """
 LET omvormer_key    = FIRST(FOR at IN assettypes FILTER at.short_uri == \"onderdeel#Omvormer\"    LIMIT 1 RETURN at._key)
 LET wegkantkast_key = FIRST(FOR at IN assettypes FILTER at.short_uri == \"onderdeel#Wegkantkast\" LIMIT 1 RETURN at._key)
@@ -74,5 +72,5 @@ FOR o IN assets
         self.report.result_query = aql_query
         self.report.cypher_query = """MATCH (o:Omvormer {isActief:TRUE})\n        WHERE NOT EXISTS ((o)-[:Bevestiging]-(:Wegkantkast {isActief:TRUE})) AND NOT EXISTS ((o)-[:Bevestiging]-(:Montagekast {isActief:TRUE}))\n        WITH o\n        OPTIONAL MATCH (o)-[:HeeftBetrokkene {rol:'toezichter'}]->(a:Agent)\n        OPTIONAL MATCH (o)-[:Bevestiging]->(b:onderdeel {isActief:TRUE})\n        RETURN o.uuid, o.naam, a.naam as toezichter, b.typeURI as behuizing_type"""
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

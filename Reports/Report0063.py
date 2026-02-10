@@ -1,12 +1,10 @@
-from DQReport import DQReport
-from LegacyReport import LegacyReport
+from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
+from lib.reports.LegacyReport import LegacyReport
 
 
-class Report0063:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0063(BaseReport):
+    def init_report(self) -> None:
         self.report = LegacyReport(name='report0063',
                                    title="Overzicht invulgraad installaties per toezichtgroep",
                                    spreadsheet_id='1i-CB_Kox651c9zP8e1Q_XtflOqvta-xlCfKSj7h_4gM',
@@ -184,5 +182,5 @@ FROM samengevoegd
 GROUP BY 1, 2, 4;
 """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)

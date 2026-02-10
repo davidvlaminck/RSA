@@ -1,11 +1,9 @@
-from DQReport import DQReport
+from lib.reports.DQReport import DQReport
+from lib.reports.BaseReport import BaseReport
 
 
-class Report0110:
-    def __init__(self):
-        self.report = None
-
-    def init_report(self):
+class Report0110(BaseReport):
+    def init_report(self) -> None:
         self.report = DQReport(name='report0110', title='Geometrie is geldig: Open Geospatial Consortium standaard',
                                spreadsheet_id='1s8IdTaTSo0tMNKU59hTj5SgrJFt3bTG1DbidwFrXIv0', datasource='PostGIS',
                                persistent_column='E')
@@ -34,5 +32,5 @@ class Report0110:
             not st_isvalid(geometry)
 	        """
 
-    def run_report(self, sender):
+    def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)
