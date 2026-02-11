@@ -8,7 +8,8 @@ class Report0128(BaseReport):
                                title='Afstand tussen legacy en OTL-voorstelling van de asset "Mast" is aanvaardbaar',
                                spreadsheet_id='1037M4_aDq9pF3ntRZhClYEB_GZxAdz5b82qH5WaeZv0',
                                datasource='PostGIS',
-                               persistent_column='F'
+                               persistent_column='F',
+                               excel_filename='[RSA] Afstand tussen legacy en OTL-voorstelling van de asset _Mast_ is aanvaardbaar.xlsx',
                                )
 
         self.report.result_query = """

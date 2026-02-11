@@ -8,7 +8,8 @@ class Report0039(BaseReport):
                                title="Lichtmast LED",
                                spreadsheet_id='1DZjg3zbcoY7_9Q0qj74KkgLL3eOwWa7e4_0SlbLMM5o',
                                datasource='PostGIS',
-                               convert_columns_to_numbers=['K', 'S', 'X', 'Y'])
+                               convert_columns_to_numbers=['K', 'S', 'X', 'Y'],
+                               excel_filename='[RSA] Lichtmast LED.xlsx',)
 
         self.report.result_query = """
 WITH cte_awegen ("aweg_ident8", "beginpositie", "eindpositie") AS ( VALUES

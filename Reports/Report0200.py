@@ -9,7 +9,8 @@ class Report0200(BaseReport):
                                spreadsheet_id='1A0CqgpEDRN0Zdet0QFQM8T90VFTpQ6_qL2GqHc9i3J0',
                                datasource='PostGIS',
                                persistent_column='F',
-                               link_type='eminfra')
+                               link_type='eminfra',
+                               excel_filename='[RSA] Assets hebben foutieve toezichters_.xlsx',)
 
         self.report.result_query = """
             with cte_agents as (

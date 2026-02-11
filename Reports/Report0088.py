@@ -47,7 +47,8 @@ FOR k IN assets
                                title='VRI Wegkantkasten hebben een afmeting',
                                spreadsheet_id='1WgLd7ESfGiJadbfALzJEwNG2-dNhUZALltPqk9WTynw',
                                datasource='ArangoDB',
-                               persistent_column='F')
+                               persistent_column='F',
+                               excel_filename='[RSA] VRI Wegkantkasten hebben een afmeting.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """MATCH (k:Wegkantkast {isActief:TRUE})-[:Bevestiging]-(vr:Verkeersregelaar {isActief:TRUE}) \nWHERE vr IS NOT NULL AND (k.`afmeting.lengte` IS NULL OR k.`afmeting.breedte` IS NULL OR k.`afmeting.hoogte` IS NULL OR (CASE WHEN k.`afmeting.breedte` < k.`afmeting.lengte` AND k.`afmeting.breedte`< k.`afmeting.hoogte` THEN TRUE ELSE FALSE END) = FALSE)\nRETURN k.uuid, k.naam, k.`afmeting.lengte`, k.`afmeting.breedte`, k.`afmeting.hoogte`"""

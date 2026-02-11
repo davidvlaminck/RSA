@@ -8,7 +8,8 @@ class Report0118(BaseReport):
                                title='Elke installatie heeft een bestekkoppeling',
                                spreadsheet_id='1bpZLWgqFp6AsRqxaTCnvc8IqpnnmSnoajlCABGD4TbY',
                                datasource='PostGIS',
-                               persistent_column='E')
+                               persistent_column='E',
+                               excel_filename='[RSA] Elke installatie heeft een bestekkoppeling.xlsx',)
 
         self.report.result_query = """
         with cte_installaties as (

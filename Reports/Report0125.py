@@ -32,7 +32,8 @@ FOR n IN assets
                                title='KabelnetToegang heeft een relatie met een andere asset',
                                spreadsheet_id='1FVilNqQXxNI0HB9Zu2Dc4e9McODPw-eDPeG0h3i0_x4',
                                datasource='ArangoDB',
-                               persistent_column='D'
+                               persistent_column='D',
+                               excel_filename='[RSA] KabelnetToegang heeft steeds een relatie met een andere asset.xlsx',
                                )
 
         self.report.result_query = aql_query

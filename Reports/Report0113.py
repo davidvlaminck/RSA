@@ -6,7 +6,8 @@ class Report0113(BaseReport):
     def init_report(self) -> None:
         self.report = DQReport(name='report0113', title='Dubbele geometrie - Galgpaal',
                                spreadsheet_id='1QpiwBAmNRIi-GP4EDfIUxMI_LV-qMMnjwzzaYk-ZoBc', datasource='PostGIS',
-                               persistent_column='J')
+                               persistent_column='J',
+                               excel_filename='[RSA] Dubbele geometrie_ Galgpaal.xlsx',)
 
         self.report.result_query = """
         with cte_asset_galgpaal as (

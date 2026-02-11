@@ -48,7 +48,8 @@ FOR c IN assets
                                title="Camera's hebben een Sturing relatie met een Netwerkpoort of Omvormer",
                                spreadsheet_id='1NKB8J6is9xTrIrDcZAP_IraBqs65JhTpoCLDMaT881A',
                                datasource='ArangoDB',
-                               persistent_column='D')
+                               persistent_column='D',
+                               excel_filename='[RSA] Camera_s Sturing relaties.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """MATCH (c:Camera {isActief:TRUE}) \n        WHERE NOT EXISTS ((c)-[:Sturing]-(:onderdeel :Netwerkpoort {isActief:TRUE})) AND NOT EXISTS ((c)-[:Sturing]-(:onderdeel :Omvormer {isActief:TRUE}))\n        WITH c\n        OPTIONAL MATCH (c)-[:HeeftBetrokkene {rol:'toezichter'}]->(a:Agent)\n        RETURN c.uuid, c.naam, a.naam as toezichter"""

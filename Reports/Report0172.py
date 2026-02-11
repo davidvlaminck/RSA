@@ -8,7 +8,8 @@ class Report0172(BaseReport):
                                title='Assets zitten volledig omvat in een andere asset van hetzelfde assettype (donut)',
                                spreadsheet_id='1TfxlJgBUJvRS5xY29ZVIjqHD_2-jpXJrfY1VILuPJhk',
                                datasource='PostGIS',
-                               persistent_column='E'
+                               persistent_column='E',
+                               excel_filename='[RSA] Donut assets zijn niet als donut-polygoon ingetekend.xlsx',
                                )
 
         self.report.result_query = """

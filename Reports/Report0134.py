@@ -8,7 +8,8 @@ class Report0134(BaseReport):
                                title='Overlappende gebouwen',
                                spreadsheet_id='1_8Xqs3uVeOPrnWJfnOuXrDkuEzhC1TRd6ybWPKk3-m4',
                                datasource='PostGIS',
-                               persistent_column='I'
+                               persistent_column='I',
+                               excel_filename='[RSA] Overlappende gebouwen.xlsx',
                                )
 
         self.report.result_query = """

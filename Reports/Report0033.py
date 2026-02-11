@@ -34,7 +34,8 @@ FOR n IN assets
                                title="VLAN objecten hebben een HoortBij relatie met een L2AccesStructuur",
                                spreadsheet_id='12urCVlUXm_KbNCrQS1MH5kVqNKak3n5DdQlAnk8mn9w',
                                datasource='ArangoDB',
-                               persistent_column='C')
+                               persistent_column='C',
+                               excel_filename='[RSA] VLAN objecten hebben een HoortBij relatie met een L2AccesStructuur.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """MATCH (n:VLAN {isActief:TRUE}) \n        WHERE NOT EXISTS ((n)-[:HoortBij]->(:L2AccessStructuur {isActief:TRUE}))\n        RETURN n.uuid, n.naam"""

@@ -9,7 +9,8 @@ class Report0212(BaseReport):
                                spreadsheet_id='1F4lMZPKRjWWEq7Q5dbjO4lN1yBD_VNs-LXC3X56CoQ4',
                                datasource='PostGIS',
                                persistent_column='G',
-                               link_type='eminfra')
+                               link_type='eminfra',
+                               excel_filename='[RSA] Assets met DA- in diens naampad.xlsx',)
 
         self.report.result_query = """
                 select

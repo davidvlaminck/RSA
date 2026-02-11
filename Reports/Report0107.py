@@ -6,7 +6,8 @@ class Report0107(BaseReport):
     def init_report(self) -> None:
         self.report = DQReport(name='report0107', title='Geometrie is geldig: in Vlaanderen gelegen',
                                spreadsheet_id='1aUVoYhqKe1k4KwuAyNcfWXkH9uwj1Cls_ufH2j37gNg', datasource='PostGIS',
-                               persistent_column='D')
+                               persistent_column='D',
+                               excel_filename='[RSA] Geometrie is geldig_ in Vlaanderen gelegen.xlsx',)
 
         self.report.result_query = """
             WITH cte_vlaanderen_buffered (geom) AS (

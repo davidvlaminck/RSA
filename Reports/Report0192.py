@@ -6,7 +6,8 @@ class Report0192(BaseReport):
     def init_report(self) -> None:
         self.report = DQReport(name='report0192', title='Overzicht van het aantal Bezoekt-relaties per bron- en doelassettype',
                                spreadsheet_id='1vcrJrrS3kXC4hiP9QiDY2WbxCm40CwCW_nEKCP4Q55o', datasource='PostGIS',
-                               persistent_column='D', link_type='eminfra')
+                               persistent_column='D', link_type='eminfra',
+                               excel_filename='[RSA] Overzicht van het aantal Bezoekt-relaties per bron- en doelassettype.xlsx',)
 
         self.report.result_query = """
         with cte_bezoek_relaties as (

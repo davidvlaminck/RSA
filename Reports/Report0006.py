@@ -30,7 +30,8 @@ FOR a IN assets
                                title='Wegkantkasten hebben een HoortBij relatie naar Kast objecten',
                                spreadsheet_id='1_yLv--qorkqbx5ym_qBUTxc6b7mOvdm5kD8SrWPkB5I',
                                datasource='ArangoDB',
-                               persistent_column='C')
+                               persistent_column='C',
+                               excel_filename='[RSA] Kast HoortBij relaties.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """MATCH (a:Asset :Wegkantkast {isActief:TRUE}) \n        WHERE NOT EXISTS ((a)-[:HoortBij]->(:Kast {isActief:TRUE}))\n        RETURN a.uuid, a.naam"""

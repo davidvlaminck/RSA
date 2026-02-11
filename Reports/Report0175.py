@@ -9,7 +9,8 @@ class Report0175(BaseReport):
                                spreadsheet_id='1qoXaCy5U2H-HloAHNojkuraN4Du1D0gWy6yr4nY2BjQ',
                                datasource='PostGIS',
                                persistent_column='G',
-                               link_type='eminfra'
+                               link_type='eminfra',
+                               excel_filename='[RSA] SegmentControllers (SegC (OTL) - [HoortBij] - SegC (LGC)) hebben identieke serienummers.xlsx',
                                )
 
         self.report.result_query = """

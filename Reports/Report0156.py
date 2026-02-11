@@ -8,7 +8,8 @@ class Report0156(BaseReport):
                                title='Assets met dubbele Betrokkene-relatie naar dezelfe rol',
                                spreadsheet_id='19CqxgnN3XzlVv6yIAi7Dh5JEykr0k-YBYNH4q4tcNu0',
                                datasource='PostGIS',
-                               persistent_column='G'
+                               persistent_column='G',
+                               excel_filename='[RSA] Assets met dubbele Betrokkene-relatie naar dezelfe rol.xlsx',
                                )
 
         self.report.result_query = """

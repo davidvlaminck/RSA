@@ -69,7 +69,8 @@ FOR a IN assets
                                spreadsheet_id='1M8NE8RxnEJdG-8suCjKOzh96O6pGUcfmFi83ePO3glc',
                                datasource='ArangoDB',
                                persistent_column='L',
-                               link_type='eminfra')
+                               link_type='eminfra',
+                               excel_filename='[RSA] Geldigheid EAN nummer DNBLaagspanning of DNBHoogspanning.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """

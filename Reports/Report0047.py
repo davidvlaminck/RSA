@@ -9,7 +9,8 @@ class Report0047(BaseReport):
                                      'assets verbonden door een LigtOp relatie van BitumineuzeLaag naar Onderbouw.',
                                spreadsheet_id='1BiRG3GxXF1AjpAoCWW_O7ukg2WeCEvGnhew-_YuclrQ',
                                datasource='PostGIS',
-                               persistent_column='D')
+                               persistent_column='D',
+                               excel_filename='[RSA] BitumineuzeLaag LigtOp Onderbouw Geometrie.xlsx',)
 
         self.report.result_query = """
         -- Bouw een tussentabel cte_provincies om zelf een ruimtelijke index na te bouwen, om ze opzoeking te versnellen.

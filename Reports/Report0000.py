@@ -8,7 +8,8 @@ class Report0000(BaseReport):
                                title="testsheet (dev only)",
                                spreadsheet_id='1SK0UVeKnJe0eQaktKMFjeJSg16wZ4SAW-W8wz16x3Tg',
                                datasource='PostGIS',
-                               convert_columns_to_numbers=['B', 'C'])
+                               convert_columns_to_numbers=['B', 'C'],
+                               excel_filename='[RSA] Testsheet.xlsx',)
 
         self.report.result_query = """
                WITH t1 as (

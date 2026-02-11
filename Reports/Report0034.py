@@ -42,7 +42,8 @@ FOR n IN assets
                                title="NNI Netwerkpoorten hebben een Sturing relatie met een NNI Netwerkpoort",
                                spreadsheet_id='1Q0ypijGhIMmax4iR3DHHu4FMYVbkU_LCQhBAyzbIA2k',
                                datasource='ArangoDB',
-                               persistent_column='C')
+                               persistent_column='C',
+                               excel_filename='[RSA] NNI Netwerkpoorten hebben een Sturing relatie met een NNI Netwerkpoort.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """MATCH (n:Netwerkpoort {isActief:TRUE, type:'NNI'})-[:Bevestiging]-(:Netwerkelement {isActief:TRUE, gebruik:'l2-switch'}) \n        WHERE NOT EXISTS ((n)-[:Sturing]-(:Netwerkpoort {isActief:TRUE, type:'NNI'}))\n        RETURN n.uuid, n.naam"""

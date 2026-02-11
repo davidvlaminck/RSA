@@ -9,7 +9,8 @@ class Report0204(BaseReport):
                                spreadsheet_id='171FTB1SvDW3oe2EQ-loH-EX2w-1JRjmRce38XzS4cUA',
                                datasource='PostGIS',
                                persistent_column='G',
-                               link_type='eminfra')
+                               link_type='eminfra',
+                               excel_filename='[RSA] Kast (Legacy) heeft hoogstens één Laagspanningsdeel via de Bevestiging-relatie.xlsx',)
 
         self.report.result_query = """
         with

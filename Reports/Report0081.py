@@ -27,7 +27,8 @@ FOR a IN assets
                                title='Verkeersregelaars hebben als naam een conforme installatienummer',
                                spreadsheet_id='1v7sqt0OumZ0rEhRVFTwnl_4vNoWj3G0QSsUTKHxSOaE',
                                datasource='ArangoDB',
-                               persistent_column='C')
+                               persistent_column='C',
+                               excel_filename='[RSA] Verkeersregelaars hebben een conforme naam.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """MATCH (a:Verkeersregelaar {isActief:TRUE}) \nWHERE a.naam is NULL OR NOT (a.naam =~ '^\\d{3}[ACG]\\d.VR$' OR a.naam =~ '^W[WO]\\d{4}.VR$')\nRETURN a.uuid, a.naam"""

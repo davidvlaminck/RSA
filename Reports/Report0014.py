@@ -30,7 +30,8 @@ FOR s IN assets
                                title='Stroomkringen en Laagspanningsborden hebben een HoortBij relatie met een LSDeel object',
                                spreadsheet_id='1iVs6wP1WcdHxEUsx5N_NlunvGU4LycRUO1_4j03Nwzo',
                                datasource='ArangoDB',
-                               persistent_column='C')
+                               persistent_column='C',
+                               excel_filename='[RSA] Stroomkring LSBord HoortBij relaties.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """MATCH (s:onderdeel {isActief:TRUE}) 

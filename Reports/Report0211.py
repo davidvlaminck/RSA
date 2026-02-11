@@ -9,7 +9,8 @@ class Report0211(BaseReport):
                                spreadsheet_id='1AztJXPe2irCDmu3dJuRB9TMvCXOrU-y9qnrnFR4vnhg',
                                datasource='PostGIS',
                                persistent_column='F',
-                               link_type='eminfra')
+                               link_type='eminfra',
+                               excel_filename='[RSA] Dubbele niet-gerichte relatie tussen assets.xlsx',)
 
         self.report.result_query = """
             with rel as (

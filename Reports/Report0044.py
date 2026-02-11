@@ -9,7 +9,8 @@ class Report0044(BaseReport):
                                title='Ingevulde deprecated attributen',
                                spreadsheet_id='1GFfEoWVvi0-BpFvrPQUG6w5AuMcoyVk9Kutf9ux8bOE',
                                datasource='PostGIS',
-                               persistent_column='E')
+                               persistent_column='E',
+                               excel_filename='[RSA] Ingevulde deprecated attributen.xlsx',)
 
         otl_cursor = OTLCursorPool.get_cursor()
         deprecated_attributes = otl_cursor.execute("""

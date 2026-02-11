@@ -46,7 +46,8 @@ FOR x IN assets
                                title='EnergiemeterDNB en ForfaitaireAansluiting hebben een HoortBij relatie naar een LS of HS',
                                spreadsheet_id='1_3NxUvqS6v_j9d7K4QzWBvN3ISveJ-poxW4_0XYEYFM',
                                datasource='ArangoDB',
-                               persistent_column='D')
+                               persistent_column='D',
+                               excel_filename='[RSA] EnergiemeterDNB en ForfaitaireAansluiting hebben een HoortBij naar legacy.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """MATCH (x {isActief: TRUE})\n            WHERE (x:EnergiemeterDNB OR x:ForfaitaireAansluiting) AND NOT EXISTS((x)-[:HoortBij]->(:LS {isActief: TRUE})) AND NOT EXISTS((x)-[:HoortBij]->(:HS {isActief: TRUE}))\n            RETURN x.uuid as uuid, x.naam as naam, x.typeURI as typeURI"""

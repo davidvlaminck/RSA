@@ -8,7 +8,8 @@ class Report0174(BaseReport):
                                title='Assets van bepaalde assettypes hebben een unieke naam',
                                spreadsheet_id='103WXbUchfGVpKN0eGTHc1X8-PJSq5rf2Ydz6FhePGFs',
                                datasource='PostGIS',
-                               persistent_column='E'
+                               persistent_column='E',
+                               excel_filename='[RSA] Assets van bepaalde assettypes hebben een unieke naam.xlsx',
                                )
 
         self.report.result_query = """

@@ -8,7 +8,8 @@ class Report0162(BaseReport):
                                title='Ontbrekende gegevens installaties TOV',
                                spreadsheet_id='1fytjc9wz3Cj5xGSYoNMxpArcxbFT8L4n1o-tHCai92Q',
                                datasource='PostGIS',
-                               persistent_column='K'
+                               persistent_column='K',
+                               excel_filename='[RSA] Ontbrekende gegevens installaties TOV.xlsx',
                                )
 
         self.report.result_query = """

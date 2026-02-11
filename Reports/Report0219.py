@@ -9,7 +9,8 @@ class Report0219(BaseReport):
                                spreadsheet_id='1gUDGRCTpwUK-ygXBigM0Jeyo05RpbKhiGWsEzL0MWgk',
                                datasource='PostGIS',
                                persistent_column='H',
-                               link_type='eminfra')
+                               link_type='eminfra',
+                               excel_filename='[RSA] Identieke (niet-unieke) EAN-nummers bij meerdere assets (assettypes_ DNBLaagspanning en DNBHoogspanning).xlsx',)
 
         self.report.result_query = """
 with cte_assets_eannummer as (

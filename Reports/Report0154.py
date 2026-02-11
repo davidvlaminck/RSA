@@ -8,7 +8,8 @@ class Report0154(BaseReport):
                                title='Dubbele Straatkolken (Limburg)',
                                spreadsheet_id='16EmsvsSgwCXfJ7HXmVCXaFIw58yVoqVQReyWZV09xzc',
                                datasource='PostGIS',
-                               persistent_column='J'
+                               persistent_column='J',
+                               excel_filename='[RSA] Dubbele Straatkolken (Limburg).xlsx',
                                )
 
         self.report.result_query = """

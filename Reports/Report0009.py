@@ -67,7 +67,8 @@ FOR o IN assets
                                title='Omvormers hebben een Bevestiging relatie met een Behuizing',
                                spreadsheet_id='1A4kata3Eg9fMjsUE8Za5XEtcF7JEm_-IftHhGz6SnJo',
                                datasource='ArangoDB',
-                               persistent_column='E')
+                               persistent_column='E',
+                               excel_filename='[RSA] Omvormer Bevestiging relaties.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """MATCH (o:Omvormer {isActief:TRUE})\n        WHERE NOT EXISTS ((o)-[:Bevestiging]-(:Wegkantkast {isActief:TRUE})) AND NOT EXISTS ((o)-[:Bevestiging]-(:Montagekast {isActief:TRUE}))\n        WITH o\n        OPTIONAL MATCH (o)-[:HeeftBetrokkene {rol:'toezichter'}]->(a:Agent)\n        OPTIONAL MATCH (o)-[:Bevestiging]->(b:onderdeel {isActief:TRUE})\n        RETURN o.uuid, o.naam, a.naam as toezichter, b.typeURI as behuizing_type"""

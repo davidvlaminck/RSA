@@ -42,7 +42,8 @@ FOR p IN assets
                                title='Paden zijn het doel van exact 2 HoortBij relaties komende van Netwerkpoorten',
                                spreadsheet_id='1EsUciU3KV5EoDwv3NbAz-1SIPGXsRUrLQOTMZSstkZI',
                                datasource='ArangoDB',
-                               persistent_column='C')
+                               persistent_column='C',
+                               excel_filename='[RSA] Paden HoortBij 2 Netwerkpoorten.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """MATCH (gl:Pad {isActief:TRUE})<-[:HoortBij]-(p:Netwerkpoort {isActief:TRUE})\n        WITH gl, COUNT(p) AS aantal_poorten\n        WHERE aantal_poorten = 2\n        WITH collect(gl.uuid) AS good_paden\n        MATCH (p:Pad {isActief:TRUE} )\n        WHERE NOT p.uuid IN good_paden\n        RETURN p.uuid, p.naam"""

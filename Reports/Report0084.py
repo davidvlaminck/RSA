@@ -8,7 +8,8 @@ class Report0084(BaseReport):
                                title='Verkeersregelaars hebben een vplannummer en vplandatum dat overeenkomt met het legacy vplan',
                                spreadsheet_id='1pGZUOMXLeWRo0Ykzshxt9PJN2tCbznsBxQf0mgh7Zos',
                                datasource='PostGIS',
-                               persistent_column='H')
+                               persistent_column='H',
+                               excel_filename='[RSA] Verkeersregelaars hebben een correct vplan.xlsx',)
 
         self.report.result_query = """
 WITH vr_otl AS (

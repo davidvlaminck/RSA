@@ -9,7 +9,8 @@ class Report0199(BaseReport):
                                spreadsheet_id='1hxBCVXI5mTzZ9Xc6sz6nBRtnNMWVZ-lDslutSIw1UOs',
                                datasource='PostGIS',
                                persistent_column='E',
-                               link_type='eminfra')
+                               link_type='eminfra',
+                               excel_filename='[RSA] Seinbrug is een punt.xlsx',)
 
         self.report.result_query = """
             with cte_seinbrug as (

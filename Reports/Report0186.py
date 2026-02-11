@@ -6,7 +6,8 @@ class Report0186(BaseReport):
     def init_report(self) -> None:
         self.report = DQReport(name='report0186', title='Bevestigingsrelatie bestaat tussen PTVerwerkingseenheid en PTDemodulatoren',
                                spreadsheet_id='1wZ4Z9wNQG95zK_Bj5Z3d5jsHTfJWC9OrlvWJ4ulhVeM', datasource='PostGIS',
-                               persistent_column='N', link_type='eminfra')
+                               persistent_column='N', link_type='eminfra',
+                               excel_filename='[RSA] Bevestigingsrelatie bestaat tussen PTVerwerkingseenheid en PTDemodulatoren.xlsx',)
 
         self.report.result_query = """
         with cte_assets_PT as (

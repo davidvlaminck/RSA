@@ -9,7 +9,8 @@ class Report0193(BaseReport):
                                spreadsheet_id='1O3e83o3Aa-b0eW3xMBjCZoG6b5vNfY9PAXmeULjo1as',
                                datasource='PostGIS',
                                persistent_column='H',
-                               link_type='eminfra')
+                               link_type='eminfra',
+                               excel_filename='[RSA] SegmentControllers hebben een (afgeleide) locatie.xlsx',)
 
         self.report.result_query = """
         select

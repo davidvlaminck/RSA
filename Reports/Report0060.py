@@ -42,7 +42,8 @@ FOR d IN assets
                                spreadsheet_id='1od9125ZSoFG6fGwvoS8CSCz-Bne4N8vVBXORjYhtjQY',
                                datasource='ArangoDB',
                                persistent_column='I',
-                               link_type='eminfra')
+                               link_type='eminfra',
+                               excel_filename='[RSA] Geen conflicten tussen EAN-nummers.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """

@@ -6,7 +6,8 @@ class Report0190(BaseReport):
     def init_report(self) -> None:
         self.report = DQReport(name='report0190', title='Toezichtsgroep en Schadebeheerder zijn tegengesteld (Legacy)',
                                spreadsheet_id='1BI4q-FF97SAWPtvkDH6rVnNu1CBc3ddQp5bNfjZiO7U', datasource='PostGIS',
-                               persistent_column='E', link_type='eminfra')
+                               persistent_column='E', link_type='eminfra',
+                               excel_filename='[RSA] Toezichtsgroep en Schadebeheerder zijn tegengesteld (Legacy).xlsx',)
 
         self.report.result_query = """
             with cte_asset_extra_info as (

@@ -29,7 +29,8 @@ FOR a IN assets
                                spreadsheet_id='11tU64Fc9Xh1IIlmufZ5yJ9Q99Sw4oP1kzCO0LrMbOn0',
                                datasource='ArangoDB',
                                persistent_column='F',
-                               link_type='eminfra')
+                               link_type='eminfra',
+                               excel_filename='[RSA] De naam van de assets (DNBHoogSpanning of DNBLaagSpanning) is gelijk aan het eerste deel van het naampad van de installatie.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """

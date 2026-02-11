@@ -25,7 +25,8 @@ FOR a IN assets
                                title='Verkeersregelaars hebben een ingevulde toestand',
                                spreadsheet_id='1EJjhp70-7bbrHaTbqPuZdn86rrXw30TEUYns7Kvi1dQ',
                                datasource='ArangoDB',
-                               persistent_column='D')
+                               persistent_column='D',
+                               excel_filename='[RSA] Verkeersregelaars hebben een toestand.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """MATCH (a:Verkeersregelaar {isActief:TRUE}) \nWHERE a.toestand IS NULL OR a.toestand = 'in-ontwerp'\nRETURN a.uuid, a.naam, a.toestand"""

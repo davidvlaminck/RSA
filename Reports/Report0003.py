@@ -49,7 +49,8 @@ FOR a IN assets
                                title='Verkeersregelaars hebben een Bevestiging relatie naar een Wegkantkast',
                                spreadsheet_id='1tud5st23sWAKYxdtGUmNHS1Tt54GW31HwkJPaXYXrtE',
                                datasource='ArangoDB',
-                               persistent_column='C')
+                               persistent_column='C',
+                               excel_filename='[RSA] Verkeersregelaars hebben een Bevestiging relatie naar een Wegkantkast.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """MATCH (a:Verkeersregelaar {isActief:TRUE}) \n        WHERE NOT EXISTS ((a)-[:Bevestiging]-(:Wegkantkast {isActief:TRUE}))\n        RETURN a.uuid, a.naam"""

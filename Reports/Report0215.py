@@ -9,7 +9,8 @@ class Report0215(BaseReport):
                                spreadsheet_id='1gmrHAnR-t459u8jY9hfoidWo3hRWg7zRY6aRDSgW2lM',
                                datasource='PostGIS',
                                persistent_column='H',
-                               link_type='eminfra')
+                               link_type='eminfra',
+                               excel_filename='[RSA] Actieve assets (Legacy) wiens assettype inactief is.xlsx',)
 
         self.report.result_query = """
             select

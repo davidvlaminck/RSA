@@ -26,7 +26,8 @@ FOR a IN assets
                                title='DNBHoogspanning en DNBLaagspanning hebben een installatieverantwoordelijke',
                                spreadsheet_id='1hGwws9A8U8F5dQZChGNDH4YOtiuB8LVq7Ovh93DmD2c',
                                datasource='ArangoDB',
-                               persistent_column='F')
+                               persistent_column='F',
+                               excel_filename='[RSA] DNBHoogspanning en DNBLaagspanning hebben een installatieverantwoordelijke.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """

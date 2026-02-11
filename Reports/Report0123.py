@@ -8,7 +8,8 @@ class Report0123(BaseReport):
                                title='Geometrie is geldig: realistische grootte',
                                spreadsheet_id='1gbwsmeKicH0_IJVfK05JD4RC93RkWa9zVUO1TEpLqxA',
                                datasource='PostGIS',
-                               persistent_column='E'
+                               persistent_column='E',
+                               excel_filename='[RSA] Geometrie is geldig_ realistische grootte.xlsx',
                                )
 
         self.report.result_query = """

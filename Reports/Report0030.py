@@ -9,7 +9,8 @@ class Report0030(BaseReport):
                                spreadsheet_id='1ZAZ8chzMbLEyGd-cbZM6S7Uw4aNOrBmAE1KWnbyvdK4',
                                datasource='PostGIS',
                                persistent_column='G',
-                               link_type='eminfra')
+                               link_type='eminfra',
+                               excel_filename='[RSA] Netwerkelementen hebben een (afgeleide) locatie.xlsx',)
 
         self.report.result_query = """
         select

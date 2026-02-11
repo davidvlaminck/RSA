@@ -34,7 +34,8 @@ FOR z IN assets
                                title='Zpaden zijn het doel van exact 2 HoortBij relaties komende van Netwerkpoorten',
                                spreadsheet_id='1dudUqdNZTf1lPcAFbv_kSTI0gIBvAkX0TUumvwR-O7M',
                                datasource='ArangoDB',
-                               persistent_column='C')
+                               persistent_column='C',
+                               excel_filename='[RSA] Zpaden HoortBij 2 Netwerkpoorten.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """MATCH (z:Zpad {isActief:TRUE})\n        WHERE z.toestand = \"in-gebruik\"\n        OPTIONAL MATCH (z)<-[:HoortBij]-(n:Netwerkpoort {isActief:TRUE})\n        WITH z, count(n) AS n_netwerkpoort\n        WHERE n_netwerkpoort <> 2\n        RETURN z.uuid, z.naam"""

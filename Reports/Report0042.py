@@ -31,7 +31,8 @@ FOR x IN assets
                                title='EnergiemeterDNB en ForfaitaireAansluiting worden gevoed door een DNBLaagspanning',
                                spreadsheet_id='1QloH-HeEqyMpg2hnbAPSv8tLpxsLDOaXcPMywTj_Oi4',
                                datasource='ArangoDB',
-                               persistent_column='D')
+                               persistent_column='D',
+                               excel_filename='[RSA] EnergiemeterDNB en ForfaitaireAansluiting worden gevoed door een DNBLaagspanning.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """MATCH (x {isActief: TRUE})\n            WHERE (x:EnergiemeterDNB OR x:ForfaitaireAansluiting) AND NOT EXISTS((x)<-[:Voedt]-(:DNBLaagspanning {isActief: TRUE}))\n            RETURN x.uuid as uuid, x.naam as naam, x.typeURI as typeURI"""

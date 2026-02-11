@@ -8,7 +8,8 @@ class Report0161(BaseReport):
                                title='Ontbrekende gegevens installaties BMI',
                                spreadsheet_id='1TyJHTYKeiG2AIZ_440cXajbHReJZkaKuQGFVaipZmIA',
                                datasource='PostGIS',
-                               persistent_column='K'
+                               persistent_column='K',
+                               excel_filename='[RSA] Ontbrekende gegevens installaties BMI.xlsx',
                                )
 
         self.report.result_query = """

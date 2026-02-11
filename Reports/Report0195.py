@@ -9,7 +9,8 @@ class Report0195(BaseReport):
                                spreadsheet_id='1xFCTQpOty0ur3Tgn-rYmHs4jonZkA5l794Neid1kaCw',
                                datasource='PostGIS',
                                persistent_column='H',
-                               link_type='eminfra')
+                               link_type='eminfra',
+                               excel_filename='[RSA] Kast (Legacy) heeft een locatie.xlsx',)
 
         self.report.result_query = """
         select

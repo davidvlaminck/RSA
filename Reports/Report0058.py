@@ -27,7 +27,8 @@ FOR a IN assets
                                title='Er zijn geen assets die het doel zijn van twee of meer Voedt relaties.',
                                spreadsheet_id='15knbCKB7xWKDX_7utnDBsNe2mYHxGwM6cl8bPwg6q5k',
                                datasource='ArangoDB',
-                               persistent_column='H')
+                               persistent_column='H',
+                               excel_filename='[RSA] Assets met dubbele voeding.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """

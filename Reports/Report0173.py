@@ -9,7 +9,8 @@ class Report0173(BaseReport):
                                spreadsheet_id='1Lu1nSafM08GgwY1FHd4vnEN6qbS0Z4lI-H96gZzV8Z0',
                                datasource='PostGIS',
                                persistent_column='H',
-                               link_type='eminfra'
+                               link_type='eminfra',
+                               excel_filename='[RSA] Legacy assets ontbreken een naampad.xlsx',
                                )
 
         self.report.result_query = """

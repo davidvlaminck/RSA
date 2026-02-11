@@ -9,7 +9,8 @@ class Report0194(BaseReport):
                                spreadsheet_id='1P-6URGL4nQujCzeeuHq50GMLWYRpMCXaf9gjouYTLMU',
                                datasource='PostGIS',
                                persistent_column='H',
-                               link_type='eminfra')
+                               link_type='eminfra',
+                               excel_filename='[RSA] CabineControllers (Afstandsbewaking) hebben een (afgeleide) locatie.xlsx',)
 
         self.report.result_query = """
         select

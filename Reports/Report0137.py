@@ -9,7 +9,8 @@ class Report0137(BaseReport):
                                spreadsheet_id='1HBOnmY6Q7ed3zeRMVlVL7EC6S9PiMa6gv80AWcdrve8',
                                datasource='PostGIS',
                                persistent_column='Q',
-                               link_type='eminfra'
+                               link_type='eminfra',
+                               excel_filename='[RSA] Bijhorende assets hebben een verschillende toezichtshouder (assettype = Signaalkabel).xlsx',
                                )
 
         self.report.result_query = """

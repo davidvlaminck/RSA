@@ -6,7 +6,8 @@ class Report0181(BaseReport):
     def init_report(self) -> None:
         self.report = DQReport(name='report0181', title='Wetenschappelijke notaties komen niet voor',
                                spreadsheet_id='1GDwzQP9TxQuMDc6_B57tx8ct_gjkoTQhvNQcil5iETo', datasource='PostGIS',
-                               persistent_column='G', link_type='eminfra')
+                               persistent_column='G', link_type='eminfra',
+                               excel_filename='[RSA] Wetenschappelijke notaties komen niet voor.xlsx',)
 
         self.report.result_query = """
         SELECT 

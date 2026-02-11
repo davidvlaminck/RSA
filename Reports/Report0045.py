@@ -32,7 +32,8 @@ FOR b IN assets
                                title='Een BitumineuzeLaag heeft steeds een ligtOp relatie naar een Onderbouw',
                                spreadsheet_id='1WRzZGpDXwtjg0CYa54pQBeYPfosNqe1-4g5c_xKWvrM',
                                datasource='ArangoDB',
-                               persistent_column='C')
+                               persistent_column='C',
+                               excel_filename='[RSA] BitumineuzeLaag LigtOp Onderbouw.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """

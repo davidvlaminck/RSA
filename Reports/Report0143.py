@@ -8,7 +8,8 @@ class Report0143(BaseReport):
                                title='Boom zonder naam',
                                spreadsheet_id='1Vnn-fHvk0NtnmIeDXtTYByzna5qy62qz6zTZDSCxFos',
                                datasource='PostGIS',
-                               persistent_column='D'
+                               persistent_column='D',
+                               excel_filename='[RSA] Boom zonder naam.xlsx',
                                )
 
         self.report.result_query = """

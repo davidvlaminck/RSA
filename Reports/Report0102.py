@@ -6,7 +6,8 @@ class Report0102(BaseReport):
     def init_report(self) -> None:
         self.report = DQReport(name='report0102', title='IMKLActivityComplex afgeleiden zonder toezichtgroep',
                                spreadsheet_id='1fbnP-heDtQnG9Q5kF1DA_cn3cY7egNFRgXMB4QaZKZk', datasource='PostGIS',
-                               persistent_column='C')
+                               persistent_column='C',
+                               excel_filename='[RSA] IMKLActivityComplex afgeleiden zonder toezichtgroep.xlsx',)
 
         self.report.result_query = """
 SELECT otl.uuid, otl_type.uri

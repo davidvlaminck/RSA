@@ -9,7 +9,8 @@ class Report0198(BaseReport):
                                spreadsheet_id='1c-dKxkczJRFVNEvNoXIem-HZ3e68Cx7yawfTg0rjNXg',
                                datasource='PostGIS',
                                persistent_column='J',
-                               link_type='eminfra')
+                               link_type='eminfra',
+                               excel_filename='[RSA] Asset (OTL) heeft een inactieve toezichter.xlsx',)
 
         self.report.result_query = """
             -- OTL: agents en betrokkenerelaties

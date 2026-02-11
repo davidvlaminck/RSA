@@ -9,7 +9,8 @@ class Report0205(BaseReport):
                                spreadsheet_id='1QCPpgI_7lIrA5dC4CwI1igOLiprs-3Ou-W_2N_wHkqI',
                                datasource='PostGIS',
                                persistent_column='D',
-                               link_type='eminfra')
+                               link_type='eminfra',
+                               excel_filename='[RSA] Kast (Legacy) ontbreekt een Bevestiging-relatie naar een Laagspanning.xlsx',)
 
         self.report.result_query = """
             with

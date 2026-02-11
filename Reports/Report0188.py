@@ -6,7 +6,8 @@ class Report0188(BaseReport):
     def init_report(self) -> None:
         self.report = DQReport(name='report0188', title='Toezichtsgroep EMT_VHS bevat geen assets (Legacy)',
                                spreadsheet_id='1PvWx9ksfXI0iUemdm_tI0gs2t4EfhVQtZXsFf4M_cqs', datasource='PostGIS',
-                               persistent_column='G', link_type='eminfra')
+                               persistent_column='G', link_type='eminfra',
+                               excel_filename='[RSA] Toezichtsgroep EMT_VHS bevat geen assets (Legacy).xlsx',)
 
         self.report.result_query = """
         with cte_toezichtsgroep as (

@@ -35,7 +35,8 @@ FOR v IN assets
                                title='VRI Wegkantkasten hebben een conforme naam',
                                spreadsheet_id='1tTJMTTWFLY9VV0imGZPRSCrC4qEULV9tWviO8JBQIfA',
                                datasource='ArangoDB',
-                               persistent_column='C')
+                               persistent_column='C',
+                               excel_filename='[RSA] VRI Wegkantkasten hebben een conforme naam.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """MATCH (k:Wegkantkast {isActief:TRUE})-[:Bevestiging]-(vr:Verkeersregelaar {isActief:TRUE}) \nWHERE vr IS NOT NULL AND (k.naam is NULL OR NOT (k.naam =~ '^\\d{3}[ACG]\\dX01$' OR k.naam =~ '^W[WO]\\d{4}X01$'))\nRETURN k.uuid, k.naam"""

@@ -30,7 +30,8 @@ FOR k IN assets
                                title='VRI Wegkantkasten hebben een toestand',
                                spreadsheet_id='1xmV-7Xn9fAozRtRBU_MueRcjEOMlfBTcIDoDkG-Y-Es',
                                datasource='ArangoDB',
-                               persistent_column='C')
+                               persistent_column='C',
+                               excel_filename='[RSA] VRI Wegkantkasten hebben een toestand.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """MATCH (k:Wegkantkast {isActief:TRUE})-[:Bevestiging]-(vr:Verkeersregelaar {isActief:TRUE}) \nWHERE vr IS NOT NULL AND (k.toestand IS NULL OR k.toestand = 'in-ontwerp')\nRETURN k.uuid, k.naam"""

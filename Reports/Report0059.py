@@ -47,7 +47,8 @@ FOR x IN assets
                                title='Er zijn geen assets die zichzelf direct of indirect voeden (geen lussen in voeding).',
                                spreadsheet_id='15z-3mTVmjg63EepO1uaN5R5dgFARcfiyrRBbXa3TzUQ',
                                datasource='ArangoDB',
-                               persistent_column='F')
+                               persistent_column='F',
+                               excel_filename='[RSA] Assets met lussen in voeding.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """

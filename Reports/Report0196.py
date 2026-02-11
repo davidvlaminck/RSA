@@ -9,7 +9,8 @@ class Report0196(BaseReport):
                                spreadsheet_id='1dgAGfvuGBCnW4oWXm0eUJMqSv6PXbbtAEEmNNUdOmwk',
                                datasource='PostGIS',
                                persistent_column='J',
-                               link_type='eminfra')
+                               link_type='eminfra',
+                               excel_filename='[RSA] Lichtmast heeft een locatie.xlsx',)
 
         self.report.result_query = """
             select

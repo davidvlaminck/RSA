@@ -8,7 +8,8 @@ class Report0136(BaseReport):
                                title='Straatkolk heeft betrokkene relaties beheerder en verantwoordelijke-reiniging',
                                spreadsheet_id='1uYTd1vGSKMxxWbkbTjgpSo969ntXGj_-xXebBGXPdVY',
                                datasource='PostGIS',
-                               persistent_column='G'
+                               persistent_column='G',
+                               excel_filename='[RSA] Straatkolk heeft betrokkene relaties beheerder en verantwoordelijke-reiniging.xlsx',
                                )
 
         self.report.result_query = """

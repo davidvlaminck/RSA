@@ -9,7 +9,8 @@ class Report0220(BaseReport):
                                spreadsheet_id='1ZLoygJt-wIiOLOcRtk8s1xDDAX-nrSpGvtSjEW99Lq0',
                                datasource='PostGIS',
                                persistent_column='F',
-                               link_type='eminfra')
+                               link_type='eminfra',
+                               excel_filename='[RSA] EAN-nummer ontbreekt (assettypes_ DNBLaagspanning en DNBHoogspanning).xlsx',)
 
         self.report.result_query = """
         with cte_assets_eannummer as (

@@ -8,7 +8,8 @@ class Report0171(BaseReport):
                                title='Assets conform naamconventies OTL EW-Infrastructuur',
                                spreadsheet_id='1t6s3fYOdRybNUOPXlI2O4sHACAb3tYcGlEHnelhogF4',
                                datasource='PostGIS',
-                               persistent_column='H'
+                               persistent_column='H',
+                               excel_filename='[RSA] Assets conform naamconventies OTL EW-Infrastructuur.xlsx',
                                )
 
         self.report.result_query = """

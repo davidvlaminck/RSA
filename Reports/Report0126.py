@@ -27,7 +27,8 @@ FOR n IN assets
                                title='KabelnetBuis HeeftNetwerktoegang tot een BeschermBuis',
                                spreadsheet_id='1_U31z99SVb2B_BbiXd9ZEB-tmwI4KYM17amUYWinkN0',
                                datasource='ArangoDB',
-                               persistent_column='D')
+                               persistent_column='D',
+                               excel_filename='[RSA] KabelnetBuis HeeftNetwerktoegang tot een BeschermBuis.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """

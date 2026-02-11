@@ -9,7 +9,8 @@ class Report0216(BaseReport):
                                spreadsheet_id='17MTZ2N_jVsUyc53zbzPwFGhDS8u1X6xrrexU-Li-OkU',
                                datasource='PostGIS',
                                persistent_column='H',
-                               link_type='eminfra')
+                               link_type='eminfra',
+                               excel_filename='[RSA] Verweven assets hebben geen naampad.xlsx',)
 
         self.report.result_query = """
 select

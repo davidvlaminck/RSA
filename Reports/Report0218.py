@@ -39,7 +39,8 @@ RETURN
                                spreadsheet_id='1wxPYC35mwexrhWDEX6FQ_xcr_ZdLX6D4PY0g11nwl1U',
                                datasource='ArangoDB',
                                persistent_column='G',
-                               link_type='eminfra')
+                               link_type='eminfra',
+                               excel_filename='[RSA] Locatie ontbreekt voor voeding-assets (LS, LSDeel, HS, HSDeel, HSCabine, SegmentController, Afstandsbewaking).xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """

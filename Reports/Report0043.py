@@ -9,7 +9,8 @@ class Report0043(BaseReport):
                                title='Instanties van deprecated classes',
                                spreadsheet_id='1rpYt_EKa5YOCDBdzmrAcV6vwoy3hccblR6_spaV2ziI',
                                datasource='PostGIS',
-                               persistent_column='D')
+                               persistent_column='D',
+                               excel_filename='[RSA] Instanties van deprecated classes.xlsx',)
 
         otl_cursor = OTLCursorPool.get_cursor()
         deprecated_classes = otl_cursor.execute("""

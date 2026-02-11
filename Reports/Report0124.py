@@ -38,7 +38,8 @@ FOR n IN assets
                                title='KabelnetToegang HeeftNetwerktoegang tot een Behuizing',
                                spreadsheet_id='1Fia3N3bXG7LXBSbcst7jDM5N8Lr9HXHc3eCVcgNIdrM',
                                datasource='ArangoDB',
-                               persistent_column='D')
+                               persistent_column='D',
+                               excel_filename='[RSA] KabelnetToegang HeeftNetwerktoegang tot een Behuizing.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """

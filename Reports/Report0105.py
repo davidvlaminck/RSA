@@ -6,7 +6,8 @@ class Report0105(BaseReport):
     def init_report(self) -> None:
         self.report = DQReport(name='report0105', title='Overzicht aantallen OTL assettypes',
                                spreadsheet_id='1E1KECv6Sm7BfAZX2Hoy84vPGzi7YNZXImSMbHgizpm8', datasource='PostGIS',
-                               persistent_column='D')
+                               persistent_column='D',
+                               excel_filename='[RSA] Overzicht aantallen OTL assettypes.xlsx',)
 
         self.report.result_query = """
 WITH otl_assettypes AS (VALUES

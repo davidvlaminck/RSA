@@ -48,7 +48,8 @@ FOR a IN assets
                                title='DNBLaagspanning/DNBHoogspanning hebben een HoortBij relatie naar LS/HS respectievelijk',
                                spreadsheet_id='1WLXykE5pX9wiBqnSgJ1HTE8dtkjRydMxAnccLV3T1_U',
                                datasource='ArangoDB',
-                               persistent_column='D')
+                               persistent_column='D',
+                               excel_filename='[RSA] DNBLaagspanning en DNBHoogspanning hebben een HoortBij naar legacy.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """MATCH (dnbl:DNBLaagspanning {isActief: TRUE})\n            WHERE NOT EXISTS((dnbl)-[:HoortBij]->(:LS {isActief: TRUE}))\n            RETURN dnbl.uuid as uuid, dnbl.naam as naam, dnbl.typeURI as typeURI\n            UNION\n            MATCH (dnbh:DNBHoogspanning {isActief: TRUE})\n            WHERE NOT EXISTS((dnbh)-[:HoortBij]->(:HS {isActief: TRUE}))\n            RETURN dnbh.uuid as uuid, dnbh.naam as naam, dnbh.typeURI as typeURI"""

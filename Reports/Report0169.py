@@ -8,7 +8,8 @@ class Report0169(BaseReport):
                                title='Seinbruggen zijn 90 graden geöriënteerd',
                                spreadsheet_id='1nJCGkb1-RbNkU6B7vNMM2p26pbIeToCBVkaD9LSP71Y',
                                datasource='PostGIS',
-                               persistent_column='H'
+                               persistent_column='H',
+                               excel_filename='[RSA] Seinbruggen zijn 90 graden geöriënteerd.xlsx',
                                )
 
         self.report.result_query = """

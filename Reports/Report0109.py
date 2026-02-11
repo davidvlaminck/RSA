@@ -6,7 +6,8 @@ class Report0109(BaseReport):
     def init_report(self) -> None:
         self.report = DQReport(name='report0109', title='Geometrie is geldig: geen opeenvolgende punten',
                                spreadsheet_id='1AmtcjAkh5H95O_lXtd4p_MHeoqFpQKQlIRfQk3MxGQ4', datasource='PostGIS',
-                               persistent_column='G')
+                               persistent_column='G',
+                               excel_filename='[RSA] Geometrie is geldig_ geen opeenvolgende punten.xlsx',)
 
         self.report.result_query = """
             WITH cte_geometrie_dubbele_punten AS (

@@ -9,7 +9,8 @@ class Report0120(BaseReport):
                                spreadsheet_id='1sBJEGOpcGfrjvBWGAkBU_vnWirsGwq2cL8faX3vdapI',
                                datasource='PostGIS',
                                persistent_column='F',
-                               link_type='eminfra')
+                               link_type='eminfra',
+                               excel_filename='[RSA] Niet-verweven OTL-assets hebben alsnog een naampad.xlsx',)
 
         self.report.result_query = """
 -- whitelist van verweven assettypes

@@ -22,7 +22,8 @@ FOR asset IN assets
                                title='Actieve assets hebben een bijpassende AIMToestand',
                                spreadsheet_id='1bz0JRZABFCk54ZswUo85j_KY8Hn_9uYj-GnqTfif4vA',
                                datasource='ArangoDB',
-                               persistent_column='E')
+                               persistent_column='E',
+                               excel_filename='[RSA] Actieve assets hebben een bijpassende AIMToestand.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """

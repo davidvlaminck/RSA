@@ -8,7 +8,8 @@ class Report0035(BaseReport):
                                title="Bestekkoppelingen die bijna vervallen (komende 30 dagen)",
                                spreadsheet_id='1DfUOm6Z38BYR7R809wiUDNrd8Fj4O-dC59ylHn99iqE',
                                datasource='PostGIS',
-                               persistent_column='J')
+                               persistent_column='J',
+                               excel_filename='[RSA] Bestekkoppelingen die bijna vervallen (komende 30 dagen).xlsx',)
 
         self.report.result_query = """
 WITH s AS (

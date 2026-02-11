@@ -23,7 +23,8 @@ FOR n IN assets
                                title="Netwerkpoorten hebben een type",
                                spreadsheet_id='1CNSGgZbARVwRzrMB5a2LrSz-HJblvzAGWODsPOFE1jo',
                                datasource='ArangoDB',
-                               persistent_column='C')
+                               persistent_column='C',
+                               excel_filename='[RSA] Netwerkpoorten hebben een type.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """MATCH (n:Netwerkpoort {isActief:TRUE})-[:Bevestiging]-(e:Netwerkelement {isActief:TRUE})

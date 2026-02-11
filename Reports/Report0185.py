@@ -6,7 +6,8 @@ class Report0185(BaseReport):
     def init_report(self) -> None:
         self.report = DQReport(name='report0185', title='IP Netwerkelementen hebben dezelfde locatie als hun Bijhorende legacy object van type IP',
                                spreadsheet_id='1cR7109F1_7iW0OVc65zMIOkAj-qUKH7S_Z012VIQP5U', datasource='PostGIS',
-                               persistent_column='I', link_type='eminfra')
+                               persistent_column='I', link_type='eminfra',
+                               excel_filename='[RSA] IP Netwerkelementen hebben dezelfde locatie als hun Bijhorende legacy object van type IP.xlsx',)
 
         self.report.result_query = """
         WITH cte_asset_netwerkelement AS (

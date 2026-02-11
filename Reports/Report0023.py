@@ -29,7 +29,8 @@ FOR c IN assets
                                title='Camera\'s hebben een toezichter',
                                spreadsheet_id='1jkBCSgtZ8jlwA-Ah62I17pVtybrqPZSreXgrC6kWKoQ',
                                datasource='ArangoDB',
-                               persistent_column='C')
+                               persistent_column='C',
+                               excel_filename='[RSA] Camera_s hebben een toezichter.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """MATCH (c:Camera {isActief:TRUE})

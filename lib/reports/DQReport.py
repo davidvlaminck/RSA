@@ -17,9 +17,10 @@ class DQReport(Report):
                  add_filter: bool = True, persistent_column: str = '', frequency: int = 1,
                  convert_columns_to_numbers: list | None = None, link_type: str = 'awvinfra',
                  recalculate_cells: list[tuple[str, str]] | None = None,
-                 output: str = 'GoogleSheets', output_settings: dict | None = None):
+                 output: str = 'GoogleSheets', output_settings: dict | None = None,
+                 excel_filename: str = ''):
         Report.__init__(self, name=name, title=title, spreadsheet_id=spreadsheet_id, datasource=datasource, add_filter=add_filter,
-                        frequency=frequency)
+                        frequency=frequency, excel_filename=excel_filename)
         self.last_data_update = ''
         self.now = ''
         self.link_type = link_type

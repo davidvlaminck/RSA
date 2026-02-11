@@ -9,7 +9,8 @@ class Report0122(BaseReport):
                                spreadsheet_id='1kOEWxEfBVrft7bxM3F6YiQrNk3YFRXeZmr2edsvhuwQ',
                                datasource='PostGIS',
                                persistent_column='H',
-                               link_type='eminfra_onderdeel')
+                               link_type='eminfra_onderdeel',
+                               excel_filename='[RSA] Netwerkpoorten hebben een naam.xlsx',)
 
         self.report.result_query = """
             with cte_attribuutwaarden_netwerkpoort_type as (

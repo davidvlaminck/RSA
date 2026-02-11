@@ -31,7 +31,8 @@ FOR n IN assets
                                title='Netwerkelementen hebben een Bevestiging relatie met een Netwerkkaart',
                                spreadsheet_id='1UfYhxcM0z8uq9-GwfDJhHNVpuhoWtUprrPGMfPSXeGk',
                                datasource='ArangoDB',
-                               persistent_column='C')
+                               persistent_column='C',
+                               excel_filename='[RSA] Netwerkkaart Bevestiging relaties.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """MATCH (n:Netwerkelement {isActief:TRUE}) \n        WHERE NOT EXISTS ((n)-[:Bevestiging]-(:Netwerkkaart {isActief:TRUE}))\n        RETURN n.uuid, n.naam"""

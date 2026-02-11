@@ -8,7 +8,8 @@ class Report0062(BaseReport):
                                title="Failover assets",
                                spreadsheet_id='1hX4KW6lRgUWb-uhtmdmBVeHUb-7xDs1Mg5sCvMZ-jhA',
                                datasource='PostGIS',
-                               persistent_column='L')
+                               persistent_column='L',
+                               excel_filename='[RSA] Failover assets.xlsx',)
 
         self.report.result_query = """
 WITH assets_met_aim_id_part AS (

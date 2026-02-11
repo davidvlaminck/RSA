@@ -30,7 +30,8 @@ FOR a IN assets
                                spreadsheet_id='1C4OvyX6uQfe3eKa8A_ClsTfnmAcBy-45Q-18htdxHHM',
                                datasource='ArangoDB',
                                persistent_column='C',
-                               link_type='eminfra')
+                               link_type='eminfra',
+                               excel_filename='[RSA] TLCfipoorten hebben een sturingsrelatie naar een Verkeersregelaar.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """MATCH (a:Asset :TLCfiPoort {isActief:TRUE}) 

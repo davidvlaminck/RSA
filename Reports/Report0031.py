@@ -9,7 +9,8 @@ class Report0031(BaseReport):
                                spreadsheet_id='1k5uUwLmf5IFVhftY7klBmylWtuEBwP8URjYPMcAB71w',
                                datasource='PostGIS',
                                persistent_column='D',
-                               link_type='eminfra_onderdeel')
+                               link_type='eminfra_onderdeel',
+                               excel_filename='[RSA] L2 Netwerkelementen hebben een HoortBij relatie met een L2AccesStructuur.xlsx',)
 
         self.report.result_query = """
             -- Netwerkementen met gebruik 'L2-switch' hebben een hoortbij relatie naar installatie L2AccesStructuur

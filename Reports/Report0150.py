@@ -8,7 +8,8 @@ class Report0150(BaseReport):
                                title='Dubbele Straatkolken (West-Vlaanderen)',
                                spreadsheet_id='1PYB4WZPlPb2C0pEmOF1oxSluWI5Rbo_oxZAjZfp0X28',
                                datasource='PostGIS',
-                               persistent_column='J'
+                               persistent_column='J',
+                               excel_filename='[RSA] Dubbele Straatkolken (West-Vlaanderen).xlsx',
                                )
 
         self.report.result_query = """

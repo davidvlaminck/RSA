@@ -36,7 +36,8 @@ FOR k IN assets
                                title='VRI Wegkantkasten hebben een ingevulde datum oprichting object',
                                spreadsheet_id='13Y1AmHPji5z-Zy-uDF6-YstSF0DKDx2oKUHCs7iU6mU',
                                datasource='ArangoDB',
-                               persistent_column='C')
+                               persistent_column='C',
+                               excel_filename='[RSA] VRI Wegkantkasten hebben een ingevulde datum oprichting object.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """MATCH (k:Wegkantkast {isActief:TRUE})-[:Bevestiging]-(vr:Verkeersregelaar {isActief:TRUE}) \nWHERE k.datumOprichtingObject IS NULL AND vr IS NOT NULL\nRETURN k.uuid, k.naam"""

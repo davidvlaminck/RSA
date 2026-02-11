@@ -8,7 +8,8 @@ class Report0157(BaseReport):
                                title='Assets zonder geometrie gelinkt aan TV-Proximus Trafiroad (dossier: HVV.089; bestek: 2017-R3-043)',
                                spreadsheet_id='1CZFtjX0ANRfmEXc-6-ElJ-hgRuwY3FdHZBxeiJVKtxE',
                                datasource='PostGIS',
-                               persistent_column='D'
+                               persistent_column='D',
+                               excel_filename='[RSA] Assets zonder geometrie gelinkt aan TV-Proximus Trafiroad (dossier_ HVV.089_ bestek_ 2017-R3-043).xlsx',
                                )
 
         self.report.result_query = """

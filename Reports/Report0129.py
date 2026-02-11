@@ -8,7 +8,8 @@ class Report0129(BaseReport):
                                title='Geometrie Linestring heeft identieke eindpunten en bevat maximum 2 punten',
                                spreadsheet_id='1bLfrHp7ETT6ZJwWshIiZRG81ID58LqaADks2ymPY_mM',
                                datasource='PostGIS',
-                               persistent_column='E'
+                               persistent_column='E',
+                               excel_filename='[RSA] Geometrie Linestring heeft identieke eindpunten en bevat maximum 2 punten.xlsx',
                                )
 
         self.report.result_query = """

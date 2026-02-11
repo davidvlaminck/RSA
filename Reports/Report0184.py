@@ -6,7 +6,8 @@ class Report0184(BaseReport):
     def init_report(self) -> None:
         self.report = DQReport(name='report0184', title='Laagspanningsaansluiting (Legacy) of Kast (Legacy) keuringsinfo',
                                spreadsheet_id='1tFLD_Ah9V3S6V3RcFsToEs7OWW5U26q6TIuOW5jLHrI', datasource='PostGIS',
-                               persistent_column='S', link_type='eminfra')
+                               persistent_column='S', link_type='eminfra',
+                               excel_filename='[RSA] Laagspanningsaansluiting (Legacy) of Kast (Legacy) keuringsinfo.xlsx',)
 
         self.report.result_query = """
 with

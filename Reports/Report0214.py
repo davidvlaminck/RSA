@@ -9,7 +9,8 @@ class Report0214(BaseReport):
                                spreadsheet_id='1VaF3IRiF5lFOkh_hK4_PvTqYanhiaRzvJX_lqmWbn3g',
                                datasource='PostGIS',
                                persistent_column='G',
-                               link_type='eminfra')
+                               link_type='eminfra',
+                               excel_filename='[RSA] Laagspanning (LS) is nergens aan bevestigd.xlsx',)
 
         self.report.result_query = """
             select

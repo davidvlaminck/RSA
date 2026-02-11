@@ -31,7 +31,8 @@ FOR n IN assets
                                title="L2 switches worden gevoed",
                                spreadsheet_id='1mPx2y3XvOGNCRoYPLTHv6Xb5kn4bQCt3Aii0zT7ZdUc',
                                datasource='ArangoDB',
-                               persistent_column='D')
+                               persistent_column='D',
+                               excel_filename='[RSA] L2 switches horen bij een asset die gevoed wordt.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """MATCH (n:Netwerkelement {isActief:TRUE, toestand:'in-gebruik', gebruik:'l2-switch'})\n        WHERE NOT EXISTS ((n)-[:HoortBij]-(:Asset {isActief:TRUE})<-[:Voedt]-(:Asset {isActief:TRUE}))\n        RETURN n.uuid, n.naam"""

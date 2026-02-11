@@ -44,7 +44,8 @@ FOR i IN assets
                                title="IP AS1 elementen hebben een .ODF TT tegenhanger",
                                spreadsheet_id='1rDCUE7kj0ZcCVtFe2EiIqKMz7fdR5J6mtpU6lRpzpbI',
                                datasource='ArangoDB',
-                               persistent_column='D')
+                               persistent_column='D',
+                               excel_filename='[RSA] IP AS1 elementen hebben een .ODF TT tegenhanger.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """MATCH (i:IP {isActief:TRUE})\n        WHERE i.naam contains '.AS1'\n        WITH i, split(i.naampad,'/') AS splitted\n        WITH i, apoc.text.join(reverse(tail(reverse(splitted))),'/') + '/' AS naampad_beh\n        OPTIONAL MATCH (t:TT {isActief:TRUE})\n        WHERE t.naampad contains naampad_beh AND t.naam contains 'ODF'\n        WITH i, t\n        WHERE t.uuid IS NULL\n        RETURN i.uuid, i.naampad, i.`tz:toezichter.tz:gebruikersnaam` AS toezichter"""

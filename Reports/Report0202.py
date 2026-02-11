@@ -9,7 +9,8 @@ class Report0202(BaseReport):
                                spreadsheet_id='1shR393J5PkEGkIRgnoNr-jzFQrvcYKkzTdg2zPEiEqk',
                                datasource='PostGIS',
                                persistent_column='H',
-                               link_type='eminfra')
+                               link_type='eminfra',
+                               excel_filename='[RSA] VPLMast (Legacy) heeft meerdere bijhorende WVLichtmast (OTL).xlsx',)
 
         self.report.result_query = """
             with cte_vplmast_hoortbij_wvlichtmast as (

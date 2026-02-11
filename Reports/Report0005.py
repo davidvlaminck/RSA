@@ -56,7 +56,8 @@ FOR a IN assets
                                title='Verkeersregelaars en TLCfiPoorten hebben een HoortBij relatie naar VRLegacy objecten',
                                spreadsheet_id='1daDivHkKfMRamwgpty9swGF4Kz68MBjJlSE5SR2GqFQ',
                                datasource='ArangoDB',
-                               persistent_column='D')
+                               persistent_column='D',
+                               excel_filename='[RSA] VRLegacy Hoortbij relaties.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """MATCH (a:onderdeel {isActief:TRUE}) \n        WHERE (a:Verkeersregelaar OR a:TLCfiPoort) AND NOT EXISTS ((a)-[:HoortBij]->(:VRLegacy {isActief:TRUE}))\n        RETURN a.uuid, a.naam, a.typeURI"""

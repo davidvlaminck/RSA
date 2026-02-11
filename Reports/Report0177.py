@@ -6,7 +6,8 @@ class Report0177(BaseReport):
     def init_report(self) -> None:
         self.report = DQReport(name='report0177', title='Actieve assets met toestand verwijderd (zichtbaar in Elisa-Infra)',
                                spreadsheet_id='1sM-Xm7gCtXo9duBF-zcSmIOPja1B4cSzDibJpaJ7WOE', datasource='PostGIS',
-                               persistent_column='E')
+                               persistent_column='E',
+                               excel_filename='[RSA] Actieve assets met toestand verwijderd (zichtbaar in Elisa-Infra).xlsx',)
 
         self.report.result_query = """
 SELECT

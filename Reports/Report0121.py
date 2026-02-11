@@ -9,7 +9,8 @@ class Report0121(BaseReport):
                                spreadsheet_id='1QPnohwuI7ziIFU2wac_9ZbOcJWr20asu4gvsr0t3x3E',
                                datasource='PostGIS',
                                persistent_column='I',
-                               link_type='eminfra_onderdeel')
+                               link_type='eminfra_onderdeel',
+                               excel_filename='[RSA] Netwerkpoorten hebben een unieke naam.xlsx',)
 
         self.report.result_query = """
                     WITH dubbele_namen AS (

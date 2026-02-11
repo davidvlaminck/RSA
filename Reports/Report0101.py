@@ -10,7 +10,8 @@ class Report0101(BaseReport):
                                datasource='PostGIS',
                                link_type='eminfra',
                                persistent_column='R',
-                               recalculate_cells=[('Dataconflicten', 'A1'), ('>10 jaar oud', 'A1')])
+                               recalculate_cells=[('Dataconflicten', 'A1'), ('>10 jaar oud', 'A1')],
+                               excel_filename='[Vplan] Vplan data EM-Infra.xlsx',)
 
         self.report.result_query = """
 WITH vrs AS (

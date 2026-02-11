@@ -48,7 +48,8 @@ FOR c IN assets
                                title='Camera\'s zijn het doel van een Voedt relatie met een Stroomkring of PoEInjector',
                                spreadsheet_id='1MzUeaGLeqV78IMBuTTFoM47y4nXja993AZnZF21Zu2U',
                                datasource='ArangoDB',
-                               persistent_column='D')
+                               persistent_column='D',
+                               excel_filename='[RSA] Camera Voedt relaties.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """MATCH (c:Camera {isActief:TRUE})\n        WHERE NOT EXISTS ((c)<-[:Voedt]-(:Stroomkring {isActief:TRUE})) AND NOT EXISTS ((c)<-[:Voedt]-(:PoEInjector {isActief:TRUE}))\n        WITH c\n        OPTIONAL MATCH (c)-[:HeeftBetrokkene {rol:'toezichter'}]->(a:Agent)\n        RETURN c.uuid, c.naam, a.naam as toezichter"""

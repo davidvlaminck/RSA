@@ -35,7 +35,8 @@ FOR a IN assets
                                title='Camera\'s hebben een unieke naam',
                                spreadsheet_id='1GM6mBwfsLkEELjroSw-df6A2HXSQnOFAeudUzTybMQE',
                                datasource='ArangoDB',
-                               persistent_column='C')
+                               persistent_column='C',
+                               excel_filename='[RSA] Camera_s hebben een unieke naam.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """MATCH (a:Camera {isActief:TRUE})

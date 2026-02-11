@@ -6,7 +6,8 @@ class Report0187(BaseReport):
     def init_report(self) -> None:
         self.report = DQReport(name='report0187', title='Toezichtsgroepen bevatten geen Legacy-assets: AWV_EW_AN; AWV_EW_VB; AWV_EW_OW; AWV_EW_WV; AWV_EW_LB',
                                spreadsheet_id='1R4M4Q4dPXeEh4kvnu8sN_EcfX2DNdvV2VsU6kCuQA7k', datasource='PostGIS',
-                               persistent_column='G', link_type='eminfra')
+                               persistent_column='G', link_type='eminfra',
+                               excel_filename='[RSA] Toezichtsgroepen bevatten geen Legacy-assets_ AWV_EW_AN_ AWV_EW_VB_ AWV_EW_OW_ AWV_EW_WV_ AWV_EW_LB.xlsx',)
 
         self.report.result_query = """
         with cte_toezichtsgroep as (

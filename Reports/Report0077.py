@@ -8,7 +8,8 @@ class Report0077(BaseReport):
                                title='Verkeersregelaars hebben een ingevulde datum oprichting object',
                                spreadsheet_id='10K9cwkJIJQ2sXb71rvqm1MqtSj5k2M5FKtYUhE4mf2E',
                                datasource='Neo4J',
-                               persistent_column='C')
+                               persistent_column='C',
+                               excel_filename='[RSA] Verkeersregelaars hebben een ingevulde datum oprichting object.xlsx',)
 
         self.report.result_query = """MATCH (a:Verkeersregelaar {isActief:TRUE}) 
 WHERE a.datumOprichtingObject IS NULL

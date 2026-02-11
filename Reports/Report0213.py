@@ -9,7 +9,8 @@ class Report0213(BaseReport):
                                spreadsheet_id='1JK1zb3RP-mwDgcbenxjfSAcbWjCrMaq0vluRdhKIwQs',
                                datasource='PostGIS',
                                persistent_column='L',
-                               link_type='eminfra')
+                               link_type='eminfra',
+                               excel_filename='[RSA] Laagspanning (LS) is bevestigd aan een Kast (Legacy).xlsx',)
 
         self.report.result_query = """
             select

@@ -25,7 +25,8 @@ FOR a IN assets
                                title='Verkeersregelaars hebben een coördinatiewijze',
                                spreadsheet_id='1uhl_HnxT5H9XrEjswHlkR_jvl4nx99ss9UOM-3Yjy_M',
                                datasource='ArangoDB',
-                               persistent_column='C')
+                               persistent_column='C',
+                               excel_filename='[RSA] Verkeersregelaars hebben een coördinatiewijze.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """MATCH (a:Verkeersregelaar {isActief:TRUE}) \nWHERE a.`coordinatiewijze[0]` IS NULL\nRETURN a.uuid, a.naam"""

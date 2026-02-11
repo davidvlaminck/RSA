@@ -9,7 +9,8 @@ class Report0140(BaseReport):
                                spreadsheet_id='1E2vu5AtwpnZbQeJY5sTWqEI8EYYJ6QdEh6yfjPaA-0Q',
                                datasource='PostGIS',
                                persistent_column='Q',
-                               link_type='eminfra'
+                               link_type='eminfra',
+                               excel_filename='[RSA] Bijhorende assets hebben een verschillende toezichtshouder (assettype = WVLichtmast).xlsx',
                                )
 
         self.report.result_query = """

@@ -8,7 +8,8 @@ class Report0160(BaseReport):
                                title='Ontbrekende gegevens installaties Telematica',
                                spreadsheet_id='1VyZLJl1H98VHsVLX-qPCWBlfcvK0EtxMJ5ySiy-1ixI',
                                datasource='PostGIS',
-                               persistent_column='K'
+                               persistent_column='K',
+                               excel_filename='[RSA] Ontbrekende gegevens installaties Telematica.xlsx',
                                )
 
         self.report.result_query = """

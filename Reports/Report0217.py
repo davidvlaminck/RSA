@@ -37,7 +37,8 @@ RETURN
                                spreadsheet_id='1d1OEDsFjaDU11mIi7J5CVVx-UTiP8p0A5VmIO03YuO0',
                                datasource='ArangoDB',
                                persistent_column='H',
-                               link_type='eminfra')
+                               link_type='eminfra',
+                               excel_filename='[RSA] Toezichtsgroep ontbreekt voor voeding-assets (LS, LSDeel, HS, HSDeel, HSCabine).xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """

@@ -22,7 +22,8 @@ FOR a IN assets
                                title='Verkeersregelaars hebben een ingevulde theoretische levensduur',
                                spreadsheet_id='11QZWCKGmGAkWWECLqtbuV4URFo3Gj4obrW4fMcEOT5s',
                                datasource='ArangoDB',
-                               persistent_column='C')
+                               persistent_column='C',
+                               excel_filename='[RSA] Verkeersregelaars hebben een theoretische levensduur.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """MATCH (a:Verkeersregelaar {isActief:TRUE}) \nWHERE a.theoretischeLevensduur IS NULL\nRETURN a.uuid, a.naam"""

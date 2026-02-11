@@ -32,7 +32,8 @@ FOR o IN assets
                                title='Een Onderbouw heeft steeds een ligtOp relatie naar een Geotextiel',
                                spreadsheet_id='1eFVzTiSiPASlvTE4tva9Vw1on5Z8AJNalj4im8tRops',
                                datasource='ArangoDB',
-                               persistent_column='C')
+                               persistent_column='C',
+                               excel_filename='[RSA] Onderbouw LigtOp Geotextiel.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """

@@ -8,7 +8,8 @@ class Report0167(BaseReport):
                                title='Ontbrekende gegevens installaties V&W-WW',
                                spreadsheet_id='1_PM7lSbX5mmpmYqQuIoE0KisV6lXncL0jZ-TO1h7pgw',
                                datasource='PostGIS',
-                               persistent_column='K'
+                               persistent_column='K',
+                               excel_filename='[RSA] Ontbrekende gegevens installaties V&W-WW.xlsx',
                                )
 
         self.report.result_query = """

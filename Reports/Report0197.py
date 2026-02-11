@@ -9,7 +9,8 @@ class Report0197(BaseReport):
                                spreadsheet_id='1fyJRTZc_yDiC5h1BRzJvW0AxWJxaSVL5CK5ETbGdXc0',
                                datasource='PostGIS',
                                persistent_column='J',
-                               link_type='eminfra')
+                               link_type='eminfra',
+                               excel_filename='[RSA] Asset (Legacy) heeft een inactieve toezichter.xlsx',)
 
         self.report.result_query = """
             -- Legacy: identiteiten

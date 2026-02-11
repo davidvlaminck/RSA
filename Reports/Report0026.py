@@ -34,7 +34,8 @@ FOR a IN assets
                                title='Paden hebben een HoortBij relatie naar Zpad objecten',
                                spreadsheet_id='18KfmYhpxc75ECyN54WFtKrG4Hdz6GPCXzH5i8Zi0144',
                                datasource='ArangoDB',
-                               persistent_column='C')
+                               persistent_column='C',
+                               excel_filename='[RSA] Paden HoortBij Zpad.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """MATCH (a:Asset:Pad {isActief:TRUE}) \n        WHERE NOT EXISTS ((a)-[:HoortBij]->(:Asset:Zpad {isActief:TRUE}))\n        RETURN a.uuid, a.naam"""

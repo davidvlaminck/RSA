@@ -8,7 +8,8 @@ class Report0142(BaseReport):
                                title='Dubbele Aanvullende Geometrie',
                                spreadsheet_id='124_Y-L0kp2pM67TY6jL4M1eHfZBl_6Nh8xFyFYnhK30',
                                datasource='PostGIS',
-                               persistent_column='F'
+                               persistent_column='F',
+                               excel_filename='[RSA] Dubbele Aanvullende Geometrie.xlsx',
                                )
 
         self.report.result_query = """

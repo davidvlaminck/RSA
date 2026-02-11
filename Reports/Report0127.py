@@ -28,7 +28,8 @@ FOR n IN assets
                                title='KabelnetBuis heeft een relatie met een andere asset',
                                spreadsheet_id='1miMzTSeLtpLlK61lijv1Fzh88xC4U9RKVmwZnMjmdPU',
                                datasource='ArangoDB',
-                               persistent_column='D')
+                               persistent_column='D',
+                               excel_filename='[RSA] KabelnetBuis heeft steeds een relatie met een andere asset.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """

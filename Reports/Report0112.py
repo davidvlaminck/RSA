@@ -21,7 +21,8 @@ FOR a IN assets
 """
         self.report = DQReport(name='report0112', title='Verkeersregelaars hebben een vplanDatum',
                                spreadsheet_id='1701KVEMJAco3NPxfgOtHP0byI9_MQ1yhb1EQ3ujvU9I', datasource='ArangoDB',
-                               persistent_column='E')
+                               persistent_column='E',
+                               excel_filename='[RSA] Verkeersregelaars hebben een vplanDatum.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """

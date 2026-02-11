@@ -8,7 +8,8 @@ class Report0076(BaseReport):
                                title='Verkeersregelaars hebben een installatieverantwoordelijke',
                                spreadsheet_id='1JGhVFeXXejMHRupSqqKgSEaz384vf4NNrJ8OyDs4NeM',
                                datasource='Neo4J',
-                               persistent_column='C')
+                               persistent_column='C',
+                               excel_filename='[RSA] Verkeersregelaars hebben een installatieverantwoordelijke.xlsx',)
 
         self.report.result_query = """MATCH (a:Verkeersregelaar {isActief:TRUE})
         WHERE NOT EXISTS ((a)-[:HeeftBetrokkene {rol:'installatieverantwoordelijke'}]->(:Agent))

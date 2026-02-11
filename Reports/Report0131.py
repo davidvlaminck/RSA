@@ -8,7 +8,8 @@ class Report0131(BaseReport):
                                title='Geometrie Polygoon heeft 3 of meer identieke punten en is visueel een punt.',
                                spreadsheet_id='1H2g6_SGcGPqRIDKxGavSQtZRFUCGpOddgvm6vJyxvEI',
                                datasource='PostGIS',
-                               persistent_column='H'
+                               persistent_column='H',
+                               excel_filename='[RSA] Geometrie Polygoon heeft 3 of meer identieke punten en is visueel een punt.xlsx',
                                )
 
         self.report.result_query = """

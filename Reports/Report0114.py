@@ -9,7 +9,8 @@ class Report0114(BaseReport):
                                spreadsheet_id='188xxFUa1uZ8GPgwB9a2c0gtkrdtacg5ft5TkODanatk',
                                datasource='PostGIS',
                                persistent_column='J',
-                               link_type='eminfra')
+                               link_type='eminfra',
+                               excel_filename='[RSA] EAN Nummer niet als commentaar gedocumenteerd.xlsx',)
 
         self.report.result_query = """
             select

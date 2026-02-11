@@ -35,7 +35,8 @@ FOR a IN assets
                                title='Verkeersregelaars hebben een unieke naam',
                                spreadsheet_id='1aGZFPAeFgkQgU2XcrKhVKK1NPu-OEPuskPvWsnAyEYU',
                                datasource='ArangoDB',
-                               persistent_column='C')
+                               persistent_column='C',
+                               excel_filename='[RSA] Verkeersregelaars hebben een unieke naam.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """MATCH (a:Verkeersregelaar {isActief:TRUE})\n        WITH a.naam AS naam, COUNT(a.naam) AS aantal\n        WHERE aantal > 1\n        MATCH (b:Verkeersregelaar {isActief:TRUE, naam:naam})\n        RETURN b.uuid, b.naam"""

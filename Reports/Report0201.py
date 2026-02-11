@@ -9,7 +9,8 @@ class Report0201(BaseReport):
                                spreadsheet_id='1VNme4tAQ0KJ5TZpyK3DikNfX7yftgCeKM6y8VLvEc9g',
                                datasource='PostGIS',
                                persistent_column='J',
-                               link_type='eminfra')
+                               link_type='eminfra',
+                               excel_filename='[RSA] Naamgeving overzicht.xlsx',)
 
         self.report.result_query = """
 /*

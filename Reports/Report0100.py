@@ -34,7 +34,8 @@ FOR a IN assets
                                spreadsheet_id='1MLoe5_exhht_bR2y9uTxPBaGIAObzwUqqHvWwBttRzk',
                                datasource='ArangoDB',
                                persistent_column='C',
-                               link_type='eminfra')
+                               link_type='eminfra',
+                               excel_filename='[RSA] Verkeersregelaars hebben een sturingsrelatie naar een TLCfiPoort.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """MATCH (a:Verkeersregelaar {isActief:TRUE}) \n        WHERE NOT EXISTS ((a)-[:Sturing]-(:TLCfiPoort {isActief:TRUE}))\n        RETURN a.uuid, a.naam"""

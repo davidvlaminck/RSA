@@ -9,7 +9,8 @@ class Report0170(BaseReport):
                                spreadsheet_id='1XHAWkGnKse2bmZth1d0PybcvyWNDO-cv3QjokT1aOic',
                                datasource='PostGIS',
                                persistent_column='I',
-                               link_type='eminfra'
+                               link_type='eminfra',
+                               excel_filename='[RSA] Actieve assets hebben een inactieve parent-asset.xlsx',
                                )
 
         self.report.result_query = """

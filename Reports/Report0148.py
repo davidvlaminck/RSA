@@ -8,7 +8,8 @@ class Report0148(BaseReport):
                                title='Dubbele bomen (Antwerpen)',
                                spreadsheet_id='1UMM-nC9T5QyKKevPU6bRYjh70dTlFAkbJQKiJKiJ0Xg',
                                datasource='PostGIS',
-                               persistent_column='T'
+                               persistent_column='T',
+                               excel_filename='[RSA] Dubbele bomen (Antwerpen).xlsx',
                                )
 
         self.report.result_query = """

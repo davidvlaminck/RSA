@@ -6,7 +6,8 @@ class Report0180(BaseReport):
     def init_report(self) -> None:
         self.report = DQReport(name='report0180', title='SegmentControllers hun serienummer volgt een bepaalde regex validatie',
                                spreadsheet_id='1CQgzLh1L0qEdVpjRz2NiKnZPkIuphc8BvOk1J8a1q_0', datasource='PostGIS',
-                               persistent_column='F', link_type='eminfra')
+                               persistent_column='F', link_type='eminfra',
+                               excel_filename='[RSA] SegmentControllers hun serienummer volgt een bepaalde regex validatie.xlsx',)
 
         self.report.result_query = """
         WITH cte_segmentcontroller AS (

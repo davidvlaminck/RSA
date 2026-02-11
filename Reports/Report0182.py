@@ -6,7 +6,8 @@ class Report0182(BaseReport):
     def init_report(self) -> None:
         self.report = DQReport(name='report0182', title='Teletransmissieverbinding (TT) ODF zonder enige HoortBij-relatie naar een KabelnetToegang',
                                spreadsheet_id='1cQ9yN9I9UT2BAtTAcOJmZkO-A2zuxdSu_9zkP1j5LMs', datasource='PostGIS',
-                               persistent_column='H', link_type='eminfra')
+                               persistent_column='H', link_type='eminfra',
+                               excel_filename='[RSA] Teletransmissieverbinding (TT) ODF zonder enige HoortBij-relatie naar een KabelnetToegang.xlsx',)
 
         self.report.result_query = """
         with 

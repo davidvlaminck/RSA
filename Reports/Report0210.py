@@ -9,7 +9,8 @@ class Report0210(BaseReport):
                                spreadsheet_id='14djKCmoRIQsKSlcPb2oJCw-PoQfRn0oDqfj2QGtnqEU',
                                datasource='PostGIS',
                                persistent_column='D',
-                               link_type='eminfra')
+                               link_type='eminfra',
+                               excel_filename='[RSA] HSCabineLegacy (Legacy) ontbreekt een Bevestiging-relatie naar een Hoogspanningsdeel.xlsx',)
 
         self.report.result_query = """
         with

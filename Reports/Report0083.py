@@ -25,7 +25,8 @@ FOR a IN assets
                                title='Verkeersregelaars hebben een voltage lampen die 42 of 230 is',
                                spreadsheet_id='1KQU0DrpB-LmU-DNOSzshYSA14aRmeomYcMF1xTm2Zek',
                                datasource='ArangoDB',
-                               persistent_column='D')
+                               persistent_column='D',
+                               excel_filename='[RSA] Verkeersregelaars hebben een voltage lampen.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """MATCH (a:Verkeersregelaar {isActief:TRUE}) \nWHERE a.voltageLampen IS NULL OR NOT a.voltageLampen IN ['42', '230']\nRETURN a.uuid, a.naam, a.voltageLampen"""

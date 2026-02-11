@@ -35,7 +35,8 @@ FOR n IN assets
                                title='LS/HS met Voedingsrelatie anders dan LS-Deel/HS-Deel',
                                spreadsheet_id='19jhMsSzcxBHTjveVWMJWXRlKxYKlw1r0m5j5JSMfJ4k',
                                datasource='ArangoDB',
-                               persistent_column='K')
+                               persistent_column='K',
+                               excel_filename='[RSA] LS_HS met Voedingsrelatie anders dan LS-Deel_HS-Deel.xlsx',)
 
         self.report.result_query = aql_query
         self.report.cypher_query = """
