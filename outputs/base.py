@@ -12,6 +12,7 @@ class OutputWriteContext:
     report_title: str
     datasource_name: str
     now_utc: str
+    excel_filename: str | None = None
 
 
 class ReportOutput(Protocol):

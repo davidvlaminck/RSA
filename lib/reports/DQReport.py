@@ -41,7 +41,11 @@ class DQReport(Report):
 
         # Resolve adapters
         ds = make_datasource(self.datasource)
-        out = make_output(self.output, settings=self.output_settings)
+        # If this report has an excel_filename configured, prefer Excel output adapter
+        if getattr(self, 'excel_filename', None):
+            out = make_output('Excel', settings=self.output_settings)
+        else:
+            out = make_output(self.output, settings=self.output_settings)
 
         # test connection first before proceeding with the report
         ds.test_connection()
@@ -109,18 +113,27 @@ class DQReport(Report):
             report_title=self.title,
             datasource_name=self.datasource,
             now_utc=self.now,
+            excel_filename=self.excel_filename or None,
         )
-        out.write_report(
-            ctx,
-            qr,
-            startcell=startcell,
-            add_filter=self.add_filter,
-            persistent_column=self.persistent_column,
-            persistent_dict=self.persistent_dict,
-            convert_columns_to_numbers=self.convert_columns_to_numbers,
-            link_type=self.link_type,
-            recalculate_cells=self.recalculate_cells,
-        )
+        # Capture metadata returned by the output writer (e.g., file path, rows_written)
+        try:
+            meta = out.write_report(
+                ctx,
+                qr,
+                startcell=startcell,
+                add_filter=self.add_filter,
+                persistent_column=self.persistent_column,
+                persistent_dict=self.persistent_dict,
+                convert_columns_to_numbers=self.convert_columns_to_numbers,
+                link_type=self.link_type,
+                recalculate_cells=self.recalculate_cells,
+            )
+        except Exception:
+            meta = None
+
+        # store for diagnostics and log
+        self.last_output_meta = meta
+        logging.info('Output writer meta: %s', meta)
 
         # historiek (keep existing Google Sheets behavior)
         historiek_data = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self.spreadsheet_id,
