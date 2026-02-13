@@ -20,6 +20,10 @@ import sys
 from pathlib import Path
 from importlib import import_module
 import os
+import warnings
+
+# Suppress known third-party DeprecationWarnings (narrow filter)
+warnings.filterwarnings('ignore', message='path is deprecated. Use files\(\) instead', category=DeprecationWarning)
 
 # Ensure project root is on sys.path so local imports work when running this script
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -136,6 +140,29 @@ def main(argv: list[str] | None = None) -> int:
     except Exception as e:
         logging.error('Arango init failed: %s', e)
         return 2
+
+    # Initialize PostGIS connector (if configured)
+    try:
+        postgis_conf = settings.get('databases', {}).get('PostGIS') or settings.get('databases', {}).get('postgis')
+        if postgis_conf:
+            from lib.connectors.PostGISConnector import SinglePostGISConnector
+            SinglePostGISConnector.init(host=postgis_conf.get('host'), port=str(postgis_conf.get('port')),
+                                        user=postgis_conf.get('user'), password=postgis_conf.get('password'),
+                                        database=postgis_conf.get('database'))
+            logging.info('Initialized SinglePostGISConnector')
+    except Exception as e:
+        logging.warning('Could not initialize PostGIS connector: %s', e)
+
+    # Initialize Excel writer (best-effort)
+    try:
+        out_dir = settings.get('output', {}).get('excel', {}).get('output_dir', None)
+        if out_dir is None:
+            out_dir = str(Path.cwd() / 'RSA_OneDrive')
+        from outputs.excel_wrapper import SingleExcelWriter
+        SingleExcelWriter.init(output_dir=out_dir)
+        logging.info('Initialized SingleExcelWriter with dir: %s', out_dir)
+    except Exception as e:
+        logging.warning('Could not initialize SingleExcelWriter: %s', e)
 
     # Optionally stub Google Sheets wrapper to avoid API calls
     if args.skip_google:

@@ -5,6 +5,7 @@ import tempfile
 import time
 import traceback
 from datetime import datetime
+from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import pytz
@@ -38,6 +39,16 @@ class ReportLoopRunner:
                             level=logging.INFO)
         SingleSheetsWrapper.init(service_cred_path=self.settings['google_api']['credentials_path'],
                                  readonly_scope=False)
+
+        # Initialize Excel writer (best-effort)
+        try:
+            out_dir = self.settings.get('output', {}).get('excel', {}).get('output_dir')
+            if out_dir is None:
+                out_dir = str(Path(self.settings_path).resolve().parents[0] / 'RSA_OneDrive')
+            from outputs.excel_wrapper import SingleExcelWriter
+            SingleExcelWriter.init(output_dir=out_dir)
+        except Exception:
+            pass
 
         neo4j_settings = self.settings['databases']['Neo4j']
         SingleNeo4JConnector.init(uri=neo4j_settings['uri'], user=neo4j_settings['user'],

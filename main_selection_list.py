@@ -7,6 +7,10 @@ Supports overrides for settings path and report list.
 import argparse
 import json
 from pathlib import Path
+import warnings
+
+# Suppress known third-party deprecation warnings that are noisy in test/CI environments
+warnings.filterwarnings('ignore', message='path is deprecated. Use files\(\) instead', category=DeprecationWarning)
 
 from lib.reports.selection_runner import run_selection
 

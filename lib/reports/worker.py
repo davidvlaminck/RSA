@@ -14,6 +14,10 @@ import logging
 import sys
 from pathlib import Path
 from contextvars import ContextVar
+import warnings
+
+# Suppress known third-party DeprecationWarnings (narrow filter)
+warnings.filterwarnings('ignore', message='path is deprecated. Use files\(\) instead', category=DeprecationWarning)
 
 # Add project root to path so we can import modules
 project_root = Path(__file__).parent.parent.parent
@@ -111,6 +115,17 @@ def reinitialize_database_connections(settings):
             logging.warning("Google API credentials_path not set; Sheets wrapper not initialized")
     except Exception as e:
         logging.warning(f"Could not reinitialize Sheets wrapper: {e}")
+
+    # Ensure Excel writer singleton is initialized for workers (best-effort)
+    try:
+        out_dir = settings.get('output', {}).get('excel', {}).get('output_dir', None)
+        if out_dir is None:
+            out_dir = str(Path(settings.get('workdir', Path.cwd())).resolve().parents[0] / 'RSA_OneDrive')
+        from outputs.excel_wrapper import SingleExcelWriter
+        SingleExcelWriter.init(output_dir=out_dir)
+        logging.info('✓ Reinitialized Excel writer')
+    except Exception as e:
+        logging.warning(f'Could not initialize Excel writer in worker: {e}')
 
 
 def run_single_report(report_name: str, settings: dict, skip_db_init: bool = False) -> int:
