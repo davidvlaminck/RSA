@@ -7,6 +7,7 @@ import decimal
 import shutil
 import time
 import importlib
+import warnings
 
 openpyxl = None
 Workbook = None
@@ -19,7 +20,13 @@ def _ensure_openpyxl_loaded():
     if openpyxl is not None:
         return
     try:
+        # import and then apply narrow warning filters for known third-party deprecation messages
         openpyxl = importlib.import_module('openpyxl')
+        # suppress specific DeprecationWarning emitted by openpyxl using datetime.utcnow()
+        warnings.filterwarnings('ignore', message='datetime.datetime.utcnow\(\) is deprecated', category=DeprecationWarning)
+        # suppress certifi/importlib-resources deprecation message seen in some environments
+        warnings.filterwarnings('ignore', message='path is deprecated. Use files\(\) instead', category=DeprecationWarning)
+
         mod = openpyxl
         Workbook = getattr(mod, 'Workbook')
         load_workbook = getattr(mod, 'load_workbook')
@@ -277,7 +284,6 @@ class ExcelOutput:
         def row_generator():
             yield [f"Rapport gemaakt op {ctx.now_utc} met data uit:"]
             yield [f"{ctx.datasource_name}, laatst gesynchroniseerd op {result.last_data_update or ''}"]
-            yield []
 
             headers = [k.split('.')[-1] for k in result.keys]
             if persistent_column:

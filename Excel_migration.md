@@ -134,5 +134,26 @@ If you'd like a different ordering (for example: implement `outputs/excel.py` fi
 
 
 ---
-Document generated: Feb 11, 2026
 
+Progress summary (Feb 11, 2026)
+-------------------------------
+- `docs/excel_output_spec.md` created: describes the API contract for the Excel writer.
+- `outputs/excel.py` implemented with streaming support and a `write_report()` compatibility function.
+- `outputs/excel_wrapper.py` added (singleton `SingleExcelWriter.init()` / `get_wrapper()`).
+- `factories.py` updated to prefer `SingleExcelWriter.get_wrapper()` when available; falls back to `ExcelOutput`.
+- `DQReport` stores writer metadata in `self.last_output_meta` for diagnosis.
+- Unit tests scaffolded at `UnitTests/test_outputs_excel.py` and executed successfully with `pytest`.
+
+Remaining items
+---------------
+- Integration tests for `Report0002` and `Report0030` (scaffold needed).
+- Runner scripts should call `SingleExcelWriter.init(output_dir)` at startup (I can implement this next).
+- Migrate historical/summary writes (historiek/overzicht) to Excel writer to be fully offline.
+
+Next step suggestion
+--------------------
+I can (and will) implement `SingleExcelWriter.init()` calls in the runner scripts (`main_selection_list.py`, `run_single_report.py`, and `scripts/run_report_real.py`) and then scaffold integration tests for the two reports. Proceed? 
+
+---
+
+Document updated: Feb 11, 2026

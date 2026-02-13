@@ -23,6 +23,11 @@ def make_output(name: str, *, settings: dict | None = None):
     if name == 'GoogleSheets':
         return GoogleSheetsOutput()
     if name == 'Excel':
-        out_dir = settings.get('excel', {}).get('output_dir', './out')
-        return ExcelOutput(output_dir=out_dir)
+        # prefer a singleton wrapper if initialized (parity with SingleSheetsWrapper)
+        try:
+            from outputs.excel_wrapper import SingleExcelWriter
+            return SingleExcelWriter.get_wrapper()
+        except Exception:
+            out_dir = settings.get('excel', {}).get('output_dir', './out')
+            return ExcelOutput(output_dir=out_dir)
     raise ValueError(f"Unsupported output: {name}")

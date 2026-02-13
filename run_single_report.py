@@ -48,6 +48,32 @@ if __name__ == '__main__':
         raise SystemExit(2)
 
     if args.once:
+        # initialize Excel singleton (best-effort)
+        try:
+            import json
+            with open(args.settings, 'r', encoding='utf-8') as fh:
+                settings = json.load(fh)
+            out_dir = settings.get('output', {}).get('excel', {}).get('output_dir', None)
+            if out_dir is None:
+                out_dir = str(Path('RSA_OneDrive'))
+            from outputs.excel_wrapper import SingleExcelWriter
+            SingleExcelWriter.init(output_dir=out_dir)
+        except Exception:
+            pass
+
         raise SystemExit(run_selection(settings_path=args.settings, report_names=[args.report], stream_output=True))
+
+    # initialize Excel singleton (best-effort) before entering daily loop
+    try:
+        import json
+        with open(args.settings, 'r', encoding='utf-8') as fh:
+            settings = json.load(fh)
+        out_dir = settings.get('output', {}).get('excel', {}).get('output_dir', None)
+        if out_dir is None:
+            out_dir = str(Path('RSA_OneDrive'))
+        from outputs.excel_wrapper import SingleExcelWriter
+        SingleExcelWriter.init(output_dir=out_dir)
+    except Exception:
+        pass
 
     raise SystemExit(run_daily(args.settings, args.report))

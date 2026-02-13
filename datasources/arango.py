@@ -88,9 +88,16 @@ class ArangoDatasource:
             except Exception:
                 keys = []
 
+            # If no keys from cursor, infer by scanning rows preserving first-seen order
             if not keys and len(result) > 0 and isinstance(result[0], dict):
-                # preserve insertion order of dict
-                keys = list(result[0].keys())
+                seen = []
+                for row in result:
+                    if not isinstance(row, dict):
+                        continue
+                    for k in row.keys():
+                        if k not in seen:
+                            seen.append(k)
+                keys = seen
 
             query_time_seconds = round(time.time() - start_time, 2)
 

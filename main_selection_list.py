@@ -5,6 +5,8 @@ Supports overrides for settings path and report list.
 """
 
 import argparse
+import json
+from pathlib import Path
 
 from lib.reports.selection_runner import run_selection
 
@@ -23,6 +25,22 @@ def _print_dry_run(settings_path: str, reports: list[str], use_parallel: bool):
     print(f"Mode: {mode}")
     print(f"Settings: {settings_path}")
     print(f"Reports: {reports}")
+
+
+def _maybe_init_excel(settings_path: str):
+    try:
+        with open(settings_path, 'r', encoding='utf-8') as fh:
+            settings = json.load(fh)
+    except Exception:
+        return
+    out_dir = settings.get('output', {}).get('excel', {}).get('output_dir', None)
+    if out_dir is None:
+        out_dir = str(Path(settings_path).resolve().parents[1] / 'RSA_OneDrive')
+    try:
+        from outputs.excel_wrapper import SingleExcelWriter
+        SingleExcelWriter.init(output_dir=out_dir)
+    except Exception:
+        pass
 
 
 def main() -> int:
@@ -57,6 +75,9 @@ def main() -> int:
     if args.dry_run:
         _print_dry_run(args.settings, args.reports, bool(use_parallel))
         return 0
+
+    # Initialize Excel writer singleton (best-effort)
+    _maybe_init_excel(args.settings)
 
     return run_selection(
         settings_path=args.settings,
