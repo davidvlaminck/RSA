@@ -1,0 +1,23 @@
+FOR a IN assets
+    LET asset_bestekken = (
+        FOR bk IN (a.bs && a.bs.Bestek_bestekkoppeling ? a.bs.Bestek_bestekkoppeling : [])
+            FILTER bk != null AND bk._to != null
+            LET b = DOCUMENT(bk._to)
+            FILTER b != null
+            RETURN {
+                dossiernummer: b.eDeltaDossiernummer ? b.eDeltaDossiernummer : null,
+                besteknummer: b.eDeltaBesteknummer ? b.eDeltaBesteknummer : null,
+                aannemer: b.aannemerNaam ? b.aannemerNaam : null,
+                van: bk.DtcBestekkoppeling_actiefVan ? bk.DtcBestekkoppeling_actiefVan : null,
+                tot: bk.DtcBestekkoppeling_actiefTot ? bk.DtcBestekkoppeling_actiefTot : null
+            }
+        )
+
+RETURN {
+    _key: a._key,
+    naam: a.AIMNaamObject_naam,
+    naampad: a.NaampadObject_naampad,
+    bs: a.bs,
+    bestekken: asset_bestekken
+}
+

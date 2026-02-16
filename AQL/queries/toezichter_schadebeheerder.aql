@@ -1,24 +1,9 @@
-/* Report0221: Wegverlichtingsinstallatie (Legacy) heeft steeds een locatie
-   Report0222: VVOP groep (Legacy) heeft steeds een locatie
-*/
-LET wv_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "lgc:installatie#WV" LIMIT 1 RETURN at._key)
-LET vvop_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "lgc:installatie#VVOPGroep" LIMIT 1 RETURN at._key)
-
-/* 1) Select assets, filter by assettype + active + locatie */
 FOR a IN assets
-  FILTER
-    //a.assettype_key == wv_key
-    a.assettype_key == vvop_key
-    AND a.AIMDBStatus_isActief == true
-    AND a.loc.Locatie_geometrie == null
-
   LET toezichter = (a.tz && a.tz.Toezicht_toezichter && a.tz.Toezicht_toezichter.DtcToezichter_email) ? a.tz.Toezicht_toezichter.DtcToezichter_email : null
   LET toezichtgroep = (a.tz && a.tz.Toezicht_toezichtgroep && a.tz.Toezicht_toezichtgroep.DtcToezichtGroep_naam) ? a.tz.Toezicht_toezichtgroep.DtcToezichtGroep_naam : null
   LET schadebeheerder = (a.tz && a.tz.Schadebeheerder_schadebeheerder && a.tz.Schadebeheerder_schadebeheerder.DtcBeheerder_naam) ? a.tz.Schadebeheerder_schadebeheerder.DtcBeheerder_naam : null
   LET schadebeheerder_referentie = (a.tz && a.tz.Schadebeheerder_schadebeheerder && a.tz.Schadebeheerder_schadebeheerder.DtcBeheerder_referentie) ? a.tz.Schadebeheerder_schadebeheerder.DtcBeheerder_referentie : null
 
-
-  /* Project only the fields we need later to keep memory small */
   RETURN {
     _key: a._key,
     naam: a.AIMNaamObject_naam,
@@ -27,5 +12,5 @@ FOR a IN assets
     toezichter: toezichter,
     toezichtsgroep: toezichtgroep,
     schadebeheerder: schadebeheerder
-    // schadebeheerder_referentie: schadebeheerder_referentie
+    schadebeheerder_referentie: schadebeheerder_referentie
   }
