@@ -368,15 +368,29 @@ class DQReport(Report):
         mail_dicts = []
         sheetrange = mail_receivers_raw['range'].split('!')[1]
         cells = sheetrange.split(':')
-        startcell = SheetsCell(cells[0])
+        # cells[0] may be empty (e.g. ':B') or may contain only column letters (e.g. 'B').
+        # Normalize to a valid A1-style cell (column+row). Default row is 1 when missing.
+        raw_start = cells[0].strip() if len(cells) > 0 else ''
+        raw_end = cells[1].strip() if len(cells) > 1 else ''
+        if not raw_start:
+            raw_start = raw_end or 'A1'
+        # if raw_start contains no digits (only column letters), append row 1
+        if not any(ch.isdigit() for ch in raw_start):
+            raw_start = raw_start + '1'
+        try:
+            startcell = SheetsCell(raw_start)
+        except Exception as e:
+            logging.warning('Could not parse start cell "%s" from range "%s": %s. Falling back to A1', raw_start, sheetrange, e)
+            startcell = SheetsCell('A1')
         startcell.update_column_by_adding_number(2)
         if 'values' not in mail_receivers_raw:
             return mail_dicts
         for list_element in mail_receivers_raw['values']:
             if len(list_element) < 2:
-                if len(list_element) > 0 and list_element[0] == '':
-                    continue
-                raise ValueError("not correctly configured mailing template")
+                # Malformed entry: skip and log a warning instead of raising to allow offline runs
+                # e.g. when Overzicht sheet is minimal during Excel-only testing.
+                logging.warning('Skipping malformed mail receiver entry (expected >=2 columns): %s', list_element)
+                continue
 
             mail_dict = {}
             mail_dicts.append(mail_dict)

@@ -15,8 +15,10 @@ import pkgutil
 from pathlib import Path
 
 
-# Default Reports directory relative to this module
-_DEFAULT_REPORTS_DIR = Path(__file__).parent.parent / "Reports"
+# Default Reports directory candidates: prefer project-root `Reports/`, fall back to `lib/Reports/` (legacy)
+_PROJECT_ROOT = Path(__file__).parent.parent.parent
+_DEFAULT_REPORTS_DIR = _PROJECT_ROOT / "Reports"
+_LEGACY_REPORTS_DIR = Path(__file__).parent.parent / "Reports"
 
 
 def create_report_instance(report_name: str):
@@ -65,13 +67,21 @@ def discover_and_instantiate_reports(reports_dir: Path = None) -> list:
         List of instantiated report objects (excludes failed instantiations).
     """
     if reports_dir is None:
-        reports_dir = _DEFAULT_REPORTS_DIR
+        # Prefer project-root Reports/, fall back to lib/Reports/
+        if _DEFAULT_REPORTS_DIR.exists():
+            reports_dir = _DEFAULT_REPORTS_DIR
+        else:
+            reports_dir = _LEGACY_REPORTS_DIR
 
-    reports = []
     if not reports_dir.exists():
         logging.error("Reports directory not found: %s", reports_dir)
-        return reports
+        # try legacy fallback if different
+        if reports_dir != _LEGACY_REPORTS_DIR and _LEGACY_REPORTS_DIR.exists():
+            reports_dir = _LEGACY_REPORTS_DIR
+        else:
+            return reports
 
+    reports = []
     for importer, module_name, is_pkg in pkgutil.iter_modules([str(reports_dir)]):
         if not is_pkg:  # Skip packages, only load .py modules
             instance = create_report_instance(module_name)

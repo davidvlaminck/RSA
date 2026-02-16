@@ -112,6 +112,36 @@ class ExcelOutput:
         shutil.copy2(workbook_path, backup)
         return backup
 
+    def _atomic_save_workbook(self, wb, workbook_path: Path) -> None:
+        """Save workbook to a temporary file and atomically replace the target path.
+
+        This mirrors the write_single_cell pattern but for full workbooks.
+        """
+        import os
+        from tempfile import NamedTemporaryFile
+
+        dirpath = workbook_path.parent
+        dirpath.mkdir(parents=True, exist_ok=True)
+        with NamedTemporaryFile(prefix=workbook_path.stem + '_tmp_', suffix=workbook_path.suffix, dir=str(dirpath), delete=False) as tmp:
+            tmp_name = tmp.name
+        try:
+            wb.save(tmp_name)
+            os.replace(tmp_name, str(workbook_path))
+            try:
+                fd = os.open(str(workbook_path), os.O_RDONLY)
+                try:
+                    os.fsync(fd)
+                finally:
+                    os.close(fd)
+            except Exception:
+                pass
+        finally:
+            try:
+                if os.path.exists(tmp_name):
+                    os.remove(tmp_name)
+            except Exception:
+                pass
+
     def create_workbook_if_missing(self, workbook_path: Path) -> Path:
         workbook_path = Path(workbook_path)
         _ensure_openpyxl_loaded()
@@ -136,7 +166,8 @@ class ExcelOutput:
 
             # Resultaat sheet: will be written by reports
             ws_resultaat = wb.create_sheet('Resultaat')
-            wb.save(workbook_path)
+            # atomic save
+            self._atomic_save_workbook(wb, workbook_path)
         return workbook_path
 
     def create_sheet(self, workbook_path: Path, sheet_name: str, clear_if_exists: bool = True) -> None:
@@ -229,6 +260,16 @@ class ExcelOutput:
         candidate = Path(self.output_dir) / sp
         if candidate.exists():
             return candidate
+        # try mapping spreadsheet id -> filename
+        try:
+            from outputs.spreadsheet_map import lookup
+            mapped = lookup(sp)
+            if mapped:
+                candidate_map = Path(self.output_dir) / mapped
+                if candidate_map.exists():
+                    return candidate_map
+        except Exception:
+            pass
         candidate_x = Path(self.output_dir) / (sp + '.xlsx')
         return candidate_x
 
@@ -321,7 +362,7 @@ class ExcelOutput:
             return {'values': rows_out, 'range': f'{sheet_name}!{rng}'}
         return rows_out
 
-    def read_celldata_from_sheet(self, spreadsheet_id: str, sheet_name: str, sheetrange: str | None = None, return_raw_results: bool = False) -> dict:
+    def read_celldata_from_sheet(self, spreadsheet_id: str, sheet_name: str, sheetrange: str | None = None, return_raw_results: bool = True) -> dict:
         """Return a minimal raw-style dict with 'values' and 'range' to mimic Sheets API basic shape.
 
         For now we return only values; rich `rowData` with hyperlinks/formulas can be added later.
@@ -523,6 +564,34 @@ class ExcelOutput:
         # if none found, return next row after existing max
         return max_row + 1
 
+    def insert_empty_rows(self, spreadsheet_id: str | Path, sheet_name: str, start_cell: str = 'A2', number_of_rows: int = 1) -> None:
+        """Insert empty rows at start_cell by shifting existing rows down.
+
+        This is a simple implementation: read the sheet, insert rows in-memory, and save.
+        """
+        _ensure_openpyxl_loaded()
+        wb_path = self._resolve_workbook_path(spreadsheet_id)
+        if not wb_path.exists():
+            # nothing to do
+            return
+        wb = load_workbook(wb_path)
+        if sheet_name not in wb.sheetnames:
+            # create if missing
+            wb.create_sheet(sheet_name)
+            wb.save(wb_path)
+            return
+        ws = wb[sheet_name]
+        # parse start row
+        col_letters = ''.join([c for c in start_cell if c.isalpha()])
+        row_digits = ''.join([c for c in start_cell if c.isdigit()])
+        start_row = int(row_digits) if row_digits else 1
+        ws.insert_rows(start_row, amount=number_of_rows)
+        # atomic save
+        try:
+            self._atomic_save_workbook(wb, wb_path)
+        except Exception:
+            wb.save(wb_path)
+
     # --- core write function ----------------------------------------------------
     def write_data_to_sheet(self, workbook_path: Path, sheet_name: str, rows: Iterable[Iterable[Any]],
                             start_cell: str = 'A1', overwrite: bool = True, use_write_only_for_nrows: int = 10000) -> dict:
@@ -536,12 +605,9 @@ class ExcelOutput:
         # ensure parent dir
         workbook_path.parent.mkdir(parents=True, exist_ok=True)
 
-        # If overwriting, backup existing file
-        if overwrite and workbook_path.exists():
-            try:
-                self.backup_file(workbook_path)
-            except Exception:
-                pass
+        # Note: do not create a backup file before write. We perform an atomic save
+        # (write to temp file + os.replace) so a partial write does not corrupt the
+        # existing workbook. If you still want backups, run the cleanup/backup script separately.
 
         # Try to write using WriteOnly if rows is a generator and large
         # We don't know rowcount ahead of time; detect generators by lack of __len__
@@ -571,48 +637,46 @@ class ExcelOutput:
                 ws.append(row)
                 rows_written += 1
 
-            wb.save(workbook_path)
+            # atomic save
             try:
-                import os
-                fd = os.open(str(workbook_path), os.O_RDONLY)
-                try:
-                    os.fsync(fd)
-                finally:
-                    os.close(fd)
+                self._atomic_save_workbook(wb, workbook_path)
             except Exception:
-                pass
+                # fallback to direct save if atomic fails
+                try:
+                    wb.save(workbook_path)
+                except Exception:
+                    raise
 
         else:
-            # workbook does not exist yet: we can create a new workbook; prefer write-only for generators
-            if is_generator and WriteOnlyWorkbook is not None:
-                wb = WriteOnlyWorkbook()
-                ws = wb.create_sheet(sheet_name)
-                for r in rows:
-                    row = [self._normalize_value(v) for v in r]
-                    ws.append(row)
-                    rows_written += 1
-                wb.save(workbook_path)
+            # workbook does not exist yet: create a workbook with default template sheets
+            # so that Overzicht and Historiek are present (preserve expected templates).
+            # Prefer creating the template workbook first, then load and write the Resultaat sheet.
+            self.create_workbook_if_missing(workbook_path)
+
+            # now load the workbook and write the Resultaat sheet (works for generators and sequences)
+            _ensure_openpyxl_loaded()
+            wb = load_workbook(workbook_path)
+            if sheet_name in wb.sheetnames:
+                idx = wb.sheetnames.index(sheet_name)
+                ws = wb[sheet_name]
+                wb.remove(ws)
+                ws = wb.create_sheet(sheet_name, idx)
             else:
-                # create a normal workbook in memory
-                if Workbook is None:
-                    raise ExcelWriterError('Workbook not available')
-                wb = Workbook()
-                ws = wb.active
-                ws.title = sheet_name
-                for r in rows:
-                    row = [self._normalize_value(v) for v in r]
-                    ws.append(row)
-                    rows_written += 1
-                wb.save(workbook_path)
+                ws = wb.create_sheet(sheet_name)
+
+            for r in rows:
+                row = [self._normalize_value(v) for v in r]
+                ws.append(row)
+                rows_written += 1
+
+            # atomic save
+            try:
+                self._atomic_save_workbook(wb, workbook_path)
+            except Exception:
                 try:
-                    import os
-                    fd = os.open(str(workbook_path), os.O_RDONLY)
-                    try:
-                        os.fsync(fd)
-                    finally:
-                        os.close(fd)
+                    wb.save(workbook_path)
                 except Exception:
-                    pass
+                    raise
 
         elapsed = time.time() - start_time
         return {'rows_written': rows_written, 'elapsed_seconds': elapsed, 'file': str(workbook_path)}
@@ -664,6 +728,7 @@ class ExcelOutput:
 
         # update summary/historiek is still performed by DQReport via Google Sheets wrapper
         return meta
+
 
 
 # Export

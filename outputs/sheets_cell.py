@@ -9,7 +9,7 @@ class SheetsCell:
 
         self._column_str = ''
         self._column_int = -1
-        self._row = ''
+        self._row = 1
 
         self.cell = cell
 
@@ -19,7 +19,8 @@ class SheetsCell:
 
     @row.setter
     def row(self, value: int):
-        self._row = value
+        # ensure we store as int
+        self._row = int(value)
 
     @property
     def cell(self):
@@ -28,13 +29,20 @@ class SheetsCell:
     @cell.setter
     def cell(self, value):
         try:
+            # extract leading letters (column) and trailing digits (row)
             self._column_str = re.split(r'\d', value)[0]
-            self._row = int(value[len(self._column_str):])
-            self._column_int = self._convert_column_to_number(self._column_str)
+            row_part = value[len(self._column_str):]
+            # if row part is empty (e.g. 'B'), default to 1
+            if row_part == '' or row_part is None:
+                self._row = 1
+            else:
+                self._row = int(row_part)
+            self._column_int = self._convert_column_to_number(self._column_str) if self._column_str else 1
 
         except ValueError as ex:
+            # re-raise ValueError so callers can handle it explicitly
             raise ex
-        except:
+        except Exception:
             raise ValueError(f"can't set or update SheetsCell object with input {value}")
 
     @staticmethod
@@ -68,7 +76,8 @@ class SheetsCell:
         return copy.copy(self)
 
     def update_row_by_adding_number(self, row_update: int):
-        self._row += row_update
+        # ensure numeric addition
+        self._row = int(self._row) + int(row_update)
 
     def update_column_by_adding_number(self, column_update: int):
         self._column_int += column_update
