@@ -60,6 +60,15 @@ def make_datasource(name: str):
 
 def make_output(name: str, *, settings: dict | None = None):
     settings = settings or {}
+
+    # Allow forcing Excel output globally via env var or settings flag. Useful for local migration/testing.
+    force_excel_env = os.environ.get('RSA_FORCE_OUTPUT') == 'Excel'
+    force_excel_setting = settings.get('force_excel') is True
+    if force_excel_env or force_excel_setting:
+        # Use configured output_dir if present
+        out_dir = settings.get('excel', {}).get('output_dir', './out')
+        return ExcelOutput(output_dir=out_dir)
+
     if name == 'GoogleSheets':
         return GoogleSheetsOutput()
     if name == 'Excel':

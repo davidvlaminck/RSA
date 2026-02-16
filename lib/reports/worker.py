@@ -124,6 +124,20 @@ def reinitialize_database_connections(settings):
         from outputs.excel_wrapper import SingleExcelWriter
         SingleExcelWriter.init(output_dir=out_dir)
         logging.info('✓ Reinitialized Excel writer')
+
+        # If Google Sheets wrapper is not initialized but Excel is forced/available,
+        # register the Excel writer as the sheets wrapper so DQReport and other callers
+        # that call SingleSheetsWrapper.get_wrapper() still receive a compatible object.
+        try:
+            from outputs.sheets_wrapper import SingleSheetsWrapper
+            # Only set if sheets_wrapper is not already initialized by Google
+            if getattr(SingleSheetsWrapper, 'sheets_wrapper', None) is None:
+                from outputs.sheets_compat import SheetsCompatAdapter
+                SingleSheetsWrapper.sheets_wrapper = SheetsCompatAdapter(SingleExcelWriter.get_wrapper())
+                logging.info('✓ Registered Excel-backed SheetsCompatAdapter as SingleSheetsWrapper fallback')
+        except Exception:
+            # best-effort: ignore if we can't set fallback
+            pass
     except Exception as e:
         logging.warning(f'Could not initialize Excel writer in worker: {e}')
 

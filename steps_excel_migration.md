@@ -67,6 +67,170 @@ Checklist (status tracked with checkmarks)
    - [ ] Optional: add `lib/connectors/onedrive.py` hook to upload files after generation
    - [ ] Update README with how to toggle Google vs Excel outputs
 
+9. Nog te implementeren SheetsWrapper-functionaliteit in SingleExcelWriter ("scel")
+
+   Hieronder een genummerde lijst met functies die de huidige `outputs/sheets_wrapper.py` (Google Sheets) bood
+   en die we nog moeten bijbouwen in de Excel-implementatie (`SingleExcelWriter` / `ExcelOutput`). Prioriteit en
+   korte implementatie-notes zijn toegevoegd.
+
+   1) `get_sheets_in_spreadsheet(spreadsheet_id)` — lijst met sheet-namen + metadata
+      - Wat: retourneer dict met sheet-namen => properties (inclusief `gridProperties` zoals `rowCount`/`columnCount`).
+      - Waarom: veel rapporten lezen `gridProperties` om max_row te bepalen.
+      - Prioriteit: Hoog.
+
+   2) `read_data_from_sheet(spreadsheet_id, sheet_name, sheetrange)`
+      - Wat: reguliere leesfunctie die een lijst van rij-lijsten (rows) teruggeeft.
+      - Waarom: veel reports gebruiken dit als primaire data-fetch.
+      - Prioriteit: Hoog.
+
+   3) `read_celldata_from_sheet(spreadsheet_id, sheet_name, sheetrange, return_raw_results=False)`
+      - Wat: retourneer ruwe API-achtige structuur (`values`, `range`, en indien gewenst `rowData` met rich cell info, hyperlinks, formules).
+      - Waarom: legacy code (Historiek/Overzicht) verwacht deze vorm voor hyperlinks en cellmetadata.
+      - Opmerking: in Excel spreken we van `Cell`-objecten; map deze naar een compatibel dict-formaat.
+      - Prioriteit: Hoog.
+
+   4) `find_first_nonempty_row_from_starting_cell(spreadsheet_id, sheet_name, start_cell)`
+      - Wat: zoekt de eerste niet-lege rij vanaf `start_cell` (A1-achtige notatie) en retourneert het rijnummer.
+      - Waarom: wordt gebruikt om persistent-kolom en append-logica te bepalen.
+      - Prioriteit: Hoog.
+
+   5) `insert_empty_rows(spreadsheet_id, sheet_name, at_row, count)`
+      - Wat: schuift rijen omlaag en maakt lege rijen op `at_row` voor `count` rijen.
+      - Waarom: sommige rapporten verwachten een insert-row operatie (samen met update van formules/filters).
+      - Prioriteit: Middel.
+
+   6) `delete_sheet(spreadsheet_id, sheet_name)`
+      - Wat: verwijdert een blad (of recreëert het later).
+      - Waarom: Historiek implementatie verwijdert oude bladen.
+      - Prioriteit: Middel.
+
+   7) `create_sheet(spreadsheet_id, sheet_name, index=None)`
+      - Wat: voegt een nieuw blad toe; kan ook op index geplaatst worden.
+      - Waarom: rapporten maken nieuwe sheets (Historiek) en willen soms de locatie (index).
+      - Prioriteit: Hoog.
+
+   8) `write_data_to_sheet(spreadsheet_id, sheet_name, start_cell, data, overwrite=True)`
+      - Wat: reeds aanwezig in `ExcelOutput`, maar uitbreiden:
+        - ondersteuning voor formules en hyperlinks
+        - batch/streaming writes met progress
+        - optionele formatting (bold header, column widths)
+      - Prioriteit: Hoog (basis aanwezig). Middel voor formatting/extensions.
+
+   9) `clear_filter(spreadsheet_id, sheet_name)` en `set_filter(...)`
+      - Wat: verwijder of zet filter-rijen/auto-filter op kolommen.
+      - Waarom: reports clearen filters na write.
+      - Implementatie: openpyxl ondersteunt auto_filter; bied eenvoudige wrapper.
+      - Prioriteit: Middel.
+
+  10) `clear_sheet_range(spreadsheet_id, sheet_name, cell_range)`
+      - Wat: wis waarde(s) in het opgegeven bereik.
+      - Opmerking: de ExcelOutput heeft al `clear_sheet_range(workbook_path, sheet_name, range)` — hergebruik/adapter vereist.
+      - Prioriteit: Middel.
+
+  11) `write_single_cell(spreadsheet_id, sheet_name, cell, value)`
+      - Wat: schrijf 1 cel (of enkele cellen) efficiënt zonder workbook-recreatie.
+      - Waarom: wordt gebruikt om laatste-synctime of enkelcelle updates te doen.
+      - Prioriteit: Hoog.
+
+  12) `update_row_by_adding_number(spreadsheet_id, sheet_name, cell, delta)` (helper)
+      - Wat: helper die een cel (bv. startRow) leest, optelt met delta en terug schrijft.
+      - Waarom: legacy code gebruikt `start_sheetcell.update_row_by_adding_number(len(...))`.
+      - Implementatie: maak helper in SheetsCell/SingleExcelWriter die veilige read+write doet.
+      - Prioriteit: Middel.
+
+  13) `read_sheet_properties(spreadsheet_id, sheet_name)` (incl. frozen rows/cols)
+      - Wat: retourneer properties zoals `frozenRowCount`, `gridProperties`, column widths.
+      - Prioriteit: Laag/middel.
+
+  14) Kolombreedte en resize (`set_column_widths`) & `freeze_panes`
+      - Wat: eenvoudiger API om kolombreedtes en gefixeerde rijen te zetten.
+      - Waarom: sommige rapporten willen resize/formatting; er waren bugs rond resize.
+      - Prioriteit: Laag (nice-to-have) — implementatie nodig als teams willen formatting parity.
+
+  15) Ondersteuning voor formules/hyperlinks/voorkeursformattering
+      - Wat: schrijf formules (strings starting with '='), en maak hyperlinks in cellen.
+      - Implementatie: openpyxl ondersteunt beide; wrapper moet detecteren en correct doorgeven.
+      - Prioriteit: Middel.
+
+  16) Append- en batch-writes (append_rows, append_with_limit)
+      - Wat: efficient append zonder hele sheet in geheugen te materialiseren.
+      - Prioriteit: Middel/Hoog voor grote datasets.
+
+  17) Atomic write / file-locking
+      - Wat: schrijf naar tijdelijke bestand en rename (atomic), of gebruik een file lock (portalocker) bij gelijktijdige schrijvers.
+      - Waarom: vereist voor veilig parallel gebruik in productie.
+      - Prioriteit: Hoog (in combinatie met parallel worker execution).
+
+  18) Compatibele 'raw' response for `read_celldata_from_sheet` to support hyperlinks and rich cell metadata
+      - Wat: in Google de raw API geeft `rowData`/`values` met `hyperlink` en `userEnteredFormat`. Voor Excel we moeten een compatibele representatie maken.
+      - Prioriteit: Middel/Hoog voor Historiek & link handling.
+
+10. Implementatie-notes & aanbevolen volgorde
+   - Stap 1 (hoogste prioriteit): implementeren van `get_sheets_in_spreadsheet`, `read_data_from_sheet`, `read_celldata_from_sheet`, `create_sheet`, `write_data_to_sheet`, `write_single_cell`, `find_first_nonempty_row_from_starting_cell`.
+   - Stap 2: `insert_empty_rows`, `delete_sheet`, `clear_filter`, `clear_sheet_range`, `update_row_by_adding_number`.
+   - Stap 3: formatting features (`set_column_widths`, freeze panes), formula/hyperlink helpers, and `append_rows`.
+   - Stap 4 (safety & scale): atomic writes, file-locking, and batch/streaming append helpers.
+
+11. Option C (staged summaries + aggregator) — recommended for parallel workers
+   - Goal: allow reports to run fully in parallel without locking by making them write small, idempotent summary messages to a staging folder. A single aggregator process will serialize updates to the shared Excel summary.
+   - Why: avoids contention and keeps report runtime fast; staged files provide an audit trail and can be retried.
+
+   Checklist to implement Option C:
+   - [ ] Create a staging folder inside the output dir: `RSA_OneDrive/staged_summaries/` and an archive folder: `RSA_OneDrive/staged_summaries/processed/`.
+   - [ ] Implement `outputs/summary_stager.py` with function `stage_summary_update(payload: dict, staged_dir: Path | str)` that:
+         * writes payload to a temporary file (e.g. `ts_reportid_uuid.json.tmp`) and renames to `.json` atomically.
+         * validates basic schema (operation + spreadsheet_id/excel_filename + sheet + payload-specific fields).
+   - [ ] Modify the summary/historiek write path (in `DQReport` or the Legacy history code) to call `stage_summary_update()` instead of writing Excel directly. (We'll not change report files automatically; this gives you a toggle.)
+   - [ ] Implement `scripts/aggregate_summaries.py` which:
+         * scans `staged_summaries/` for ready `.json` files, sorted by filename/timestamp
+         * moves each file to a `processing/` subdir to claim it (atomic rename)
+         * applies the operation using `ExcelOutput` (functions: `write_data_to_sheet`, `write_single_cell`, `update_row_by_adding_number`)
+         * moves processed files to `processed/` with a timestamped folder or delete/archive them
+         * supports CLI options: `--staged-dir`, `--processed-dir`, `--output-dir`, `--limit`, `--dry-run`, `--verbose`
+   - [ ] Add a simple retry/backoff for transient failures (e.g., file locked by another process or IO errors) — aggregator should log and move failing files to `failed/` after N attempts.
+   - [ ] Add unit tests for the stager and aggregator logic (simulate payload and run aggregator in dry-run).
+
+   Minimal payload schema examples (v1):
+   - Append row (typical):
+     {
+       "operation": "append_row",
+       "excel_filename": "[RSA] TLCfipoorten hebben een sturingsrelatie naar een Verkeersregelaar.xlsx",
+       "sheet": "Resultaat",
+       "row": ["uuid","naam","opmerkingen (blijvend)"],
+       "meta": {"report": "Report0002", "timestamp": "2026-02-13T12:00:00Z"}
+     }
+
+   - Update single cell (last sync time):
+     {
+       "operation": "write_cell",
+       "excel_filename": "historiek.xlsx",
+       "sheet": "Historiek",
+       "cell": "B3",
+       "value": "2026-02-13T12:00:00Z",
+       "meta": {"report": "Report0002"}
+     }
+
+   - Increment counter:
+     {
+       "operation": "increment_cell",
+       "excel_filename": "historiek.xlsx",
+       "sheet": "Historiek",
+       "cell": "C5",
+       "delta": 1,
+       "meta": {"report": "Report0002"}
+     }
+
+   Notes:
+   - The aggregator will be the only process that writes to the shared summary workbook; per-report result files remain independently written by reports.
+   - This approach is safe, easy to audit, and supports retries. It also enables later migration to a DB-backed summary if desired.
+
+12. Rollout plan for staged approach
+   - [ ] Implement stager and aggregator
+   - [ ] Switch historiek writer to use stager in a single non-production run and validate aggregator updates
+   - [ ] Run aggregator periodically (cron/systemd) or call it at the end of report-run loop
+   - [ ] Monitor `RSA_OneDrive/staged_summaries/failed/` for issues and add alerts
+
+If you want, I can now implement both `outputs/summary_stager.py` and `scripts/aggregate_summaries.py` and provide a small example run. I'll create both files next.
 
 Progress notes (actions performed)
 ----------------------------------

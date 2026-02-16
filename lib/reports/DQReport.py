@@ -57,9 +57,32 @@ class DQReport(Report):
         try:
             mail_receivers_raw = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='Overzicht',
                                                                  sheetrange='emails', return_raw_results=True)
-            mail_receivers = mail_receivers_raw.get('values', [])
-            mail_receivers_dict = self.transform_raw_to_dict(mail_receivers_raw)
-            sender.add_sheet_info(spreadsheet_id=self.spreadsheet_id, mail_receivers_dict=mail_receivers_dict)
+            # Normalize fallback return shapes:
+            # - if a list was returned, wrap into dict
+            # - if a dict without 'range' was returned (Excel fallback), synthesize a range
+            if isinstance(mail_receivers_raw, list):
+                mail_receivers_raw = {'values': mail_receivers_raw, 'range': 'Overzicht!A1:A{}'.format(len(mail_receivers_raw))}
+            if isinstance(mail_receivers_raw, dict):
+                values = mail_receivers_raw.get('values', [])
+                if not values:
+                    mail_receivers = []
+                    mail_receivers_dict = []
+                    # no receivers configured; continue without adding sheet info
+                    mail_receivers = []
+                else:
+                    # ensure 'range' exists
+                    if 'range' not in mail_receivers_raw:
+                        # estimate a reasonable range based on values length and columns
+                        cols = max((len(r) for r in values), default=1)
+                        end_col = chr(64 + cols) if cols <= 26 else 'Z'
+                        mail_receivers_raw['range'] = f'Overzicht!A1:{end_col}{len(values)}'
+                    mail_receivers = mail_receivers_raw.get('values', [])
+                    mail_receivers_dict = self.transform_raw_to_dict(mail_receivers_raw)
+                    sender.add_sheet_info(spreadsheet_id=self.spreadsheet_id, mail_receivers_dict=mail_receivers_dict)
+            else:
+                # unexpected return type: skip mail receivers
+                mail_receivers = []
+                mail_receivers_dict = []
         except HttpError as exc:
             if exc.error_details == 'Unable to parse range: Overzicht!emails':
                 logging.info(f'{self.__class__.__name__} does not have a range Overzicht!emails')
@@ -135,45 +158,104 @@ class DQReport(Report):
         self.last_output_meta = meta
         logging.info('Output writer meta: %s', meta)
 
-        # historiek (keep existing Google Sheets behavior)
-        historiek_data = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self.spreadsheet_id,
-                                                             sheet_name='Historiek',
-                                                             sheetrange='B2:B2')
-        last_data_update = None
-        if len(historiek_data) > 0:
-            last_data_update = historiek_data[0][0]
-        if last_data_update != self.last_data_update:
-            sheets_wrapper.insert_empty_rows(spreadsheet_id=self.spreadsheet_id, sheet_name='Historiek', start_cell='A2',
-                                             number_of_rows=1)
-
-        sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='Historiek', start_cell='A2',
-                                           data=[[self.now, self.last_data_update, len(qr.rows)]])
-
-        # summary sheet (unchanged)
-        summary_links = sheets_wrapper.read_celldata_from_sheet(spreadsheet_id=self.summary_sheet_id, sheet_name='Overzicht',
-                                                                sheetrange='B4:B')
-        rowFound = summary_links['startRow']
-        for i, summary_link in enumerate(summary_links['rowData']):
-            if 'values' not in summary_link:
-                continue
-            if 'hyperlink' not in summary_link['values'][0]:
-                continue
-            if self.spreadsheet_id in summary_link['values'][0]['hyperlink']:
-                rowFound += i
-                break
-        sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.summary_sheet_id,
-                                           sheet_name='Overzicht',
-                                           start_cell='C' + str(rowFound + 1),
-                                           data=[[self.last_data_update, len(qr.rows)]])
-
-        # also write the query execution time into column H for this report's summary row
+        # historiek: instead of writing directly to sheets (which may be Google or Excel),
+        # stage an append_row payload for the aggregator to apply later. This avoids concurrent
+        # writers clobbering each other in parallel runs.
         try:
-            sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.summary_sheet_id,
-                                               sheet_name='Overzicht',
-                                               start_cell='H' + str(rowFound + 1),
-                                               data=[[query_time]])
-        except Exception:
-            pass
+            from outputs.summary_stager import stage_summary_update
+            staged_dir = self.output_settings.get('staged_dir') if isinstance(self.output_settings, dict) and self.output_settings.get('staged_dir') else None
+            # determine target workbook identifier for aggregator: prefer excel_filename if created
+            target_workbook = ctx.excel_filename if getattr(ctx, 'excel_filename', None) else self.spreadsheet_id
+
+            # compute rowFound safely from summary_links
+            try:
+                summary_links = sheets_wrapper.read_celldata_from_sheet(spreadsheet_id=self.summary_sheet_id, sheet_name='Overzicht',
+                                                                        sheetrange='B4:B')
+                rowFound = int(summary_links.get('startRow', 1))
+                for i, summary_link in enumerate(summary_links.get('rowData', [])):
+                    if 'values' not in summary_link:
+                        continue
+                    if 'hyperlink' not in summary_link['values'][0]:
+                        continue
+                    if self.spreadsheet_id in summary_link['values'][0].get('hyperlink', ''):
+                        rowFound += i
+                        break
+            except Exception:
+                rowFound = 4  # fallback
+
+            last_data_update = None
+            historiek_data = None
+            try:
+                historiek_data = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self.spreadsheet_id,
+                                                                     sheet_name='Historiek',
+                                                                     sheetrange='B2:B2')
+                if len(historiek_data) > 0:
+                    last_data_update = historiek_data[0][0]
+            except Exception:
+                last_data_update = None
+
+            # append historiek row
+            payload_hist = {
+                'operation': 'append_row',
+                'excel_filename': target_workbook if ctx.excel_filename else None,
+                'spreadsheet_id': None if ctx.excel_filename else self.spreadsheet_id,
+                'sheet': 'Historiek',
+                'row': [self.now, self.last_data_update, len(qr.rows)],
+                'meta': {'report': self.name}
+            }
+            # clean payload: remove None keys
+            if payload_hist['excel_filename'] is None:
+                del payload_hist['excel_filename']
+            if payload_hist['spreadsheet_id'] is None:
+                del payload_hist['spreadsheet_id']
+
+            stage_summary_update(payload_hist, staged_dir=staged_dir or 'RSA_OneDrive/staged_summaries')
+
+            # Summary sheet updates: write last_data_update and count into summary sheet 'Overzicht' at C{rowFound+1}
+            # and write query_time into H{rowFound+1}. We'll stage write_cell operations.
+            # determine the output workbook for the summary sheet (self.summary_sheet_id)
+            summary_target = self.summary_sheet_id
+            # stage last_data_update+count
+            c_cell = 'C' + str(rowFound + 1)
+            payload_summary_c = {
+                'operation': 'write_cell',
+                'spreadsheet_id': summary_target,
+                'sheet': 'Overzicht',
+                'cell': c_cell,
+                'value': [self.last_data_update, len(qr.rows)],
+                'meta': {'report': self.name}
+            }
+            # stage query_time (single cell)
+            h_cell = 'H' + str(rowFound + 1)
+            payload_summary_h = {
+                'operation': 'write_cell',
+                'spreadsheet_id': summary_target,
+                'sheet': 'Overzicht',
+                'cell': h_cell,
+                'value': query_time,
+                'meta': {'report': self.name}
+            }
+            stage_summary_update(payload_summary_c, staged_dir=staged_dir or 'RSA_OneDrive/staged_summaries')
+            stage_summary_update(payload_summary_h, staged_dir=staged_dir or 'RSA_OneDrive/staged_summaries')
+
+        except Exception as ex:
+            # fallback to original direct writes if staging isn't available
+            try:
+                logging.warning(f'Summary staging failed: {ex}; falling back to direct writes')
+                if last_data_update != self.last_data_update:
+                    sheets_wrapper.insert_empty_rows(spreadsheet_id=self.spreadsheet_id, sheet_name='Historiek', start_cell='A2',
+                                                     number_of_rows=1)
+                sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='Historiek', start_cell='A2',
+                                                   data=[[self.now, self.last_data_update, len(qr.rows)]])
+                sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.summary_sheet_id, sheet_name='Overzicht', start_cell='C' + str(rowFound + 1),
+                                                   data=[[self.last_data_update, len(qr.rows)]])
+                try:
+                    sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.summary_sheet_id, sheet_name='Overzicht', start_cell='H' + str(rowFound + 1),
+                                                       data=[[query_time]])
+                except Exception:
+                    pass
+            except Exception:
+                logging.exception('Failed both staging and fallback writes for historiek/summary')
 
         if mail_receivers is not None:
             self.send_mails(sender=sender, named_range=mail_receivers, previous_result=previous_result,

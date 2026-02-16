@@ -19,6 +19,7 @@ from lib.reports.instantiator import create_report_instance, discover_and_instan
 from lib.reports.pipeline_runner import run_pipelines_by_datasource
 from outputs.sheets_wrapper import SingleSheetsWrapper
 from SettingsManager import SettingsManager
+from scripts.aggregate_summaries import process_once
 
 ROOT_DIR = (os.path.dirname(os.path.abspath(__file__)))
 BRUSSELS = ZoneInfo("Europe/Brussels")
@@ -47,6 +48,8 @@ class ReportLoopRunner:
                 out_dir = str(Path(self.settings_path).resolve().parents[0] / 'RSA_OneDrive')
             from outputs.excel_wrapper import SingleExcelWriter
             SingleExcelWriter.init(output_dir=out_dir)
+            # remember excel output dir for aggregator usage
+            self.excel_output_dir = Path(out_dir)
         except Exception:
             pass
 
@@ -205,7 +208,20 @@ class ReportLoopRunner:
         self.adjust_mailed_info_in_sheets(sender=self.mail_sender)
 
         logging.info(f'{datetime.now(tz=pytz.timezone("Europe/Brussels"))}: '
-                      f'sent all mails_to_send ({len(list(self.mail_sender.mails_to_send))})')
+                       f'sent all mails_to_send ({len(list(self.mail_sender.mails_to_send))})')
+        # After all reports are done, aggregate staged summary updates.
+        try:
+            staged_dir = (self.excel_output_dir / 'staged_summaries') if hasattr(self, 'excel_output_dir') else Path('RSA_OneDrive') / 'staged_summaries'
+            output_dir = self.excel_output_dir if hasattr(self, 'excel_output_dir') else Path('RSA_OneDrive')
+            logging.info(f'Running summary aggregator for staged dir {staged_dir}')
+            # process_once returns number of processed files
+            try:
+                processed = process_once(staged_dir, output_dir, limit=1000, dry_run=False)
+                logging.info(f'Aggregate summaries processed {processed} files')
+            except Exception as ex:
+                logging.error(f'Failed running aggregate_summaries.process_once: {ex}')
+        except Exception as ex:
+            logging.error(f'Could not run aggregator: {ex}')
 
     def _run_parallel_by_datasource(self, report_names: list[str] | None = None):
         """Run reports in parallel, grouped by datasource to avoid DB contention.
@@ -251,7 +267,18 @@ class ReportLoopRunner:
                 pass
 
         logging.info(f'{datetime.now(tz=pytz.timezone("Europe/Brussels"))}: parallel execution complete')
-
+        # After parallel pipelines completed, run the aggregator once to apply staged summaries
+        try:
+            staged_dir = (self.excel_output_dir / 'staged_summaries') if hasattr(self, 'excel_output_dir') else Path('RSA_OneDrive') / 'staged_summaries'
+            output_dir = self.excel_output_dir if hasattr(self, 'excel_output_dir') else Path('RSA_OneDrive')
+            logging.info(f'Running summary aggregator for staged dir {staged_dir} (parallel mode)')
+            try:
+                processed = process_once(staged_dir, output_dir, limit=1000, dry_run=False)
+                logging.info(f'Aggregate summaries processed {processed} files')
+            except Exception as ex:
+                logging.error(f'Failed running aggregate_summaries.process_once: {ex}')
+        except Exception as ex:
+            logging.error(f'Could not run aggregator after parallel pipelines: {ex}')
 
     @staticmethod
     def adjust_mailed_info_in_sheets(sender: MailSender):
