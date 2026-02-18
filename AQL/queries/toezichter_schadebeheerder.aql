@@ -1,0 +1,16 @@
+FOR a IN assets
+  LET toezichter = (a.tz && a.tz.Toezicht_toezichter && a.tz.Toezicht_toezichter.DtcToezichter_email) ? a.tz.Toezicht_toezichter.DtcToezichter_email : null
+  LET toezichtgroep = (a.tz && a.tz.Toezicht_toezichtgroep && a.tz.Toezicht_toezichtgroep.DtcToezichtGroep_naam) ? a.tz.Toezicht_toezichtgroep.DtcToezichtGroep_naam : null
+  LET schadebeheerder = (a.tz && a.tz.Schadebeheerder_schadebeheerder && a.tz.Schadebeheerder_schadebeheerder.DtcBeheerder_naam) ? a.tz.Schadebeheerder_schadebeheerder.DtcBeheerder_naam : null
+  LET schadebeheerder_referentie = (a.tz && a.tz.Schadebeheerder_schadebeheerder && a.tz.Schadebeheerder_schadebeheerder.DtcBeheerder_referentie) ? a.tz.Schadebeheerder_schadebeheerder.DtcBeheerder_referentie : null
+
+  RETURN {
+    _key: a._key,
+    naam: a.AIMNaamObject_naam,
+    naampad: a.NaampadObject_naampad,
+    toestand: a.toestand,
+    toezichter: toezichter,
+    toezichtsgroep: toezichtgroep,
+    schadebeheerder: schadebeheerder
+    schadebeheerder_referentie: schadebeheerder_referentie
+  }

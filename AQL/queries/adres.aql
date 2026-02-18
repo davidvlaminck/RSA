@@ -1,0 +1,27 @@
+FOR a IN assets
+    LET adres_json = (a.loc && a.loc.Locatie_puntlocatie && a.loc.Locatie_puntlocatie.DtcPuntlocatie_adres) ? a.loc.Locatie_puntlocatie.DtcPuntlocatie_adres : null
+    LET provincie = adres_json && adres_json.DtcAdres_provincie ? adres_json.DtcAdres_provincie : null
+    LET adres_parts = [
+      adres_json && adres_json.DtcAdres_straat ? adres_json.DtcAdres_straat : null,
+      adres_json && adres_json.DtcAdres_nummer ? adres_json.DtcAdres_nummer : null,
+      adres_json && adres_json.DtcAdres_bus ? adres_json.DtcAdres_bus : null,
+      adres_json && adres_json.DtcAdres_postcode ? adres_json.DtcAdres_postcode : null,
+      adres_json && adres_json.DtcAdres_gemeente ? adres_json.DtcAdres_gemeente : null
+    ]
+    LET adres_arr = (FOR p IN adres_parts FILTER p != null RETURN p)
+    LET adres = LENGTH(adres_arr) > 0 ? CONCAT_SEPARATOR(" ", adres_arr) : null
+
+    LET locatie_coordinaten = (c.loc && c.loc.Locatie_geometrie) ? c.loc.Locatie_geometrie : null
+    LET locatie_omschrijving = (c.loc && c.loc.Locatie_omschrijving) ? c.loc.Locatie_omschrijving : null
+
+
+    /* Project only the fields we need later to keep memory small */
+    RETURN {
+      _key: a._key,
+      naam= a.naam,
+      loc: a.loc,
+      locatie_coordinaten: locatie_coordinaten,
+      locatie_omschrijving: locatie_omschrijving,
+      adres: adres,
+      provincie: adres_json && adres_json.DtcAdres_provincie ? adres_json.DtcAdres_provincie : null,
+    }

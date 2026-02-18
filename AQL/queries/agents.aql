@@ -1,0 +1,7 @@
+FOR a IN agents
+  RETURN {
+    identificator: a.purl.Agent_agentId.DtcIdentificator_identificator,
+    naam: a.purl.Agent_naam,
+    ovoCode: a.tz.Agent_ovoCode,
+    voId: a.tz.Agent_voId
+  }
