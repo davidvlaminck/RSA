@@ -61,3 +61,67 @@ class Report0101(BaseReport):
 
     def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)
+
+aql_query = """
+/* Report0101 Vplankoppelingen */
+LET vr1_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "lgc:installatie#ITSApp-RIS" LIMIT 1 RETURN at._key)
+LET vr2_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "lgc:installatie#VRLegacy" LIMIT 1 RETURN at._key)
+
+/* Select candidate assets, filter by assettype + active */
+LET candidates = (
+  FOR a IN assets
+    FILTER
+      a.AIMDBStatus_isActief == true
+      AND
+      (a.assettype_key == vr1_key OR a.assettype_key == vr2_key)
+
+    /* Project only the fields we need later to keep memory small */
+    RETURN {
+      _key: a._key,
+      naam: a.AIMNaamObject_naam,
+      naampad: a.NaampadObject_naampad,
+      naampad_parent: a.naampad_parent,
+      toestand: a.toestand
+    }
+)
+
+
+/* 2) Iterate candidates
+      For vplankoppelingenwe still may call DOCUMENT(...) for each vplankoppeling (these are fewer)
+*/
+FOR c IN candidates
+  LET vplankoppelingen = (
+    FOR vplan IN vplankoppelingen
+      FILTER vplan.asset_key == c._key
+      RETURN {
+        vplan_uuid: vplan.vplan_uuid,
+        vplan_nummer: vplan.vplan_nummer,
+        inDienstDatum: vplan.inDienstDatum,
+        uitDienstDatum: vplan.uitDienstDatum
+      }
+  )
+  FILTER length(vplankoppelingen) > 0
+
+  // TO DO: voeg het aantal jaar toe dat het plan in dienst is. 
+  /*
+  provincie
+  gemeente
+  indienstdatum
+  uitdienstdatum
+  aantal_jaar_in_dienst
+  vplannummer
+  vplannummer_kort
+  commentaar? >> Mist in arangoDB ?
+  edeltadossiernummer >> Bestek
+  aannemernaam >> bestek
+  dataconflicten >> nazien hoe deze wordt gereconstrueerd.
+  */
+
+  RETURN {
+    uuid: c._key,
+    naam: c.naam,
+    naampad: c.naampad,
+    toestand: c.toestand,
+    vplankoppelingen: vplankoppelingen
+  }
+"""
