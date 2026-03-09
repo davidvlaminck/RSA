@@ -78,6 +78,7 @@ LET candidates = (
     /* Project only the fields we need later to keep memory small */
     RETURN {
       _key: a._key,
+      actief: a.AIMDBStatus_isActief,
       naam: a.AIMNaamObject_naam,
       naampad: a.NaampadObject_naampad,
       naampad_parent: a.naampad_parent,
@@ -143,25 +144,34 @@ FOR c IN candidates
       ? DATE_DIFF(left(vplan.inDienstDatum, 10), DATE_NOW(), "years")
       : DATE_DIFF(left(vplan.inDienstDatum, 10), left(vplan.uitDienstDatum, 10), "years")
   LET vplan_nummer_kort = vplan.vplan_nummer ? left(vplan.vplan_nummer, 7) : null
+  LET tien_jaar_oud = jarenInDienst >= 10 // true if jarenInDienst greater than 10, else false
+
+  SORT c.AIMDBStatus_isActief DESC, c.naampad ASC, vplan.inDienstDatum DESC
 
   RETURN {
     uuid: c._key,
-    naam: c.naam,
+    //naam: c.naam,
+    installatie: regex_matches(c.naampad, '^[^/]{1,10}', false)[0],
     naampad: c.naampad,
+    actief: c.AIMDBStatus_isActief,
     toestand: c.toestand,
-    vplan_uuid: vplan.vplan_uuid,
-    vplan_nummer: vplan.vplan_nummer,
-    vplan_nummer_kort: vplan_nummer_kort,
-    vplan_commentaar: null,
-    inDienstDatum: vplan.inDienstDatum,
-    uitDienstDatum: vplan.uitDienstDatum,
-    jarenInDienst: jarenInDienst,
-    provincie: provincie,
-    gemeente: gemeente,
-    adres: adres,
+    adres_gemeente: gemeente,
+    adres_provincie: provincie,
+    indienstdatum: vplan.inDienstDatum,
+    uitdienstdatum: vplan.uitDienstDatum,
+    // vplan_uuid: vplan.vplan_uuid,
+    vplan_nr: vplan.vplan_nummer,
+    vplan_nr_kort: vplan_nummer_kort,
+    commentaar: 'onbeschikbaar',
+    edeltadossiernummer: meest_recent_bestek.dossiernummer,
+    aannemernaam: meest_recent_bestek.aannemer,
+    tien_jaar_oud: tien_jaar_oud,
+    dataconflicten: null, // to implement
+    //jarenInDienst: jarenInDienst,
+    //adres: adres,
     //alle_bestekken: asset_bestekken,
-    recent_bestek: meest_recent_bestek,
-    recent_bestek_dossiernummer: meest_recent_bestek.dossiernummer,
-    recent_bestek_aannemer: meest_recent_bestek.aannemer
+    //recent_bestek: meest_recent_bestek,
+    //recent_bestek_dossiernummer: meest_recent_bestek.dossiernummer,
+    //recent_bestek_aannemer: meest_recent_bestek.aannemer
   }
 """
