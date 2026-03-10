@@ -8,6 +8,7 @@ import shutil
 import time
 import importlib
 import warnings
+import logging
 
 # lazy-loaded openpyxl handles
 openpyxl = None
@@ -60,6 +61,10 @@ def _ensure_openpyxl_loaded():
         load_workbook = None
         raise
 
+
+# module logger
+logger = logging.getLogger(__name__)
+
 from datasources.base import QueryResult
 from .base import OutputWriteContext
 
@@ -78,7 +83,13 @@ class ExcelOutput:
     name = "Excel"
 
     def __init__(self, output_dir: str = "RSA_OneDrive"):
-        self.output_dir = Path(output_dir)
+        # If a relative path is provided, resolve it against the repository root so
+        # running scripts from inside `scripts/` doesn't create `scripts/RSA_OneDrive`.
+        out = Path(output_dir)
+        if not out.is_absolute():
+            repo_root = Path(__file__).resolve().parents[1]
+            out = repo_root / out
+        self.output_dir = out.resolve()
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
     # --- helpers -----------------------------------------------------------------
@@ -90,9 +101,19 @@ class ExcelOutput:
                 return float(val)
             except Exception:
                 return str(val)
-        if isinstance(val, (datetime.datetime, datetime.date)):
-            # use ISO-format for clarity (no timezone conversion here)
-            return val.isoformat()
+        if isinstance(val, datetime.datetime):
+            # normalize datetimes to UTC and format without timezone info to match summary format
+            try:
+                if val.tzinfo is None:
+                    # assume UTC for naive datetimes
+                    dt_utc = val.replace(tzinfo=datetime.timezone.utc)
+                else:
+                    dt_utc = val.astimezone(datetime.timezone.utc)
+                return dt_utc.strftime('%Y-%m-%d %H:%M:%S')
+            except Exception:
+                return str(val)
+        if isinstance(val, datetime.date):
+            return val.strftime('%Y-%m-%d')
         return val
 
     def iter_rows_from_data(self, headers: List[str], rows: Iterable[Iterable[Any]]) -> Iterable[List[Any]]:
@@ -105,12 +126,10 @@ class ExcelOutput:
             yield [self._normalize_value(c) for c in r]
 
     def backup_file(self, workbook_path: Path) -> Path:
-        if not workbook_path.exists():
-            return workbook_path
-        ts = datetime.datetime.now().strftime('%Y%m%dT%H%M%S')
-        backup = workbook_path.with_name(f"{workbook_path.stem}_backup_{ts}{workbook_path.suffix}")
-        shutil.copy2(workbook_path, backup)
-        return backup
+        # No-op: do not create backups by default. Backups are an explicit operational
+        # action and can be created with scripts/create_backups.py when needed.
+        # Keep function for API compatibility; return original path unchanged.
+        return workbook_path
 
     def _atomic_save_workbook(self, wb, workbook_path: Path) -> None:
         """Save workbook to a temporary file and atomically replace the target path.
@@ -168,6 +187,11 @@ class ExcelOutput:
             ws_resultaat = wb.create_sheet('Resultaat')
             # atomic save
             self._atomic_save_workbook(wb, workbook_path)
+            # log creation
+            try:
+                self._log_file_change(str(Path(workbook_path).resolve()), 'CREATED')
+            except Exception:
+                pass
         return workbook_path
 
     def create_sheet(self, workbook_path: Path, sheet_name: str, clear_if_exists: bool = True) -> None:
@@ -185,6 +209,10 @@ class ExcelOutput:
         else:
             wb.create_sheet(sheet_name)
         wb.save(workbook_path)
+        try:
+            self._log_file_change(str(Path(wb_path).resolve()), 'MODIFIED')
+        except Exception:
+            pass
 
     def iter_rows(self, a, b=None) -> Iterator[list[Any]]:
         """Dual-purpose iter_rows:
@@ -242,6 +270,10 @@ class ExcelOutput:
             wb.remove(ws)
             wb.create_sheet(sheet_name, idx)
             wb.save(workbook_path)
+        try:
+            self._log_file_change(str(Path(workbook_path).resolve()), 'MODIFIED')
+        except Exception:
+            pass
 
     # --- compatibility helpers that mimic SheetsWrapper (read-focused) -----------------
     def _resolve_workbook_path(self, spreadsheet_id_or_path: str | Path) -> Path:
@@ -260,16 +292,18 @@ class ExcelOutput:
         candidate = Path(self.output_dir) / sp
         if candidate.exists():
             return candidate
-        # try mapping spreadsheet id -> filename
+        # try mapping spreadsheet id -> filename (log any issues)
         try:
             from outputs.spreadsheet_map import lookup
             mapped = lookup(sp)
+            logger.debug('Spreadsheet id lookup for "%s" -> %s', sp, mapped)
             if mapped:
                 candidate_map = Path(self.output_dir) / mapped
+                logger.debug('Candidate mapped path: %s (exists=%s)', candidate_map, candidate_map.exists())
                 if candidate_map.exists():
                     return candidate_map
-        except Exception:
-            pass
+        except Exception as ex:
+            logger.exception('Failed to lookup spreadsheet mapping for %s: %s', sp, ex)
         candidate_x = Path(self.output_dir) / (sp + '.xlsx')
         return candidate_x
 
@@ -435,7 +469,8 @@ class ExcelOutput:
 
         _ensure_openpyxl_loaded()
         wb_path = self._resolve_workbook_path(spreadsheet_id)
-        # ensure workbook exists
+        workbook_existed = wb_path.exists()
+         # ensure workbook exists
         if not wb_path.exists():
             self.create_workbook_if_missing(wb_path)
 
@@ -473,6 +508,12 @@ class ExcelOutput:
                     os.remove(tmp_name)
             except Exception:
                 pass
+        # log change
+        try:
+            action = 'MODIFIED' if workbook_existed else 'CREATED'
+            self._log_file_change(str(Path(wb_path).resolve()), action)
+        except Exception:
+            pass
 
     def update_row_by_adding_number(self, spreadsheet_id: str | Path, sheet_name: str, cell: str, delta: int) -> None:
         """Read integer from `cell`, add `delta`, and write it back using atomic save.
@@ -486,8 +527,9 @@ class ExcelOutput:
 
         _ensure_openpyxl_loaded()
         wb_path = self._resolve_workbook_path(spreadsheet_id)
+        workbook_existed = wb_path.exists()
 
-        # ensure workbook exists
+         # ensure workbook exists
         if not wb_path.exists():
             self.create_workbook_if_missing(wb_path)
 
@@ -527,6 +569,12 @@ class ExcelOutput:
                     os.remove(tmp_name)
             except Exception:
                 pass
+        # log change
+        try:
+            action = 'MODIFIED' if workbook_existed else 'CREATED'
+            self._log_file_change(str(Path(wb_path).resolve()), action)
+        except Exception:
+            pass
 
     def find_first_nonempty_row_from_starting_cell(self, spreadsheet_id: str | Path, sheet_name: str, start_cell: str, max_rows: int = 1000000) -> int:
         """Find the first non-empty row in the column of start_cell, searching up to max_rows rows.
@@ -591,6 +639,11 @@ class ExcelOutput:
             self._atomic_save_workbook(wb, wb_path)
         except Exception:
             wb.save(wb_path)
+        # log modification
+        try:
+            self._log_file_change(str(Path(wb_path).resolve()), 'MODIFIED')
+        except Exception:
+            pass
 
     # --- core write function ----------------------------------------------------
     def write_data_to_sheet(self, workbook_path: Path, sheet_name: str, rows: Iterable[Iterable[Any]],
@@ -679,6 +732,12 @@ class ExcelOutput:
                     raise
 
         elapsed = time.time() - start_time
+        # log the file change: CREATED if it did not exist at start, else MODIFIED
+        try:
+            action = 'MODIFIED' if workbook_exists else 'CREATED'
+            self._log_file_change(str(Path(workbook_path).resolve()), action)
+        except Exception:
+            pass
         return {'rows_written': rows_written, 'elapsed_seconds': elapsed, 'file': str(workbook_path)}
 
     # --- compatibility entrypoint used by DQReport --------------------------------
@@ -729,6 +788,20 @@ class ExcelOutput:
         # update summary/historiek is still performed by DQReport via Google Sheets wrapper
         return meta
 
+    def _log_file_change(self, workbook_path: str, action: str) -> None:
+        """Helper: append a file change entry by invoking scripts/file_change_log.py.
+
+        Use subprocess to avoid importing scripts as a package. Fail silently on errors.
+        """
+        try:
+            import subprocess, sys
+            repo_root = Path(__file__).resolve().parents[1]
+            log_script = repo_root / 'scripts' / 'file_change_log.py'
+            if not log_script.exists():
+                return
+            subprocess.run([sys.executable, str(log_script), '--action', action, '--path', str(workbook_path)], check=False)
+        except Exception:
+            pass
 
 
 # Export
