@@ -84,6 +84,12 @@ FOR c IN candidates
     LET vplan_nummer_kort = vplan.vplan_nummer ? LEFT(vplan.vplan_nummer, 7) : null
     LET tien_jaar_oud = jarenInDienst >= 10
 
+    /* safe access to geometry coordinates (longitude, latitude) */
+    LET geom = (c.loc && c.loc.Locatie_puntlocatie && c.loc.Locatie_puntlocatie.DtcPuntlocatie_locatie && c.loc.Locatie_puntlocatie.DtcPuntlocatie_locatie.geometry) ? c.loc.Locatie_puntlocatie.DtcPuntlocatie_locatie.geometry : null
+    LET coords = (geom && geom.coordinates) ? geom.coordinates : null
+    LET longitude = (coords ? coords[0] : null)
+    LET latitude = (coords ? coords[1] : null)
+
     SORT c.AIMDBStatus_isActief DESC, c.naampad ASC, vplan.inDienstDatum DESC
 
     RETURN {
@@ -92,6 +98,8 @@ FOR c IN candidates
       naampad: c.naampad,
       actief: c.AIMDBStatus_isActief,
       toestand: c.toestand,
+      longitude: longitude,
+      latitude: latitude,
       adres_gemeente: gemeente,
       adres_provincie: provincie,
       indienstdatum: vplan.inDienstDatum,
@@ -198,7 +206,7 @@ def main():
 
     if args.example:
         sample = [
-            {'uuid': '1', 'installatie': 'A', 'naampad': 'a/b', 'actief': True, 'aant_bestekken': [{'dossiernummer': 'D1'}]},
+            {'uuid': '1', 'installatie': 'A', 'naampad': 'a/b', 'actief': True, 'aant_bestekken': [{'dossiernummer': 'D1'}], 'longitude': 4.3, 'latitude': 51.1},
             {'uuid': '2', 'installatie': 'B', 'naampad': 'c/d', 'actief': False},
         ]
         write_csv_from_rows(iter(sample), out_path)
