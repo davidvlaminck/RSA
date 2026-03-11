@@ -41,7 +41,8 @@ LET candidates = (
       naampad_parent: a.naampad_parent,
       toestand: a.toestand,
       loc: a.loc,
-      bs: a.bs
+      bs: a.bs,
+      geometry: a.geometry
     }
 )
 
@@ -85,18 +86,25 @@ FOR c IN candidates
     LET tien_jaar_oud = jarenInDienst >= 10
 
     /* safe access to geometry coordinates (longitude, latitude) */
-    LET geom = (c.loc && c.loc.Locatie_puntlocatie && c.loc.Locatie_puntlocatie.DtcPuntlocatie_locatie && c.loc.Locatie_puntlocatie.DtcPuntlocatie_locatie.geometry) ? c.loc.Locatie_puntlocatie.DtcPuntlocatie_locatie.geometry : null
-    LET coords = (geom && geom.coordinates) ? geom.coordinates : null
+    LET coords = (c.geometry && c.geometry.coordinates) ? c.geometry.coordinates : null
     LET longitude = (coords ? coords[0] : null)
     LET latitude = (coords ? coords[1] : null)
 
-    SORT c.AIMDBStatus_isActief DESC, c.naampad ASC, vplan.inDienstDatum DESC
+    /* dataconflicten translation from SQL CASE */
+    LET vplan_has_id = (HAS(vplan, '_key') && vplan._key != null) || (HAS(vplan, 'uuid') && vplan.uuid != null) || (HAS(vplan, 'vplan_uuid') && vplan.vplan_uuid != null)
+    LET dataconflicten = (
+      ((NOT vplan_has_id) && c.actief == true && c.toestand == 'in-gebruik')
+      || ((vplan.uitDienstDatum == null) && vplan_has_id && c.actief == true && (c.toestand != 'in-gebruik' && c.toestand != 'overgedragen'))
+      || ((provincie == null || coords == null) && c.actief == true)
+    )
+
+    SORT c.actief DESC, c.naampad ASC, vplan.inDienstDatum DESC
 
     RETURN {
       uuid: c._key,
       installatie: (c.naampad ? regex_matches(c.naampad, '^[^/]{1,10}', false)[0] : null),
       naampad: c.naampad,
-      actief: c.AIMDBStatus_isActief,
+      actief: c.actief,
       toestand: c.toestand,
       longitude: longitude,
       latitude: latitude,
@@ -110,7 +118,7 @@ FOR c IN candidates
       edeltadossiernummer: (meest_recent_bestek != null ? meest_recent_bestek.dossiernummer : null),
       aannemernaam: (meest_recent_bestek != null ? meest_recent_bestek.aannemer : null),
       tien_jaar_oud: tien_jaar_oud,
-      dataconflicten: null
+      dataconflicten: dataconflicten
     }
 '''
 
