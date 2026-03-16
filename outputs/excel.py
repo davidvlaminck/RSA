@@ -164,53 +164,38 @@ class ExcelOutput:
     def create_workbook_if_missing(self, workbook_path: Path) -> Path:
         workbook_path = Path(workbook_path)
         _ensure_openpyxl_loaded()
-        if not workbook_path.exists():
-            wb = Workbook()
-            # Create default sheets in a sensible order: Overzicht, Historiek, Resultaat
-            # Remove default active sheet and recreate
-            try:
-                # remove default active
-                default = wb.active
-                wb.remove(default)
-            except Exception:
-                pass
-            # Overzicht sheet: header area for mail receivers and summary links
-            ws_overzicht = wb.create_sheet('Overzicht')
-            # common header row (example): Mail, Frequency, Last sent
-            ws_overzicht.append(['mail', 'frequency', 'last_sent'])
-
-            # Historiek sheet: header row for history entries
-            ws_historiek = wb.create_sheet('Historiek')
-            ws_historiek.append(['timestamp', 'laatste_sync_databron', 'aantal'])
-
-            # Resultaat sheet: will be written by reports
-            ws_resultaat = wb.create_sheet('Resultaat')
-            # atomic save
-            self._atomic_save_workbook(wb, workbook_path)
-            # log creation
-            try:
-                self._log_file_change(str(Path(workbook_path).resolve()), 'CREATED')
-            except Exception:
-                pass
+        # Do not create a new workbook automatically. Silent creation caused the original
+        # 'Overzicht' workbook to be replaced/renamed to an id-based filename. Creation of
+        # workbooks should be explicit. If the workbook does not exist, return the intended
+        # path and let the caller create it intentionally.
         return workbook_path
 
     def create_sheet(self, workbook_path: Path, sheet_name: str, clear_if_exists: bool = True) -> None:
         workbook_path = Path(workbook_path)
         _ensure_openpyxl_loaded()
+        # Do not implicitly create a workbook here; create_workbook_if_missing returns the path
+        # but no longer creates files automatically (to avoid accidental overwrite).
         self.create_workbook_if_missing(workbook_path)
+        if not workbook_path.exists():
+            # nothing to do if workbook is missing
+            return
         wb = load_workbook(workbook_path)
         if sheet_name in wb.sheetnames:
-            if clear_if_exists:
+            # Avoid destructive clearing for important summary sheets.
+            if clear_if_exists and sheet_name not in {"Overzicht", "Historiek"}:
                 ws = wb[sheet_name]
                 # remove all rows: easiest by recreating sheet
                 idx = wb.sheetnames.index(sheet_name)
                 wb.remove(ws)
                 wb.create_sheet(sheet_name, idx)
+            else:
+                # keep existing content
+                pass
         else:
             wb.create_sheet(sheet_name)
         wb.save(workbook_path)
         try:
-            self._log_file_change(str(Path(wb_path).resolve()), 'MODIFIED')
+            self._log_file_change(str(Path(workbook_path).resolve()), 'MODIFIED')
         except Exception:
             pass
 
@@ -305,6 +290,29 @@ class ExcelOutput:
         except Exception as ex:
             logger.exception('Failed to lookup spreadsheet mapping for %s: %s', sp, ex)
         candidate_x = Path(self.output_dir) / (sp + '.xlsx')
+
+        # If no exact file was found, try to discover an existing summary workbook in output_dir.
+        # This prevents creating a new file named after the spreadsheet id which would hide/replace
+        # the original '[RSA] Overzicht rapporten.xlsx' workbook.
+        try:
+            if Path(self.output_dir).exists():
+                for p in sorted(Path(self.output_dir).glob('*.xlsx')):
+                    try:
+                        _ensure_openpyxl_loaded()
+                        wb_tmp = load_workbook(p, read_only=True)
+                        if 'Overzicht' in wb_tmp.sheetnames or 'Historiek' in wb_tmp.sheetnames:
+                            # register mapping for future fast lookup if possible (non-persistent)
+                            try:
+                                from outputs.spreadsheet_map import add_mapping
+                                add_mapping(sp, p.name, persist=False)
+                            except Exception:
+                                pass
+                            return p
+                    except Exception:
+                        continue
+        except Exception:
+            pass
+
         return candidate_x
 
     def get_sheets_in_spreadsheet(self, spreadsheet_id: str) -> dict:

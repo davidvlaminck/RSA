@@ -84,10 +84,42 @@ class DQReport(Report):
                 mail_receivers = []
                 mail_receivers_dict = []
         except HttpError as exc:
-            if exc.error_details == 'Unable to parse range: Overzicht!emails':
+            # Common failure: Google API returns 403 when the service account/app has no access to the
+            # target spreadsheet. For robustness we try to fall back to the Excel-backed SheetsCompatAdapter
+            # (if available) or otherwise continue without mail receivers (safe default).
+            status = None
+            try:
+                status = getattr(exc, 'resp', None) and getattr(exc.resp, 'status', None)
+            except Exception:
+                status = None
+
+            if status == 403 or 'permission' in str(exc).lower() or 'permission_denied' in str(exc).lower():
+                logging.warning(f'Google Sheets permission error reading Overzicht!emails: {exc}; falling back to Excel or skipping mail receivers')
+                # Attempt to register Excel-backed adapter as a fallback and retry once
+                try:
+                    from outputs.excel_wrapper import SingleExcelWriter
+                    from outputs.sheets_compat import SheetsCompatAdapter
+                    if getattr(SingleExcelWriter, 'get_wrapper', None):
+                        SingleSheetsWrapper.sheets_wrapper = SheetsCompatAdapter(SingleExcelWriter.get_wrapper())
+                        sheets_wrapper = SingleSheetsWrapper.get_wrapper()
+                        try:
+                            mail_receivers_raw = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self.spreadsheet_id,
+                                                                                     sheet_name='Overzicht',
+                                                                                     sheetrange='emails', return_raw_results=True)
+                        except Exception:
+                            mail_receivers_raw = []
+                    else:
+                        mail_receivers_raw = []
+                except Exception:
+                    # If any of the fallback steps fail, continue with empty receivers
+                    mail_receivers_raw = []
+            elif getattr(exc, 'error_details', None) == 'Unable to parse range: Overzicht!emails':
                 logging.info(f'{self.__class__.__name__} does not have a range Overzicht!emails')
+                mail_receivers_raw = []
             else:
-                raise exc
+                # Unknown HttpError: log and continue without mail receivers instead of failing the whole report
+                logging.warning(f'Unexpected HttpError while reading Overzicht!emails: {exc}; continuing without mail receivers')
+                mail_receivers_raw = []
 
         previous_result, latest_data_sync = self.get_historiek_record_info(sheets_wrapper)
 
