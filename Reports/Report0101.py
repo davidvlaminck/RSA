@@ -79,90 +79,294 @@ LET candidates = (
     /* Project only the fields we need later to keep memory small */
     RETURN {
       _key: a._key,
+      actief: a.AIMDBStatus_isActief,
       naam: a.AIMNaamObject_naam,
       naampad: a.NaampadObject_naampad,
       naampad_parent: a.naampad_parent,
       toestand: a.toestand,
       loc: a.loc,
-      bs: a.bs,
+      bs: a.bs
     }
 )
 
 
-/* 2) Iterate candidates
-      For vplankoppelingenwe still may call DOCUMENT(...) for each vplankoppeling (these are fewer)
-*/
+/* 2) Iterate candidates */
 FOR c IN candidates
   /* vplankoppelingen */
   FOR vplan IN vplankoppelingen
     FILTER vplan.asset_key == c._key
-/*  LET vplankoppelingen = (
+
+    /* adres */
+    LET adres_json = (c.loc && c.loc.Locatie_puntlocatie && c.loc.Locatie_puntlocatie.DtcPuntlocatie_adres) ? c.loc.Locatie_puntlocatie.DtcPuntlocatie_adres : null
+    LET provincie = adres_json && adres_json.DtcAdres_provincie ? adres_json.DtcAdres_provincie : null
+    LET gemeente = adres_json && adres_json.DtcAdres_gemeente ? adres_json.DtcAdres_gemeente : null
+    LET adres_parts = [
+      adres_json && adres_json.DtcAdres_straat ? adres_json.DtcAdres_straat : null,
+      adres_json && adres_json.DtcAdres_nummer ? adres_json.DtcAdres_nummer : null,
+      adres_json && adres_json.DtcAdres_bus ? adres_json.DtcAdres_bus : null,
+      adres_json && adres_json.DtcAdres_postcode ? adres_json.DtcAdres_postcode : null,
+      adres_json && adres_json.DtcAdres_gemeente ? adres_json.DtcAdres_gemeente : null
+    ]
+    LET adres_arr = (FOR p IN adres_parts FILTER p != null RETURN p)
+    LET adres = LENGTH(adres_arr) > 0 ? CONCAT_SEPARATOR(" ", adres_arr) : null
+
+    /* bestekkoppelingen */
+    LET asset_bestekken = (
+      FOR bk IN (c.bs && c.bs.Bestek_bestekkoppeling ? c.bs.Bestek_bestekkoppeling : [])
+          FILTER bk != null AND bk._to != null
+          LET b = DOCUMENT(bk._to)
+          FILTER b != null
+          RETURN {
+              dossiernummer: b.eDeltaDossiernummer ? b.eDeltaDossiernummer : null,
+              besteknummer: b.eDeltaBesteknummer ? b.eDeltaBesteknummer : null,
+              aannemer: b.aannemerNaam ? b.aannemerNaam : null,
+              van: bk.DtcBestekkoppeling_actiefVan ? bk.DtcBestekkoppeling_actiefVan : null,
+              tot: bk.DtcBestekkoppeling_actiefTot ? bk.DtcBestekkoppeling_actiefTot : null
+          }
+      )
+    LET meest_recent_bestek = (LENGTH(asset_bestekken) > 0 ? asset_bestekken[0] : null)
+
+    /* Calculate jarenInDienst */
+    LET jarenInDienst =
+      IS_NULL(vplan.uitDienstDatum)
+        ? DATE_DIFF(LEFT(vplan.inDienstDatum, 10), DATE_NOW(), "years")
+        : DATE_DIFF(LEFT(vplan.inDienstDatum, 10), LEFT(vplan.uitDienstDatum, 10), "years")
+    LET vplan_nummer_kort = vplan.vplan_nummer ? LEFT(vplan.vplan_nummer, 7) : null
+    LET tien_jaar_oud = jarenInDienst >= 10
+
+    SORT c.AIMDBStatus_isActief DESC, c.naampad ASC, vplan.inDienstDatum DESC
+
+    RETURN {
+      uuid: c._key,
+      installatie: (c.naampad ? regex_matches(c.naampad, '^[^/]{1,10}', false)[0] : null),
+      naampad: c.naampad,
+      actief: c.AIMDBStatus_isActief,
+      toestand: c.toestand,
+      adres_gemeente: gemeente,
+      adres_provincie: provincie,
+      indienstdatum: vplan.inDienstDatum,
+      uitdienstdatum: vplan.uitDienstDatum,
+      vplan_nr: vplan.vplan_nummer,
+      vplan_nr_kort: vplan_nummer_kort,
+      commentaar: (vplan.commentaar ? vplan.commentaar : 'onbeschikbaar'),
+      edeltadossiernummer: (meest_recent_bestek != null ? meest_recent_bestek.dossiernummer : null),
+      aannemernaam: (meest_recent_bestek != null ? meest_recent_bestek.aannemer : null),
+      tien_jaar_oud: tien_jaar_oud,
+      dataconflicten: null,
+      debug_asset_bestekken_is_array: IS_ARRAY(asset_bestekken),
+      debug_asset_bestekken_is_obj: IS_OBJECT(asset_bestekken),
+      debug_meest_recent_is_obj: IS_OBJECT(meest_recent_bestek),
+      debug_meest_recent_is_null: IS_NULL(meest_recent_bestek)
+
+    }
+"""
+
+aql_debug_query = """
+/* Debug variant: compute the same result rows, then for first 10 rows return attribute-level type info */
+LET vr1_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "lgc:installatie#ITSApp-RIS" LIMIT 1 RETURN at._key)
+LET vr2_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "lgc:installatie#VRLegacy" LIMIT 1 RETURN at._key)
+
+LET candidates = (
+  FOR a IN assets
+    FILTER a.AIMDBStatus_isActief == true
+      AND (a.assettype_key == vr1_key OR a.assettype_key == vr2_key)
+    RETURN {
+      _key: a._key,
+      actief: a.AIMDBStatus_isActief,
+      naam: a.AIMNaamObject_naam,
+      naampad: a.NaampadObject_naampad,
+      naampad_parent: a.naampad_parent,
+      toestand: a.toestand,
+      loc: a.loc,
+      bs: a.bs
+    }
+)
+
+LET rows = (
+  FOR c IN candidates
     FOR vplan IN vplankoppelingen
       FILTER vplan.asset_key == c._key
-      RETURN {
-        vplan_uuid: vplan.vplan_uuid,
-        vplan_nummer: vplan.vplan_nummer,
-        inDienstDatum: vplan.inDienstDatum,
-        uitDienstDatum: vplan.uitDienstDatum
-      }
-  )*/
-//  FILTER length(vplankoppelingen) > 0
 
-  /* adres */
-  LET adres_json = (c.loc && c.loc.Locatie_puntlocatie && c.loc.Locatie_puntlocatie.DtcPuntlocatie_adres) ? c.loc.Locatie_puntlocatie.DtcPuntlocatie_adres : null
-  LET provincie = adres_json && adres_json.DtcAdres_provincie ? adres_json.DtcAdres_provincie : null
-  LET gemeente = adres_json && adres_json.DtcAdres_gemeente ? adres_json.DtcAdres_gemeente : null
-  LET adres_parts = [
-    adres_json && adres_json.DtcAdres_straat ? adres_json.DtcAdres_straat : null,
-    adres_json && adres_json.DtcAdres_nummer ? adres_json.DtcAdres_nummer : null,
-    adres_json && adres_json.DtcAdres_bus ? adres_json.DtcAdres_bus : null,
-    adres_json && adres_json.DtcAdres_postcode ? adres_json.DtcAdres_postcode : null,
-    adres_json && adres_json.DtcAdres_gemeente ? adres_json.DtcAdres_gemeente : null
-  ]
-  LET adres_arr = (FOR p IN adres_parts FILTER p != null RETURN p)
-  LET adres = LENGTH(adres_arr) > 0 ? CONCAT_SEPARATOR(" ", adres_arr) : null
+      LET adres_json = (c.loc && c.loc.Locatie_puntlocatie && c.loc.Locatie_puntlocatie.DtcPuntlocatie_adres) ? c.loc.Locatie_puntlocatie.DtcPuntlocatie_adres : null
+      LET provincie = adres_json && adres_json.DtcAdres_provincie ? adres_json.DtcAdres_provincie : null
+      LET gemeente = adres_json && adres_json.DtcAdres_gemeente ? adres_json.DtcAdres_gemeente : null
+      LET adres_parts = [
+        adres_json && adres_json.DtcAdres_straat ? adres_json.DtcAdres_straat : null,
+        adres_json && adres_json.DtcAdres_nummer ? adres_json.DtcAdres_nummer : null,
+        adres_json && adres_json.DtcAdres_bus ? adres_json.DtcAdres_bus : null,
+        adres_json && adres_json.DtcAdres_postcode ? adres_json.DtcAdres_postcode : null,
+        adres_json && adres_json.DtcAdres_gemeente ? adres_json.DtcAdres_gemeente : null
+      ]
+      LET adres_arr = (FOR p IN adres_parts FILTER p != null RETURN p)
+      LET adres = LENGTH(adres_arr) > 0 ? CONCAT_SEPARATOR(" ", adres_arr) : null
 
-  // bestekkoppelingen
-  LET asset_bestekken = (
-    FOR bk IN (c.bs && c.bs.Bestek_bestekkoppeling ? c.bs.Bestek_bestekkoppeling : [])
-        FILTER bk != null AND bk._to != null
-        LET b = DOCUMENT(bk._to)
-        FILTER b != null
-        RETURN {
+      LET asset_bestekken = (
+        FOR bk IN (c.bs && c.bs.Bestek_bestekkoppeling ? c.bs.Bestek_bestekkoppeling : [])
+          FILTER bk != null AND bk._to != null
+          LET b = DOCUMENT(bk._to)
+          FILTER b != null
+          RETURN {
             dossiernummer: b.eDeltaDossiernummer ? b.eDeltaDossiernummer : null,
             besteknummer: b.eDeltaBesteknummer ? b.eDeltaBesteknummer : null,
             aannemer: b.aannemerNaam ? b.aannemerNaam : null,
             van: bk.DtcBestekkoppeling_actiefVan ? bk.DtcBestekkoppeling_actiefVan : null,
             tot: bk.DtcBestekkoppeling_actiefTot ? bk.DtcBestekkoppeling_actiefTot : null
+          }
+      )
+      LET meest_recent_bestek = (LENGTH(asset_bestekken) > 0 ? asset_bestekken[0] : null)
+
+      LET jarenInDienst =
+        IS_NULL(vplan.uitDienstDatum)
+          ? DATE_DIFF(LEFT(vplan.inDienstDatum, 10), DATE_NOW(), "years")
+          : DATE_DIFF(LEFT(vplan.inDienstDatum, 10), LEFT(vplan.uitDienstDatum, 10), "years")
+      LET vplan_nummer_kort = vplan.vplan_nummer ? LEFT(vplan.vplan_nummer, 7) : null
+      LET tien_jaar_oud = jarenInDienst >= 10
+
+      SORT c.AIMDBStatus_isActief DESC, c.naampad ASC, vplan.inDienstDatum DESC
+
+      RETURN {
+        uuid: c._key,
+        installatie: (c.naampad ? regex_matches(c.naampad, '^[^/]{1,10}', false)[0] : null),
+        naampad: c.naampad,
+        actief: c.AIMDBStatus_isActief,
+        toestand: c.toestand,
+        adres_gemeente: gemeente,
+        adres_provincie: provincie,
+        indienstdatum: vplan.inDienstDatum,
+        uitdienstdatum: vplan.uitDienstDatum,
+        vplan_nr: vplan.vplan_nummer,
+        vplan_nr_kort: vplan_nummer_kort,
+        commentaar: (vplan.commentaar ? vplan.commentaar : 'onbeschikbaar'),
+        edeltadossiernummer: (meest_recent_bestek != null ? meest_recent_bestek.dossiernummer : null),
+        aannemernaam: (meest_recent_bestek != null ? meest_recent_bestek.aannemer : null),
+        tien_jaar_oud: tien_jaar_oud,
+        dataconflicten: null,
+        debug_asset_bestekken_is_array: IS_ARRAY(asset_bestekken),
+        debug_asset_bestekken_is_obj: IS_OBJECT(asset_bestekken),
+        debug_meest_recent_is_obj: IS_OBJECT(meest_recent_bestek),
+        debug_meest_recent_is_null: IS_NULL(meest_recent_bestek)
+      }
+)
+
+/* For debugging: return the first 10 rows with per-attribute type checks */
+RETURN (
+  FOR r IN SLICE(rows, 0, 10)
+    LET attrs = (
+      FOR k IN ATTRIBUTES(r)
+        LET v = r[k]
+        RETURN {
+          key: k,
+          typeof: (
+            IS_OBJECT(v) ? 'object' : (
+            IS_ARRAY(v) ? 'array' : (
+            IS_STRING(v) ? 'string' : (
+            IS_NUMBER(v) ? 'number' : (
+            IS_BOOL(v) ? 'bool' : (
+            IS_NULL(v) ? 'null' : 'other')))))) ,
+          isNull: IS_NULL(v),
+          isString: IS_STRING(v),
+          isNumber: IS_NUMBER(v),
+          isBool: IS_BOOL(v),
+          isArray: IS_ARRAY(v),
+          isObject: IS_OBJECT(v)
         }
     )
-    LET meest_recent_bestek = asset_bestekken[0]
+    RETURN { uuid: r.uuid, attrs: attrs }
+)
+"""
 
-  /* Calculate jarenInDiendst */
-  LET jarenInDienst =
-    IS_NULL(vplan.uitDienstDatum)
-      ? DATE_DIFF(left(vplan.inDienstDatum, 10), DATE_NOW(), "years")
-      : DATE_DIFF(left(vplan.inDienstDatum, 10), left(vplan.uitDienstDatum, 10), "years")
-  LET vplan_nummer_kort = vplan.vplan_nummer ? left(vplan.vplan_nummer, 7) : null
+aql_safe_query = """
+/* Safe variant: compute rows, then for each row convert ARRAY/OBJECT values to JSON strings so rows are CSV-friendly. Returns all rows (not limited). */
+LET vr1_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "lgc:installatie#ITSApp-RIS" LIMIT 1 RETURN at._key)
+LET vr2_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "lgc:installatie#VRLegacy" LIMIT 1 RETURN at._key)
 
-  RETURN {
-    uuid: c._key,
-    naam: c.naam,
-    naampad: c.naampad,
-    toestand: c.toestand,
-    vplan_uuid: vplan.vplan_uuid,
-    vplan_nummer: vplan.vplan_nummer,
-    vplan_nummer_kort: vplan_nummer_kort,
-    vplan_commentaar: null,
-    inDienstDatum: vplan.inDienstDatum,
-    uitDienstDatum: vplan.uitDienstDatum,
-    jarenInDienst: jarenInDienst,
-    provincie: provincie,
-    gemeente: gemeente,
-    adres: adres,
-    //alle_bestekken: asset_bestekken,
-    recent_bestek: meest_recent_bestek,
-    recent_bestek_dossiernummer: meest_recent_bestek.dossiernummer,
-    recent_bestek_aannemer: meest_recent_bestek.aannemer
-  }
+LET candidates = (
+  FOR a IN assets
+    FILTER a.AIMDBStatus_isActief == true
+      AND (a.assettype_key == vr1_key OR a.assettype_key == vr2_key)
+    RETURN {
+      _key: a._key,
+      actief: a.AIMDBStatus_isActief,
+      naam: a.AIMNaamObject_naam,
+      naampad: a.NaampadObject_naampad,
+      naampad_parent: a.naampad_parent,
+      toestand: a.toestand,
+      loc: a.loc,
+      bs: a.bs
+    }
+)
+
+LET rows = (
+  FOR c IN candidates
+    FOR vplan IN vplankoppelingen
+      FILTER vplan.asset_key == c._key
+
+      LET adres_json = (c.loc && c.loc.Locatie_puntlocatie && c.loc.Locatie_puntlocatie.DtcPuntlocatie_adres) ? c.loc.Locatie_puntlocatie.DtcPuntlocatie_adres : null
+      LET provincie = adres_json && adres_json.DtcAdres_provincie ? adres_json.DtcAdres_provincie : null
+      LET gemeente = adres_json && adres_json.DtcAdres_gemeente ? adres_json.DtcAdres_gemeente : null
+
+      LET asset_bestekken = (
+        FOR bk IN (c.bs && c.bs.Bestek_bestekkoppeling ? c.bs.Bestek_bestekkoppeling : [])
+          FILTER bk != null AND bk._to != null
+          LET b = DOCUMENT(bk._to)
+          FILTER b != null
+          RETURN {
+            dossiernummer: b.eDeltaDossiernummer ? b.eDeltaDossiernummer : null,
+            besteknummer: b.eDeltaBesteknummer ? b.eDeltaBesteknummer : null,
+            aannemer: b.aannemerNaam ? b.aannemerNaam : null
+          }
+      )
+      LET meest_recent_bestek = (LENGTH(asset_bestekken) > 0 ? asset_bestekken[0] : null)
+
+      LET jarenInDienst =
+        IS_NULL(vplan.uitDienstDatum)
+          ? DATE_DIFF(LEFT(vplan.inDienstDatum, 10), DATE_NOW(), "years")
+          : DATE_DIFF(LEFT(vplan.inDienstDatum, 10), LEFT(vplan.uitDienstDatum, 10), "years")
+      LET vplan_nummer_kort = vplan.vplan_nummer ? LEFT(vplan.vplan_nummer, 7) : null
+      LET tien_jaar_oud = jarenInDienst >= 10
+
+      /* compute geometry and presence flags for dataconflicten logic */
+      LET geom = (c.loc && c.loc.Locatie_puntlocatie && c.loc.Locatie_puntlocatie.DtcPuntlocatie_locatie && c.loc.Locatie_puntlocatie.DtcPuntlocatie_locatie.geometry) ? c.loc.Locatie_puntlocatie.DtcPuntlocatie_locatie.geometry : null
+      LET vplan_has_id = (HAS(vplan, '_key') && vplan._key != null) || (HAS(vplan, 'uuid') && vplan.uuid != null) || (HAS(vplan, 'vplan_uuid') && vplan.vplan_uuid != null)
+
+      /* Translate SQL CASE logic to AQL booleans: */
+      LET dataconflicten = (
+        /* WHEN vplan.uuid IS NULL AND v.actief = TRUE AND v.toestand = 'in-gebruik' THEN TRUE */
+        ((NOT vplan_has_id) && c.AIMDBStatus_isActief == true && c.toestand == 'in-gebruik')
+        /* WHEN vplan.uitdienstdatum IS NULL AND vplan.uuid IS NOT NULL AND v.actief = TRUE AND v.toestand NOT IN ('in-gebruik', 'overgedragen') THEN TRUE */
+        || ((vplan.uitDienstDatum == null) && vplan_has_id && c.AIMDBStatus_isActief == true && (c.toestand != 'in-gebruik' && c.toestand != 'overgedragen'))
+        /* WHEN (l.adres_provincie IS NULL OR l.geometry IS NULL) AND v.actief = TRUE THEN TRUE */
+        || ((provincie == null || geom == null) && c.AIMDBStatus_isActief == true)
+      )
+
+      LET base_row = {
+        uuid: c._key,
+        installatie: (c.naampad ? regex_matches(c.naampad, '^[^/]{1,10}', false)[0] : null),
+        naampad: c.naampad,
+        actief: c.AIMDBStatus_isActief,
+        toestand: c.toestand,
+        adres_gemeente: gemeente,
+        adres_provincie: provincie,
+        indienstdatum: vplan.inDienstDatum,
+        uitdienstdatum: vplan.uitDienstDatum,
+        vplan_nr: vplan.vplannummer,
+        vplan_nr_kort: vplan_nummer_kort,
+        commentaar: (vplan.commentaar ? vplan.commentaar : 'onbeschikbaar'),
+        edeltadossiernummer: (meest_recent_bestek != null ? meest_recent_bestek.dossiernummer : null),
+        aannemernaam: (meest_recent_bestek != null ? meest_recent_bestek.aannemer : null),
+        tien_jaar_oud: tien_jaar_oud,
+        dataconflicten: dataconflicten
+      }
+
+      /* Convert any ARRAY/OBJECT attribute to a JSON string */
+      LET safe_pairs = (
+        FOR k IN ATTRIBUTES(base_row)
+          LET v = base_row[k]
+          LET safe_v = (IS_OBJECT(v) OR IS_ARRAY(v) ? JSON_STRINGIFY(v) : v)
+          RETURN { k: safe_v }
+      )
+      RETURN MERGE(safe_pairs)
+)
+
+RETURN rows
 """
