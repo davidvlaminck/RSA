@@ -162,6 +162,91 @@ class DQReport(Report):
         query_time = qr.query_time_seconds
         self.last_data_update = qr.last_data_update or ''
 
+        # If a per-report `last_update_query` is configured, prefer its result as the
+        # authoritative datasource last-update timestamp. This allows reports to run a
+        # lightweight metadata query (e.g., SELECT max(updated_at) FROM ...) and return
+        # the precise value to be shown in Overzicht column C.
+        if getattr(self, 'last_update_query', None):
+            try:
+                lu_qr = ds.execute(self.last_update_query)
+                # extract first cell of first row if available
+                lu_val = None
+                if lu_qr and getattr(lu_qr, 'rows', None):
+                    if len(lu_qr.rows) > 0:
+                        first = lu_qr.rows[0]
+                        if isinstance(first, dict):
+                            # pick first value
+                            vals = list(first.values())
+                            if vals:
+                                lu_val = vals[0]
+                        elif isinstance(first, (list, tuple)):
+                            if len(first) > 0:
+                                lu_val = first[0]
+                if lu_val is not None:
+                    # normalize using same helper used for historiek staging
+                    def _normalize_to_utc_string_local(val):
+                        from datetime import datetime, timezone
+                        import re
+                        if val is None:
+                            return ''
+                        if isinstance(val, (int, float)):
+                            return str(val)
+                        s = str(val).strip()
+                        if s == '':
+                            return ''
+                        try:
+                            iso = s.replace('Z', '+00:00') if s.endswith('Z') else s
+                            try:
+                                dt = datetime.fromisoformat(iso)
+                            except Exception:
+                                dt = None
+                            if dt is None:
+                                fmts = [
+                                    '%Y-%m-%d %H:%M:%S',
+                                    '%Y-%m-%dT%H:%M:%S.%f%z',
+                                    '%Y-%m-%dT%H:%M:%S%z',
+                                    '%Y-%m-%d %H:%M:%S%z',
+                                    '%Y-%m-%dT%H:%M:%S.%f',
+                                    '%Y-%m-%dT%H:%M:%S',
+                                ]
+                                for f in fmts:
+                                    try:
+                                        dt = datetime.strptime(s, f)
+                                        break
+                                    except Exception:
+                                        dt = None
+                            if dt is None:
+                                m = re.search(r"\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:[+-]\d{2}:?\d{2}|Z)?", s)
+                                if m:
+                                    piece = m.group(0).replace('Z', '+00:00')
+                                    try:
+                                        dt = datetime.fromisoformat(piece)
+                                    except Exception:
+                                        dt = None
+                            if dt is None:
+                                return s
+                            if dt.tzinfo is None:
+                                dt = dt.replace(tzinfo=timezone.utc)
+                            dt_utc = dt.astimezone(timezone.utc)
+                            return dt_utc.strftime('%Y-%m-%d %H:%M:%S')
+                        except Exception:
+                            return str(val)
+
+                    normalized_lu = _normalize_to_utc_string_local(lu_val)
+                    if normalized_lu:
+                        self.last_data_update = normalized_lu
+                        try:
+                            logging.info('%s: last_update_query override supplied last_data_update=%r', self.name, self.last_data_update)
+                        except Exception:
+                            pass
+            except Exception:
+                logging.exception('Failed to execute last_update_query for %s', self.name)
+        # Log datasource-provided last_data_update for troubleshooting Overzicht timestamps
+        try:
+            logging.info('%s: datasource last_data_update=%r', self.name, self.last_data_update)
+        except Exception:
+            pass
+
         # write output via output adapter
         ctx = OutputWriteContext(
             spreadsheet_id=self.spreadsheet_id,
@@ -258,6 +343,11 @@ class DQReport(Report):
                 # if nothing matched, leave rowFound as 4 (default)
             except Exception:
                 rowFound = 4  # fallback
+
+            try:
+                logging.info('%s: determined rowFound=%s for summary target=%s', self.name, rowFound, summary_target)
+            except Exception:
+                pass
 
             last_data_update = None
             historiek_data = None
@@ -363,6 +453,12 @@ class DQReport(Report):
 
             stage_summary_update(payload_summary_c, staged_dir=staged_dir or 'RSA_OneDrive/staged_summaries')
             stage_summary_update(payload_summary_h, staged_dir=staged_dir or 'RSA_OneDrive/staged_summaries')
+            # Log the exact staged payloads for post-aggregation verification
+            try:
+                logging.info('%s: staged Overzicht C payload cell=%s value=%r', self.name, c_cell, payload_summary_c.get('value'))
+                logging.info('%s: staged Overzicht H payload cell=%s value=%r', self.name, h_cell, payload_summary_h.get('value'))
+            except Exception:
+                pass
 
         except Exception as ex:
             # fallback to original direct writes if staging isn't available
@@ -373,10 +469,11 @@ class DQReport(Report):
                                                      number_of_rows=1)
                 sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='Historiek', start_cell='A2',
                                                    data=[[self.now, self.last_data_update, len(qr.rows)]])
-                sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.summary_sheet_id, sheet_name='Overzicht', start_cell='C' + str(rowFound + 1),
+                # Use the same rowFound that was computed above for staged payloads
+                sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.summary_sheet_id, sheet_name='Overzicht', start_cell='C' + str(rowFound),
                                                    data=[[self.last_data_update, len(qr.rows)]])
                 try:
-                    sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.summary_sheet_id, sheet_name='Overzicht', start_cell='H' + str(rowFound + 1),
+                    sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.summary_sheet_id, sheet_name='Overzicht', start_cell='H' + str(rowFound),
                                                        data=[[query_time]])
                 except Exception:
                     pass

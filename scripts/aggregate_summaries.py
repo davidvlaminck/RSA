@@ -39,7 +39,14 @@ def apply_payload(excel: ExcelOutput, payload: Dict[str, Any], output_dir: Path)
     wb_path = None
     # Prefer the canonical summary workbook if present when updating the Overzicht sheet
     try:
-        preferred_summary = Path(output_dir) / '[RSA] Overzicht rapporten.xlsx'
+        # Use the ExcelOutput's configured output_dir (absolute) so resolution
+        # matches ExcelOutput._resolve_workbook_path and any mappings discovered
+        # earlier when grouping writes. This avoids inconsistencies when a
+        # relative Path(output_dir) differs from the ExcelOutput instance's
+        # resolved output directory and prevents selecting the wrong workbook
+        # (e.g. 'ABBAMelda - EM-Infra id_s.xlsx') when the canonical
+        # '[RSA] Overzicht rapporten.xlsx' is present in the ExcelOutput folder.
+        preferred_summary = Path(getattr(excel, 'output_dir', Path(output_dir))) / '[RSA] Overzicht rapporten.xlsx'
         if payload.get('sheet') == 'Overzicht' and preferred_summary.exists():
             wb_path = preferred_summary.resolve()
             logger.debug('Using explicit summary workbook %s for Overzicht writes', wb_path)
@@ -66,6 +73,22 @@ def apply_payload(excel: ExcelOutput, payload: Dict[str, Any], output_dir: Path)
         else:
             combined = [row]
         excel.write_data_to_sheet(wb_path, sheet, combined, overwrite=True)
+        # If this is the Historiek sheet (DQReport writes), apply automatic column
+        # resizing so the newly appended data is visible without manual adjustment.
+        try:
+            # determine number of columns from header if present else from the new row
+            num_cols = 0
+            if combined and isinstance(combined, list) and len(combined) > 0 and isinstance(combined[0], (list, tuple)):
+                num_cols = len(combined[0])
+            elif isinstance(row, (list, tuple)):
+                num_cols = len(row)
+            if num_cols > 0:
+                try:
+                    excel.automatic_resize_columns(wb_path, sheet, number_of_columns=num_cols)
+                except Exception:
+                    logger.exception('Failed automatic resize for %s sheet %s', wb_path, sheet)
+        except Exception:
+            logger.exception('Failed to schedule automatic resize for %s sheet %s', wb_path, sheet)
         return wb_path.resolve()
 
     elif op == 'write_cell':
@@ -219,15 +242,70 @@ def apply_payload(excel: ExcelOutput, payload: Dict[str, Any], output_dir: Path)
             sc = SheetsCell(cell)
             col_index = sc._column_int
             row_index = sc._row
+            # Verify that the target row contains the expected report name in column F.
+            report_name = (payload.get('meta', {}).get('report') or '').strip().lower()
+            try:
+                if report_name:
+                    from openpyxl import load_workbook as _load_wb
+                    _wb_check = _load_wb(wb_path, read_only=True)
+                    if sheet in _wb_check.sheetnames:
+                        _ws_check = _wb_check[sheet]
+                        existing_f = _ws_check.cell(row=row_index, column=6).value
+                        if not (existing_f and str(existing_f).strip().lower() == report_name):
+                            # search column F for the report_name
+                            found_row = None
+                            max_search = min(2000, _ws_check.max_row or 1000)
+                            for r in range(4, max_search + 1):
+                                try:
+                                    fv = _ws_check.cell(row=r, column=6).value
+                                except Exception:
+                                    fv = None
+                                if fv and str(fv).strip().lower() == report_name:
+                                    found_row = r
+                                    break
+                            if found_row:
+                                old = row_index
+                                row_index = found_row
+                                logger.warning('Report name mismatch in %s: staged cell %s pointed at row %s (F=%r); correcting to row %s', wb_path, cell, old, existing_f, row_index)
+                                # update SheetsCell/target variables accordingly
+                                # col_index remains same; target cell will be recomputed below
+                            else:
+                                logger.warning('Could not find report %s in column F of %s; leaving staged target %s', report_name, wb_path, cell)
+                    _wb_check.close()
+            except Exception:
+                logger.exception('Failed to verify/locate report row in %s for report=%s', wb_path, report_name)
             # write each element to successive columns
             for i, v in enumerate(value):
                 target_col = SheetsCell._convert_number_to_column(col_index + i)
                 target_cell = f"{target_col}{row_index}"
                 excel.write_single_cell(wb_path, sheet, target_cell, v)
+            # Post-write verification log: read back the value written to the first column
+            try:
+                from openpyxl import load_workbook as _load_wb
+                _wb = _load_wb(wb_path, read_only=True)
+                if sheet in _wb.sheetnames:
+                    _ws = _wb[sheet]
+                    new_val = _ws.cell(row=row_index, column=col_index).value
+                    logger.info('Post-write Overzicht C check (list): report=%s workbook=%s cell=%s after=%s',
+                                payload.get('meta', {}).get('report'), str(Path(wb_path).resolve()), f"{SheetsCell._convert_number_to_column(col_index)}{row_index}", new_val)
+            except Exception:
+                logger.exception('Failed post-write check for %s %s', wb_path, cell)
             return wb_path.resolve()
         else:
             # scalar
             excel.write_single_cell(wb_path, sheet, cell, value)
+            # Post-write verification log for Overzicht C scalar writes
+            try:
+                from openpyxl import load_workbook as _load_wb
+                _wb = _load_wb(wb_path, read_only=True)
+                if sheet in _wb.sheetnames:
+                    _ws = _wb[sheet]
+                    row_idx = int(''.join([c for c in cell if c.isdigit()]))
+                    new_val = _ws.cell(row=row_idx, column=3).value
+                    logger.info('Post-write Overzicht C check (scalar): report=%s workbook=%s cell=%s after=%s',
+                                payload.get('meta', {}).get('report'), str(Path(wb_path).resolve()), cell, new_val)
+            except Exception:
+                logger.exception('Failed post-write check for %s %s', wb_path, cell)
             return wb_path.resolve()
 
     elif op == 'increment_cell':

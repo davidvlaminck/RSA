@@ -102,26 +102,91 @@ class ArangoDatasource:
             query_time_seconds = round(time.time() - start_time, 2)
 
             # Try to get last_data_update from the cursor or from params collection
+            # Try to get last_data_update from the cursor or from params collection
             last_data_update = getattr(cursor, 'last_data_update', None)
 
-            # Normalize if it's present
+            # Debug: log the raw cursor-provided last_data_update for diagnostics
+            try:
+                logging.debug('Arango cursor last_data_update (raw): %r', last_data_update)
+            except Exception:
+                pass
+
+            # Normalize if it's present (cursor may provide it)
             normalized = self._normalize_last_data_update(last_data_update)
             if normalized:
                 last_data_update = normalized
+                source = 'cursor'
             else:
-                # fallback: try params collection
+                # fallback: try params collection with several common keys
                 try:
                     params_col = self.connection.collection('params')
-                    doc = params_col.get('finished_at')
-                    if doc and 'value' in doc:
-                        normalized = self._normalize_last_data_update(doc['value'])
-                        if normalized:
-                            last_data_update = normalized
-                        else:
-                            last_data_update = doc['value']
+                    candidate_keys = ['finished_at', 'last_data_update', 'last_sync', 'updated_at']
+                    found = False
+                    for key in candidate_keys:
+                        try:
+                            doc = params_col.get(key)
+                        except Exception:
+                            doc = None
+                        if doc and 'value' in doc and doc.get('value') is not None:
+                            try:
+                                logging.debug('Arango params.%s raw value: %r', key, doc.get('value'))
+                            except Exception:
+                                pass
+                            normalized = self._normalize_last_data_update(doc['value'])
+                            if normalized:
+                                last_data_update = normalized
+                                source = f'params.{key}.normalized'
+                            else:
+                                last_data_update = doc['value']
+                                source = f'params.{key}.raw'
+                            found = True
+                            break
+                    if not found:
+                        last_data_update = None
                 except Exception:
                     # ignore failures reading params
                     last_data_update = last_data_update
+                    if not locals().get('source'):
+                        source = 'unknown'
+
+                # If params didn't yield a timestamp, try inferring from result rows
+                if not last_data_update:
+                    try:
+                        import re as _re
+                        candidates = []
+                        key_pattern = _re.compile(r'(date|time|updated|modified|finished|ts)', _re.IGNORECASE)
+                        for r in result:
+                            if not isinstance(r, dict):
+                                continue
+                            for k, v in r.items():
+                                if key_pattern.search(k):
+                                    norm = self._normalize_last_data_update(v)
+                                    if norm:
+                                        candidates.append(norm)
+                        if candidates:
+                            # parse candidates to datetimes and pick the latest
+                            parsed = []
+                            for s in candidates:
+                                try:
+                                    # s is expected as 'YYYY-MM-DD HH:MM:SS'
+                                    parsed.append(datetime.fromisoformat(s.replace(' ', 'T')))
+                                except Exception:
+                                    try:
+                                        parsed.append(datetime.strptime(s, '%Y-%m-%d %H:%M:%S'))
+                                    except Exception:
+                                        pass
+                            if parsed:
+                                latest = max(parsed)
+                                last_data_update = latest.astimezone(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+                                source = 'inferred.rows'
+                    except Exception:
+                        pass
+
+            # Log resolved last_data_update and its source at INFO level for visibility
+            try:
+                logging.info('Arango last_data_update resolved (source=%s): %r', locals().get('source'), last_data_update)
+            except Exception:
+                pass
 
             return QueryResult(keys=keys, rows=result, query_time_seconds=query_time_seconds, last_data_update=last_data_update)
         except Exception as e:
