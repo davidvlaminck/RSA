@@ -412,12 +412,19 @@ class DQReport(Report):
                 except Exception:
                     return str(val)
 
+            # Ensure last_data_update is normalized to UTC string before staging
+            try:
+                from outputs.time_utils import format_utc_string
+                normalized_last = format_utc_string(self.last_data_update)
+            except Exception:
+                normalized_last = _normalize_to_utc_string(self.last_data_update)
+
             payload_hist = {
                 'operation': 'append_row',
                 'excel_filename': target_workbook if ctx.excel_filename else None,
                 'spreadsheet_id': None if ctx.excel_filename else self.spreadsheet_id,
                 'sheet': 'Historiek',
-                'row': [self.now, _normalize_to_utc_string(self.last_data_update), len(qr.rows)],
+                'row': [self.now, normalized_last, len(qr.rows)],
                 'meta': {'report': self.name}
             }
             # clean payload: remove None keys
@@ -449,13 +456,19 @@ class DQReport(Report):
                 mapped = None
             excel_fname_for_summary = mapped if mapped else '[RSA] Overzicht rapporten.xlsx'
 
+            try:
+                from outputs.time_utils import format_utc_string
+                normalized_for_summary = format_utc_string(self.last_data_update)
+            except Exception:
+                normalized_for_summary = _normalize_to_utc_string(self.last_data_update)
+
             payload_summary_c = {
                 'operation': 'write_cell',
                 'excel_filename': excel_fname_for_summary,
                 'spreadsheet_id': summary_target,
                 'sheet': 'Overzicht',
                 'cell': c_cell,
-                'value': [_normalize_to_utc_string(self.last_data_update), len(qr.rows)],
+                'value': [normalized_for_summary, len(qr.rows)],
                 'meta': {'report': self.name}
             }
 

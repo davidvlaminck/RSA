@@ -9,6 +9,7 @@ import time
 import importlib
 import warnings
 import logging
+from contextlib import contextmanager
 
 # lazy-loaded openpyxl handles
 openpyxl = None
@@ -60,6 +61,43 @@ def _ensure_openpyxl_loaded():
         get_column_letter = None
         load_workbook = None
         raise
+
+
+@contextmanager
+def _file_lock(path: Path):
+    """Context manager that acquires an advisory POSIX exclusive lock on a lockfile
+
+    The lock file is created alongside the workbook (same directory) with suffix '.lock'.
+    This uses fcntl.flock and blocks until the lock is acquired. Intended for POSIX only.
+    """
+    lock_path = Path(path).with_suffix(path.suffix + '.lock')
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    fh = None
+    try:
+        # open lock file for update/creation
+        fh = open(lock_path, 'a+')
+        try:
+            import fcntl
+            fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
+        except Exception:
+            # if locking fails, close and raise
+            fh.close()
+            raise
+        yield
+    finally:
+        try:
+            if fh:
+                try:
+                    import fcntl
+                    fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
+                except Exception:
+                    pass
+                try:
+                    fh.close()
+                except Exception:
+                    pass
+        except Exception:
+            pass
 
 
 # module logger
@@ -148,7 +186,9 @@ class ExcelOutput:
             tmp_name = tmp.name
         try:
             wb.save(tmp_name)
-            os.replace(tmp_name, str(workbook_path))
+            # use a file lock while replacing the target to avoid races
+            with _file_lock(workbook_path):
+                os.replace(tmp_name, str(workbook_path))
             try:
                 fd = os.open(str(workbook_path), os.O_RDONLY)
                 try:
@@ -603,15 +643,21 @@ class ExcelOutput:
         if not col_letters or not row_digits:
             raise ExcelWriterError(f'Invalid cell identifier: {cell}')
 
-        ws[cell].value = value
+        # normalize value consistently with other write paths
+        try:
+            norm_val = self._normalize_value(value)
+        except Exception:
+            norm_val = value
+        ws[cell].value = norm_val
 
-        # atomic save: write to temp file and replace
+        # atomic save: write to temp file and replace under lock
         dirpath = wb_path.parent
         with NamedTemporaryFile(prefix=wb_path.stem + '_tmp_', suffix=wb_path.suffix, dir=str(dirpath), delete=False) as tmp:
             tmp_name = tmp.name
         try:
             wb.save(tmp_name)
-            os.replace(tmp_name, str(wb_path))
+            with _file_lock(wb_path):
+                os.replace(tmp_name, str(wb_path))
             try:
                 fd = os.open(str(wb_path), os.O_RDONLY)
                 try:
@@ -666,13 +712,14 @@ class ExcelOutput:
         new_val = current + int(delta)
         ws[cell].value = new_val
 
-        # atomic save
+        # atomic save under file lock to prevent concurrent writers
         dirpath = wb_path.parent
         with NamedTemporaryFile(prefix=wb_path.stem + '_tmp_', suffix=wb_path.suffix, dir=str(dirpath), delete=False) as tmp:
             tmp_name = tmp.name
         try:
             wb.save(tmp_name)
-            os.replace(tmp_name, str(wb_path))
+            with _file_lock(wb_path):
+                os.replace(tmp_name, str(wb_path))
             try:
                 fd = os.open(str(wb_path), os.O_RDONLY)
                 try:
@@ -808,13 +855,14 @@ class ExcelOutput:
                 ws.append(row)
                 rows_written += 1
 
-            # atomic save
+            # atomic save under file lock
             try:
+                # _atomic_save_workbook already acquires lock around replace
                 self._atomic_save_workbook(wb, workbook_path)
             except Exception:
-                # fallback to direct save if atomic fails
                 try:
-                    wb.save(workbook_path)
+                    with _file_lock(workbook_path):
+                        wb.save(workbook_path)
                 except Exception:
                     raise
 
@@ -840,12 +888,13 @@ class ExcelOutput:
                 ws.append(row)
                 rows_written += 1
 
-            # atomic save
+            # atomic save under file lock
             try:
                 self._atomic_save_workbook(wb, workbook_path)
             except Exception:
                 try:
-                    wb.save(workbook_path)
+                    with _file_lock(workbook_path):
+                        wb.save(workbook_path)
                 except Exception:
                     raise
 
