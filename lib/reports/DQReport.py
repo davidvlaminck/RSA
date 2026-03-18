@@ -345,7 +345,8 @@ class DQReport(Report):
                 rowFound = 4  # fallback
 
             try:
-                logging.info('%s: determined rowFound=%s for summary target=%s', self.name, rowFound, summary_target)
+                # Log the resolved target workbook identifier used for summary updates
+                logging.info('%s: determined rowFound=%s for summary target_workbook=%s', self.name, rowFound, target_workbook)
             except Exception:
                 pass
 
@@ -420,11 +421,15 @@ class DQReport(Report):
                 'meta': {'report': self.name}
             }
             # clean payload: remove None keys
-            if payload_hist['excel_filename'] is None:
+            if payload_hist.get('excel_filename') is None:
                 del payload_hist['excel_filename']
-            if payload_hist['spreadsheet_id'] is None:
+            if payload_hist.get('spreadsheet_id') is None:
                 del payload_hist['spreadsheet_id']
 
+            try:
+                logging.info('%s: staging historiek payload target=%s payload=%s', self.name, excel_fname_for_summary, payload_hist)
+            except Exception:
+                pass
             stage_summary_update(payload_hist, staged_dir=staged_dir or 'RSA_OneDrive/staged_summaries')
 
             # Summary sheet updates: write last_data_update and count into Overzicht at column C and query_time into column H
@@ -433,8 +438,20 @@ class DQReport(Report):
             c_cell = f'C{rowFound}'
             h_cell = f'H{rowFound}'
 
+            # Prefer to include an excel_filename in staged payloads so the aggregator
+            # can deterministically resolve the workbook under RSA_OneDrive even when
+            # spreadsheet_id -> filename mapping isn't present. Lookup mapping first,
+            # otherwise fall back to the canonical '[RSA] Overzicht rapporten.xlsx'.
+            try:
+                from outputs.spreadsheet_map import lookup as _lookup
+                mapped = _lookup(summary_target)
+            except Exception:
+                mapped = None
+            excel_fname_for_summary = mapped if mapped else '[RSA] Overzicht rapporten.xlsx'
+
             payload_summary_c = {
                 'operation': 'write_cell',
+                'excel_filename': excel_fname_for_summary,
                 'spreadsheet_id': summary_target,
                 'sheet': 'Overzicht',
                 'cell': c_cell,
@@ -444,6 +461,7 @@ class DQReport(Report):
 
             payload_summary_h = {
                 'operation': 'write_cell',
+                'excel_filename': excel_fname_for_summary,
                 'spreadsheet_id': summary_target,
                 'sheet': 'Overzicht',
                 'cell': h_cell,
@@ -451,12 +469,20 @@ class DQReport(Report):
                 'meta': {'report': self.name}
             }
 
-            stage_summary_update(payload_summary_c, staged_dir=staged_dir or 'RSA_OneDrive/staged_summaries')
-            stage_summary_update(payload_summary_h, staged_dir=staged_dir or 'RSA_OneDrive/staged_summaries')
-            # Log the exact staged payloads for post-aggregation verification
             try:
-                logging.info('%s: staged Overzicht C payload cell=%s value=%r', self.name, c_cell, payload_summary_c.get('value'))
-                logging.info('%s: staged Overzicht H payload cell=%s value=%r', self.name, h_cell, payload_summary_h.get('value'))
+                logging.info('%s: staging Overzicht payload target=%s cell=%s payload=%s', self.name, excel_fname_for_summary, c_cell, payload_summary_c)
+            except Exception:
+                pass
+            stage_summary_update(payload_summary_c, staged_dir=staged_dir or 'RSA_OneDrive/staged_summaries')
+            try:
+                logging.info('%s: staging Overzicht H payload target=%s cell=%s payload=%s', self.name, excel_fname_for_summary, h_cell, payload_summary_h)
+            except Exception:
+                pass
+            stage_summary_update(payload_summary_h, staged_dir=staged_dir or 'RSA_OneDrive/staged_summaries')
+            # Log the exact staged payloads for post-aggregation verification including the target workbook
+            try:
+                logging.info('%s: staged Overzicht C payload target=%s cell=%s value=%r', self.name, excel_fname_for_summary, c_cell, payload_summary_c.get('value'))
+                logging.info('%s: staged Overzicht H payload target=%s cell=%s value=%r', self.name, excel_fname_for_summary, h_cell, payload_summary_h.get('value'))
             except Exception:
                 pass
 

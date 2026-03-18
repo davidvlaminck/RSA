@@ -111,21 +111,26 @@ def main():
         else:
             print("All pipelines finished successfully")
 
-        # After reports finished, run aggregator to apply staged summary updates
-        try:
-            from scripts.aggregate_summaries import process_once
-            staged_dir = Path(args.output_dir or Path(tmp_settings).with_suffix('').name)
-        except Exception:
-            staged_dir = None
+        # After reports finished, run aggregator to apply staged summary updates.
+        # Resolve output directory relative to the repository root when a relative
+        # path is provided so behavior is consistent whether this script is run
+        # from the project root or other working directories.
+        repo_root = Path(__file__).resolve().parents[1]
+        if chosen_output:
+            out_choice = Path(chosen_output)
+            if not out_choice.is_absolute():
+                output_dir_choice = repo_root / out_choice
+            else:
+                output_dir_choice = out_choice
+        else:
+            output_dir_choice = repo_root / 'RSA_OneDrive'
 
-        # call aggregator
-        # Use folder_path if provided, else output-dir, else default 'RSA_OneDrive' in repo root
-        output_dir_choice = Path(args.folder_path or args.output_dir or 'RSA_OneDrive')
+        output_dir_choice = output_dir_choice.resolve()
         agg_staged = output_dir_choice / 'staged_summaries'
+        print(f"Running aggregator on staged dir: {agg_staged} (output dir: {output_dir_choice})")
         from scripts.aggregate_summaries import process_once as agg_process_once
-        print(f"Running aggregator on staged dir: {agg_staged}")
-        applied = agg_process_once(Path(agg_staged), Path(output_dir_choice), limit=100, dry_run=False)
-        print(f"Aggregator applied {applied} staged updates")
+        applied = agg_process_once(agg_staged, output_dir_choice, limit=100, dry_run=False)
+        print(f"Aggregator applied {applied} staged updates (output_dir={output_dir_choice})")
 
     finally:
         try:

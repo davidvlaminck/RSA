@@ -378,6 +378,14 @@ class ExcelOutput:
         candidate = Path(self.output_dir) / sp
         if candidate.exists():
             return candidate
+        # If the caller supplied what looks like a filename (has .xlsx suffix or any suffix),
+        # prefer to return the candidate path (which may not exist yet). This avoids the
+        # discovery scan picking a different workbook in output_dir that happens to
+        # contain an Overzicht/Historiek sheet (which previously caused writes to end
+        # up in another file). Returning the candidate allows writes to create the
+        # intended workbook under output_dir.
+        if p.suffix:
+            return candidate
         # try mapping spreadsheet id -> filename (log any issues)
         try:
             from outputs.spreadsheet_map import lookup
@@ -390,7 +398,8 @@ class ExcelOutput:
                     return candidate_map
         except Exception as ex:
             logger.exception('Failed to lookup spreadsheet mapping for %s: %s', sp, ex)
-        candidate_x = Path(self.output_dir) / (sp + '.xlsx')
+        # If input had no suffix, try candidate with .xlsx appended.
+        candidate_x = Path(self.output_dir) / (sp + '.xlsx') if not p.suffix else candidate
 
         # If no exact file was found, try to discover an existing summary workbook in output_dir.
         # This prevents creating a new file named after the spreadsheet id which would hide/replace
