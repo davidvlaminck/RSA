@@ -27,8 +27,17 @@ RETRIES = 5
 
 
 class ReportLoopRunner:
-    def __init__(self, settings_path):
+    def __init__(self, settings_path, excel_output_dir: str | None = None):
+        """Initialize runner.
+
+        Args:
+            settings_path: Path to settings JSON used by SettingsManager.
+            excel_output_dir: Optional override for Excel output directory. If provided,
+                this value takes precedence over settings['output']['excel']['output_dir'].
+        """
         self.settings_path = settings_path
+        # optional override supplied by caller (e.g., main.py)
+        self._excel_output_dir_override = excel_output_dir
         settings_manager = SettingsManager(settings_path=settings_path)
         self.settings = settings_manager.settings
 
@@ -50,15 +59,32 @@ class ReportLoopRunner:
             pass
 
         # Initialize Excel writer (best-effort)
+        # ensure attribute exists even if excel init fails
+        self.excel_output_dir = None
         try:
-            out_dir = self.settings.get('output', {}).get('excel', {}).get('output_dir')
-            if out_dir is None:
-                out_dir = str(Path(self.settings_path).resolve().parents[0] / 'RSA_OneDrive')
+            # if caller provided override, prefer it
+            if self._excel_output_dir_override is not None:
+                out_dir = str(Path(self._excel_output_dir_override))
+            else:
+                out_dir = self.settings.get('output', {}).get('excel', {}).get('output_dir')
+                if out_dir is None:
+                    out_dir = str(Path(self.settings_path).resolve().parents[0] / 'RSA_OneDrive')
+
             from outputs.excel_wrapper import SingleExcelWriter
             SingleExcelWriter.init(output_dir=out_dir)
             # remember excel output dir for aggregator usage
             self.excel_output_dir = Path(out_dir)
+            # also update settings so worker processes reading settings will see the path
+            try:
+                if isinstance(self.settings, dict):
+                    self.settings.setdefault('output', {})
+                    self.settings['output'].setdefault('excel', {})
+                    self.settings['output']['excel']['output_dir'] = out_dir
+            except Exception:
+                # non-fatal if we can't mutate settings
+                pass
         except Exception:
+            # best-effort: continue without Excel initialization
             pass
 
         neo4j_settings = self.settings['databases']['Neo4j']
