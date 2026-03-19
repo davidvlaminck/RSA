@@ -1,12 +1,12 @@
 import decimal
 import logging
 import time
-from datetime import datetime, date, timedelta, UTC
+from _pydatetime import UTC
+from datetime import datetime, date, timedelta
 
 from neo4j.time import DateTime
 
 from lib.mail.MailSender import MailSender
-from Neo4JConnector import SingleNeo4JConnector
 from lib.connectors.PostGISConnector import SinglePostGISConnector
 from lib.reports.Report import Report
 from outputs.sheets_cell import SheetsCell
