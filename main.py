@@ -1,7 +1,9 @@
 from lib.reports.ReportLoopRunner import ReportLoopRunner
 
 if __name__ == '__main__':
-    reportlooprunner = ReportLoopRunner(settings_path=r'/home/davidlinux/Documenten/AWV/resources/settings_RSA.json')
+    settings_path = r'/home/davidlinux/Documenten/AWV/resources/settings_RSA.json'
+    onedrive_path = '/home/davidlinux/PycharmProjects/RSA/RSA_OneDrive'  # absoluut pad
+    reportlooprunner = ReportLoopRunner(settings_path=settings_path, excel_output_dir=onedrive_path)
     # reportlooprunner = ReportLoopRunner(settings_path=r'C:\resources\settings_RSA.json')
     reportlooprunner.start(run_right_away=True)
 
