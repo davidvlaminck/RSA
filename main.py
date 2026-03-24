@@ -8,3 +8,9 @@ if __name__ == '__main__':
     reportlooprunner.start(run_right_away=True)
 
 # first on linux do: pip install psycopg2-binary
+
+# bash script for VM
+# #! usr/bin/bash
+# # sleep 5h (possibly)
+# export PYTHONPATH=/home/david/PycharmProjects/RSA:$PYTHONPATH
+# ~/PycharmProjects/RSA/venv314/bin/python3.14 ~/PycharmProjects/RSA/main.py
