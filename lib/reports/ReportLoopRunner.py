@@ -27,8 +27,17 @@ RETRIES = 5
 
 
 class ReportLoopRunner:
-    def __init__(self, settings_path):
+    def __init__(self, settings_path, excel_output_dir: str | None = None):
+        """Initialize runner.
+
+        Args:
+            settings_path: Path to settings JSON used by SettingsManager.
+            excel_output_dir: Optional override for Excel output directory. If provided,
+                this value takes precedence over settings['output']['excel']['output_dir'].
+        """
         self.settings_path = settings_path
+        # optional override supplied by caller (e.g., main.py)
+        self._excel_output_dir_override = excel_output_dir
         settings_manager = SettingsManager(settings_path=settings_path)
         self.settings = settings_manager.settings
 
@@ -38,19 +47,44 @@ class ReportLoopRunner:
                             format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
                             datefmt='%H:%M:%S',
                             level=logging.INFO)
-        SingleSheetsWrapper.init(service_cred_path=self.settings['google_api']['credentials_path'],
-                                 readonly_scope=False)
+        # initialize Sheets wrapper if credentials present; allow missing/empty google_api for
+        # offline/Excel-only runs (no-Google mode)
+        try:
+            creds = None
+            if isinstance(self.settings.get('google_api', None), dict):
+                creds = self.settings.get('google_api', {}).get('credentials_path')
+            SingleSheetsWrapper.init(service_cred_path=creds, readonly_scope=False)
+        except Exception:
+            # best-effort: continue without Google Sheets initialization (Excel-only will be used)
+            pass
 
         # Initialize Excel writer (best-effort)
+        # ensure attribute exists even if excel init fails
+        self.excel_output_dir = None
         try:
-            out_dir = self.settings.get('output', {}).get('excel', {}).get('output_dir')
-            if out_dir is None:
-                out_dir = str(Path(self.settings_path).resolve().parents[0] / 'RSA_OneDrive')
+            # if caller provided override, prefer it
+            if self._excel_output_dir_override is not None:
+                out_dir = str(Path(self._excel_output_dir_override))
+            else:
+                out_dir = self.settings.get('output', {}).get('excel', {}).get('output_dir')
+                if out_dir is None:
+                    out_dir = str(Path(self.settings_path).resolve().parents[0] / 'RSA_OneDrive')
+
             from outputs.excel_wrapper import SingleExcelWriter
             SingleExcelWriter.init(output_dir=out_dir)
             # remember excel output dir for aggregator usage
             self.excel_output_dir = Path(out_dir)
+            # also update settings so worker processes reading settings will see the path
+            try:
+                if isinstance(self.settings, dict):
+                    self.settings.setdefault('output', {})
+                    self.settings['output'].setdefault('excel', {})
+                    self.settings['output']['excel']['output_dir'] = out_dir
+            except Exception:
+                # non-fatal if we can't mutate settings
+                pass
         except Exception:
+            # best-effort: continue without Excel initialization
             pass
 
         neo4j_settings = self.settings['databases']['Neo4j']
@@ -279,6 +313,94 @@ class ReportLoopRunner:
                 logging.error(f'Failed running aggregate_summaries.process_once: {ex}')
         except Exception as ex:
             logging.error(f'Could not run aggregator after parallel pipelines: {ex}')
+
+    def run_all_no_google(self, output_dir: str | None = None, limit: int = 1000, timeout_seconds: int | None = None, max_concurrent: int | None = None):
+        """Run all reports (discovering from Reports/) in no-Google mode.
+
+        This prepares a temporary settings file where Google is disabled and Excel
+        output is forced. It then runs pipelines grouped by datasource (parallel)
+        and applies staged summary updates via the aggregator.
+        """
+        # Build a modified settings dict based on existing settings but disable Google
+        # and force Excel output for workers by writing a temporary settings file.
+        try:
+            # load base settings from original settings file if possible
+            base_settings = {}
+            try:
+                with open(self.settings_path, 'r', encoding='utf-8') as fh:
+                    base_settings = json.load(fh)
+            except Exception:
+                base_settings = dict(self.settings or {})
+
+            # Ensure structure
+            if 'output' not in base_settings or not isinstance(base_settings['output'], dict):
+                base_settings['output'] = {}
+            if 'excel' not in base_settings['output'] or not isinstance(base_settings['output']['excel'], dict):
+                base_settings['output']['excel'] = {}
+
+            # Determine output directory
+            out_dir = output_dir or base_settings['output']['excel'].get('output_dir')
+            if out_dir is None:
+                repo_root = Path(self.settings_path).resolve().parents[0]
+                out_dir = str(repo_root / 'RSA_OneDrive')
+            base_settings['output']['excel']['output_dir'] = out_dir
+
+            # Force Excel and disable Google API credentials
+            base_settings['force_excel'] = True
+            base_settings['google_api'] = {}
+
+            # Inject execution controls if provided (timeout and max concurrency)
+            if timeout_seconds is not None or max_concurrent is not None:
+                if 'report_execution' not in base_settings or not isinstance(base_settings['report_execution'], dict):
+                    base_settings['report_execution'] = {}
+                if timeout_seconds is not None:
+                    base_settings['report_execution']['timeout_seconds'] = int(timeout_seconds)
+                if max_concurrent is not None:
+                    base_settings['report_execution']['max_concurrent'] = int(max_concurrent)
+
+            # write temp settings file
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as tmpf:
+                json.dump(base_settings, tmpf, indent=2)
+                tmp_settings_path = tmpf.name
+
+            # discover report names
+            report_instances = discover_and_instantiate_reports()
+            report_names = [type(inst).__name__ for inst in report_instances] if report_instances else []
+
+            if not report_names:
+                logging.warning('No reports discovered to run in no-Google mode')
+                return
+
+            # initialize Excel writer for this process (best-effort)
+            try:
+                from outputs.excel_wrapper import SingleExcelWriter
+                SingleExcelWriter.init(output_dir=out_dir)
+                self.excel_output_dir = Path(out_dir)
+            except Exception:
+                pass
+
+            # run pipelines grouped by datasource using the temp settings file so workers
+            # will not try to initialize Google and will prefer Excel output
+            try:
+                run_pipelines_by_datasource(report_names, base_settings, tmp_settings_path, stream_output=True)
+            finally:
+                try:
+                    os.unlink(tmp_settings_path)
+                except Exception:
+                    pass
+
+            # apply staged summaries
+            try:
+                staged_dir = (self.excel_output_dir / 'staged_summaries') if hasattr(self, 'excel_output_dir') else Path('RSA_OneDrive') / 'staged_summaries'
+                output_dir_path = self.excel_output_dir if hasattr(self, 'excel_output_dir') else Path('RSA_OneDrive')
+                logging.info(f'Running summary aggregator for staged dir {staged_dir} (no-Google mode)')
+                processed = process_once(staged_dir, output_dir_path, limit=limit, dry_run=False)
+                logging.info(f'Aggregate summaries processed {processed} files')
+            except Exception as ex:
+                logging.error(f'Failed running aggregate_summaries.process_once (no-Google mode): {ex}')
+
+        except Exception as e:
+            logging.exception('run_all_no_google failed: %s', e)
 
     @staticmethod
     def adjust_mailed_info_in_sheets(sender: MailSender):

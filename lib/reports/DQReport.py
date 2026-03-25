@@ -84,10 +84,42 @@ class DQReport(Report):
                 mail_receivers = []
                 mail_receivers_dict = []
         except HttpError as exc:
-            if exc.error_details == 'Unable to parse range: Overzicht!emails':
+            # Common failure: Google API returns 403 when the service account/app has no access to the
+            # target spreadsheet. For robustness we try to fall back to the Excel-backed SheetsCompatAdapter
+            # (if available) or otherwise continue without mail receivers (safe default).
+            status = None
+            try:
+                status = getattr(exc, 'resp', None) and getattr(exc.resp, 'status', None)
+            except Exception:
+                status = None
+
+            if status == 403 or 'permission' in str(exc).lower() or 'permission_denied' in str(exc).lower():
+                logging.warning(f'Google Sheets permission error reading Overzicht!emails: {exc}; falling back to Excel or skipping mail receivers')
+                # Attempt to register Excel-backed adapter as a fallback and retry once
+                try:
+                    from outputs.excel_wrapper import SingleExcelWriter
+                    from outputs.sheets_compat import SheetsCompatAdapter
+                    if getattr(SingleExcelWriter, 'get_wrapper', None):
+                        SingleSheetsWrapper.sheets_wrapper = SheetsCompatAdapter(SingleExcelWriter.get_wrapper())
+                        sheets_wrapper = SingleSheetsWrapper.get_wrapper()
+                        try:
+                            mail_receivers_raw = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self.spreadsheet_id,
+                                                                                     sheet_name='Overzicht',
+                                                                                     sheetrange='emails', return_raw_results=True)
+                        except Exception:
+                            mail_receivers_raw = []
+                    else:
+                        mail_receivers_raw = []
+                except Exception:
+                    # If any of the fallback steps fail, continue with empty receivers
+                    mail_receivers_raw = []
+            elif getattr(exc, 'error_details', None) == 'Unable to parse range: Overzicht!emails':
                 logging.info(f'{self.__class__.__name__} does not have a range Overzicht!emails')
+                mail_receivers_raw = []
             else:
-                raise exc
+                # Unknown HttpError: log and continue without mail receivers instead of failing the whole report
+                logging.warning(f'Unexpected HttpError while reading Overzicht!emails: {exc}; continuing without mail receivers')
+                mail_receivers_raw = []
 
         previous_result, latest_data_sync = self.get_historiek_record_info(sheets_wrapper)
 
@@ -130,6 +162,91 @@ class DQReport(Report):
         query_time = qr.query_time_seconds
         self.last_data_update = qr.last_data_update or ''
 
+        # If a per-report `last_update_query` is configured, prefer its result as the
+        # authoritative datasource last-update timestamp. This allows reports to run a
+        # lightweight metadata query (e.g., SELECT max(updated_at) FROM ...) and return
+        # the precise value to be shown in Overzicht column C.
+        if getattr(self, 'last_update_query', None):
+            try:
+                lu_qr = ds.execute(self.last_update_query)
+                # extract first cell of first row if available
+                lu_val = None
+                if lu_qr and getattr(lu_qr, 'rows', None):
+                    if len(lu_qr.rows) > 0:
+                        first = lu_qr.rows[0]
+                        if isinstance(first, dict):
+                            # pick first value
+                            vals = list(first.values())
+                            if vals:
+                                lu_val = vals[0]
+                        elif isinstance(first, (list, tuple)):
+                            if len(first) > 0:
+                                lu_val = first[0]
+                if lu_val is not None:
+                    # normalize using same helper used for historiek staging
+                    def _normalize_to_utc_string_local(val):
+                        from datetime import datetime, timezone
+                        import re
+                        if val is None:
+                            return ''
+                        if isinstance(val, (int, float)):
+                            return str(val)
+                        s = str(val).strip()
+                        if s == '':
+                            return ''
+                        try:
+                            iso = s.replace('Z', '+00:00') if s.endswith('Z') else s
+                            try:
+                                dt = datetime.fromisoformat(iso)
+                            except Exception:
+                                dt = None
+                            if dt is None:
+                                fmts = [
+                                    '%Y-%m-%d %H:%M:%S',
+                                    '%Y-%m-%dT%H:%M:%S.%f%z',
+                                    '%Y-%m-%dT%H:%M:%S%z',
+                                    '%Y-%m-%d %H:%M:%S%z',
+                                    '%Y-%m-%dT%H:%M:%S.%f',
+                                    '%Y-%m-%dT%H:%M:%S',
+                                ]
+                                for f in fmts:
+                                    try:
+                                        dt = datetime.strptime(s, f)
+                                        break
+                                    except Exception:
+                                        dt = None
+                            if dt is None:
+                                m = re.search(r"\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:[+-]\d{2}:?\d{2}|Z)?", s)
+                                if m:
+                                    piece = m.group(0).replace('Z', '+00:00')
+                                    try:
+                                        dt = datetime.fromisoformat(piece)
+                                    except Exception:
+                                        dt = None
+                            if dt is None:
+                                return s
+                            if dt.tzinfo is None:
+                                dt = dt.replace(tzinfo=timezone.utc)
+                            dt_utc = dt.astimezone(timezone.utc)
+                            return dt_utc.strftime('%Y-%m-%d %H:%M:%S')
+                        except Exception:
+                            return str(val)
+
+                    normalized_lu = _normalize_to_utc_string_local(lu_val)
+                    if normalized_lu:
+                        self.last_data_update = normalized_lu
+                        try:
+                            logging.info('%s: last_update_query override supplied last_data_update=%r', self.name, self.last_data_update)
+                        except Exception:
+                            pass
+            except Exception:
+                logging.exception('Failed to execute last_update_query for %s', self.name)
+        # Log datasource-provided last_data_update for troubleshooting Overzicht timestamps
+        try:
+            logging.info('%s: datasource last_data_update=%r', self.name, self.last_data_update)
+        except Exception:
+            pass
+
         # write output via output adapter
         ctx = OutputWriteContext(
             spreadsheet_id=self.spreadsheet_id,
@@ -167,21 +284,71 @@ class DQReport(Report):
             # determine target workbook identifier for aggregator: prefer excel_filename if created
             target_workbook = ctx.excel_filename if getattr(ctx, 'excel_filename', None) else self.spreadsheet_id
 
-            # compute rowFound safely from summary_links
+            # compute rowFound using column F 'rapportnummer' which should contain the report class name.
+            # Read the Overzicht sheet and search column F for self.name. Default to row 4 if not found.
             try:
-                summary_links = sheets_wrapper.read_celldata_from_sheet(spreadsheet_id=self.summary_sheet_id, sheet_name='Overzicht',
-                                                                        sheetrange='B4:B')
-                rowFound = int(summary_links.get('startRow', 1))
-                for i, summary_link in enumerate(summary_links.get('rowData', [])):
-                    if 'values' not in summary_link:
-                        continue
-                    if 'hyperlink' not in summary_link['values'][0]:
-                        continue
-                    if self.spreadsheet_id in summary_link['values'][0].get('hyperlink', ''):
-                        rowFound += i
+                # Read column F (rapportnummer) and column B (links) to robustly locate the report row.
+                ovF = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self.summary_sheet_id, sheet_name='Overzicht', sheetrange='F4:F1000')
+                # read B with raw cell data to inspect hyperlinks if available
+                try:
+                    ovB_raw = sheets_wrapper.read_celldata_from_sheet(spreadsheet_id=self.summary_sheet_id, sheet_name='Overzicht', sheetrange='B4:B1000')
+                    ovB_values = ovB_raw.get('values', [])
+                    ovB_rowdata = ovB_raw.get('rowData', [])
+                except Exception:
+                    ovB_values = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self.summary_sheet_id, sheet_name='Overzicht', sheetrange='B4:B1000') or []
+                    ovB_rowdata = []
+
+                rowFound = 4
+                target_name = (self.name or '').strip().lower()
+                target_sheet_id = (self.spreadsheet_id or '')
+
+                # iterate rows and try multiple matching strategies
+                max_rows = max(len(ovF or []), len(ovB_values or []))
+                for idx in range(max_rows):
+                    # check F column match first (rapportnummer)
+                    try:
+                        fval = ovF[idx][0] if ovF and idx < len(ovF) and ovF[idx] and len(ovF[idx]) > 0 else ''
+                    except Exception:
+                        fval = ''
+                    if str(fval).strip().lower() == target_name and target_name != '':
+                        rowFound = 4 + idx
                         break
+
+                    # check B column hyperlinks/values for spreadsheet id or excel filename
+                    try:
+                        bval = ovB_values[idx][0] if ovB_values and idx < len(ovB_values) and ovB_values[idx] and len(ovB_values[idx]) > 0 else ''
+                    except Exception:
+                        bval = ''
+
+                    # inspect rich rowData hyperlink if available
+                    hyperlink_found = False
+                    try:
+                        if ovB_rowdata and idx < len(ovB_rowdata):
+                            cellinfo = ovB_rowdata[idx]['values'][0]
+                            link = cellinfo.get('hyperlink') or ''
+                            if link and target_sheet_id and target_sheet_id in str(link):
+                                hyperlink_found = True
+                    except Exception:
+                        hyperlink_found = False
+
+                    if hyperlink_found:
+                        rowFound = 4 + idx
+                        break
+
+                    # fallback: direct value match in B to spreadsheet_id or excel_filename
+                    if target_sheet_id and str(bval).strip() != '' and target_sheet_id in str(bval):
+                        rowFound = 4 + idx
+                        break
+
+                # if nothing matched, leave rowFound as 4 (default)
             except Exception:
                 rowFound = 4  # fallback
+
+            try:
+                # Log the resolved target workbook identifier used for summary updates
+                logging.info('%s: determined rowFound=%s for summary target_workbook=%s', self.name, rowFound, target_workbook)
+            except Exception:
+                pass
 
             last_data_update = None
             historiek_data = None
@@ -195,48 +362,142 @@ class DQReport(Report):
                 last_data_update = None
 
             # append historiek row
+            # Normalize last_data_update to UTC 'YYYY-MM-DD HH:MM:SS' when staging summary/historiek
+            def _normalize_to_utc_string(val):
+                from datetime import datetime, timezone
+                import re
+                if val is None:
+                    return ''
+                if isinstance(val, (int, float)):
+                    return str(val)
+                s = str(val).strip()
+                if s == '':
+                    return ''
+                # try iso first (handle trailing Z)
+                try:
+                    iso = s.replace('Z', '+00:00') if s.endswith('Z') else s
+                    try:
+                        dt = datetime.fromisoformat(iso)
+                    except Exception:
+                        dt = None
+                    if dt is None:
+                        fmts = [
+                            '%Y-%m-%d %H:%M:%S',
+                            '%Y-%m-%dT%H:%M:%S.%f%z',
+                            '%Y-%m-%dT%H:%M:%S%z',
+                            '%Y-%m-%d %H:%M:%S%z',
+                            '%Y-%m-%dT%H:%M:%S.%f',
+                            '%Y-%m-%dT%H:%M:%S',
+                        ]
+                        for f in fmts:
+                            try:
+                                dt = datetime.strptime(s, f)
+                                break
+                            except Exception:
+                                dt = None
+                    if dt is None:
+                        m = re.search(r"\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:[+-]\d{2}:?\d{2}|Z)?", s)
+                        if m:
+                            piece = m.group(0).replace('Z', '+00:00')
+                            try:
+                                dt = datetime.fromisoformat(piece)
+                            except Exception:
+                                dt = None
+                    if dt is None:
+                        return s
+                    if dt.tzinfo is None:
+                        dt = dt.replace(tzinfo=timezone.utc)
+                    dt_utc = dt.astimezone(timezone.utc)
+                    return dt_utc.strftime('%Y-%m-%d %H:%M:%S')
+                except Exception:
+                    return str(val)
+
+            # Ensure last_data_update is normalized to UTC string before staging
+            try:
+                from outputs.time_utils import format_utc_string
+                normalized_last = format_utc_string(self.last_data_update)
+            except Exception:
+                normalized_last = _normalize_to_utc_string(self.last_data_update)
+
             payload_hist = {
                 'operation': 'append_row',
                 'excel_filename': target_workbook if ctx.excel_filename else None,
                 'spreadsheet_id': None if ctx.excel_filename else self.spreadsheet_id,
                 'sheet': 'Historiek',
-                'row': [self.now, self.last_data_update, len(qr.rows)],
+                'row': [self.now, normalized_last, len(qr.rows)],
                 'meta': {'report': self.name}
             }
             # clean payload: remove None keys
-            if payload_hist['excel_filename'] is None:
+            if payload_hist.get('excel_filename') is None:
                 del payload_hist['excel_filename']
-            if payload_hist['spreadsheet_id'] is None:
+            if payload_hist.get('spreadsheet_id') is None:
                 del payload_hist['spreadsheet_id']
 
+            try:
+                logging.info('%s: staging historiek payload target=%s payload=%s', self.name, excel_fname_for_summary, payload_hist)
+            except Exception:
+                pass
             stage_summary_update(payload_hist, staged_dir=staged_dir or 'RSA_OneDrive/staged_summaries')
 
-            # Summary sheet updates: write last_data_update and count into summary sheet 'Overzicht' at C{rowFound+1}
-            # and write query_time into H{rowFound+1}. We'll stage write_cell operations.
-            # determine the output workbook for the summary sheet (self.summary_sheet_id)
+            # Summary sheet updates: write last_data_update and count into Overzicht at column C and query_time into column H
+            # rowFound already points to the row (e.g., 4-based). Use exact cell coordinates when staging payloads.
             summary_target = self.summary_sheet_id
-            # stage last_data_update+count
-            c_cell = 'C' + str(rowFound + 1)
+            c_cell = f'C{rowFound}'
+            h_cell = f'H{rowFound}'
+
+            # Prefer to include an excel_filename in staged payloads so the aggregator
+            # can deterministically resolve the workbook under RSA_OneDrive even when
+            # spreadsheet_id -> filename mapping isn't present. Lookup mapping first,
+            # otherwise fall back to the canonical '[RSA] Overzicht rapporten.xlsx'.
+            try:
+                from outputs.spreadsheet_map import lookup as _lookup
+                mapped = _lookup(summary_target)
+            except Exception:
+                mapped = None
+            excel_fname_for_summary = mapped if mapped else '[RSA] Overzicht rapporten.xlsx'
+
+            try:
+                from outputs.time_utils import format_utc_string
+                normalized_for_summary = format_utc_string(self.last_data_update)
+            except Exception:
+                normalized_for_summary = _normalize_to_utc_string(self.last_data_update)
+
             payload_summary_c = {
                 'operation': 'write_cell',
+                'excel_filename': excel_fname_for_summary,
                 'spreadsheet_id': summary_target,
                 'sheet': 'Overzicht',
                 'cell': c_cell,
-                'value': [self.last_data_update, len(qr.rows)],
+                'value': [normalized_for_summary, len(qr.rows)],
                 'meta': {'report': self.name}
             }
-            # stage query_time (single cell)
-            h_cell = 'H' + str(rowFound + 1)
+
             payload_summary_h = {
                 'operation': 'write_cell',
+                'excel_filename': excel_fname_for_summary,
                 'spreadsheet_id': summary_target,
                 'sheet': 'Overzicht',
                 'cell': h_cell,
                 'value': query_time,
                 'meta': {'report': self.name}
             }
+
+            try:
+                logging.info('%s: staging Overzicht payload target=%s cell=%s payload=%s', self.name, excel_fname_for_summary, c_cell, payload_summary_c)
+            except Exception:
+                pass
             stage_summary_update(payload_summary_c, staged_dir=staged_dir or 'RSA_OneDrive/staged_summaries')
+            try:
+                logging.info('%s: staging Overzicht H payload target=%s cell=%s payload=%s', self.name, excel_fname_for_summary, h_cell, payload_summary_h)
+            except Exception:
+                pass
             stage_summary_update(payload_summary_h, staged_dir=staged_dir or 'RSA_OneDrive/staged_summaries')
+            # Log the exact staged payloads for post-aggregation verification including the target workbook
+            try:
+                logging.info('%s: staged Overzicht C payload target=%s cell=%s value=%r', self.name, excel_fname_for_summary, c_cell, payload_summary_c.get('value'))
+                logging.info('%s: staged Overzicht H payload target=%s cell=%s value=%r', self.name, excel_fname_for_summary, h_cell, payload_summary_h.get('value'))
+            except Exception:
+                pass
 
         except Exception as ex:
             # fallback to original direct writes if staging isn't available
@@ -247,10 +508,11 @@ class DQReport(Report):
                                                      number_of_rows=1)
                 sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='Historiek', start_cell='A2',
                                                    data=[[self.now, self.last_data_update, len(qr.rows)]])
-                sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.summary_sheet_id, sheet_name='Overzicht', start_cell='C' + str(rowFound + 1),
+                # Use the same rowFound that was computed above for staged payloads
+                sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.summary_sheet_id, sheet_name='Overzicht', start_cell='C' + str(rowFound),
                                                    data=[[self.last_data_update, len(qr.rows)]])
                 try:
-                    sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.summary_sheet_id, sheet_name='Overzicht', start_cell='H' + str(rowFound + 1),
+                    sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.summary_sheet_id, sheet_name='Overzicht', start_cell='H' + str(rowFound),
                                                        data=[[query_time]])
                 except Exception:
                     pass

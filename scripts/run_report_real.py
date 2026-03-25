@@ -256,10 +256,6 @@ def main(argv: list[str] | None = None) -> int:
                 logging.info('Report output written to: %s (updated)', out_path)
             else:
                 logging.warning('Report output file exists but was NOT modified by this run: %s (mtime unchanged)', out_path)
-                # show backups if present
-                backups = list(Path('RSA_OneDrive').glob(out_path.stem + '_backup_*' + out_path.suffix))
-                if backups:
-                    logging.info('Backups found for this file: %s', backups)
         else:
             logging.warning('Expected output file not found after waiting: %s', out_path)
 

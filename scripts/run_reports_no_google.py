@@ -24,6 +24,13 @@ import tempfile
 import os
 from pathlib import Path
 import shutil
+import sys
+
+# Ensure repository root is on sys.path so `lib` package imports work when this script
+# is executed directly or via subprocess from a different working dir.
+repo_root = Path(__file__).resolve().parents[1]
+if str(repo_root) not in sys.path:
+    sys.path.insert(0, str(repo_root))
 
 from lib.reports.selection_runner import run_selection
 
@@ -87,11 +94,13 @@ def main():
     parser.add_argument('--settings', help='Path to settings JSON', default=DEFAULT_SETTINGS)
     parser.add_argument('--reports', nargs='+', help='Report names to run', default=DEFAULT_REPORTS)
     parser.add_argument('--output-dir', help='Optional output dir for Excel files (overrides settings)', default=None)
+    parser.add_argument('--folder-path', help='Optional Path to RSA_OneDrive folder (preferred over --output-dir)', default=None)
 
     args = parser.parse_args()
 
-    # Prepare temp settings file with Google disabled
-    tmp_settings = prepare_temp_settings(args.settings, excel_output_dir=args.output_dir)
+    # Prefer explicit folder-path over output-dir for directing where Excel files are written
+    chosen_output = args.folder_path or args.output_dir
+    tmp_settings = prepare_temp_settings(args.settings, excel_output_dir=chosen_output)
 
     try:
         print(f"Using temporary settings: {tmp_settings}")
@@ -102,19 +111,26 @@ def main():
         else:
             print("All pipelines finished successfully")
 
-        # After reports finished, run aggregator to apply staged summary updates
-        try:
-            from scripts.aggregate_summaries import process_once
-            staged_dir = Path(args.output_dir or Path(tmp_settings).with_suffix('').name)
-        except Exception:
-            staged_dir = None
+        # After reports finished, run aggregator to apply staged summary updates.
+        # Resolve output directory relative to the repository root when a relative
+        # path is provided so behavior is consistent whether this script is run
+        # from the project root or other working directories.
+        repo_root = Path(__file__).resolve().parents[1]
+        if chosen_output:
+            out_choice = Path(chosen_output)
+            if not out_choice.is_absolute():
+                output_dir_choice = repo_root / out_choice
+            else:
+                output_dir_choice = out_choice
+        else:
+            output_dir_choice = repo_root / 'RSA_OneDrive'
 
-        # call aggregator
-        agg_staged = Path(args.output_dir or 'RSA_OneDrive') / 'staged_summaries'
+        output_dir_choice = output_dir_choice.resolve()
+        agg_staged = output_dir_choice / 'staged_summaries'
+        print(f"Running aggregator on staged dir: {agg_staged} (output dir: {output_dir_choice})")
         from scripts.aggregate_summaries import process_once as agg_process_once
-        print(f"Running aggregator on staged dir: {agg_staged}")
-        applied = agg_process_once(Path(agg_staged), Path(args.output_dir or 'RSA_OneDrive'), limit=100, dry_run=False)
-        print(f"Aggregator applied {applied} staged updates")
+        applied = agg_process_once(agg_staged, output_dir_choice, limit=100, dry_run=False)
+        print(f"Aggregator applied {applied} staged updates (output_dir={output_dir_choice})")
 
     finally:
         try:

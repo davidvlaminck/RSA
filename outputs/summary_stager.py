@@ -12,6 +12,7 @@ import json
 import uuid
 import time
 from pathlib import Path
+import logging
 from typing import Dict, Any
 
 
@@ -20,6 +21,9 @@ def _ensure_dirs(staged_dir: Path):
     (staged_dir / 'processing').mkdir(parents=True, exist_ok=True)
     (staged_dir / 'processed').mkdir(parents=True, exist_ok=True)
     (staged_dir / 'failed').mkdir(parents=True, exist_ok=True)
+
+
+logger = logging.getLogger(__name__)
 
 
 def _validate_payload(payload: Dict[str, Any]) -> None:
@@ -40,6 +44,13 @@ def stage_summary_update(payload: Dict[str, Any], staged_dir: str | Path = 'RSA_
     Returns the final path to the staged file (Path ending with .json).
     """
     staged_dir = Path(staged_dir)
+    # If a relative staged_dir is provided, resolve it against the repository root so
+    # all code paths consistently write into ProjectRoot/RSA_OneDrive when a
+    # relative path is used. This prevents child processes or different cwd's from
+    # creating staged files in unexpected locations.
+    if not staged_dir.is_absolute():
+        repo_root = Path(__file__).resolve().parents[1]
+        staged_dir = (repo_root / staged_dir).resolve()
     _ensure_dirs(staged_dir)
 
     # shallow validate
@@ -48,7 +59,7 @@ def stage_summary_update(payload: Dict[str, Any], staged_dir: str | Path = 'RSA_
     ts = time.strftime('%Y%m%dT%H%M%S')
     uid = uuid.uuid4().hex
     filename = f"{ts}_{payload.get('operation')}_{payload.get('meta', {}).get('report','unknown')}_{uid}.json"
-    tmp = staged_dir / (filename + '.tmp')
+    tmp = staged_dir / f"{filename}.tmp"
     final = staged_dir / filename
 
     # write tmp and then rename
@@ -57,6 +68,10 @@ def stage_summary_update(payload: Dict[str, Any], staged_dir: str | Path = 'RSA_
         f.flush()
         # optional: os.fsync(f.fileno())  # not strictly needed
     tmp.replace(final)
+    try:
+        logger.info('Staged summary payload to %s (staged_dir=%s)', str(final), str(staged_dir))
+    except Exception:
+        pass
     return final
 
 

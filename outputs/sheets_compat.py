@@ -84,6 +84,10 @@ class SheetsCompatAdapter:
     def write_single_cell(self, spreadsheet_id: str | Path, sheet_name: str, cell: str, value: Any) -> None:
         return self.excel.write_single_cell(spreadsheet_id, sheet_name, cell, value)
 
+    def delete_sheet(self, spreadsheet_id: str | Path, sheet_name: str) -> None:
+        """Delegate sheet deletion to the ExcelOutput implementation."""
+        return self.excel.delete_sheet(spreadsheet_id, sheet_name)
+
     def insert_empty_rows(self, spreadsheet_id: str | Path, sheet_name: str, start_cell: str, number_of_rows: int):
         # Simplest approach: read all rows, insert empty rows at the proper index, rewrite sheet.
         workbook_path = self.excel._resolve_workbook_path(spreadsheet_id)

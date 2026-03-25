@@ -4,7 +4,7 @@ from lib.reports.BaseReport import BaseReport
 
 class Report0119(BaseReport):
     def init_report(self) -> None:
-n 1        aql_query = """
+        aql_query = """
 LET dnblaagspanning_key  = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#DNBLaagspanning" LIMIT 1 RETURN at._key)
 LET dnbhoogspanning_key  = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#DNBHoogspanning" LIMIT 1 RETURN at._key)
 

@@ -10,7 +10,7 @@ from pathlib import Path
 import warnings
 
 # Suppress known third-party deprecation warnings that are noisy in test/CI environments
-warnings.filterwarnings('ignore', message='path is deprecated. Use files\(\) instead', category=DeprecationWarning)
+warnings.filterwarnings('ignore', message=r'path is deprecated. Use files\(\) instead', category=DeprecationWarning)
 
 from lib.reports.selection_runner import run_selection
 

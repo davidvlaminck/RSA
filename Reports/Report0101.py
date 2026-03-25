@@ -79,7 +79,6 @@ LET candidates = (
     /* Project only the fields we need later to keep memory small */
     RETURN {
       _key: a._key,
-      actief: a.AIMDBStatus_isActief,
       naam: a.AIMNaamObject_naam,
       naampad: a.NaampadObject_naampad,
       naampad_parent: a.naampad_parent,
