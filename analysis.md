@@ -125,21 +125,19 @@ class QueryResult:
 ---
 
 ### FR5: Mail Notifications
-**Requirement:** After each full batch run, send email with summary.
+**Requirement:** Mail notifications are report-driven; recipients and frequency come from each report definition.
 
 **Details:**
-- Email sent via configured SMTP or `MailSender` class
-- Content includes:
-  - Total reports run, passed, failed counts
-  - Last `data_update` timestamp per datasource
-  - Execution time (total, per report optional)
-  - Failed report details with retry counts
-- Mailing list configurable in `settings.json`
+- Email sending is triggered by report metadata (addresses + frequency) stored in report files.
+- There is no central/configurable mailing list in `settings.json`.
+- Transport can still use existing mail infrastructure (`MailSender` / SMTP wiring).
+- Frequency logic is evaluated per report (e.g., daily/weekly cadence as defined in the report).
+- Report mails can include report-specific summary data (row counts, timestamps, failures if relevant).
 
 **Acceptance Criteria:**
-- [ ] Email sent after batch completes (success or partial failure)
-- [ ] Email contains all summary fields
-- [ ] Mailing list configured in `settings.json`
+- [ ] For a report with configured recipients in its file, mail is sent to those recipients only.
+- [ ] For a report with no recipients configured, no mail is sent.
+- [ ] Frequency in the report definition is respected (no extra sends outside cadence).
 
 ---
 
@@ -371,12 +369,6 @@ And Overzicht sheet is updated
     "backoff_base_seconds": 2,
     "remote_upload_target": "s3://logs-bucket/errors"
   },
-  "mail": {
-    "enabled": true,
-    "smtp_server": "mail.company.com",
-    "from": "reports@company.com",
-    "recipients": ["admin@company.com"]
-  },
   "time_window": {
     "start_hour": 5,
     "end_hour": 23
@@ -394,7 +386,7 @@ And Overzicht sheet is updated
 | FR2 (Datasource Abstraction) | `datasources/arango.py`, `datasources/postgis.py`, `factories.py` | Unit tests: execute, keys population |
 | FR3 (QueryResult) | `datasources/base.py` | Unit tests: to_rows_list, iter_rows |
 | FR4 (Retry Logic) | `lib/reports/ReportLoopRunner.py` | Simulation: failure + 3 retries |
-| FR5 (Mail Notifications) | `lib/mail/MailSender.py` | Mock SMTP: verify email sent |
+| FR5 (Mail Notifications) | `Reports/`, `lib/mail/MailSender.py` | Mock SMTP: verify report-defined recipients/frequency |
 | FR6 (History & Summary) | `outputs/summary_stager.py` | Verify sheet rows updated |
 
 ---
@@ -423,6 +415,7 @@ And Overzicht sheet is updated
 ### Question: Backwards Compat with Neo4j?
 **Current:** Code compiles but not executed  
 **Plan:** Keep imports; mark deprecated; phase out in 6 months (v2.0)
+
 
 
 
