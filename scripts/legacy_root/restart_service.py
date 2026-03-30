@@ -24,3 +24,4 @@ if __name__ == '__main__':
             print('probably not active')
             command = 'sudo -S systemctl start neo4j'
             os.system('echo %s | %s' % (password, command))
+

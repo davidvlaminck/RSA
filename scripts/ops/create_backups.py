@@ -5,13 +5,13 @@ This is an explicit utility that must be called to create backups. No scripts cr
 
 Usage:
   # Backup a single file by exact filename (relative to RSA_OneDrive)
-  python3 scripts/create_backups.py --file "[RSA] TLCfipoorten hebben een sturingsrelatie naar een Verkeersregelaar.xlsx"
+  python3 scripts/ops/create_backups.py --file "[RSA] TLCfipoorten hebben een sturingsrelatie naar een Verkeersregelaar.xlsx"
 
   # Backup all report files matching a pattern
-  python3 scripts/create_backups.py --glob "[RSA]*TLC*"
+  python3 scripts/ops/create_backups.py --glob "[RSA]*TLC*"
 
   # Dry-run
-  python3 scripts/create_backups.py --glob "[RSA]*" --dry-run
+  python3 scripts/ops/create_backups.py --glob "[RSA]*" --dry-run
 
 """
 from pathlib import Path
@@ -20,7 +20,7 @@ import logging
 import sys
 
 # Ensure project root is on sys.path so imports work when running script directly
-repo_root = Path(__file__).resolve().parents[1]
+repo_root = Path(__file__).resolve().parents[2]
 if str(repo_root) not in sys.path:
     sys.path.insert(0, str(repo_root))
 
@@ -87,3 +87,4 @@ for c in candidates:
     logger.info('Backed up %s -> %s', c.name, backup.name)
 
 logger.info('Done')
+

@@ -94,7 +94,7 @@ Quick troubleshooting steps
 3. Run the aggregator manually pointing to the project-root-relative paths:
 
 ```bash
-python scripts/aggregate_summaries.py --staged-dir RSA_OneDrive/staged_summaries --output-dir RSA_OneDrive
+python scripts/ops/aggregate_summaries.py --staged-dir RSA_OneDrive/staged_summaries --output-dir RSA_OneDrive
 ```
 
 4. Open `RSA_OneDrive/[RSA] Overzicht rapporten.xlsx` and confirm column C

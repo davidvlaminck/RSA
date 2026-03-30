@@ -2,7 +2,7 @@
 """Simple utility to append a file-change entry into a log file.
 
 Usage:
-  python scripts/file_change_log.py --action CREATED --path /full/path/to/file
+  python scripts/utils/file_change_log.py --action CREATED --path /full/path/to/file
 
 This is intentionally tiny and invoked by other scripts whenever they create or modify files.
 The log file is at .gitignored path: scripts/file_changes.log
@@ -13,7 +13,7 @@ import argparse
 from datetime import datetime, timezone
 from pathlib import Path
 
-LOG_PATH = Path(__file__).resolve().parent / 'file_changes.log'
+LOG_PATH = Path(__file__).resolve().parents[1] / 'file_changes.log'
 
 
 def append_entry(action: str, path: str):
@@ -31,3 +31,4 @@ if __name__ == '__main__':
     p.add_argument('--path', required=True)
     args = p.parse_args()
     append_entry(args.action, args.path)
+

@@ -19,7 +19,7 @@ from lib.reports.instantiator import create_report_instance, discover_and_instan
 from lib.reports.pipeline_runner import run_pipelines_by_datasource
 from outputs.sheets_wrapper import SingleSheetsWrapper
 from SettingsManager import SettingsManager
-from scripts.aggregate_summaries import process_once
+from scripts.ops.aggregate_summaries import process_once
 
 ROOT_DIR = (os.path.dirname(os.path.abspath(__file__)))
 BRUSSELS = ZoneInfo("Europe/Brussels")

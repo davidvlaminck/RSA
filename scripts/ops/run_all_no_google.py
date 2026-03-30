@@ -10,7 +10,7 @@ This script:
 - Calls the aggregator to apply staged summary updates
 
 Usage:
-  python scripts/run_all_no_google.py --settings /path/to/settings.json
+  python scripts/ops/run_all_no_google.py --settings /path/to/settings.json
 """
 
 from __future__ import annotations
@@ -23,7 +23,7 @@ import sys
 from pathlib import Path
 
 # Ensure repository root is on sys.path so imports work when executed from other cwd
-repo_root = Path(__file__).resolve().parents[1]
+repo_root = Path(__file__).resolve().parents[2]
 if str(repo_root) not in sys.path:
     sys.path.insert(0, str(repo_root))
 
@@ -131,7 +131,7 @@ def main():
             print('Pipelines finished (rc=', rc, ')')
 
         # Run aggregator to apply staged updates
-        from scripts.aggregate_summaries import process_once as agg_process_once
+        from scripts.ops.aggregate_summaries import process_once as agg_process_once
         output_dir_choice = out_dir.resolve()
         staged = output_dir_choice / 'staged_summaries'
         print(f'Running aggregator on staged dir: {staged} (output dir: {output_dir_choice})')
@@ -147,5 +147,6 @@ def main():
 
 if __name__ == '__main__':
     main()
+
 
 

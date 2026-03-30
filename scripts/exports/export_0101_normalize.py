@@ -6,9 +6,9 @@ This script embeds a null-safe AQL variant of the provided query (prevents error
 and exports results to CSV. Arrays and objects are JSON-stringified.
 
 Usage:
-  python scripts/export_0101_normalize.py --settings /path/to/settings.json --out /tmp/report0101.csv
+  python scripts/exports/export_0101_normalize.py --settings /path/to/settings.json --out /tmp/report0101.csv
   OR
-  python scripts/export_0101_normalize.py --host 127.0.0.1 --port 8529 --user user --password pw --database db --out /tmp/report0101.csv
+  python scripts/exports/export_0101_normalize.py --host 127.0.0.1 --port 8529 --user user --password pw --database db --out /tmp/report0101.csv
 
 Options:
   --example   write a small example CSV without connecting to DB (useful for layout/debug)
@@ -21,6 +21,10 @@ import json
 import os
 import sys
 from pathlib import Path
+
+repo_root = Path(__file__).resolve().parents[2]
+if str(repo_root) not in sys.path:
+    sys.path.insert(0, str(repo_root))
 
 DEFAULT_SETTINGS_PATH = Path(os.environ.get('RSA_SETTINGS') or Path.home() / 'Documenten' / 'AWV' / 'resources' / 'settings_RSA.json')
 
@@ -270,4 +274,5 @@ def main():
 
 if __name__ == '__main__':
     raise SystemExit(main())
+
 

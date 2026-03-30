@@ -4,10 +4,10 @@ Scans a staging directory, claims files (moves to processing/), applies operatio
 and moves processed files to processed/ or failed/.
 
 Usage (dry-run):
-  python scripts/aggregate_summaries.py --staged-dir RSA_OneDrive/staged_summaries --dry-run
+  python scripts/ops/aggregate_summaries.py --staged-dir RSA_OneDrive/staged_summaries --dry-run
 
 Usage (real run):
-  python scripts/aggregate_summaries.py --staged-dir RSA_OneDrive/staged_summaries --output-dir RSA_OneDrive --limit 100
+  python scripts/ops/aggregate_summaries.py --staged-dir RSA_OneDrive/staged_summaries --output-dir RSA_OneDrive --limit 100
 """
 from __future__ import annotations
 
@@ -18,6 +18,11 @@ from pathlib import Path
 from typing import Any, Dict
 from datetime import datetime, timezone
 import re
+import sys
+
+repo_root = Path(__file__).resolve().parents[2]
+if str(repo_root) not in sys.path:
+    sys.path.insert(0, str(repo_root))
 
 from outputs.excel import ExcelOutput
 from outputs.summary_stager import _ensure_dirs
@@ -521,4 +526,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
 

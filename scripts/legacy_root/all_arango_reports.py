@@ -4,13 +4,14 @@ import logging
 import os
 import traceback
 from datetime import datetime, UTC
+from pathlib import Path
 from lib.mail.MailSender import MailSender
 from SettingsManager import SettingsManager
 from outputs.sheets_wrapper import SingleSheetsWrapper
 from lib.connectors.Neo4JConnector import SingleNeo4JConnector
 from lib.connectors.PostGISConnector import SinglePostGISConnector
 
-ROOT_DIR = (os.path.dirname(os.path.abspath(__file__)))
+ROOT_DIR = Path(__file__).resolve().parents[2]
 
 # List of Arango reports to run, based on tasks.md (Has AQL Query = Yes, Refactored = Yes)
 ARANGO_REPORTS = [
@@ -71,7 +72,7 @@ class AllArangoReportsRunner:
             logging.error(f"Failed to initialize SingleArangoConnector: {e}")
             traceback.print_exc()
 
-        self.dir_path = os.path.abspath(os.path.join(os.sep, ROOT_DIR, 'Reports'))
+        self.dir_path = str(ROOT_DIR / 'Reports')
         self.mail_sender = MailSender(mail_settings=self.settings['smtp_options'])
 
     def run(self):
@@ -135,3 +136,4 @@ if __name__ == '__main__':
     runner = AllArangoReportsRunner(
         settings_path=r'/home/david/Documents/AWV/resources/settings_RSA.json')
     runner.run()
+

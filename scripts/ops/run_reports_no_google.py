@@ -10,7 +10,7 @@ This script:
   runs in its own worker subprocess
 
 Usage:
-    python scripts/run_reports_no_google.py --settings /path/to/settings.json
+    python scripts/ops/run_reports_no_google.py --settings /path/to/settings.json
 
 This avoids needing to monkeypatch SingleSheetsWrapper in-process because worker subprocesses
 read the modified temp settings and therefore will not attempt Google initialization.
@@ -28,7 +28,7 @@ import sys
 
 # Ensure repository root is on sys.path so `lib` package imports work when this script
 # is executed directly or via subprocess from a different working dir.
-repo_root = Path(__file__).resolve().parents[1]
+repo_root = Path(__file__).resolve().parents[2]
 if str(repo_root) not in sys.path:
     sys.path.insert(0, str(repo_root))
 
@@ -70,7 +70,7 @@ def prepare_temp_settings(orig_settings_path: str | None, excel_output_dir: str 
     out_dir = excel_output_dir or settings['output']['excel'].get('output_dir')
     if out_dir is None:
         # default inside project root
-        proj_root = Path(__file__).resolve().parents[1]
+        proj_root = Path(__file__).resolve().parents[2]
         out_dir = str(proj_root / 'RSA_OneDrive')
     settings['output']['excel']['output_dir'] = out_dir
 
@@ -115,7 +115,7 @@ def main():
         # Resolve output directory relative to the repository root when a relative
         # path is provided so behavior is consistent whether this script is run
         # from the project root or other working directories.
-        repo_root = Path(__file__).resolve().parents[1]
+        repo_root = Path(__file__).resolve().parents[2]
         if chosen_output:
             out_choice = Path(chosen_output)
             if not out_choice.is_absolute():
@@ -128,7 +128,7 @@ def main():
         output_dir_choice = output_dir_choice.resolve()
         agg_staged = output_dir_choice / 'staged_summaries'
         print(f"Running aggregator on staged dir: {agg_staged} (output dir: {output_dir_choice})")
-        from scripts.aggregate_summaries import process_once as agg_process_once
+        from scripts.ops.aggregate_summaries import process_once as agg_process_once
         applied = agg_process_once(agg_staged, output_dir_choice, limit=100, dry_run=False)
         print(f"Aggregator applied {applied} staged updates (output_dir={output_dir_choice})")
 
@@ -141,4 +141,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
 
