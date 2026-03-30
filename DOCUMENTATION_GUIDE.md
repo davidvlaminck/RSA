@@ -74,6 +74,7 @@ This project uses a **four-document documentation strategy** designed for differ
 - Learn output adapter patterns (Excel)
 - Understand QueryResult conversion and helpers
 - See configuration schema with examples
+- Understand where operational, export, utility, and legacy scripts live
 - Learn logging strategy and context injection
 - Get testing patterns and mocking examples
 - Create a new report from template
@@ -100,6 +101,7 @@ This project uses a **four-document documentation strategy** designed for differ
   - settings.json schema with examples
   - Environment variables
   - Loading configuration
+- Scripts Layout
 - Logging Strategy
   - Context injection (ContextVar)
   - Custom filter setup
@@ -227,6 +229,7 @@ This project uses a **four-document documentation strategy** designed for differ
 | How do I debug a failing report? | architecture.md → Debugging Guide |
 | What is QueryResult? | analysis.md → FR3 (Data Contract) |
 | How do I configure the system? | implementation_details.md → Configuration & Settings |
+| Where do scripts live now? | implementation_details.md → Scripts Layout |
 | What are the entry points? | architecture.md → Entry Points & Behaviors |
 | What datasources are supported? | spec.md → Domain Context |
 | How do I run tests? | architecture.md → Testing Checklist |

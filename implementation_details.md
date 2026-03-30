@@ -10,6 +10,7 @@
 - [Output Adapters](#output-adapters)
 - [QueryResult & Conversion](#queryresult--conversion)
 - [Configuration & Settings](#configuration--settings)
+- [Scripts Layout](#scripts-layout)
 - [Logging Strategy](#logging-strategy)
 - [Testing & Mocking](#testing--mocking)
 - [Creating a New Report](#creating-a-new-report)
@@ -661,6 +662,61 @@ arango_config = settings['databases']['arango']
 
 ---
 
+## Scripts Layout
+
+The repository keeps its main operational entrypoints at the project root:
+
+- `main.py`
+- `run_single_report.py`
+- `main_selection_list.py`
+
+Supporting scripts are grouped under `scripts/` by purpose.
+
+### `scripts/ops/`
+Operational helper scripts for running batches and maintaining generated outputs.
+
+Typical examples:
+- `aggregate_summaries.py` — applies staged summary/history updates to Excel workbooks
+- `run_reports_no_google.py` — runs a curated report set with Excel-only behavior
+- `run_all_no_google.py` — runs all reports in Excel-only mode
+- `create_backups.py` — creates timestamped backups of generated Excel files
+
+Use this folder for scripts that support real execution flows or production-style maintenance.
+
+### `scripts/exports/`
+Data extraction/export helpers that are not part of the normal report runner lifecycle.
+
+Typical examples:
+- `export_0101_normalize.py`
+- `export_report0101_csv.py`
+
+Use this folder for one-off or report-specific export tooling.
+
+### `scripts/utils/`
+Shared low-level script utilities.
+
+Typical example:
+- `file_change_log.py` — helper for logging file modifications from operational scripts
+
+Use this folder for reusable support functions that are script-oriented, but not part of the core application packages.
+
+### `scripts/legacy_root/`
+Historical or ad-hoc scripts that were moved out of the repository root to reduce clutter.
+
+Typical examples:
+- `all_arango_reports.py`
+- `dev_main.py`
+- `mail_test.py`
+- `restart_service.py`
+
+Do not place new scripts here. Treat this folder as legacy compatibility or historical reference unless a script is actively modernized.
+
+### Compatibility note
+
+Some old top-level paths under `scripts/` may temporarily remain as wrappers for backwards compatibility. New documentation and new automation should target the grouped paths (`scripts/ops/...`, `scripts/exports/...`, etc.).
+
+---
+
 ## Logging Strategy
 
 ### Context Injection (ContextVar)
@@ -846,6 +902,7 @@ Neo4j imports are still present but:
 - 📋 Plan: Phase out by Q3 2026
 
 Old Neo4j reports preserved in `ArchivedReports/` for reference.
+
 
 
 
