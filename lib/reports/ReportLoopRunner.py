@@ -108,6 +108,11 @@ class ReportLoopRunner:
 
         self.reports = None
 
+        # Optionele callback die aangeroepen wordt na elke volledige run.
+        # Gebruik in main.py om bv. bestanden naar Google Drive te uploaden.
+        # Voorbeeld: runner.on_run_complete = lambda: upload_folder_to_drive(...)
+        self.on_run_complete: callable | None = None
+
         self.dir_path = os.path.abspath(os.path.join(os.sep, ROOT_DIR, 'Reports'))
         self.mail_sender = MailSender(mail_settings=self.settings['smtp_options'])
         self.output_type = (self.settings.get('output', {}) or {}).get('type', 'GoogleSheets')
@@ -179,6 +184,12 @@ class ReportLoopRunner:
             self._run_parallel_by_datasource()
         else:
             self._run_sequential()
+
+        if self.on_run_complete is not None:
+            try:
+                self.on_run_complete()
+            except Exception as exc:
+                logging.error(f"on_run_complete callback mislukt: {exc}")
 
     def run_selected(self, report_names: list[str]):
         """Run a specific list of reports using the configured execution mode."""
