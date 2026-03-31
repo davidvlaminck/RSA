@@ -524,10 +524,10 @@ self.postgis_connector = SinglePostGISConnector(settings)
 **Reuse:**
 ```python
 # Each report reuses same connections
-ds_adapter = factories.make_datasource('ArangoDB')  # Returns adapter using singleton
+ds_adapter = datasources.datasource_factory.make_datasource('ArangoDB')  # Returns adapter using singleton
 qr = ds_adapter.execute(query)
 # ... next report ...
-ds_adapter2 = factories.make_datasource('ArangoDB')  # SAME connector
+ds_adapter2 = datasources.datasource_factory.make_datasource('ArangoDB')  # SAME connector
 qr2 = ds_adapter2.execute(query2)
 ```
 
@@ -563,13 +563,13 @@ def reinitialize_database_connections(settings):
 ```python
 # Worker 1 (ArangoDB pipeline)
 for report_name in arangodb_reports:
-    ds = factories.make_datasource('ArangoDB')  # Singleton (in Worker1's process)
+    ds = datasources.datasource_factory.make_datasource('ArangoDB')  # Singleton (in Worker1's process)
     qr = ds.execute(query)
 
 # Worker 2 (PostGIS pipeline) in parallel
 # Has its own PostGIS singleton (isolated from Worker1)
 for report_name in postgis_reports:
-    ds = factories.make_datasource('PostGIS')  # Singleton (in Worker2's process)
+    ds = datasources.datasource_factory.make_datasource('PostGIS')  # Singleton (in Worker2's process)
     qr = ds.execute(query)
 ```
 

@@ -1,0 +1,33 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "awv-rsa-report-service"
+version = "0.1.0"
+description = "Reporting service for AWV infrastructure data using ArangoDB, PostGIS, Excel output, and scheduled runners."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "python-arango",
+  "psycopg2-binary",
+  "openpyxl==3.1.2",
+  "neo4j>=5.3.0",
+  "pytz==2022.1",
+  "google-api-python-client==2.48.0",
+  "google-auth==2.6.6",
+  "google-auth-httplib2==0.1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8,<9",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["UnitTests"]
+python_files = ["test_*.py", "*Tests.py"]
+

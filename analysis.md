@@ -44,7 +44,7 @@ The report service needs a **refactored, extensible architecture** that:
 
 **Details:**
 - Each adapter implements `Datasource` protocol: `test_connection()` and `execute(query: str) -> QueryResult`
-- Adapters are created by `factories.make_datasource(datasource_name)`
+- Adapters are created by `datasources.datasource_factory.make_datasource(datasource_name)`
 - Adapters must work independently (swappable in config)
 
 **Acceptance Criteria:**
@@ -296,7 +296,7 @@ And Overzicht sheet is updated
 - [ ] Implement `ArangoDatasource` adapter (execute, keys population, last_data_update)
 - [ ] Implement `PostGISDatasource` adapter (execute, keys population, last_data_update)
 - [ ] Implement `ExcelOutput` adapter (write .xlsx, upload to OneDrive/SharePoint)
-- [ ] Update `factories.make_datasource()` to return new adapters
+- [ ] Update `datasources.datasource_factory.make_datasource()` to return new adapters
 - [ ] Run existing reports with new adapters; verify outputs match baseline
 
 **Deliverable:** One report runs successfully with Excel output (e.g., Report0002)
@@ -383,7 +383,7 @@ And Overzicht sheet is updated
 | FR | Component(s) | Test Coverage |
 |---|---|---|
 | FR1 (Excel Output) | `outputs/excel.py`, `ExcelWriter` | Integration test: write + upload |
-| FR2 (Datasource Abstraction) | `datasources/arango.py`, `datasources/postgis.py`, `factories.py` | Unit tests: execute, keys population |
+| FR2 (Datasource Abstraction) | `datasources/arango.py`, `datasources/postgis.py`, `datasources/datasource_factory.py` | Unit tests: execute, keys population |
 | FR3 (QueryResult) | `datasources/base.py` | Unit tests: to_rows_list, iter_rows |
 | FR4 (Retry Logic) | `lib/reports/ReportLoopRunner.py` | Simulation: failure + 3 retries |
 | FR5 (Mail Notifications) | `Reports/`, `lib/mail/MailSender.py` | Mock SMTP: verify report-defined recipients/frequency |

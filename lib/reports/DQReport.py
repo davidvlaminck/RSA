@@ -8,7 +8,8 @@ from lib.mail.MailSender import MailSender
 from lib.reports.Report import Report
 from outputs.sheets_cell import SheetsCell
 from outputs.sheets_wrapper import SingleSheetsWrapper, SheetsWrapper
-from factories import make_datasource, make_output
+from datasources.datasource_factory import make_datasource
+from outputs.output_factory import make_output
 from outputs.base import OutputWriteContext
 
 

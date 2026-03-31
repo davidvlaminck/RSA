@@ -66,13 +66,18 @@ class Report0002:
 
 **Execution Flow:**
 1. `DQReport.run_report(sender)` called
-2. Datasource adapter created via `factories.make_datasource()`
+2. Datasource adapter created via `datasources.datasource_factory.make_datasource()`
 3. `adapter.test_connection()` → raises if unreachable
 4. `qr = adapter.execute(result_query)` → returns `QueryResult`
-5. Output adapter created via `factories.make_output()`
+5. Output adapter created via `outputs.output_factory.make_output()`
 6. `output.write_report(ctx, qr, ...)` → writes to Excel
 7. History (`Historiek`) and summary (`Overzicht`) updated
 8. Mail sent if configured
+
+**Factory modules:**
+- `datasources/datasource_factory.py`: `make_datasource()` and `try_init_postgis_from_settings()`
+- `outputs/output_factory.py`: `make_output()`
+- Legacy compatibility: `factories.py` re-exports these functions for older imports.
 
 **Key Features:**
 - ✅ Extensible datasource/output via factories
@@ -235,8 +240,8 @@ class DQReport:
         """Main execution method."""
         try:
             # 1. Create adapters
-            ds_adapter = factories.make_datasource(self.datasource)
-            out_adapter = factories.make_output(self.output)
+            ds_adapter = datasources.datasource_factory.make_datasource(self.datasource)
+            out_adapter = outputs.output_factory.make_output(self.output)
             
             # 2. Test connection
             ds_adapter.test_connection()
@@ -902,6 +907,8 @@ Neo4j imports are still present but:
 - 📋 Plan: Phase out by Q3 2026
 
 Old Neo4j reports preserved in `ArchivedReports/` for reference.
+
+
 
 
 
