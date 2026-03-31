@@ -6,6 +6,7 @@ import time
 import traceback
 from datetime import datetime
 from pathlib import Path
+from typing import Callable, Optional
 from zoneinfo import ZoneInfo
 
 import pytz
@@ -27,7 +28,7 @@ RETRIES = 5
 
 
 class ReportLoopRunner:
-    def __init__(self, settings_path, excel_output_dir: str | None = None):
+    def __init__(self, settings_path, excel_output_dir: Optional[str] = None):
         """Initialize runner.
 
         Args:
@@ -112,6 +113,34 @@ class ReportLoopRunner:
         self.mail_sender = MailSender(mail_settings=self.settings['smtp_options'])
         self.output_type = (self.settings.get('output', {}) or {}).get('type', 'GoogleSheets')
         self.output_settings = (self.settings.get('output', {}) or {})
+        self.post_run_hooks: list[Callable[[], None]] = []
+
+    def add_post_run_hook(self, hook: Callable[[], None]) -> None:
+        """Register a callback to run after reports and summary aggregation complete."""
+        self.post_run_hooks.append(hook)
+
+    def _invoke_post_run_hooks(self) -> None:
+        for hook in self.post_run_hooks:
+            try:
+                hook()
+            except Exception as ex:
+                logging.error(f'post-run hook failed: {ex}')
+
+    def _resolved_excel_output_dir(self) -> Path:
+        if self.excel_output_dir is not None:
+            return self.excel_output_dir
+        return Path('RSA_OneDrive')
+
+    def _run_summary_aggregator(self, *, mode_label: str = '', limit: int = 1000) -> None:
+        output_dir = self._resolved_excel_output_dir()
+        staged_dir = output_dir / 'staged_summaries'
+        suffix = f' ({mode_label})' if mode_label else ''
+        logging.info(f'Running summary aggregator for staged dir {staged_dir}{suffix}')
+        try:
+            processed = process_once(staged_dir, output_dir, limit=limit, dry_run=False)
+            logging.info(f'Aggregate summaries processed {processed} files')
+        except Exception as ex:
+            logging.error(f'Failed running aggregate_summaries.process_once{suffix}: {ex}')
 
     @staticmethod
     def _parse_hms_to_seconds(hms: str) -> int:
@@ -180,6 +209,8 @@ class ReportLoopRunner:
         else:
             self._run_sequential()
 
+        self._invoke_post_run_hooks()
+
     def run_selected(self, report_names: list[str]):
         """Run a specific list of reports using the configured execution mode."""
         execution_mode = self.settings.get('report_execution', {}).get('mode', 'sequential')
@@ -189,7 +220,9 @@ class ReportLoopRunner:
         else:
             self._run_sequential(report_names)
 
-    def _run_sequential(self, report_names: list[str] | None = None):
+        self._invoke_post_run_hooks()
+
+    def _run_sequential(self, report_names: Optional[list[str]] = None):
         """Run reports one at a time (original behavior)."""
         # start running reports now and at midnight
         logging.info(f"{datetime.now(tz=BRUSSELS)}: let's run the reports now")
@@ -243,21 +276,9 @@ class ReportLoopRunner:
 
         logging.info(f'{datetime.now(tz=pytz.timezone("Europe/Brussels"))}: '
                        f'sent all mails_to_send ({len(list(self.mail_sender.mails_to_send))})')
-        # After all reports are done, aggregate staged summary updates.
-        try:
-            staged_dir = (self.excel_output_dir / 'staged_summaries') if hasattr(self, 'excel_output_dir') else Path('RSA_OneDrive') / 'staged_summaries'
-            output_dir = self.excel_output_dir if hasattr(self, 'excel_output_dir') else Path('RSA_OneDrive')
-            logging.info(f'Running summary aggregator for staged dir {staged_dir}')
-            # process_once returns number of processed files
-            try:
-                processed = process_once(staged_dir, output_dir, limit=1000, dry_run=False)
-                logging.info(f'Aggregate summaries processed {processed} files')
-            except Exception as ex:
-                logging.error(f'Failed running aggregate_summaries.process_once: {ex}')
-        except Exception as ex:
-            logging.error(f'Could not run aggregator: {ex}')
+        self._run_summary_aggregator()
 
-    def _run_parallel_by_datasource(self, report_names: list[str] | None = None):
+    def _run_parallel_by_datasource(self, report_names: Optional[list[str]] = None):
         """Run reports in parallel, grouped by datasource to avoid DB contention.
 
         This mode:
@@ -301,20 +322,9 @@ class ReportLoopRunner:
                 pass
 
         logging.info(f'{datetime.now(tz=pytz.timezone("Europe/Brussels"))}: parallel execution complete')
-        # After parallel pipelines completed, run the aggregator once to apply staged summaries
-        try:
-            staged_dir = (self.excel_output_dir / 'staged_summaries') if hasattr(self, 'excel_output_dir') else Path('RSA_OneDrive') / 'staged_summaries'
-            output_dir = self.excel_output_dir if hasattr(self, 'excel_output_dir') else Path('RSA_OneDrive')
-            logging.info(f'Running summary aggregator for staged dir {staged_dir} (parallel mode)')
-            try:
-                processed = process_once(staged_dir, output_dir, limit=1000, dry_run=False)
-                logging.info(f'Aggregate summaries processed {processed} files')
-            except Exception as ex:
-                logging.error(f'Failed running aggregate_summaries.process_once: {ex}')
-        except Exception as ex:
-            logging.error(f'Could not run aggregator after parallel pipelines: {ex}')
+        self._run_summary_aggregator(mode_label='parallel mode')
 
-    def run_all_no_google(self, output_dir: str | None = None, limit: int = 1000, timeout_seconds: int | None = None, max_concurrent: int | None = None):
+    def run_all_no_google(self, output_dir: Optional[str] = None, limit: int = 1000, timeout_seconds: Optional[int] = None, max_concurrent: Optional[int] = None):
         """Run all reports (discovering from Reports/) in no-Google mode.
 
         This prepares a temporary settings file where Google is disabled and Excel
@@ -389,15 +399,8 @@ class ReportLoopRunner:
                 except Exception:
                     pass
 
-            # apply staged summaries
-            try:
-                staged_dir = (self.excel_output_dir / 'staged_summaries') if hasattr(self, 'excel_output_dir') else Path('RSA_OneDrive') / 'staged_summaries'
-                output_dir_path = self.excel_output_dir if hasattr(self, 'excel_output_dir') else Path('RSA_OneDrive')
-                logging.info(f'Running summary aggregator for staged dir {staged_dir} (no-Google mode)')
-                processed = process_once(staged_dir, output_dir_path, limit=limit, dry_run=False)
-                logging.info(f'Aggregate summaries processed {processed} files')
-            except Exception as ex:
-                logging.error(f'Failed running aggregate_summaries.process_once (no-Google mode): {ex}')
+            self._run_summary_aggregator(mode_label='no-Google mode', limit=limit)
+            self._invoke_post_run_hooks()
 
         except Exception as e:
             logging.exception('run_all_no_google failed: %s', e)

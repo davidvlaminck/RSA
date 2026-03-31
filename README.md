@@ -24,6 +24,7 @@ Common commands:
 ```bash
 uv run python main.py
 uv run python main_selection_list.py --parallel
+uv run python scripts/ops/run_one_report_and_mail_archive.py --report Report0002
 uv run pytest
 ```
 
@@ -31,6 +32,10 @@ Main entrypoints:
 - `main.py`
 - `run_single_report.py`
 - `main_selection_list.py`
+
+Archive email:
+- `main.py` now zips the configured Excel output directory after a full run and mails it to `david.vlaminck@mow.vlaanderen.be` using `smtp_options`.
+- For a focused test flow, use `scripts/ops/run_one_report_and_mail_archive.py`.
 
 ## Documentation
 
