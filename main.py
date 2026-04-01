@@ -1,19 +1,9 @@
 from lib.reports.ReportLoopRunner import ReportLoopRunner
-from lib.mail.archive_mailer import zip_and_mail_output_dir
 
 if __name__ == '__main__':
     settings_path = r'/home/davidlinux/Documenten/AWV/resources/settings_RSA.json'
     onedrive_path = '/home/davidlinux/PycharmProjects/RSA/RSA_OneDrive'  # absoluut pad
-    archive_mail_recipient = 'david.vlaminck@mow.vlaanderen.be'
     reportlooprunner = ReportLoopRunner(settings_path=settings_path, excel_output_dir=onedrive_path)
-    reportlooprunner.add_post_run_hook(
-        lambda: zip_and_mail_output_dir(
-            output_dir=reportlooprunner._resolved_excel_output_dir(),
-            mail_settings=reportlooprunner.settings['smtp_options'],
-            recipient=archive_mail_recipient,
-            subject='RSA',
-        )
-    )
     # reportlooprunner = ReportLoopRunner(settings_path=r'C:\resources\settings_RSA.json')
     reportlooprunner.start(run_right_away=True)
 
