@@ -2,14 +2,16 @@ import argparse
 import os
 import sys
 import time
-from datetime import datetime, UTC
+from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from lib.reports.selection_runner import run_selection
 
 
 DEFAULT_SETTINGS_PATH = r'/home/davidlinux/Documenten/AWV/resources/settings_RSA.json'
 DEFAULT_WORKDIR = str(Path(__file__).resolve().parent)
+BRUSSELS = ZoneInfo('Europe/Brussels')
 
 
 def run_daily(settings_path: str, report: str) -> int:
@@ -17,13 +19,13 @@ def run_daily(settings_path: str, report: str) -> int:
     started_running_date = None
 
     while True:
-        now_utc = datetime.now(UTC)
-        if started_running_date is None or started_running_date != now_utc.date():
-            print(f'{now_utc}: let\'s run the report now')
-            started_running_date = now_utc.date()
+        now_brussels = datetime.now(BRUSSELS)
+        if started_running_date is None or started_running_date != now_brussels.date():
+            print(f'{now_brussels}: let\'s run the report now')
+            started_running_date = now_brussels.date()
             return run_selection(settings_path=settings_path, report_names=[report], stream_output=True)
 
-        print(f'{datetime.now(UTC)}: not yet the right time to run reports.')
+        print(f'{datetime.now(BRUSSELS)}: not yet the right time to run reports.')
         time.sleep(60)
 
 

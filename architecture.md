@@ -141,7 +141,7 @@ Main Process
 
 ### 1. main.py (All Reports, Scheduled Loop)
 
-**Purpose:** Run all 194+ reports daily in a scheduled loop
+**Purpose:** Run all reports daily in a scheduled loop, with Drive mirror sync around the run window.
 
 **Code:**
 ```bash
@@ -149,40 +149,33 @@ python main.py
 ```
 
 **Behavior:**
-1. Respect time window (config: `settings.json` → `time.start` / `time.end`)
-2. On startup, enter infinite loop
-3. On each daily boundary, run all reports (or when time window matches)
-4. After run, wait until next boundary
-5. Log all execution details
+1. Stay in infinite loop managed by `ReportLoopRunner.start(run_right_away=False)`
+2. Before first run of each day, wait until at least `01:00:00` and mirror-download Drive folder to local `RSA_OneDrive`
+3. Respect execution window from settings (`time.start` / `time.end`)
+4. Execute reports when window is active
+5. After run completion, mirror-upload local `RSA_OneDrive` back to Drive
+6. Append run status lines to `RSA_OneDrive/logs/run_YYYYMMDD.log`
 
 **Implementation:**
 ```python
 # main.py
 from lib.reports.ReportLoopRunner import ReportLoopRunner
+from scripts.ops.gdrive_upload import sync_drive_to_local, sync_local_to_drive
 
-runner = ReportLoopRunner(settings_path='settings.json')
-runner.start(run_right_away=True)  # Infinite loop
+runner = ReportLoopRunner(settings_path='settings.json', excel_output_dir='RSA_OneDrive')
+runner.on_before_run = daily_sync_gate.ensure_synced
+runner.on_run_complete = lambda: sync_local_to_drive(...)
+runner.start(run_right_away=False)
 ```
 
 **Configuration (time window):**
 ```json
 {
-  "time_window": {
-    "start_hour": 5,
-    "end_hour": 23
+  "time": {
+    "start": "06:00:00",
+    "end": "12:50:00"
   }
 }
-```
-
-**Example Output:**
-```
-[2026-03-30 05:00:02] [system] INFO - Time window active (5:00 - 23:59); running reports
-[2026-03-30 05:00:02] [Report0002] INFO - Starting report
-[2026-03-30 05:00:05] [Report0002] INFO - ✓ Completed successfully
-... [193 more reports]
-[2026-03-30 11:45:00] [Report0199] INFO - ✓ Completed successfully
-[2026-03-30 11:45:01] [system] INFO - All reports completed (195/195 success)
-[2026-03-30 11:45:02] [system] INFO - Waiting until next daily boundary (tomorrow at 5:00 AM)
 ```
 
 ---
@@ -893,6 +886,3 @@ Exponential backoff for failed reports (FR4 from analysis.md).
 ✅ **Timeout and fault tolerance**  
 ✅ **Easy to test and debug**  
 ✅ **Extensible for future enhancements**
-
-
-

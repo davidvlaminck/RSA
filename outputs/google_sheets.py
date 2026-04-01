@@ -95,10 +95,12 @@ class GoogleSheetsWriter:
                                     new_sheet_name='Resultaat')
 
         # report header lines
-        # If last_data_update is empty, try to fill it with current UTC time as fallback
-        from datetime import datetime, UTC
+        # If last_data_update is empty, try to fill it with current Brussels time as fallback
+        from datetime import datetime
+        from zoneinfo import ZoneInfo
+        brussels = ZoneInfo('Europe/Brussels')
         if not result.last_data_update:
-            result_last_data_update = datetime.now(UTC).strftime('%Y-%m-%d %H:%M:%S')
+            result_last_data_update = datetime.now(brussels).strftime('%Y-%m-%d %H:%M:%S')
         else:
             result_last_data_update = result.last_data_update
         report_made_lines = [[f'Rapport gemaakt op {ctx.now_utc} met data uit:'],

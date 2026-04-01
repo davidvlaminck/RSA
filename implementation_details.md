@@ -681,10 +681,12 @@ Supporting scripts are grouped under `scripts/` by purpose.
 Operational helper scripts for running batches and maintaining generated outputs.
 
 Typical examples:
-- `aggregate_summaries.py` — applies staged summary/history updates to Excel workbooks
-- `run_reports_no_google.py` — runs a curated report set with Excel-only behavior
-- `run_all_no_google.py` — runs all reports in Excel-only mode
-- `create_backups.py` — creates timestamped backups of generated Excel files
+- `aggregate_summaries.py` - applies staged summary/history updates to Excel workbooks
+- `run_reports_no_google.py` - runs a curated report set with Excel-only behavior
+- `run_all_no_google.py` - runs all reports in Excel-only mode
+- `create_backups.py` - creates timestamped backups of generated Excel files
+- `gdrive_upload.py` - Google Drive OAuth login + folder mirror sync (`sync-down` and `sync-up`)
+- `dry_sync_test.py` - one-shot pre-run Drive download test (without report execution)
 
 Use this folder for scripts that support real execution flows or production-style maintenance.
 
@@ -907,9 +909,4 @@ Neo4j imports are still present but:
 - 📋 Plan: Phase out by Q3 2026
 
 Old Neo4j reports preserved in `ArchivedReports/` for reference.
-
-
-
-
-
 

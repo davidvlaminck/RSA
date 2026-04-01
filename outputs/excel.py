@@ -10,6 +10,7 @@ import importlib
 import warnings
 import logging
 from contextlib import contextmanager
+from zoneinfo import ZoneInfo
 
 # lazy-loaded openpyxl handles
 openpyxl = None
@@ -17,6 +18,7 @@ Workbook = None
 WriteOnlyWorkbook = None
 get_column_letter = None
 load_workbook = None
+BRUSSELS = ZoneInfo('Europe/Brussels')
 
 def _ensure_openpyxl_loaded():
     global openpyxl, Workbook, WriteOnlyWorkbook, get_column_letter, load_workbook
@@ -140,17 +142,17 @@ class ExcelOutput:
             except Exception:
                 return str(val)
         if isinstance(val, datetime.datetime):
-            # normalize datetimes to UTC and format as ISO (with 'T') without timezone
+            # normalize datetimes to Brussels time and format as ISO (with 'T') without timezone
             # information to match expected summary format (YYYY-MM-DDTHH:MM:SS).
             try:
                 if val.tzinfo is None:
-                    # naive datetimes: assume UTC, preserve value but format with 'T'
+                    # naive datetimes: assume Brussels time, preserve value but format with 'T'
                     return val.isoformat(timespec='seconds')
                 else:
-                    # aware datetimes: convert to UTC then drop tzinfo so string
+                    # aware datetimes: convert to Brussels then drop tzinfo so string
                     # matches naive-ISO representation expected by callers/tests
-                    dt_utc = val.astimezone(datetime.timezone.utc).replace(tzinfo=None)
-                    return dt_utc.isoformat(timespec='seconds')
+                    dt_brussels = val.astimezone(BRUSSELS).replace(tzinfo=None)
+                    return dt_brussels.isoformat(timespec='seconds')
             except Exception:
                 return str(val)
         if isinstance(val, datetime.date):

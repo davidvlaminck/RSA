@@ -1,7 +1,8 @@
 import decimal
 import logging
 import time
-from datetime import datetime, date, timedelta, UTC
+from datetime import datetime, date, timedelta
+from zoneinfo import ZoneInfo
 
 from googleapiclient.errors import HttpError
 from neo4j.time import DateTime
@@ -12,6 +13,8 @@ from lib.connectors.PostGISConnector import SinglePostGISConnector
 from lib.reports.Report import Report
 from outputs.sheets_cell import SheetsCell
 from outputs.sheets_wrapper import SingleSheetsWrapper, SheetsWrapper
+
+BRUSSELS = ZoneInfo('Europe/Brussels')
 
 
 class LegacyReport(Report):
@@ -137,7 +140,7 @@ class LegacyReport(Report):
         sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.summary_sheet_id,
                                            sheet_name='Overzicht',
                                            start_cell='C' + str(rowFound + 1),
-                                           data=[[datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S"), None]])
+                                           data=[[datetime.now(BRUSSELS).strftime("%Y-%m-%d %H:%M:%S"), None]])
 
         # also write the query execution time into column H for this report's summary row
         try:

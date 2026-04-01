@@ -5,7 +5,7 @@
         "password": ""
     },
     "google_api": {
-        "credentials_path": "C:\\resources\\driven-wonder-149715-ca8bdf010930.json"
+        "credentials_path": "/home/davidlinux/Documenten/AWV/resources/client_secret_RSA-API.json"
     },
     "databases": {
         "Neo4j": {
@@ -16,13 +16,21 @@
         }
     },
     "time": {
-        "start": "03:00:00",
+        "start": "06:00:00",
         "end": "23:59:59"
     },
     "output": {
-        "type": "GoogleSheets",
+        "type": "excel",
         "excel": {
-            "output_dir": "./out"
+            "output_dir": "./RSA_OneDrive"
         }
+    },
+    "drive_sync": {
+        "enabled": true,
+        "sync_after": "01:00:00",
+        "drive_folder": "RSA",
+        "credentials_path": "/home/davidlinux/Documenten/AWV/resources/client_secret_RSA-API.json",
+        "local_folder": "./RSA_OneDrive",
+        "token_path": "/home/davidlinux/Documenten/AWV/resources/gdrive_token.pkl"
     }
 }

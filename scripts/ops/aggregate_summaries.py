@@ -16,7 +16,8 @@ import json
 import logging
 from pathlib import Path
 from typing import Any, Dict
-from datetime import datetime, timezone
+from datetime import datetime
+from zoneinfo import ZoneInfo
 import re
 import sys
 
@@ -31,6 +32,7 @@ from pathlib import Path as _Path
 
 logging.basicConfig(level=logging.INFO, format='[AGG] %(asctime)s %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+BRUSSELS = ZoneInfo('Europe/Brussels')
 
 
 def apply_payload(excel: ExcelOutput, payload: Dict[str, Any], output_dir: Path) -> Path | None:
@@ -101,8 +103,8 @@ def apply_payload(excel: ExcelOutput, payload: Dict[str, Any], output_dir: Path)
         value = payload['value']
         wb_path = Path(wb_path).resolve()
         logger.debug('Applying write_cell to workbook %s sheet %s cell %s (report=%s)', wb_path, sheet, cell, payload.get('meta',{}).get('report'))
-        # If writing to Overzicht column C, normalize the timestamp format to UTC 'YYYY-MM-DD HH:MM:SS'
-        def _normalize_to_utc_string(val) -> str:
+        # If writing to Overzicht column C, normalize the timestamp format to Brussels 'YYYY-MM-DD HH:MM:SS'
+        def _normalize_to_brussels_string(val) -> str:
             if val is None:
                 return ''
             if isinstance(val, (int, float)):
@@ -147,24 +149,24 @@ def apply_payload(excel: ExcelOutput, payload: Dict[str, Any], output_dir: Path)
                             dt = None
                 if dt is None:
                     return s
-                # ensure tzinfo: if naive, assume UTC (user requested UTC) and convert to UTC
+                # ensure tzinfo: if naive, assume Brussels (user requested Brussels) and convert to Brussels
                 if dt.tzinfo is None:
-                    dt = dt.replace(tzinfo=timezone.utc)
-                # convert to UTC and format
-                dt_utc = dt.astimezone(timezone.utc)
+                    dt = dt.replace(tzinfo=BRUSSELS)
+                # convert to Brussels and format
+                dt_utc = dt.astimezone(BRUSSELS)
                 return dt_utc.strftime('%Y-%m-%d %H:%M:%S')
             except Exception:
                 return str(val)
 
         def _parse_dt(val):
-            """Return a timezone-aware datetime in UTC if parseable, else None."""
+            """Return a timezone-aware datetime in Brussels if parseable, else None."""
             if val is None:
                 return None
             if isinstance(val, datetime):
                 dt = val
                 if dt.tzinfo is None:
-                    dt = dt.replace(tzinfo=timezone.utc)
-                return dt.astimezone(timezone.utc)
+                    dt = dt.replace(tzinfo=BRUSSELS)
+                return dt.astimezone(BRUSSELS)
             s = str(val).strip()
             if s == '':
                 return None
@@ -172,8 +174,8 @@ def apply_payload(excel: ExcelOutput, payload: Dict[str, Any], output_dir: Path)
             try:
                 dt = datetime.fromisoformat(iso)
                 if dt.tzinfo is None:
-                    dt = dt.replace(tzinfo=timezone.utc)
-                return dt.astimezone(timezone.utc)
+                    dt = dt.replace(tzinfo=BRUSSELS)
+                return dt.astimezone(BRUSSELS)
             except Exception:
                 pass
             # try known formats
@@ -189,8 +191,8 @@ def apply_payload(excel: ExcelOutput, payload: Dict[str, Any], output_dir: Path)
                 try:
                     dt = datetime.strptime(s, f)
                     if dt.tzinfo is None:
-                        dt = dt.replace(tzinfo=timezone.utc)
-                    return dt.astimezone(timezone.utc)
+                        dt = dt.replace(tzinfo=BRUSSELS)
+                    return dt.astimezone(BRUSSELS)
                 except Exception:
                     continue
             # regex fallback
@@ -200,8 +202,8 @@ def apply_payload(excel: ExcelOutput, payload: Dict[str, Any], output_dir: Path)
                 try:
                     dt = datetime.fromisoformat(piece)
                     if dt.tzinfo is None:
-                        dt = dt.replace(tzinfo=timezone.utc)
-                    return dt.astimezone(timezone.utc)
+                        dt = dt.replace(tzinfo=BRUSSELS)
+                    return dt.astimezone(BRUSSELS)
                 except Exception:
                     return None
             return None
@@ -212,9 +214,9 @@ def apply_payload(excel: ExcelOutput, payload: Dict[str, Any], output_dir: Path)
             # value expected to be [timestamp, count]
             # Handle list payloads like [timestamp, count]
             if isinstance(value, list) and len(value) >= 1:
-                # Normalize payload timestamp and always write the payload's timestamp (normalized to UTC).
+                # Normalize payload timestamp and always write the payload's timestamp (normalized to Brussels).
                 try:
-                    normalized = _normalize_to_utc_string(value[0])
+                    normalized = _normalize_to_brussels_string(value[0])
                     value[0] = normalized
                     logger.info('Overzicht C write: report=%s workbook=%s cell=%s payload_normalized=%s',
                                 payload.get('meta', {}).get('report'), str(Path(wb_path).resolve()), cell, normalized)
@@ -223,7 +225,7 @@ def apply_payload(excel: ExcelOutput, payload: Dict[str, Any], output_dir: Path)
             else:
                 # Handle scalar timestamp payloads
                 try:
-                    normalized = _normalize_to_utc_string(value)
+                    normalized = _normalize_to_brussels_string(value)
                     # write back normalized scalar
                     before_val = None
                     try:
@@ -358,8 +360,8 @@ def process_once(staged_dir: Path, output_dir: Path, limit: int = 100, dry_run: 
         if isinstance(val, datetime):
             dt = val
             if dt.tzinfo is None:
-                dt = dt.replace(tzinfo=timezone.utc)
-            return dt.astimezone(timezone.utc)
+                dt = dt.replace(tzinfo=BRUSSELS)
+            return dt.astimezone(BRUSSELS)
         s = str(val).strip()
         if s == '':
             return None
@@ -367,8 +369,8 @@ def process_once(staged_dir: Path, output_dir: Path, limit: int = 100, dry_run: 
         try:
             dt = datetime.fromisoformat(iso)
             if dt.tzinfo is None:
-                dt = dt.replace(tzinfo=timezone.utc)
-            return dt.astimezone(timezone.utc)
+                dt = dt.replace(tzinfo=BRUSSELS)
+            return dt.astimezone(BRUSSELS)
         except Exception:
             pass
         fmts = [
@@ -383,8 +385,8 @@ def process_once(staged_dir: Path, output_dir: Path, limit: int = 100, dry_run: 
             try:
                 dt = datetime.strptime(s, ffmt)
                 if dt.tzinfo is None:
-                    dt = dt.replace(tzinfo=timezone.utc)
-                return dt.astimezone(timezone.utc)
+                    dt = dt.replace(tzinfo=BRUSSELS)
+                return dt.astimezone(BRUSSELS)
             except Exception:
                 continue
         m = re.search(r"\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:[+-]\d{2}:?\d{2}|Z)?", s)
@@ -393,8 +395,8 @@ def process_once(staged_dir: Path, output_dir: Path, limit: int = 100, dry_run: 
             try:
                 dt = datetime.fromisoformat(piece)
                 if dt.tzinfo is None:
-                    dt = dt.replace(tzinfo=timezone.utc)
-                return dt.astimezone(timezone.utc)
+                    dt = dt.replace(tzinfo=BRUSSELS)
+                return dt.astimezone(BRUSSELS)
             except Exception:
                 return None
         return None

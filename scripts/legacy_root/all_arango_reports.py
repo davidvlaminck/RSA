@@ -3,8 +3,9 @@ import importlib.util
 import logging
 import os
 import traceback
-from datetime import datetime, UTC
+from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 from lib.mail.MailSender import MailSender
 from SettingsManager import SettingsManager
 from outputs.sheets_wrapper import SingleSheetsWrapper
@@ -12,6 +13,7 @@ from lib.connectors.Neo4JConnector import SingleNeo4JConnector
 from lib.connectors.PostGISConnector import SinglePostGISConnector
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
+BRUSSELS = ZoneInfo('Europe/Brussels')
 
 # List of Arango reports to run, based on tasks.md (Has AQL Query = Yes, Refactored = Yes)
 ARANGO_REPORTS = [
@@ -77,9 +79,9 @@ class AllArangoReportsRunner:
 
     def run(self):
         started_running_date = None
-        now_utc = datetime.now(UTC)
-        started_running_date = now_utc.date()
-        logging.info(f'{now_utc}: running all Arango reports')
+        now_brussels = datetime.now(BRUSSELS)
+        started_running_date = now_brussels.date()
+        logging.info(f'{now_brussels}: running all Arango reports')
         reports_to_do = list(ARANGO_REPORTS)
         for report_name in sorted(reports_to_do):
             try:
@@ -92,11 +94,11 @@ class AllArangoReportsRunner:
                 logging.exception(ex)
                 traceback.print_exc()
                 logging.error(f'Failed completing report {report_name}')
-        logging.info(f'{datetime.now(UTC)}: done running all Arango reports')
+        logging.info(f'{datetime.now(BRUSSELS)}: done running all Arango reports')
         try:
             self.mail_sender.send_all_mails()
             self.adjust_mailed_info_in_sheets(sender=self.mail_sender)
-            logging.info(f'{datetime.now(UTC)}: sent all mails_to_send ({len(self.mail_sender.mails_to_send)})')
+            logging.info(f'{datetime.now(BRUSSELS)}: sent all mails_to_send ({len(self.mail_sender.mails_to_send)})')
         except Exception as ex:
             logging.info(f"Mail sending failed: {ex}")
             logging.exception(ex)
