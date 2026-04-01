@@ -2,12 +2,15 @@ from __future__ import annotations
 
 import time
 from typing import Any, Sequence
+from zoneinfo import ZoneInfo
 
 from neo4j.time import DateTime
 
 from lib.connectors.Neo4JConnector import SingleNeo4JConnector
 
 from .base import QueryResult
+
+BRUSSELS = ZoneInfo('Europe/Brussels')
 
 
 class Neo4JDatasource:
@@ -31,7 +34,10 @@ class Neo4JDatasource:
         # Last sync timestamp (existing behavior).
         with self._connector.driver.session(database=self._connector.db) as session:
             query_result: DateTime = session.run('MATCH (p:Params) RETURN p.last_update_utc').single()[0]
-        last_data_update = query_result.to_native().strftime("%Y-%m-%d %H:%M:%S")
+        native = query_result.to_native()
+        if native.tzinfo is None:
+            native = native.replace(tzinfo=BRUSSELS)
+        last_data_update = native.astimezone(BRUSSELS).strftime("%Y-%m-%d %H:%M:%S")
 
         # Normalize rows in key order.
         rows: list[Sequence[Any]] = [[row.get(k, "") for k in keys] for row in data]

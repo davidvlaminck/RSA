@@ -7,6 +7,7 @@ import traceback
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
+from typing import Callable
 
 import pytz
 
@@ -108,6 +109,10 @@ class ReportLoopRunner:
 
         self.reports = None
 
+        # Optional callback invoked before starting a daily run.
+        # Should return True when preconditions are met; False to retry later.
+        self.on_before_run: Callable[[datetime], bool] | None = None
+
         # Optionele callback die aangeroepen wordt na elke volledige run.
         # Gebruik in main.py om bv. bestanden naar Google Drive te uploaden.
         # Voorbeeld: runner.on_run_complete = lambda: upload_folder_to_drive(...)
@@ -161,12 +166,36 @@ class ReportLoopRunner:
 
         while True:
             if run_right_away:
+                # Respect the same pre-run hook for immediate execution.
+                if self.on_before_run is not None:
+                    while True:
+                        now = datetime.now(tz=BRUSSELS)
+                        try:
+                            if self.on_before_run(now):
+                                break
+                        except Exception as exc:
+                            logging.error(f"on_before_run callback mislukt: {exc}")
+                        logging.info(f"{datetime.now(tz=BRUSSELS)}: waiting for pre-run conditions")
+                        time.sleep(60)
                 self.run()
                 run_right_away = False
                 last_run_date = datetime.now(tz=BRUSSELS).date()
                 continue
 
             now = datetime.now(tz=pytz.timezone("Europe/Brussels"))
+
+            # Allow external pre-run prerequisites (e.g. daily Drive download sync).
+            if self.on_before_run is not None and last_run_date != now.date():
+                try:
+                    if not self.on_before_run(now):
+                        logging.info(f'{datetime.now(tz=BRUSSELS)}: pre-run conditions not yet met.')
+                        time.sleep(60)
+                        continue
+                except Exception as exc:
+                    logging.error(f"on_before_run callback mislukt: {exc}")
+                    time.sleep(60)
+                    continue
+
             if last_run_date == now.date() or not self._is_within_run_window(now):
                 logging.info(f'{datetime.now(tz=BRUSSELS)}: not yet the right time to run reports.')
                 time.sleep(60)

@@ -4,7 +4,10 @@ from .base import QueryResult
 
 from .ArangoDBConnectionFactory import ArangoDBConnectionFactory
 from arango import ArangoClient
-from datetime import datetime, timezone
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
+BRUSSELS = ZoneInfo('Europe/Brussels')
 
 class ArangoDatasource:
     """ArangoDB datasource (AQL)."""
@@ -17,7 +20,7 @@ class ArangoDatasource:
         self.test_connection()
 
     def _normalize_last_data_update(self, v):
-        """Normalize various datetime/string representations to '%Y-%m-%d %H:%M:%S'.
+        """Normalize various datetime/string representations to Brussels-local '%Y-%m-%d %H:%M:%S'.
         Accepts: datetime (aware or naive), ISO string with offset, or other string.
         Returns formatted string or None if cannot parse.
         """
@@ -25,11 +28,11 @@ class ArangoDatasource:
             return None
         # If it's already a datetime
         if isinstance(v, datetime):
-            # ensure timezone-aware in UTC for consistent formatting
+            # ensure timezone-aware in Brussels for consistent formatting
             if v.tzinfo is None:
-                v = v.replace(tzinfo=timezone.utc)
+                v = v.replace(tzinfo=BRUSSELS)
             else:
-                v = v.astimezone(timezone.utc)
+                v = v.astimezone(BRUSSELS)
             return v.strftime("%Y-%m-%d %H:%M:%S")
         # If it's a string, try to parse ISO formats
         if isinstance(v, str):
@@ -37,9 +40,9 @@ class ArangoDatasource:
                 # Python 3.11+ supports fromisoformat with offset; use it and fallback
                 dt = datetime.fromisoformat(v)
                 if dt.tzinfo is None:
-                    dt = dt.replace(tzinfo=timezone.utc)
+                    dt = dt.replace(tzinfo=BRUSSELS)
                 else:
-                    dt = dt.astimezone(timezone.utc)
+                    dt = dt.astimezone(BRUSSELS)
                 return dt.strftime("%Y-%m-%d %H:%M:%S")
             except Exception:
                 # Try a few common formats
@@ -47,9 +50,9 @@ class ArangoDatasource:
                     try:
                         dt = datetime.strptime(v, fmt)
                         if dt.tzinfo is None:
-                            dt = dt.replace(tzinfo=timezone.utc)
+                            dt = dt.replace(tzinfo=BRUSSELS)
                         else:
-                            dt = dt.astimezone(timezone.utc)
+                            dt = dt.astimezone(BRUSSELS)
                         return dt.strftime("%Y-%m-%d %H:%M:%S")
                     except Exception:
                         continue
@@ -177,7 +180,7 @@ class ArangoDatasource:
                                         pass
                             if parsed:
                                 latest = max(parsed)
-                                last_data_update = latest.astimezone(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+                                last_data_update = latest.astimezone(BRUSSELS).strftime('%Y-%m-%d %H:%M:%S')
                                 source = 'inferred.rows'
                     except Exception:
                         pass

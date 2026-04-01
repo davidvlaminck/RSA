@@ -10,14 +10,16 @@ The log file is at .gitignored path: scripts/file_changes.log
 from __future__ import annotations
 
 import argparse
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 LOG_PATH = Path(__file__).resolve().parents[1] / 'file_changes.log'
+BRUSSELS = ZoneInfo('Europe/Brussels')
 
 
 def append_entry(action: str, path: str):
-    ts = datetime.now(timezone.utc).isoformat()
+    ts = datetime.now(BRUSSELS).isoformat()
     entry = f"{ts}\t{action}\t{path}\n"
     LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
     with open(LOG_PATH, 'a', encoding='utf-8') as fh:

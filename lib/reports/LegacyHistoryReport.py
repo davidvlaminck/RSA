@@ -1,8 +1,8 @@
 import decimal
 import logging
 import time
-from _pydatetime import UTC
 from datetime import datetime, date, timedelta
+from zoneinfo import ZoneInfo
 
 from neo4j.time import DateTime
 
@@ -11,6 +11,25 @@ from lib.connectors.PostGISConnector import SinglePostGISConnector
 from lib.reports.Report import Report
 from outputs.sheets_cell import SheetsCell
 from outputs.sheets_wrapper import SingleSheetsWrapper
+
+BRUSSELS = ZoneInfo('Europe/Brussels')
+
+
+def _to_brussels_string(value) -> str:
+    if value is None:
+        return ''
+    try:
+        dt = value.to_native() if hasattr(value, 'to_native') else value
+        if hasattr(dt, 'tzinfo') and dt.tzinfo is None:
+            dt = dt.replace(tzinfo=BRUSSELS)
+        if hasattr(dt, 'astimezone'):
+            return dt.astimezone(BRUSSELS).strftime('%Y-%m-%d %H:%M:%S')
+    except Exception:
+        pass
+    try:
+        return value.strftime('%Y-%m-%d %H:%M:%S')
+    except Exception:
+        return str(value)
 
 
 class LegacyHistoryReport(Report):
@@ -89,7 +108,7 @@ class LegacyHistoryReport(Report):
         lastest_sheetname = None
         if len(sheet_names) > 0:
             lastest_sheetname = sheet_names[0]
-        new_sheetname = datetime.now(UTC).strftime('%d/%m/%Y')
+        new_sheetname = datetime.now(BRUSSELS).strftime('%d/%m/%Y')
 
         if len(sheet_names) > self.sheets_to_keep:
             for delete_name in sheet_names[self.sheets_to_keep:]:
@@ -131,8 +150,8 @@ class LegacyHistoryReport(Report):
             with connector.driver.session(database=connector.db) as session:
                 query_result: DateTime = session.run('MATCH (p:Params) RETURN p.last_update_utc').single()[0]
 
-            self.last_data_update = query_result.to_native().strftime("%Y-%m-%d %H:%M:%S")
-            self.now = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S")
+            self.last_data_update = _to_brussels_string(query_result)
+            self.now = datetime.now(BRUSSELS).strftime("%Y-%m-%d %H:%M:%S")
 
             report_made_lines = [[f'Rapport gemaakt op {self.now} met data uit:'],
                                  [f'{self.datasource}, laatst gesynchroniseerd op {self.last_data_update}']]
@@ -157,13 +176,13 @@ class LegacyHistoryReport(Report):
 
             if params and 'last_update_utc_assets' in params and params['last_update_utc_assets'] is not None:
                 try:
-                    self.last_data_update = params['last_update_utc_assets'].strftime("%Y-%m-%d %H:%M:%S")
+                    self.last_data_update = _to_brussels_string(params['last_update_utc_assets'])
                 except Exception:
                     self.last_data_update = ''
             else:
                 self.last_data_update = ''
 
-            self.now = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S")
+            self.now = datetime.now(BRUSSELS).strftime("%Y-%m-%d %H:%M:%S")
 
             report_made_lines = [[f'Rapport gemaakt op {self.now} met data uit:'],
                                  [f'{self.datasource}, laatst gesynchroniseerd op {self.last_data_update}']]

@@ -1,6 +1,7 @@
 import logging
-from datetime import datetime, date, timedelta, UTC
+from datetime import datetime, date, timedelta
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from googleapiclient.errors import HttpError
 
@@ -11,6 +12,8 @@ from outputs.sheets_wrapper import SingleSheetsWrapper, SheetsWrapper
 from datasources.datasource_factory import make_datasource
 from outputs.output_factory import make_output
 from outputs.base import OutputWriteContext
+
+BRUSSELS = ZoneInfo('Europe/Brussels')
 
 
 class DQReport(Report):
@@ -154,7 +157,7 @@ class DQReport(Report):
 
         # execute query via datasource adapter
         query_time = None
-        self.now = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S")
+        self.now = datetime.now(BRUSSELS).strftime("%Y-%m-%d %H:%M:%S")
 
         if self.datasource == 'Neo4J':
             self.result_query = self.clean_query(self.result_query)
@@ -185,8 +188,8 @@ class DQReport(Report):
                                 lu_val = first[0]
                 if lu_val is not None:
                     # normalize using same helper used for historiek staging
-                    def _normalize_to_utc_string_local(val):
-                        from datetime import datetime, timezone
+                    def _normalize_to_brussels_string_local(val):
+                        from datetime import datetime
                         import re
                         if val is None:
                             return ''
@@ -227,13 +230,13 @@ class DQReport(Report):
                             if dt is None:
                                 return s
                             if dt.tzinfo is None:
-                                dt = dt.replace(tzinfo=timezone.utc)
-                            dt_utc = dt.astimezone(timezone.utc)
-                            return dt_utc.strftime('%Y-%m-%d %H:%M:%S')
+                                dt = dt.replace(tzinfo=BRUSSELS)
+                            dt_brussels = dt.astimezone(BRUSSELS)
+                            return dt_brussels.strftime('%Y-%m-%d %H:%M:%S')
                         except Exception:
                             return str(val)
 
-                    normalized_lu = _normalize_to_utc_string_local(lu_val)
+                    normalized_lu = _normalize_to_brussels_string_local(lu_val)
                     if normalized_lu:
                         self.last_data_update = normalized_lu
                         try:
@@ -363,24 +366,27 @@ class DQReport(Report):
                 last_data_update = None
 
             # append historiek row
-            # Normalize last_data_update to UTC 'YYYY-MM-DD HH:MM:SS' when staging summary/historiek
-            def _normalize_to_utc_string(val):
-                from datetime import datetime, timezone
+            # Normalize last_data_update to Brussels 'YYYY-MM-DD HH:MM:SS' when staging summary/historiek
+            def _normalize_to_brussels_string(val):
+                from datetime import datetime
                 import re
+
                 if val is None:
                     return ''
                 if isinstance(val, (int, float)):
                     return str(val)
+
                 s = str(val).strip()
                 if s == '':
                     return ''
-                # try iso first (handle trailing Z)
+
                 try:
                     iso = s.replace('Z', '+00:00') if s.endswith('Z') else s
                     try:
                         dt = datetime.fromisoformat(iso)
                     except Exception:
                         dt = None
+
                     if dt is None:
                         fmts = [
                             '%Y-%m-%d %H:%M:%S',
@@ -396,6 +402,7 @@ class DQReport(Report):
                                 break
                             except Exception:
                                 dt = None
+
                     if dt is None:
                         m = re.search(r"\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:[+-]\d{2}:?\d{2}|Z)?", s)
                         if m:
@@ -404,21 +411,21 @@ class DQReport(Report):
                                 dt = datetime.fromisoformat(piece)
                             except Exception:
                                 dt = None
+
                     if dt is None:
                         return s
+
                     if dt.tzinfo is None:
-                        dt = dt.replace(tzinfo=timezone.utc)
-                    dt_utc = dt.astimezone(timezone.utc)
-                    return dt_utc.strftime('%Y-%m-%d %H:%M:%S')
+                        dt = dt.replace(tzinfo=BRUSSELS)
+                    return dt.astimezone(BRUSSELS).strftime('%Y-%m-%d %H:%M:%S')
                 except Exception:
                     return str(val)
 
-            # Ensure last_data_update is normalized to UTC string before staging
             try:
-                from outputs.time_utils import format_utc_string
-                normalized_last = format_utc_string(self.last_data_update)
+                from outputs.time_utils import format_brussels_string
+                normalized_last = format_brussels_string(self.last_data_update)
             except Exception:
-                normalized_last = _normalize_to_utc_string(self.last_data_update)
+                normalized_last = _normalize_to_brussels_string(self.last_data_update)
 
             payload_hist = {
                 'operation': 'append_row',
@@ -458,10 +465,10 @@ class DQReport(Report):
             excel_fname_for_summary = mapped if mapped else '[RSA] Overzicht rapporten.xlsx'
 
             try:
-                from outputs.time_utils import format_utc_string
-                normalized_for_summary = format_utc_string(self.last_data_update)
+                from outputs.time_utils import format_brussels_string
+                normalized_for_summary = format_brussels_string(self.last_data_update)
             except Exception:
-                normalized_for_summary = _normalize_to_utc_string(self.last_data_update)
+                normalized_for_summary = _normalize_to_brussels_string(self.last_data_update)
 
             payload_summary_c = {
                 'operation': 'write_cell',

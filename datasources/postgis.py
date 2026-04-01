@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 import time
-from datetime import datetime, UTC
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from lib.connectors.PostGISConnector import SinglePostGISConnector
 
 from .base import QueryResult
+
+BRUSSELS = ZoneInfo('Europe/Brussels')
 
 
 class PostGISDatasource:
@@ -52,7 +55,7 @@ class PostGISDatasource:
 
         query_time = round(time.time() - start, 2)
 
-        # Set last_data_update to current UTC time as fallback
-        last_data_update = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S")
+        # Set last_data_update to current Brussels time as fallback
+        last_data_update = datetime.now(BRUSSELS).strftime("%Y-%m-%d %H:%M:%S")
 
         return QueryResult(keys=keys, rows=rows, last_data_update=last_data_update, query_time_seconds=query_time)
