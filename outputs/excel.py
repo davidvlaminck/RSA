@@ -248,14 +248,7 @@ class ExcelOutput:
                 pass
 
             # save atomically
-            try:
-                self._atomic_save_workbook(wb, workbook_path)
-            except Exception:
-                try:
-                    wb.save(workbook_path)
-                except Exception:
-                    # if saving fails, propagate to caller
-                    raise
+            self._atomic_save_workbook(wb, workbook_path)
 
             try:
                 self._log_file_change(str(Path(workbook_path).resolve()), 'CREATED')
@@ -290,7 +283,7 @@ class ExcelOutput:
                 pass
         else:
             wb.create_sheet(sheet_name)
-        wb.save(workbook_path)
+        self._atomic_save_workbook(wb, workbook_path)
         try:
             self._log_file_change(str(Path(workbook_path).resolve()), 'MODIFIED')
         except Exception:
@@ -324,13 +317,7 @@ class ExcelOutput:
         wb.remove(ws)
 
         # atomic save
-        try:
-            self._atomic_save_workbook(wb, workbook_path)
-        except Exception:
-            try:
-                wb.save(workbook_path)
-            except Exception:
-                raise
+        self._atomic_save_workbook(wb, workbook_path)
 
         try:
             self._log_file_change(str(Path(workbook_path).resolve()), 'MODIFIED')
@@ -381,18 +368,17 @@ class ExcelOutput:
         # naive clear: iterate cells in range
         try:
             cells = ws[cell_range]
-            # cells can be tuple of tuples
             for r in cells:
                 for c in r:
                     c.value = None
-            wb.save(workbook_path)
+            self._atomic_save_workbook(wb, workbook_path)
         except Exception:
             # fallback: recreate sheet
             ws = wb[sheet_name]
             idx = wb.sheetnames.index(sheet_name)
             wb.remove(ws)
             wb.create_sheet(sheet_name, idx)
-            wb.save(workbook_path)
+            self._atomic_save_workbook(wb, workbook_path)
         try:
             self._log_file_change(str(Path(workbook_path).resolve()), 'MODIFIED')
         except Exception:
@@ -403,31 +389,29 @@ class ExcelOutput:
         """Resolve a spreadsheet identifier to a workbook Path inside the configured output dir.
 
         Logic:
-        - If the provided value is an absolute or relative path to an existing file, return it.
-        - Else, look inside self.output_dir for the filename as-is or with .xlsx appended.
-        - Fall back to treating the identifier as a filename under output_dir.
+        - If the provided value is an absolute path, use it as-is.
+        - Bare filenames (e.g. 'report.xlsx') are always resolved under output_dir.
+        - Relative paths with explicit directories can still resolve to existing filesystem paths.
         """
         sp = str(spreadsheet_id_or_path)
         p = Path(sp)
-        # If an absolute path was provided, treat it as the intended target even
-        # if the file does not yet exist. This avoids accidentally constructing a
-        # candidate under self.output_dir with the absolute path string embedded.
         if p.is_absolute():
             return p
+
+        candidate = Path(self.output_dir) / sp
+
+        # Critical safety: prevent accidental writes to CWD when callers pass only a filename.
+        if len(p.parts) == 1 and p.suffix:
+            return candidate
+
         if p.exists():
             return p
-        # try as file in output dir
-        candidate = Path(self.output_dir) / sp
         if candidate.exists():
             return candidate
-        # If the caller supplied what looks like a filename (has .xlsx suffix or any suffix),
-        # prefer to return the candidate path (which may not exist yet). This avoids the
-        # discovery scan picking a different workbook in output_dir that happens to
-        # contain an Overzicht/Historiek sheet (which previously caused writes to end
-        # up in another file). Returning the candidate allows writes to create the
-        # intended workbook under output_dir.
+
         if p.suffix:
             return candidate
+
         # try mapping spreadsheet id -> filename (log any issues)
         try:
             from outputs.spreadsheet_map import lookup
@@ -793,7 +777,7 @@ class ExcelOutput:
         if sheet_name not in wb.sheetnames:
             # create if missing
             wb.create_sheet(sheet_name)
-            wb.save(wb_path)
+            self._atomic_save_workbook(wb, wb_path)
             return
         ws = wb[sheet_name]
         # parse start row
@@ -802,10 +786,7 @@ class ExcelOutput:
         start_row = int(row_digits) if row_digits else 1
         ws.insert_rows(start_row, amount=number_of_rows)
         # atomic save
-        try:
-            self._atomic_save_workbook(wb, wb_path)
-        except Exception:
-            wb.save(wb_path)
+        self._atomic_save_workbook(wb, wb_path)
         # log modification
         try:
             self._log_file_change(str(Path(wb_path).resolve()), 'MODIFIED')
@@ -858,15 +839,8 @@ class ExcelOutput:
                 rows_written += 1
 
             # atomic save under file lock
-            try:
-                # _atomic_save_workbook already acquires lock around replace
-                self._atomic_save_workbook(wb, workbook_path)
-            except Exception:
-                try:
-                    with _file_lock(workbook_path):
-                        wb.save(workbook_path)
-                except Exception:
-                    raise
+            # _atomic_save_workbook already acquires lock around replace
+            self._atomic_save_workbook(wb, workbook_path)
 
         else:
             # workbook does not exist yet: create a workbook with default template sheets
@@ -891,14 +865,7 @@ class ExcelOutput:
                 rows_written += 1
 
             # atomic save under file lock
-            try:
-                self._atomic_save_workbook(wb, workbook_path)
-            except Exception:
-                try:
-                    with _file_lock(workbook_path):
-                        wb.save(workbook_path)
-                except Exception:
-                    raise
+            self._atomic_save_workbook(wb, workbook_path)
 
         elapsed = time.time() - start_time
         # log the file change: CREATED if it did not exist at start, else MODIFIED
@@ -1040,7 +1007,7 @@ class ExcelOutput:
                     ws.auto_filter.ref = f"{start_col_letter}{header_row}:{end_col_letter}{last_row}"
 
                     # persist changes
-                    wb.save(out_path)
+                    self._atomic_save_workbook(wb, out_path)
             except Exception:
                 # best-effort: don't fail the whole report because auto-filter couldn't be set
                 pass
@@ -1176,7 +1143,8 @@ class ExcelOutput:
                 with zipfile.ZipFile(tmp_name, 'w', compression=zipfile.ZIP_DEFLATED) as zout:
                     for name, data in files.items():
                         zout.writestr(name, data)
-                os.replace(tmp_name, str(wb_path))
+                with _file_lock(wb_path):
+                    os.replace(tmp_name, str(wb_path))
             finally:
                 try:
                     if os.path.exists(tmp_name):
@@ -1217,13 +1185,7 @@ class ExcelOutput:
                 except Exception:
                     pass
             # persist changes
-            try:
-                self._atomic_save_workbook(wb, wb_path)
-            except Exception:
-                try:
-                    wb.save(wb_path)
-                except Exception:
-                    pass
+            self._atomic_save_workbook(wb, wb_path)
         except Exception:
             # best-effort
             pass
@@ -1260,13 +1222,7 @@ class ExcelOutput:
                     pass
 
             # save atomically
-            try:
-                self._atomic_save_workbook(wb, wb_path)
-            except Exception:
-                try:
-                    wb.save(wb_path)
-                except Exception:
-                    pass
+            self._atomic_save_workbook(wb, wb_path)
         except Exception:
             # best-effort
             pass
@@ -1325,19 +1281,13 @@ class ExcelOutput:
                     pass
 
             # save changes
-            try:
-                self._atomic_save_workbook(wb, wb_path)
-            except Exception:
-                try:
-                    wb.save(wb_path)
-                except Exception:
-                    pass
+            self._atomic_save_workbook(wb, wb_path)
         except Exception:
             # best-effort
             pass
 
     def add_hyperlink_column(self, spreadsheet_id: str | Path, sheet_name: str, start_cell: str,
-                             link_type: str = 'awvinfra', column_data: list = None) -> None:
+                         link_type: str = 'awvinfra', column_data: list = None) -> None:
         """Add a column of hyperlinks starting at start_cell. column_data is a list of ids/values.
 
         For each non-empty value in column_data, compute a URL depending on link_type and set
@@ -1397,17 +1347,11 @@ class ExcelOutput:
                     continue
 
             # save
-            try:
-                self._atomic_save_workbook(wb, wb_path)
-            except Exception:
-                try:
-                    wb.save(wb_path)
-                except Exception:
-                    pass
+            self._atomic_save_workbook(wb, wb_path)
         except Exception:
             # best-effort
             pass
-        
+
     def recalculate_formula(self, spreadsheet_id: str | Path, sheet_name: str, cell: str) -> None:
         """Ensure the formula in the given cell is present and instruct Excel to recalc on open.
 
@@ -1460,13 +1404,7 @@ class ExcelOutput:
                 pass
 
             # save workbook
-            try:
-                self._atomic_save_workbook(wb, wb_path)
-            except Exception:
-                try:
-                    wb.save(wb_path)
-                except Exception:
-                    pass
+            self._atomic_save_workbook(wb, wb_path)
         except Exception:
             # best-effort
             pass
@@ -1528,7 +1466,8 @@ class ExcelOutput:
                                     zout.writestr(item, new_xml)
                                 else:
                                     zout.writestr(item, zin.read(item.filename))
-                    os.replace(tmp_name, str(wb_path))
+                    with _file_lock(wb_path):
+                        os.replace(tmp_name, str(wb_path))
                 finally:
                     try:
                         if os.path.exists(tmp_name):
