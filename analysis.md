@@ -30,12 +30,17 @@ The report service needs a **refactored, extensible architecture** that:
 **Details:**
 - Report is rendered locally as `.xlsx` file (using openpyxl or xlsxwriter)
 - File is uploaded to OneDrive/SharePoint using configured credentials or agent-based sync
+- Report files in `RSA_OneDrive` are stored in bucket subfolders of max 100 files: `0000-0099`, `0100-0199`, ...
+- Bucket assignment is based on report number (e.g., `Report0002` -> `0000-0099`, `Report0158` -> `0100-0199`)
+- Drive mirror sync must preserve and reconcile nested bucket folders in both directions
 - Output adapters are extensible (interface/abstract class pattern)
 - Same `OutputWriteContext` contract remains; `DQReport.run()` calls `out.write_report(ctx, qr, ...)` unchanged
 
 **Acceptance Criteria:**
 - [ ] At least one report successfully outputs to Excel and uploads to configured target
 - [ ] Multiple reports can be queued and uploaded concurrently (if applicable)
+- [ ] A report in range `0000-0099` is written under the `0000-0099` subfolder
+- [ ] A report in range `0100-0199` is written under the `0100-0199` subfolder
 
 ---
 
@@ -133,11 +138,13 @@ class QueryResult:
 - Transport can still use existing mail infrastructure (`MailSender` / SMTP wiring).
 - Frequency logic is evaluated per report (e.g., daily/weekly cadence as defined in the report).
 - Report mails can include report-specific summary data (row counts, timestamps, failures if relevant).
+- When report links are present in mails, they must target the canonical SharePoint URL for the bucketed file path.
 
 **Acceptance Criteria:**
 - [ ] For a report with configured recipients in its file, mail is sent to those recipients only.
 - [ ] For a report with no recipients configured, no mail is sent.
 - [ ] Frequency in the report definition is respected (no extra sends outside cadence).
+- [ ] Mail hyperlink for `ReportXXXX` resolves to the correct bucket subfolder on SharePoint.
 
 ---
 
@@ -147,6 +154,7 @@ class QueryResult:
 **Details:**
 - History sheet (`Historiek`): one row per run, columns: `now_utc`, `last_data_update` per datasource, row count per report
 - Summary sheet (`Overzicht`): current snapshot of all reports (last run timestamp, row count, status)
+- Summary hyperlinks to report files must use bucketed paths (`0000-0099`, `0100-0199`, ...)
 - For ArangoDB: `last_data_update` derived from `params` collection (`finished_at`)
 - For PostGIS: `last_data_update` derived from `SinglePostGISConnector.get_params()` attribute `last_update_utc_assets`
 
@@ -154,6 +162,7 @@ class QueryResult:
 - [ ] `Historiek` sheet updated after each batch run
 - [ ] `Overzicht` sheet current and accurate
 - [ ] `last_data_update` correctly sourced per datasource
+- [ ] `Overzicht` hyperlinks open the correct SharePoint file in the report bucket folder
 
 ---
 
@@ -257,6 +266,8 @@ When Excel output adapter writes
 Then local .xlsx file is created
 And file contains all rows/columns from QueryResult
 And file is successfully uploaded to OneDrive/SharePoint
+And file is placed in the expected report bucket subfolder (0000-0099, 0100-0199, ...)
+And sync-up keeps the same nested subfolder structure remotely
 ```
 
 ### AC5: History & Summary
@@ -268,6 +279,8 @@ Then Historiek sheet has one new row with:
   - last_data_update per datasource
   - row count per report
 And Overzicht sheet is updated
+And each report hyperlink in Overzicht points to the correct bucketed SharePoint path
+And any hyperlink included in report mail points to that same canonical SharePoint path
 ```
 
 ---
@@ -387,7 +400,7 @@ And Overzicht sheet is updated
 | FR3 (QueryResult) | `datasources/base.py` | Unit tests: to_rows_list, iter_rows |
 | FR4 (Retry Logic) | `lib/reports/ReportLoopRunner.py` | Simulation: failure + 3 retries |
 | FR5 (Mail Notifications) | `Reports/`, `lib/mail/MailSender.py` | Mock SMTP: verify report-defined recipients/frequency |
-| FR6 (History & Summary) | `outputs/summary_stager.py` | Verify sheet rows updated |
+| FR6 (History & Summary) | `outputs/summary_stager.py`, `outputs/spreadsheet_map.py` | Verify sheet rows + hyperlink targets updated |
 
 ---
 

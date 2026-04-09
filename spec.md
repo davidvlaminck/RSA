@@ -46,6 +46,8 @@ It runs many report classes from `Reports/`, queries ArangoDB and PostGIS, and p
 - Report execution from modular Python report definitions.
 - Querying ArangoDB and PostGIS through adapter abstractions.
 - Excel-first output flow (local `.xlsx` generation + OneDrive/SharePoint delivery).
+- Bucketed report storage in `RSA_OneDrive` with max 100 report files per subfolder (`0000-0099`, `0100-0199`, ...).
+- Canonical SharePoint hyperlink generation for report references in summary artifacts and mails.
 - Scheduled and ad-hoc report execution entry points.
 
 ### Out of Scope

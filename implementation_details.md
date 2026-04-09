@@ -488,6 +488,8 @@ class OutputWriteContext:
 2. Write header row + data rows
 3. Format (optional: colors, fonts)
 4. Upload to OneDrive/SharePoint
+5. Resolve report bucket folder (`0000-0099`, `0100-0199`, ...) from report number
+6. Expose canonical SharePoint URL so summary and mail templates link to the exact uploaded file
 
 **Implementation Sketch:**
 ```python
@@ -528,6 +530,16 @@ class ExcelOutput:
 **Memory Strategy:**
 - **Small datasets (<1000 rows):** Use `qr.to_rows_list()`, load all in memory
 - **Large datasets (>1000 rows):** Use `qr.iter_rows()`, stream to file
+
+### Bucketed OneDrive/SharePoint Path Rule
+
+- Report files are stored in `RSA_OneDrive/<bucket>/` where each bucket contains at most 100 reports.
+- Bucket format: zero-padded range, e.g. `0000-0099`, `0100-0199`, `0200-0299`.
+- Mapping rule example:
+  - `Report0002` -> `0000-0099`
+  - `Report0104` -> `0100-0199`
+- Summary (`Overzicht`) and mail body links must be generated from the same canonical SharePoint file URL derived from this bucketed path.
+- Sync scripts must treat these bucket directories as first-class mirrored folders (recursive sync in both directions).
 
 **Example:**
 ```python

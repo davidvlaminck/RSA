@@ -153,8 +153,10 @@ python main.py
 2. Before first run of each day, wait until at least `01:00:00` and mirror-download Drive folder to local `RSA_OneDrive`
 3. Respect execution window from settings (`time.start` / `time.end`)
 4. Execute reports when window is active
-5. After run completion, mirror-upload local `RSA_OneDrive` back to Drive
-6. Append run status lines to `RSA_OneDrive/logs/run_YYYYMMDD.log`
+5. Write report files under bucket folders with max 100 files each (`0000-0099`, `0100-0199`, ...)
+6. After run completion, mirror-upload local `RSA_OneDrive` back to Drive, preserving nested bucket folders
+7. Keep summary and mail hyperlink targets aligned with the same bucketed SharePoint path
+8. Append run status lines to `RSA_OneDrive/logs/run_YYYYMMDD.log`
 
 **Implementation:**
 ```python
@@ -799,7 +801,7 @@ python main.py --once  # (need to add --once flag to main.py)
 2. **Report names in logs:** Grep by report name
 3. **No OOM:** Monitor `free -h` during run
 4. **Exit codes:** `echo $?` after script completes (0 = success)
-5. **Output files:** Verify Excel files uploaded to OneDrive/SharePoint
+5. **Output files:** Verify Excel files uploaded to OneDrive/SharePoint in expected bucket subfolders
 6. **History updated:** Check `Historiek` sheet for new row
 
 ---
