@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Protocol, Sequence
+from typing import Optional, Protocol
 
 from datasources.base import QueryResult
 
@@ -12,7 +12,8 @@ class OutputWriteContext:
     report_title: str
     datasource_name: str
     now_utc: str
-    excel_filename: str | None = None
+    report_name: Optional[str] = None
+    excel_filename: Optional[str] = None
 
 
 class ReportOutput(Protocol):

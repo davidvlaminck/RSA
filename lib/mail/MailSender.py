@@ -7,24 +7,29 @@ from email.mime.text import MIMEText
 from zoneinfo import ZoneInfo
 
 from lib.mail.MailContent import MailContent
+from outputs.report_routes import report_sharepoint_url
 
 BRUSSELS = ZoneInfo('Europe/Brussels')
 
 
 class MailSender:
     def __init__(self, mail_settings: dict):
-        self.mails_to_send: [MailContent] = []
+        self.mails_to_send: list[MailContent] = []
         self.host = mail_settings['host']
         self.username = mail_settings['username']
         self.password = mail_settings['password']
-        self.sent_mails: [MailContent] = []
+        self.sent_mails: list[MailContent] = []
         self.sheet_info = {}
 
     def add_mail(self, receiver: str, report_name: str, spreadsheet_id: str, count: int, latest_sync: str,
-                 frequency: str, previous: int = -1):
+                 frequency: str, previous: int = -1, excel_filename: str = '', report_code: str = ''):
         content = MailContent(receiver=receiver, count=count, latest_sync=latest_sync, report_name=report_name,
                               frequency=frequency, spreadsheet_id=spreadsheet_id, previous=previous)
-        content.hyperlink = f'https://docs.google.com/spreadsheets/d/{spreadsheet_id}'
+        content.hyperlink = report_sharepoint_url(
+            excel_filename=excel_filename,
+            report_name=report_code,
+            report_title=report_name,
+        ) or ''
         self.mails_to_send.append(content)
 
     def send_all_mails(self):
@@ -50,7 +55,10 @@ class MailSender:
                    '<table><tr><th>Rapport Link</th><th>Vorig aantal</th><th>Aantal</th><th>Data van</th></tr>'
 
             for mail_content in self.remove_duplicate_mail_content(mails):
-                html += f'<tr><td><a href="{mail_content.hyperlink}">{mail_content.report_name}</a></td>'
+                if mail_content.hyperlink:
+                    html += f'<tr><td><a href="{mail_content.hyperlink}">{mail_content.report_name}</a></td>'
+                else:
+                    html += f'<tr><td>{mail_content.report_name}</td>'
                 if mail_content.previous == -1:
                     html += '<td></td>'
                 else:
@@ -61,7 +69,7 @@ class MailSender:
             email_message = MIMEMultipart()
             email_message['From'] = f'Rapporteringsservice Assets <{sender}>'
             email_message['To'] = receiver
-            email_message['Subject'] = f'Rapporteringsservice Assets overzicht'
+            email_message['Subject'] = 'RSA'
 
             email_message.attach(MIMEText(html, "html"))
             msg = email_message.as_string()

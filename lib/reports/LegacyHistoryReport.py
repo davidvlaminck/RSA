@@ -11,6 +11,8 @@ from lib.connectors.PostGISConnector import SinglePostGISConnector
 from lib.reports.Report import Report
 from outputs.sheets_cell import SheetsCell
 from outputs.sheets_wrapper import SingleSheetsWrapper
+from outputs.report_routes import report_sharepoint_url
+from outputs.spreadsheet_map import lookup as lookup_spreadsheet_filename
 
 BRUSSELS = ZoneInfo('Europe/Brussels')
 
@@ -63,7 +65,15 @@ class LegacyHistoryReport(Report):
         summary_links = sheets_wrapper.read_celldata_from_sheet(spreadsheet_id=self.summary_sheet_id,
                                                                 sheet_name='Overzicht',
                                                                 sheetrange='B4:B')
+        summary_names = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self.summary_sheet_id,
+                                                            sheet_name='Overzicht',
+                                                            sheetrange='F4:F')
         rowFound = summary_links['startRow']
+        target_name = (self.name or '').strip().lower()
+        for i, summary_name in enumerate(summary_names):
+            if summary_name and len(summary_name) > 0 and str(summary_name[0]).strip().lower() == target_name and target_name != '':
+                rowFound += i
+                break
         for i, summary_link in enumerate(summary_links['rowData']):
             if 'values' not in summary_link:
                 continue
@@ -361,6 +371,18 @@ class LegacyHistoryReport(Report):
                                            sheet_name='Overzicht',
                                            start_cell='C' + str(rowFound + 1),
                                            data=[[self.last_data_update, len(result_data)]])
+
+        report_link = report_sharepoint_url(
+            excel_filename=lookup_spreadsheet_filename(self.spreadsheet_id),
+            report_name=self.name,
+            report_title=self.title,
+        )
+        summary_link_value = f'=HYPERLINK("{report_link}"; "Link")' if report_link else 'Link'
+        sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.summary_sheet_id,
+                                           sheet_name='Overzicht',
+                                           start_cell='B' + str(rowFound + 1),
+                                           data=[[summary_link_value]],
+                                           value_input_option='USER_ENTERED')
 
         # also write the query execution time into column H for this report's summary row
         try:

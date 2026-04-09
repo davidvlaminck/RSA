@@ -12,6 +12,7 @@ from outputs.sheets_wrapper import SingleSheetsWrapper, SheetsWrapper
 from datasources.datasource_factory import make_datasource
 from outputs.output_factory import make_output
 from outputs.base import OutputWriteContext
+from outputs.report_routes import report_sharepoint_url
 
 BRUSSELS = ZoneInfo('Europe/Brussels')
 
@@ -257,6 +258,7 @@ class DQReport(Report):
             report_title=self.title,
             datasource_name=self.datasource,
             now_utc=self.now,
+            report_name=self.name,
             excel_filename=self.excel_filename or None,
         )
         # Capture metadata returned by the output writer (e.g., file path, rows_written)
@@ -285,6 +287,22 @@ class DQReport(Report):
         try:
             from outputs.summary_stager import stage_summary_update
             staged_dir = self.output_settings.get('staged_dir') if isinstance(self.output_settings, dict) and self.output_settings.get('staged_dir') else None
+            report_link = ''
+            summary_link_value = 'Link'
+            rowFound = 4
+            last_data_update = None
+
+            # Prefer to include an excel_filename in staged payloads so the aggregator
+            # can deterministically resolve the workbook under RSA_OneDrive even when
+            # spreadsheet_id -> filename mapping isn't present. Lookup mapping first,
+            # otherwise fall back to the canonical '[RSA] Overzicht rapporten.xlsx'.
+            try:
+                from outputs.spreadsheet_map import lookup as _lookup
+                mapped = _lookup(self.summary_sheet_id)
+            except Exception:
+                mapped = None
+            excel_fname_for_summary = mapped or '[RSA] Overzicht rapporten.xlsx'
+
             # determine target workbook identifier for aggregator: prefer excel_filename if created
             target_workbook = ctx.excel_filename if getattr(ctx, 'excel_filename', None) else self.spreadsheet_id
 
@@ -354,7 +372,6 @@ class DQReport(Report):
             except Exception:
                 pass
 
-            last_data_update = None
             historiek_data = None
             try:
                 historiek_data = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self.spreadsheet_id,
@@ -453,22 +470,28 @@ class DQReport(Report):
             c_cell = f'C{rowFound}'
             h_cell = f'H{rowFound}'
 
-            # Prefer to include an excel_filename in staged payloads so the aggregator
-            # can deterministically resolve the workbook under RSA_OneDrive even when
-            # spreadsheet_id -> filename mapping isn't present. Lookup mapping first,
-            # otherwise fall back to the canonical '[RSA] Overzicht rapporten.xlsx'.
-            try:
-                from outputs.spreadsheet_map import lookup as _lookup
-                mapped = _lookup(summary_target)
-            except Exception:
-                mapped = None
-            excel_fname_for_summary = mapped if mapped else '[RSA] Overzicht rapporten.xlsx'
-
             try:
                 from outputs.time_utils import format_brussels_string
                 normalized_for_summary = format_brussels_string(self.last_data_update)
             except Exception:
                 normalized_for_summary = _normalize_to_brussels_string(self.last_data_update)
+
+            report_link = report_sharepoint_url(
+                excel_filename=target_workbook if ctx.excel_filename else self.excel_filename or None,
+                report_name=self.name,
+                report_title=self.title,
+            )
+            summary_link_value = f'=HYPERLINK("{report_link}"; "Link")' if report_link else 'Link'
+
+            payload_summary_b = {
+                'operation': 'write_cell',
+                'excel_filename': excel_fname_for_summary,
+                'spreadsheet_id': summary_target,
+                'sheet': 'Overzicht',
+                'cell': f'B{rowFound}',
+                'value': summary_link_value,
+                'meta': {'report': self.name}
+            }
 
             payload_summary_c = {
                 'operation': 'write_cell',
@@ -489,6 +512,12 @@ class DQReport(Report):
                 'value': query_time,
                 'meta': {'report': self.name}
             }
+
+            try:
+                logging.info('%s: staging Overzicht B payload target=%s cell=%s payload=%s', self.name, excel_fname_for_summary, f'B{rowFound}', payload_summary_b)
+            except Exception:
+                pass
+            stage_summary_update(payload_summary_b, staged_dir=staged_dir or 'RSA_OneDrive/staged_summaries')
 
             try:
                 logging.info('%s: staging Overzicht payload target=%s cell=%s payload=%s', self.name, excel_fname_for_summary, c_cell, payload_summary_c)
@@ -516,6 +545,21 @@ class DQReport(Report):
                                                      number_of_rows=1)
                 sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='Historiek', start_cell='A2',
                                                    data=[[self.now, self.last_data_update, len(qr.rows)]])
+                if report_link:
+                    sheets_wrapper.write_data_to_sheet(
+                        spreadsheet_id=self.summary_sheet_id,
+                        sheet_name='Overzicht',
+                        start_cell='B' + str(rowFound),
+                        data=[[summary_link_value]],
+                        value_input_option='USER_ENTERED',
+                    )
+                else:
+                    sheets_wrapper.write_data_to_sheet(
+                        spreadsheet_id=self.summary_sheet_id,
+                        sheet_name='Overzicht',
+                        start_cell='B' + str(rowFound),
+                        data=[['Link']],
+                    )
                 # Use the same rowFound that was computed above for staged payloads
                 sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.summary_sheet_id, sheet_name='Overzicht', start_cell='C' + str(rowFound),
                                                    data=[[self.last_data_update, len(qr.rows)]])
@@ -527,7 +571,7 @@ class DQReport(Report):
             except Exception:
                 logging.exception('Failed both staging and fallback writes for historiek/summary')
 
-        if mail_receivers is not None:
+        if mail_receivers is not None and sender is not None:
             self.send_mails(sender=sender, named_range=mail_receivers, previous_result=previous_result,
                             result=len(qr.rows), latest_data_sync=self.last_data_update)
 
@@ -593,13 +637,13 @@ class DQReport(Report):
                 if previous_result != result:
                     sender.add_mail(receiver=line[0], report_name=self.title, spreadsheet_id=self.spreadsheet_id,
                                     count=result, latest_sync=latest_data_sync, frequency=line[1],
-                                    previous = previous_result)
+                                    previous = previous_result, excel_filename=self.excel_filename or '', report_code=self.name)
                     # add frequency
             elif line[1] in ['Dagelijks', 'Wekelijks', 'Maandelijks', 'Jaarlijks']:
                 if len(line) < 3 or line[2] == '' or line[2] is None:
                     sender.add_mail(receiver=line[0], report_name=self.title, spreadsheet_id=self.spreadsheet_id,
                                     count=result, latest_sync=latest_data_sync, frequency=line[1],
-                                    previous = previous_result)
+                                    previous = previous_result, excel_filename=self.excel_filename or '', report_code=self.name)
                 else:
                     dt = datetime.strptime(line[2], '%Y-%m-%d %H:%M:%S')
                     last_sent = dt.date()
@@ -607,22 +651,26 @@ class DQReport(Report):
                         diff_days = date.today() - last_sent
                         if diff_days >= timedelta(days=1):
                             sender.add_mail(receiver=line[0], report_name=self.title, spreadsheet_id=self.spreadsheet_id,
-                                            count=result, latest_sync=latest_data_sync, frequency=line[1])
+                                            count=result, latest_sync=latest_data_sync, frequency=line[1],
+                                            excel_filename=self.excel_filename or '', report_code=self.name)
                     elif line[1] == 'Wekelijks':
                         diff_days = date.today() - last_sent
                         if diff_days >= timedelta(days=7):
                             sender.add_mail(receiver=line[0], report_name=self.title, spreadsheet_id=self.spreadsheet_id,
-                                            count=result, latest_sync=latest_data_sync, frequency=line[1])
+                                            count=result, latest_sync=latest_data_sync, frequency=line[1],
+                                            excel_filename=self.excel_filename or '', report_code=self.name)
                     elif line[1] == 'Maandelijks':
                         current_month = date.today().month
                         if current_month != last_sent.month:
                             sender.add_mail(receiver=line[0], report_name=self.title, spreadsheet_id=self.spreadsheet_id,
-                                            count=result, latest_sync=latest_data_sync, frequency=line[1])
+                                            count=result, latest_sync=latest_data_sync, frequency=line[1],
+                                            excel_filename=self.excel_filename or '', report_code=self.name)
                     elif line[1] == 'Jaarlijks':
                         current_month = date.today().year
                         if current_month != last_sent.year:
                             sender.add_mail(receiver=line[0], report_name=self.title, spreadsheet_id=self.spreadsheet_id,
-                                            count=result, latest_sync=latest_data_sync, frequency=line[1])
+                                            count=result, latest_sync=latest_data_sync, frequency=line[1],
+                                            excel_filename=self.excel_filename or '', report_code=self.name)
 
     def get_historiek_record_info(self, sheets_wrapper: SheetsWrapper) -> tuple[int | None, str]:
         results = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='Historiek',

@@ -98,6 +98,10 @@ def _file_lock(path: Path):
                     fh.close()
                 except Exception:
                     pass
+            try:
+                lock_path.unlink(missing_ok=True)
+            except Exception:
+                pass
         except Exception:
             pass
 
@@ -107,6 +111,7 @@ logger = logging.getLogger(__name__)
 
 from datasources.base import QueryResult
 from .base import OutputWriteContext
+from .report_routes import resolve_report_output_path
 
 
 class ExcelWriterError(Exception):
@@ -400,8 +405,21 @@ class ExcelOutput:
 
         candidate = Path(self.output_dir) / sp
 
+        def _recursive_match(name: str) -> Path | None:
+            try:
+                if Path(self.output_dir).exists():
+                    for candidate_path in sorted(Path(self.output_dir).rglob('*')):
+                        if candidate_path.is_file() and candidate_path.name == name:
+                            return candidate_path
+            except Exception:
+                pass
+            return None
+
         # Critical safety: prevent accidental writes to CWD when callers pass only a filename.
         if len(p.parts) == 1 and p.suffix:
+            found = _recursive_match(p.name)
+            if found is not None:
+                return found
             return candidate
 
         if p.exists():
@@ -410,6 +428,9 @@ class ExcelOutput:
             return candidate
 
         if p.suffix:
+            found = _recursive_match(p.name)
+            if found is not None:
+                return found
             return candidate
 
         # try mapping spreadsheet id -> filename (log any issues)
@@ -426,6 +447,10 @@ class ExcelOutput:
             logger.exception('Failed to lookup spreadsheet mapping for %s: %s', sp, ex)
         # If input had no suffix, try candidate with .xlsx appended.
         candidate_x = Path(self.output_dir) / (sp + '.xlsx') if not p.suffix else candidate
+
+        found = _recursive_match(Path(candidate_x).name)
+        if found is not None:
+            return found
 
         # If no exact file was found, try to discover an existing summary workbook in output_dir.
         # This prevents creating a new file named after the spreadsheet id which would hide/replace
@@ -891,12 +916,30 @@ class ExcelOutput:
             raise ExcelWriterError('openpyxl required')
 
         # determine output filename: prefer ctx.excel_filename if provided
-        if hasattr(ctx, 'excel_filename') and ctx.excel_filename:
-            out_path = self.output_dir / ctx.excel_filename
-        else:
-            # fallback to title-based filename
-            safe_title = ctx.report_title.replace('/', '_')
-            out_path = self.output_dir / f"{safe_title}.xlsx"
+        out_path = resolve_report_output_path(
+            self.output_dir,
+            excel_filename=getattr(ctx, 'excel_filename', None),
+            report_name=getattr(ctx, 'report_name', None),
+            report_title=ctx.report_title,
+        )
+
+        # If a legacy root-level workbook still exists, migrate it into the bucket path
+        # before writing so the first bucketed run preserves headers, history and any
+        # existing summary sheets instead of starting from a fresh template.
+        try:
+            legacy_name = getattr(ctx, 'excel_filename', None)
+            if legacy_name:
+                legacy_path = Path(self.output_dir) / Path(legacy_name).name
+                if legacy_path != out_path and legacy_path.exists():
+                    out_path.parent.mkdir(parents=True, exist_ok=True)
+                    if out_path.exists():
+                        try:
+                            out_path.unlink()
+                        except Exception:
+                            pass
+                    shutil.move(str(legacy_path), str(out_path))
+        except Exception:
+            pass
 
         # prepare rows generator: include header and metadata lines similar to Google implementation
         def row_generator():

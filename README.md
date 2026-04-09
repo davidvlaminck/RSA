@@ -34,6 +34,8 @@ uv run pytest
 - report window starts based on `settings.time` (for example around `06:00`)
 - after reports: mirror upload local `RSA_OneDrive` back to Drive
 - run log is appended to `RSA_OneDrive/logs/run_YYYYMMDD.log` and uploaded too
+- report files are written into 100-report buckets under `RSA_OneDrive/<bucket>/`
+- summary links in `Overzicht` and mail links use the same canonical SharePoint URL as the file on disk
 
 Token bootstrap + mapcheck (`RSA`):
 
