@@ -46,3 +46,23 @@ def test_write_streaming_large(tmp_path):
     f = out_dir / 'big_test.xlsx'
     assert f.exists()
 
+
+def test_resolve_prefers_valid_bucket_workbook_over_corrupt_root(tmp_path):
+    out_dir = tmp_path / 'out'
+    writer = ExcelOutput(output_dir=str(out_dir))
+
+    root = out_dir / 'sample.xlsx'
+    bucket = out_dir / '0000-0099' / 'sample.xlsx'
+    bucket.parent.mkdir(parents=True, exist_ok=True)
+
+    # corrupt root workbook: looks like an xlsx file but is not a valid zip archive
+    root.write_text('not a real xlsx', encoding='utf-8')
+
+    # create a valid bucket workbook directly
+    writer.write_data_to_sheet(bucket, 'Overzicht', [['header'], ['value']], overwrite=True)
+
+    resolved = writer._resolve_workbook_path('sample.xlsx')
+    assert resolved == bucket
+    assert resolved.exists()
+
+

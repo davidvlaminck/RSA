@@ -179,6 +179,48 @@ class ExcelOutput:
         # Keep function for API compatibility; return original path unchanged.
         return workbook_path
 
+    def _is_valid_workbook_file(self, workbook_path: Path) -> bool:
+        workbook_path = Path(workbook_path)
+        if not workbook_path.exists() or not workbook_path.is_file():
+            return False
+        if workbook_path.suffix.lower() != '.xlsx':
+            return False
+        if workbook_path.name.endswith('.lock') or '_tmp_' in workbook_path.name:
+            return False
+        try:
+            import zipfile
+            with zipfile.ZipFile(workbook_path, 'r') as zin:
+                return zin.testzip() is None
+        except Exception:
+            return False
+
+    def _find_existing_workbook_by_name(self, filename: str) -> Path | None:
+        filename = Path(filename).name
+        root = Path(self.output_dir)
+        if not root.exists():
+            return None
+        try:
+            for candidate_path in sorted(root.rglob(filename)):
+                if self._is_valid_workbook_file(candidate_path):
+                    return candidate_path
+        except Exception:
+            return None
+        return None
+
+    def _load_workbook_resilient(self, workbook_path: Path, *, read_only: bool = False):
+        _ensure_openpyxl_loaded()
+        workbook_path = Path(workbook_path)
+        try:
+            return load_workbook(workbook_path, read_only=read_only)
+        except Exception as exc:
+            if workbook_path.suffix.lower() != '.xlsx':
+                raise
+            alternate = self._find_existing_workbook_by_name(workbook_path.name)
+            if alternate is None or alternate == workbook_path:
+                raise
+            logger.warning('Workbook %s could not be opened (%s); retrying with %s', workbook_path, exc, alternate)
+            return load_workbook(alternate, read_only=read_only)
+
     def _atomic_save_workbook(self, wb, workbook_path: Path) -> None:
         """Save workbook to a temporary file and atomically replace the target path.
 
@@ -274,7 +316,7 @@ class ExcelOutput:
         if not workbook_path.exists():
             # nothing to do if workbook is missing
             return
-        wb = load_workbook(workbook_path)
+        wb = self._load_workbook_resilient(workbook_path)
         if sheet_name in wb.sheetnames:
             # Avoid destructive clearing for important summary sheets.
             if clear_if_exists and sheet_name not in {"Overzicht", "Historiek"}:
@@ -314,7 +356,7 @@ class ExcelOutput:
             return
 
         _ensure_openpyxl_loaded()
-        wb = load_workbook(workbook_path)
+        wb = self._load_workbook_resilient(workbook_path)
         if sheet_name not in wb.sheetnames:
             return
         # remove the sheet
@@ -353,7 +395,7 @@ class ExcelOutput:
             return
             yield  # pragma: no cover
         _ensure_openpyxl_loaded()
-        wb = load_workbook(workbook_path, read_only=True)
+        wb = self._load_workbook_resilient(workbook_path, read_only=True)
         if sheet_name not in wb.sheetnames:
             return
             yield  # pragma: no cover
@@ -366,7 +408,7 @@ class ExcelOutput:
         if not workbook_path.exists():
             return
         _ensure_openpyxl_loaded()
-        wb = load_workbook(workbook_path)
+        wb = self._load_workbook_resilient(workbook_path)
         if sheet_name not in wb.sheetnames:
             return
         ws = wb[sheet_name]
@@ -409,7 +451,7 @@ class ExcelOutput:
             try:
                 if Path(self.output_dir).exists():
                     for candidate_path in sorted(Path(self.output_dir).rglob('*')):
-                        if candidate_path.is_file() and candidate_path.name == name:
+                        if candidate_path.is_file() and candidate_path.name == name and self._is_valid_workbook_file(candidate_path):
                             return candidate_path
             except Exception:
                 pass
@@ -423,8 +465,18 @@ class ExcelOutput:
             return candidate
 
         if p.exists():
+            if p.suffix.lower() == '.xlsx' and self._is_valid_workbook_file(p):
+                return p
+            found = _recursive_match(p.name)
+            if found is not None:
+                return found
             return p
         if candidate.exists():
+            if candidate.suffix.lower() == '.xlsx' and self._is_valid_workbook_file(candidate):
+                return candidate
+            found = _recursive_match(candidate.name)
+            if found is not None:
+                return found
             return candidate
 
         if p.suffix:
@@ -441,8 +493,11 @@ class ExcelOutput:
             if mapped:
                 candidate_map = Path(self.output_dir) / mapped
                 logger.debug('Candidate mapped path: %s (exists=%s)', candidate_map, candidate_map.exists())
-                if candidate_map.exists():
+                if candidate_map.exists() and self._is_valid_workbook_file(candidate_map):
                     return candidate_map
+                found_mapped = _recursive_match(Path(mapped).name)
+                if found_mapped is not None:
+                    return found_mapped
         except Exception as ex:
             logger.exception('Failed to lookup spreadsheet mapping for %s: %s', sp, ex)
         # If input had no suffix, try candidate with .xlsx appended.
@@ -459,8 +514,7 @@ class ExcelOutput:
             if Path(self.output_dir).exists():
                 for p in sorted(Path(self.output_dir).glob('*.xlsx')):
                     try:
-                        _ensure_openpyxl_loaded()
-                        wb_tmp = load_workbook(p, read_only=True)
+                        wb_tmp = self._load_workbook_resilient(p, read_only=True)
                         if 'Overzicht' in wb_tmp.sheetnames or 'Historiek' in wb_tmp.sheetnames:
                             # register mapping for future fast lookup if possible (non-persistent)
                             try:
@@ -489,7 +543,7 @@ class ExcelOutput:
         wb_path = self._resolve_workbook_path(spreadsheet_id)
         if not wb_path.exists():
             return {}
-        wb = load_workbook(wb_path, read_only=True)
+        wb = self._load_workbook_resilient(wb_path, read_only=True)
         out = {}
         for name in wb.sheetnames:
             ws = wb[name]
@@ -514,7 +568,7 @@ class ExcelOutput:
         wb_path = self._resolve_workbook_path(spreadsheet_id)
         if not wb_path.exists():
             return {} if return_raw_results else []
-        wb = load_workbook(wb_path, read_only=True)
+        wb = self._load_workbook_resilient(wb_path, read_only=True)
         if sheet_name not in wb.sheetnames:
             return {} if return_raw_results else []
         ws = wb[sheet_name]
@@ -579,7 +633,7 @@ class ExcelOutput:
         try:
             wb_path = self._resolve_workbook_path(spreadsheet_id)
             if wb_path.exists():
-                wb = load_workbook(wb_path, read_only=True)
+                wb = self._load_workbook_resilient(wb_path, read_only=True)
                 if sheet_name in wb.sheetnames:
                     ws = wb[sheet_name]
                     rowData = []
@@ -643,7 +697,7 @@ class ExcelOutput:
         if not wb_path.exists():
             self.create_workbook_if_missing(wb_path)
 
-        wb = load_workbook(wb_path)
+        wb = self._load_workbook_resilient(wb_path)
         if sheet_name not in wb.sheetnames:
             wb.create_sheet(sheet_name)
         ws = wb[sheet_name]
@@ -708,7 +762,7 @@ class ExcelOutput:
         if not wb_path.exists():
             self.create_workbook_if_missing(wb_path)
 
-        wb = load_workbook(wb_path)
+        wb = self._load_workbook_resilient(wb_path)
         if sheet_name not in wb.sheetnames:
             ws = wb.create_sheet(sheet_name)
         else:
@@ -761,7 +815,7 @@ class ExcelOutput:
         wb_path = self._resolve_workbook_path(spreadsheet_id)
         if not wb_path.exists():
             return 1
-        wb = load_workbook(wb_path, read_only=True)
+        wb = self._load_workbook_resilient(wb_path, read_only=True)
         if sheet_name not in wb.sheetnames:
             return 1
         ws = wb[sheet_name]
@@ -798,7 +852,7 @@ class ExcelOutput:
         if not wb_path.exists():
             # nothing to do
             return
-        wb = load_workbook(wb_path)
+        wb = self._load_workbook_resilient(wb_path)
         if sheet_name not in wb.sheetnames:
             # create if missing
             wb.create_sheet(sheet_name)
@@ -847,7 +901,7 @@ class ExcelOutput:
         if workbook_exists:
             # Load existing workbook and replace/clear the target sheet to preserve other sheets
             _ensure_openpyxl_loaded()
-            wb = load_workbook(workbook_path)
+            wb = self._load_workbook_resilient(workbook_path)
             if sheet_name in wb.sheetnames:
                 # remove existing sheet and recreate at same position
                 idx = wb.sheetnames.index(sheet_name)
@@ -875,7 +929,7 @@ class ExcelOutput:
 
             # now load the workbook and write the Resultaat sheet (works for generators and sequences)
             _ensure_openpyxl_loaded()
-            wb = load_workbook(workbook_path)
+            wb = self._load_workbook_resilient(workbook_path)
             if sheet_name in wb.sheetnames:
                 idx = wb.sheetnames.index(sheet_name)
                 ws = wb[sheet_name]
@@ -1020,7 +1074,7 @@ class ExcelOutput:
                 from openpyxl.utils import get_column_letter
                 from outputs.sheets_cell import SheetsCell
 
-                wb = load_workbook(out_path)
+                wb = self._load_workbook_resilient(out_path)
                 if 'Resultaat' in wb.sheetnames:
                     ws = wb['Resultaat']
 
@@ -1214,7 +1268,7 @@ class ExcelOutput:
         if not wb_path.exists():
             return
         try:
-            wb = load_workbook(wb_path)
+            wb = self._load_workbook_resilient(wb_path)
             if sheet_name not in wb.sheetnames:
                 return
             ws = wb[sheet_name]
@@ -1247,7 +1301,7 @@ class ExcelOutput:
         if not wb_path.exists():
             return
         try:
-            wb = load_workbook(wb_path)
+            wb = self._load_workbook_resilient(wb_path)
             if sheet_name not in wb.sheetnames:
                 return
             ws = wb[sheet_name]
@@ -1285,7 +1339,7 @@ class ExcelOutput:
         if not wb_path.exists():
             return
         try:
-            wb = load_workbook(wb_path)
+            wb = self._load_workbook_resilient(wb_path)
             if sheet_name not in wb.sheetnames:
                 return
             ws = wb[sheet_name]
@@ -1349,7 +1403,7 @@ class ExcelOutput:
             return
 
         try:
-            wb = load_workbook(wb_path)
+            wb = self._load_workbook_resilient(wb_path)
             if sheet_name not in wb.sheetnames:
                 return
             ws = wb[sheet_name]
@@ -1411,7 +1465,7 @@ class ExcelOutput:
             return
 
         try:
-            wb = load_workbook(wb_path)
+            wb = self._load_workbook_resilient(wb_path)
             if sheet_name not in wb.sheetnames:
                 return
             ws = wb[sheet_name]
