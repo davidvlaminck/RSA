@@ -25,7 +25,10 @@ Common commands:
 uv run python main.py
 uv run python main_selection_list.py --parallel
 uv run pytest
+uv run python -m scripts.ops.bootstrap_bucket_layout --output-dir RSA_OneDrive
 ```
+
+`bootstrap_bucket_layout` is the one-shot repair script for a reset `RSA_OneDrive`: it creates the bucket folders, moves existing report workbooks into the right bucket, and refreshes the summary hyperlinks.
 
 ## Daily Google Drive Flow
 

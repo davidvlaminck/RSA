@@ -9,7 +9,8 @@ class Report0071(BaseReport):
                                           spreadsheet_id='1l3fkoacvQ_ka5QpErK6CwS9ZQo8U-EgpQksS4iPuQW8',
                                           datasource='PostGIS',
                                           frequency=7,
-                                          persistent_column='K')
+                                          persistent_column='K',
+                                          excel_filename='[RSA] Ontbrekende gegevens installaties V&W-WVB.xlsx')
 
         self.report.result_query = """
 WITH bestek_koppelingen AS ( 

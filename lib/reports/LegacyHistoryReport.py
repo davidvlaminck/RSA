@@ -2,10 +2,12 @@ import decimal
 import logging
 import time
 from datetime import datetime, date, timedelta
+from typing import Optional
 from zoneinfo import ZoneInfo
 
 from neo4j.time import DateTime
 
+from lib.connectors.Neo4JConnector import SingleNeo4JConnector
 from lib.mail.MailSender import MailSender
 from lib.connectors.PostGISConnector import SinglePostGISConnector
 from lib.reports.Report import Report
@@ -37,10 +39,10 @@ def _to_brussels_string(value) -> str:
 class LegacyHistoryReport(Report):
     def __init__(self, name: str = '', title: str = '', spreadsheet_id: str = '', datasource: str = '',
                  add_filter: bool = True, frequency: int = 1, persistent_column: str = '', sheets_to_keep: int = 5,
-                 sheet_name: str = '', sheets_to_ignore: [str] = None):
+                 sheet_name: str = '', sheets_to_ignore: Optional[list[str]] = None, excel_filename: str = ''):
         Report.__init__(self, name=name, title=title, spreadsheet_id=spreadsheet_id, datasource=datasource,
                         add_filter=add_filter,
-                        frequency=frequency)
+                        frequency=frequency, excel_filename=excel_filename)
         self.sheet_name = sheet_name
         self.persistent_column = persistent_column
         self.persistent_dict = {}
@@ -373,7 +375,7 @@ class LegacyHistoryReport(Report):
                                            data=[[self.last_data_update, len(result_data)]])
 
         report_link = report_sharepoint_url(
-            excel_filename=lookup_spreadsheet_filename(self.spreadsheet_id),
+            excel_filename=self.excel_filename or lookup_spreadsheet_filename(self.spreadsheet_id),
             report_name=self.name,
             report_title=self.title,
         )
@@ -437,7 +439,7 @@ class LegacyHistoryReport(Report):
 
         return new_result_data
 
-    def send_mails(self, sender: MailSender, named_range: [list], previous_result: int, result: int,
+    def send_mails(self, sender: MailSender, named_range: list[list], previous_result: int, result: int,
                    latest_data_sync: str = ''):
         pass
 

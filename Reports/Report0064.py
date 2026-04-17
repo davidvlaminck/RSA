@@ -10,7 +10,8 @@ class Report0064(BaseReport):
                                           datasource='PostGIS',
                                           sheets_to_ignore=['Pivot', 'acties'],
                                           frequency=7,
-                                          persistent_column='K')
+                                          persistent_column='K',
+                                          excel_filename='[RSA] Ontbrekende gegevens installaties VMHS.xlsx')
 
         self.report.result_query = """
 WITH bestek_koppelingen AS ( 

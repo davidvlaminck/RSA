@@ -41,6 +41,11 @@ from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 SCOPES = ['https://www.googleapis.com/auth/drive']
 FOLDER_MIME = 'application/vnd.google-apps.folder'
 BRUSSELS = ZoneInfo('Europe/Brussels')
+SKIP_NAMES = {'archief', 'archivedreports'}
+
+
+def _should_skip(name: str) -> bool:
+    return name.strip().lower() in SKIP_NAMES
 
 
 def first_login(credentials_json_path: str, token_path: str) -> None:
@@ -151,6 +156,9 @@ def _download_file(service, file_id: str, target_path: Path) -> None:
 def _download_tree(service, folder_id: str, local_path: Path) -> None:
     local_path.mkdir(parents=True, exist_ok=True)
     for child in _list_children(service, folder_id):
+        if _should_skip(child['name']):
+            logging.info('Skipping Drive item during download mirror: %s', child['name'])
+            continue
         child_path = local_path / child['name']
         if child['mimeType'] == FOLDER_MIME:
             _download_tree(service, child['id'], child_path)
@@ -187,6 +195,9 @@ def _sync_local_dir_to_drive(service, local_dir: Path, remote_folder_id: str) ->
     local_entries = sorted(local_dir.iterdir(), key=lambda p: p.name)
 
     for entry in local_entries:
+        if _should_skip(entry.name):
+            logging.info('Skipping local item during upload mirror: %s', entry)
+            continue
         remote = remote_children.pop(entry.name, None)
 
         if entry.is_dir():

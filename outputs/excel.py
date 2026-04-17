@@ -19,6 +19,8 @@ WriteOnlyWorkbook = None
 get_column_letter = None
 load_workbook = None
 BRUSSELS = ZoneInfo('Europe/Brussels')
+OVERVIEW_FOLDER_NAME = 'Overzicht'
+OVERVIEW_WORKBOOK_NAMES = {'[RSA] Overzicht rapporten.xlsx'}
 
 def _ensure_openpyxl_loaded():
     global openpyxl, Workbook, WriteOnlyWorkbook, get_column_letter, load_workbook
@@ -35,18 +37,9 @@ def _ensure_openpyxl_loaded():
         mod = openpyxl
         Workbook = getattr(mod, 'Workbook')
         load_workbook = getattr(mod, 'load_workbook')
-        # WriteOnlyWorkbook location can vary; prefer writer.write_only
-        # WriteOnlyWorkbook is in openpyxl.writer.write_only
-        try:
-            wmod = importlib.import_module('openpyxl.writer.write_only')
-            WriteOnlyWorkbook = getattr(wmod, 'WriteOnlyWorkbook')
-        except Exception:
-            # fallback: try alternative path
-            try:
-                from openpyxl.writer.write_only import WriteOnlyWorkbook as _W
-                WriteOnlyWorkbook = _W
-            except Exception:
-                WriteOnlyWorkbook = None
+        # Write-only workbook helpers differ across openpyxl versions and are not
+        # required for the current code paths, so keep this as a best-effort placeholder.
+        WriteOnlyWorkbook = None
         try:
             utils_mod = importlib.import_module('openpyxl.utils')
             get_column_letter = getattr(utils_mod, 'get_column_letter')
@@ -199,6 +192,10 @@ class ExcelOutput:
         root = Path(self.output_dir)
         if not root.exists():
             return None
+        if filename in OVERVIEW_WORKBOOK_NAMES:
+            overview_candidate = root / OVERVIEW_FOLDER_NAME / filename
+            if overview_candidate.exists() and self._is_valid_workbook_file(overview_candidate):
+                return overview_candidate
         try:
             for candidate_path in sorted(root.rglob(filename)):
                 if self._is_valid_workbook_file(candidate_path):
@@ -445,7 +442,17 @@ class ExcelOutput:
         if p.is_absolute():
             return p
 
+        if p.name in OVERVIEW_WORKBOOK_NAMES:
+            overview_candidate = Path(self.output_dir) / OVERVIEW_FOLDER_NAME / p.name
+            if overview_candidate.exists():
+                return overview_candidate
+            legacy_candidate = Path(self.output_dir) / p.name
+            if legacy_candidate.exists():
+                return legacy_candidate
+            return overview_candidate
+
         candidate = Path(self.output_dir) / sp
+        overview_candidate = Path(self.output_dir) / OVERVIEW_FOLDER_NAME / sp
 
         def _recursive_match(name: str) -> Path | None:
             try:
@@ -462,7 +469,9 @@ class ExcelOutput:
             found = _recursive_match(p.name)
             if found is not None:
                 return found
-            return candidate
+            if overview_candidate.exists():
+                return overview_candidate
+            return overview_candidate
 
         if p.exists():
             if p.suffix.lower() == '.xlsx' and self._is_valid_workbook_file(p):
@@ -483,7 +492,7 @@ class ExcelOutput:
             found = _recursive_match(p.name)
             if found is not None:
                 return found
-            return candidate
+            return overview_candidate
 
         # try mapping spreadsheet id -> filename (log any issues)
         try:
@@ -502,6 +511,7 @@ class ExcelOutput:
             logger.exception('Failed to lookup spreadsheet mapping for %s: %s', sp, ex)
         # If input had no suffix, try candidate with .xlsx appended.
         candidate_x = Path(self.output_dir) / (sp + '.xlsx') if not p.suffix else candidate
+        overview_candidate_x = Path(self.output_dir) / OVERVIEW_FOLDER_NAME / (sp + '.xlsx') if not p.suffix else overview_candidate
 
         found = _recursive_match(Path(candidate_x).name)
         if found is not None:
@@ -528,7 +538,7 @@ class ExcelOutput:
         except Exception:
             pass
 
-        return candidate_x
+        return overview_candidate_x
 
     def get_sheets_in_spreadsheet(self, spreadsheet_id: str) -> dict:
         """Return a dict of sheet names -> properties similar to Sheets API minimal shape.

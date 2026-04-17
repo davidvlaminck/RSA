@@ -7,13 +7,15 @@ from typing import Dict, Optional
 
 # Mapping loader: looks for a CSV at project root named `spreadsheet_mapping.csv` with columns:
 # spreadsheet_id, excel_filename
-# Also looks for JSON `RSA_OneDrive/spreadsheet_mapping.json` as fallback.
+# Also looks for JSON `RSA_OneDrive/Overzicht/spreadsheet_mapping.json` as fallback.
 # Additionally, scan `Reports/Report*.py` for inline attributes `spreadsheet_id` and `excel_filename`.
 
 CACHE: Dict[str, str] = {}
 LOADED = False
 
-MAPPING_JSON_PATH = Path(__file__).resolve().parents[1] / 'RSA_OneDrive' / 'spreadsheet_mapping.json'
+_RSA_ONE_DRIVE = Path(__file__).resolve().parents[1] / 'RSA_OneDrive'
+_OVERVIEW_DIR = _RSA_ONE_DRIVE / 'Overzicht'
+MAPPING_JSON_PATH = _OVERVIEW_DIR / 'spreadsheet_mapping.json'
 REPORTS_DIR = Path(__file__).resolve().parents[1] / 'Reports'
 
 # regex patterns to extract attributes in Report files
@@ -29,7 +31,7 @@ def _load_mapping() -> None:
     proj_root = Path(__file__).resolve().parents[1]
     csv_path = proj_root / 'spreadsheet_mapping.csv'
     bak_csv_path = proj_root / 'spreadsheet_mapping.csv.bak'
-    json_path = MAPPING_JSON_PATH
+    json_paths = [MAPPING_JSON_PATH, _RSA_ONE_DRIVE / 'spreadsheet_mapping.json']
 
     # 1) load CSV if present (primary)
     for p in (csv_path, bak_csv_path):
@@ -51,15 +53,16 @@ def _load_mapping() -> None:
                 pass
 
     # 2) load JSON mapping if present (merge/override)
-    if json_path.exists():
-        try:
-            with open(json_path, 'r', encoding='utf-8') as fh:
-                data = json.load(fh)
-                if isinstance(data, dict):
-                    for k, v in data.items():
-                        CACHE[str(k)] = str(v)
-        except Exception:
-            pass
+    for json_path in json_paths:
+        if json_path.exists():
+            try:
+                with open(json_path, 'r', encoding='utf-8') as fh:
+                    data = json.load(fh)
+                    if isinstance(data, dict):
+                        for k, v in data.items():
+                            CACHE[str(k)] = str(v)
+            except Exception:
+                pass
 
     # 3) scan Reports/ for inline attributes
     try:

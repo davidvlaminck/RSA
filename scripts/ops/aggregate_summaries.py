@@ -27,8 +27,6 @@ if str(repo_root) not in sys.path:
 
 from outputs.excel import ExcelOutput
 from outputs.summary_stager import _ensure_dirs
-from openpyxl import load_workbook
-from pathlib import Path as _Path
 
 logging.basicConfig(level=logging.INFO, format='[AGG] %(asctime)s %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -50,13 +48,17 @@ def apply_payload(excel: ExcelOutput, payload: Dict[str, Any], output_dir: Path)
         # matches ExcelOutput._resolve_workbook_path and any mappings discovered
         # earlier when grouping writes. This avoids inconsistencies when a
         # relative Path(output_dir) differs from the ExcelOutput instance's
-        # resolved output directory and prevents selecting the wrong workbook
-        # (e.g. 'ABBAMelda - EM-Infra id_s.xlsx') when the canonical
-        # '[RSA] Overzicht rapporten.xlsx' is present in the ExcelOutput folder.
-        preferred_summary = Path(getattr(excel, 'output_dir', Path(output_dir))) / '[RSA] Overzicht rapporten.xlsx'
-        if payload.get('sheet') == 'Overzicht' and preferred_summary.exists():
-            wb_path = preferred_summary.resolve()
-            logger.debug('Using explicit summary workbook %s for Overzicht writes', wb_path)
+        # resolved output directory and prevents selecting the wrong workbook.
+        overview_root = Path(getattr(excel, 'output_dir', Path(output_dir))) / 'Overzicht'
+        preferred_summary = overview_root / '[RSA] Overzicht rapporten.xlsx'
+        legacy_summary = Path(getattr(excel, 'output_dir', Path(output_dir))) / '[RSA] Overzicht rapporten.xlsx'
+        if payload.get('sheet') == 'Overzicht':
+            if preferred_summary.exists():
+                wb_path = preferred_summary.resolve()
+                logger.debug('Using explicit summary workbook %s for Overzicht writes', wb_path)
+            elif legacy_summary.exists():
+                wb_path = legacy_summary.resolve()
+                logger.debug('Using legacy summary workbook %s for Overzicht writes', wb_path)
     except Exception:
         logger.debug('Failed to check preferred summary workbook', exc_info=True)
 

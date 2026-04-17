@@ -33,6 +33,7 @@ def resolve_report_output_path(
     report_title: Optional[str] = None,
 ) -> Path:
     base = Path(output_dir)
+    is_rsa_onedrive = base.name == 'RSA_OneDrive'
     if excel_filename:
         filename = Path(excel_filename).name
     elif report_title:
@@ -45,7 +46,9 @@ def resolve_report_output_path(
 
     report_number = extract_report_number(report_name, report_title, excel_filename)
     if report_number is None:
-        return base / filename
+        if not is_rsa_onedrive:
+            return base / filename
+        raise ValueError(f'Cannot route workbook without a report number: {filename}')
     return base / report_bucket_name(report_number) / filename
 
 
@@ -70,6 +73,8 @@ def report_sharepoint_url(
         quote(bucket, safe=''),
         quote(filename, safe=''),
     ]) + '?web=1'
+
+
 
 
 

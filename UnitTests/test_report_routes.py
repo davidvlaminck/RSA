@@ -1,6 +1,9 @@
+import pytest
+
 from outputs.base import OutputWriteContext
 from outputs.excel import ExcelOutput
 from outputs.report_routes import report_bucket_name, report_sharepoint_url
+from outputs.report_routes import resolve_report_output_path
 from lib.mail.MailSender import MailSender
 
 
@@ -56,6 +59,16 @@ def test_sharepoint_url_is_bucketed():
     assert '/0200-0299/' in url
     assert '%5BRSA%5D%20Example%20report.xlsx' in url
     assert url.endswith('?web=1')
+
+
+def test_unrouted_report_workbook_does_not_fall_back_to_root(tmp_path):
+    with pytest.raises(ValueError):
+        resolve_report_output_path(
+            tmp_path / 'RSA_OneDrive',
+            excel_filename='[RSA] Example report.xlsx',
+            report_name='Example report',
+            report_title='Example report',
+        )
 
 
 def test_mail_sender_uses_sharepoint_link():

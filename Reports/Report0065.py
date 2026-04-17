@@ -9,7 +9,8 @@ class Report0065(BaseReport):
                                           spreadsheet_id='1WrLJIWpl98XFBcEwccjqSF3R_sGz3sEbCqSz9BkjLhk',
                                           datasource='PostGIS',
                                           frequency=7,
-                                          persistent_column='K')
+                                          persistent_column='K',
+                                          excel_filename='[RSA] Ontbrekende gegevens installaties Telematica.xlsx')
 
         self.report.result_query = """
 WITH bestek_koppelingen AS ( 

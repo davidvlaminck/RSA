@@ -3,19 +3,20 @@ Timestamp types used by the report service
 Overview
 --------
 This document explains the two distinct timestamps used throughout the reporting
-pipeline and where each is sourced, normalized and written.
+pipeline and where each is sourced, normalized and written. All timestamps are
+stored and displayed in Brussels time (`Europe/Brussels`).
 
 1) "Report created" timestamp (created-at)
 -----------------------------------------
 - Purpose: records when the report run created the report file. It documents the
   moment the report was executed and the output file was generated.
 - Where it is set: in `lib/reports/DQReport.py` as `self.now`.
-- Format: UTC, formatted as `YYYY-MM-DD HH:MM:SS` (no timezone suffix).
+- Format: Brussels time, formatted as `YYYY-MM-DD HH:MM:SS` (no timezone suffix).
 - Usage / written to:
   - First metadata row on each report's `Resultaat` sheet: "Rapport gemaakt op {now} met data uit:".
   - Included in the `Historiek` staging payload (first column) when staging historiek rows.
 - Source / semantics: produced by the report runner at report time using
-  `datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S")`.
+  `datetime.now(ZoneInfo("Europe/Brussels")).strftime("%Y-%m-%d %H:%M:%S")`.
 
 2) "Datasource last synchronized" timestamp (last_data_update)
 -------------------------------------------------------------
@@ -32,24 +33,25 @@ pipeline and where each is sourced, normalized and written.
     the PostGIS adapter should return a deterministic timestamp (e.g. a
     dedicated params table or explicit query). Historically PostGIS sometimes
     fell back to `datetime.now()`, which is NOT correct for freshness reporting.
-- Format: Normalized to UTC and written as `YYYY-MM-DD HH:MM:SS` (no timezone
-  suffix) when staged for the summary/historiek or when written to Overzicht
-  column C. The aggregator further ensures normalization before applying writes.
+- Format: Normalized to Brussels time and written as `YYYY-MM-DD HH:MM:SS`
+  (no timezone suffix) when staged for the summary/historiek or when written
+  to `Overzicht` column C. The aggregator further ensures normalization before
+  applying writes.
 - Usage / written to:
   - Second metadata row on each report's `Resultaat` sheet: e.g.
     "ArangoDB, laatst gesynchroniseerd op {last_data_update}".
   - Historically / Historiek sheet: second column contains the last_data_update
     as staged by the report (normalized) and appended via the aggregator.
   - `Overzicht` sheet column C: receives the `last_data_update` (normalized
-    UTC `YYYY-MM-DD HH:MM:SS`) for the corresponding report row. The aggregator
-    consolidates multiple staged writes for the same Overzicht cell and applies
-    the most recent timestamp.
+    Brussels `YYYY-MM-DD HH:MM:SS`) for the corresponding report row. The
+    aggregator consolidates multiple staged writes for the same Overzicht cell
+    and applies the most recent timestamp.
 - Semantics and normalization:
   - Timestamps coming from the database or driver may be:
     - timezone-aware datetimes, naive datetimes, ISO strings (with Z or offset),
       or other textual formats.
-    - The code normalizes these to timezone-aware UTC datetimes and formats
-      them as `YYYY-MM-DD HH:MM:SS` for storage in Overzicht and Historiek.
+    - The code normalizes these to timezone-aware Brussels datetimes and formats
+      them as `YYYY-MM-DD HH:MM:SS` for storage in `Overzicht` and `Historiek`.
   - If a report configures `last_update_query`, its (first) result value is
     preferred and normalized by `DQReport` before staging.
 
@@ -75,10 +77,11 @@ Common causes of incorrect Overzicht values
 Developer guidance / checklist
 ------------------------------
 - When writing report code or datasource adapters:
-  - Always populate `QueryResult.last_data_update` with a normalized UTC string
-    if possible. If unavailable, prefer an empty string over `datetime.now()`.
+  - Always populate `QueryResult.last_data_update` with a normalized Brussels
+    string if possible. If unavailable, prefer an empty string over
+    `datetime.now()`.
   - If a per-report `last_update_query` is used, normalize the returned value
-    to UTC before assigning to `self.last_data_update`.
+    to Brussels time before assigning to `self.last_data_update`.
 - For scripts that stage payloads or run the aggregator:
   - Use relative paths (e.g. `RSA_OneDrive`) and let the code resolve them
     against the repository root, or pass absolute paths consistently.
@@ -97,18 +100,6 @@ Quick troubleshooting steps
 python scripts/ops/aggregate_summaries.py --staged-dir RSA_OneDrive/staged_summaries --output-dir RSA_OneDrive
 ```
 
-4. Open `RSA_OneDrive/[RSA] Overzicht rapporten.xlsx` and confirm column C
+4. Open `RSA_OneDrive/Overzicht/[RSA] Overzicht rapporten.xlsx` and confirm column C
    updated. If the file modified is different, inspect `outputs/spreadsheet_map.py`
    to ensure the spreadsheet_id -> filename mapping is correct.
-
-If you prefer, I can now:
-- (A) Add additional debug logging to `apply_payload` and the aggregator so each
-  staged file is logged with absolute path and payload before/after normalization.
-- (B) Add a small check that refuses to apply writes to files outside the
-  project `RSA_OneDrive` (safety guard).
-- (C) Run a local simulation/test (unit-test style) that creates a temp
-  RSA_OneDrive with an Overzicht workbook and staged files, then runs the
-  aggregator and asserts the expected Overzicht C value was written.
-
-Tell me which of (A),(B),(C) you'd like next, or reply "done" if this
-documentation meets your needs.
