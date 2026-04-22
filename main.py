@@ -13,6 +13,9 @@ from scripts.ops.gdrive_upload import (
 )
 
 
+DEFAULT_SETTINGS_PATH = Path(__file__).resolve().parent / 'settings_sample.json'
+
+
 def _resolve_path(path_value: str, base_dir: Path) -> str:
     path = Path(path_value)
     if not path.is_absolute():
@@ -43,15 +46,11 @@ def _load_runtime_config(settings_path: str) -> dict:
 
 def _default_settings_path() -> str:
     """Resolve settings path for local runs (PyCharm Play friendly)."""
-    env_path = os.getenv('RSA_SETTINGS_PATH')
+    env_path = os.getenv('RSA_SETTINGS')
     if env_path:
         return env_path
 
-    repo_settings = Path(__file__).resolve().parent / 'settings_sample.json'
-    if repo_settings.exists():
-        return str(repo_settings)
-
-    return '/home/davidlinux/Documenten/AWV/resources/settings_RSA.json'
+    return str(DEFAULT_SETTINGS_PATH)
 
 
 class DailyDriveSyncGate:

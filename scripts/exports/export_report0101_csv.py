@@ -4,7 +4,7 @@ Export Report0101 (Vplan koppelingen) to CSV using the safe AQL variant (CSV-fri
 
 Usage examples:
   # Use settings file (default path or --settings):
-  python scripts/exports/export_report0101_csv.py --settings /home/davidlinux/Documenten/AWV/resources/settings_RSA.json --out /tmp/report0101.csv
+  python scripts/exports/export_report0101_csv.py --settings /path/to/your/settings_RSA.json --out /tmp/report0101.csv
 
   # Or override connection parameters directly:
   python scripts/exports/export_report0101_csv.py --host 127.0.0.1 --port 8529 --user myuser --password 'mypw' --database awvinfra --out /tmp/report0101.csv
@@ -25,7 +25,7 @@ repo_root = Path(__file__).resolve().parents[2]
 if str(repo_root) not in sys.path:
     sys.path.insert(0, str(repo_root))
 
-DEFAULT_SETTINGS_PATH = Path(os.environ.get('RSA_SETTINGS') or Path.home() / 'Documenten' / 'AWV' / 'resources' / 'settings_RSA.json')
+DEFAULT_SETTINGS_PATH = Path(os.environ.get('RSA_SETTINGS') or repo_root / 'settings_sample.json')
 
 
 def load_settings(path: Path) -> dict:
@@ -255,5 +255,6 @@ def _format_cell(v):
 
 if __name__ == '__main__':
     raise SystemExit(main())
+
 
 

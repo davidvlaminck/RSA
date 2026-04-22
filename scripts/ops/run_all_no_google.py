@@ -31,7 +31,7 @@ from lib.reports.instantiator import discover_and_instantiate_reports
 from lib.reports.pipeline_runner import run_pipelines_by_datasource
 from outputs.excel_wrapper import SingleExcelWriter
 
-DEFAULT_SETTINGS = r"/home/davidlinux/Documenten/AWV/resources/settings_RSA.json"
+DEFAULT_SETTINGS = str(repo_root / 'settings_sample.json')
 
 
 def prepare_temp_settings(orig_settings_path: str | None, excel_output_dir: str | None = None, timeout_seconds: int | None = None, max_concurrent: int | None = None) -> str:

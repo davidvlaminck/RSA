@@ -6,6 +6,7 @@ Supports overrides for settings path and report list.
 
 import argparse
 import json
+import os
 from pathlib import Path
 import warnings
 
@@ -15,7 +16,7 @@ warnings.filterwarnings('ignore', message=r'path is deprecated. Use files\(\) in
 from lib.reports.selection_runner import run_selection
 
 
-DEFAULT_SETTINGS_PATH = r"/home/davidlinux/Documenten/AWV/resources/settings_RSA.json"
+DEFAULT_SETTINGS_PATH = str(Path(os.environ.get('RSA_SETTINGS') or Path(__file__).resolve().parent / 'settings_sample.json'))
 DEFAULT_REPORTS = [
     "Report0002",
     "Report0004",

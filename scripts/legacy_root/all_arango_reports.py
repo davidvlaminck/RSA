@@ -135,7 +135,10 @@ class AllArangoReportsRunner:
                                                    data=[[mailcontent.mail_sent.strftime("%Y-%m-%d %H:%M:%S")]])
 
 if __name__ == '__main__':
+    settings_path = r'/home/davidlinux/PycharmProjects/RSA/settings_sample.json'
+    if os.environ.get('RSA_SETTINGS'):
+        settings_path = os.environ['RSA_SETTINGS']
     runner = AllArangoReportsRunner(
-        settings_path=r'/home/david/Documents/AWV/resources/settings_RSA.json')
+        settings_path=settings_path)
     runner.run()
 

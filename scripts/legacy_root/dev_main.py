@@ -1,4 +1,5 @@
 import logging
+import os
 import sys
 from pathlib import Path
 
@@ -18,8 +19,10 @@ if __name__ == '__main__':
                         format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
                         datefmt='%H:%M:%S',
                         level=logging.INFO)
-    SingleSheetsWrapper.init(service_cred_path='C:\\resources\\driven-wonder-149715-ca8bdf010930.json',
-                             readonly_scope=False)
+    service_cred_path = os.environ.get('RSA_SHEETS_SERVICE_ACCOUNT', '')
+    if not service_cred_path:
+        raise RuntimeError('Set RSA_SHEETS_SERVICE_ACCOUNT to a Google Sheets service-account JSON path')
+    SingleSheetsWrapper.init(service_cred_path=service_cred_path, readonly_scope=False)
     SingleNeo4JConnector.init("bolt://localhost:7687", "neo4jPython", "python")
     mail_sender = MailSender()
     report_instance = Report0016()

@@ -3,20 +3,20 @@
 Gebruik:
     1. Eenmalig inloggen via browser:
        python -m scripts.ops.gdrive_upload login \
-           --credentials ~/Documenten/AWV/resources/gdrive_oauth_credentials.json \
-           --token      ~/Documenten/AWV/resources/gdrive_token.pkl
+            --credentials /path/to/external/resources/gdrive_oauth_credentials.json \
+            --token      /path/to/external/resources/gdrive_token.pkl
 
     2. Download mirror (Drive -> local):
        python -m scripts.ops.gdrive_upload sync-down \
            --folder /path/to/RSA_OneDrive \
            --drive-folder RSA_Reports \
-           --token ~/Documenten/AWV/resources/gdrive_token.pkl
+            --token /path/to/external/resources/gdrive_token.pkl
 
     3. Upload mirror (local -> Drive):
        python -m scripts.ops.gdrive_upload sync-up \
            --folder /path/to/RSA_OneDrive \
            --drive-folder RSA_Reports \
-           --token ~/Documenten/AWV/resources/gdrive_token.pkl
+            --token /path/to/external/resources/gdrive_token.pkl
 
 Token-levensduur:
     De access token vervalt na 1 uur maar wordt automatisch ververst door de library.

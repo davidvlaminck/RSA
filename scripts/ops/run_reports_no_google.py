@@ -35,7 +35,7 @@ if str(repo_root) not in sys.path:
 from lib.reports.selection_runner import run_selection
 
 
-DEFAULT_SETTINGS = r"/home/davidlinux/Documenten/AWV/resources/settings_RSA.json"
+DEFAULT_SETTINGS = str(repo_root / 'settings_sample.json')
 DEFAULT_REPORTS = [
     "Report0002",
     "Report0004",

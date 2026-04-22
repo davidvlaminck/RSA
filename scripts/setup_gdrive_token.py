@@ -18,8 +18,8 @@ from pathlib import Path
 FOLDER_MIME = 'application/vnd.google-apps.folder'
 SCOPES = ['https://www.googleapis.com/auth/drive']
 DEFAULT_SETTINGS = str(Path(__file__).resolve().parents[1] / 'settings_sample.json')
-DEFAULT_CREDENTIALS = '/home/davidlinux/Documenten/AWV/resources/client_secret_RSA-API.json'
-DEFAULT_TOKEN = '/home/davidlinux/Documenten/AWV/resources/gdrive_token.pkl'
+DEFAULT_CREDENTIALS = ''
+DEFAULT_TOKEN = ''
 DEFAULT_DRIVE_FOLDER = 'RSA'
 
 
@@ -134,6 +134,15 @@ def main() -> int:
 
     if args.dry_run:
         return 0
+
+    if not credentials:
+        print('ERROR: geen OAuth client credentials pad opgegeven.')
+        print('  Geef --credentials mee of vul google_api.credentials_path / drive_sync.credentials_path in je settingsbestand.')
+        return 1
+    if not token:
+        print('ERROR: geen token pad opgegeven.')
+        print('  Geef --token mee of vul drive_sync.token_path in je settingsbestand.')
+        return 1
 
     token_path = Path(token)
     if token_path.exists() and not args.force_login:

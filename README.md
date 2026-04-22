@@ -82,15 +82,9 @@ uv run python -m scripts.ops.dry_sync_test --settings settings_sample.json --tok
 
 ### Persoonlijke Google Drive setup
 
-Gebruik voor een persoonlijke Google Drive exact dezelfde OAuth-flow als voor een werkaccount. Je hebt eerst een OAuth client JSON nodig (`credentials_path`), daarna maakt het setup-script een user token aan (`token_path`).
+Gebruik voor een persoonlijke Google Drive exact dezelfde OAuth-flow als voor een werkaccount. De OAuth client JSON en token staan **buiten de repo**; alleen het settingsbestand verwijst ernaar via `google_api.credentials_path` en `drive_sync.token_path`.
 
-1. Maak een vaste map voor de bestanden:
-
-```bash
-mkdir -p /home/davidlinux/Documenten/AWV/resources
-```
-
-2. Open Google Cloud Console en doe het volgende:
+1. Open Google Cloud Console en doe het volgende:
    - maak een nieuw project
    - activeer **Google Drive API**
    - ga naar **APIs & Services** → **OAuth consent screen**
@@ -103,39 +97,34 @@ mkdir -p /home/davidlinux/Documenten/AWV/resources
    - kies **Desktop app**
    - download het JSON-bestand
 
-3. Sla dat JSON-bestand lokaal op, bijvoorbeeld als:
+2. Sla dat JSON-bestand lokaal op in je eigen resources-map buiten de repo.
 
-```bash
-/home/davidlinux/Documenten/AWV/resources/gdrive_oauth_credentials.json
-```
-
-4. Run daarna in PyCharm gewoon `scripts/setup_gdrive_token.py` met Play, of via terminal:
+3. Run daarna `scripts/setup_gdrive_token.py` met Play, of via terminal:
 
 ```bash
 uv run python -m scripts.setup_gdrive_token \
-  --credentials /home/davidlinux/Documenten/AWV/resources/gdrive_oauth_credentials.json \
-  --token /home/davidlinux/Documenten/AWV/resources/gdrive_token.pkl \
+  --settings /path/to/your/settings_RSA.json \
   --drive-folder RSA \
   --write-settings
 ```
 
-5. Er opent een browser. Log in met je persoonlijke Google account en geef toestemming.
+4. Er opent een browser. Log in met je persoonlijke Google account en geef toestemming.
 
-6. Na succesvolle login:
+5. Na succesvolle login:
    - wordt `gdrive_token.pkl` aangemaakt
    - test het script of map `RSA` bereikbaar is
    - schrijft `--write-settings` de gebruikte paden terug naar je settingsbestand
 
-7. Controleer daarna deze velden in je settings:
+6. Controleer daarna deze velden in je settings:
 
 ```json
 {
   "google_api": {
-    "credentials_path": "/home/davidlinux/Documenten/AWV/resources/gdrive_oauth_credentials.json"
+    "credentials_path": "/path/to/external/resources/gdrive_oauth_credentials.json"
   },
   "drive_sync": {
-    "credentials_path": "/home/davidlinux/Documenten/AWV/resources/gdrive_oauth_credentials.json",
-    "token_path": "/home/davidlinux/Documenten/AWV/resources/gdrive_token.pkl",
+    "credentials_path": "/path/to/external/resources/gdrive_oauth_credentials.json",
+    "token_path": "/path/to/external/resources/gdrive_token.pkl",
     "drive_folder": "RSA",
     "local_folder": "./RSA_OneDrive"
   }

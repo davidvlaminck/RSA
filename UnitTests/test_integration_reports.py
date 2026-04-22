@@ -73,7 +73,7 @@ def run_report_to_dir(report_name: str, out_dir: Path):
 
 def test_report0002_and_0030(tmp_path):
     # integration tests require a real ArangoDB connection. Try to load settings and initialize the connector.
-    settings_path = os.environ.get('RSA_SETTINGS') or '/home/davidlinux/Documenten/AWV/resources/settings_RSA.json'
+    settings_path = os.environ.get('RSA_SETTINGS') or str(Path(__file__).resolve().parents[1] / 'settings_sample.json')
     if not Path(settings_path).exists():
         import pytest
         pytest.skip(f'ArangoDB settings not found at {settings_path}; skipping integration test')

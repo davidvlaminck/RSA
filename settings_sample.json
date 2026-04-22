@@ -5,7 +5,7 @@
         "password": ""
     },
     "google_api": {
-        "credentials_path": "/home/davidlinux/Documenten/AWV/resources/client_secret_RSA-API.json"
+        "credentials_path": "/path/to/external/resources/gdrive_oauth_credentials.json"
     },
     "databases": {
         "Neo4j": {
@@ -29,8 +29,8 @@
         "enabled": true,
         "sync_after": "01:00:00",
         "drive_folder": "RSA",
-        "credentials_path": "/home/davidlinux/Documenten/AWV/resources/client_secret_RSA-API.json",
+        "credentials_path": "/path/to/external/resources/gdrive_oauth_credentials.json",
         "local_folder": "./RSA_OneDrive",
-        "token_path": "/home/davidlinux/Documenten/AWV/resources/gdrive_token.pkl"
+        "token_path": "/path/to/external/resources/gdrive_token.pkl"
     }
 }

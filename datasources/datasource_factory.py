@@ -21,9 +21,7 @@ def try_init_postgis_from_settings() -> bool:
     except RuntimeError:
         pass
 
-    settings_path = os.environ.get("RSA_SETTINGS") or str(
-        Path.home() / "Documenten" / "AWV" / "resources" / "settings_RSA.json"
-    )
+    settings_path = os.environ.get("RSA_SETTINGS") or str(Path(__file__).resolve().parents[1] / "settings_sample.json")
     try:
         if Path(settings_path).exists():
             with open(settings_path, "r", encoding="utf-8") as fh:
@@ -59,4 +57,5 @@ def make_datasource(name: str):
         db = SingleArangoConnector.get_db()
         return ArangoDatasource.from_existing_connection(db)
     raise ValueError(f"Unsupported datasource: {name}")
+
 

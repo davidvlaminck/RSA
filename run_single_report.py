@@ -9,7 +9,7 @@ from zoneinfo import ZoneInfo
 from lib.reports.selection_runner import run_selection
 
 
-DEFAULT_SETTINGS_PATH = r'/home/davidlinux/Documenten/AWV/resources/settings_RSA.json'
+DEFAULT_SETTINGS_PATH = str(Path(os.environ.get('RSA_SETTINGS') or Path(__file__).resolve().parent / 'settings_sample.json'))
 DEFAULT_WORKDIR = str(Path(__file__).resolve().parent)
 BRUSSELS = ZoneInfo('Europe/Brussels')
 

@@ -26,7 +26,7 @@ repo_root = Path(__file__).resolve().parents[2]
 if str(repo_root) not in sys.path:
     sys.path.insert(0, str(repo_root))
 
-DEFAULT_SETTINGS_PATH = Path(os.environ.get('RSA_SETTINGS') or Path.home() / 'Documenten' / 'AWV' / 'resources' / 'settings_RSA.json')
+DEFAULT_SETTINGS_PATH = Path(os.environ.get('RSA_SETTINGS') or repo_root / 'settings_sample.json')
 
 SAFE_AQL = r'''
 /* Report0101 Vplankoppelingen - safe variant */
