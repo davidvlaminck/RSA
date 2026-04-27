@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 import uuid
 import time
+import shutil
 from pathlib import Path
 import logging
 from typing import Dict, Any
@@ -73,6 +74,32 @@ def stage_summary_update(payload: Dict[str, Any], staged_dir: str | Path = 'RSA_
     except Exception:
         pass
     return final
+
+
+def clear_staged_processed(staged_dir: str | Path = 'RSA_OneDrive/staged_summaries') -> Path:
+    """Remove all contents from `staged_dir/processed` and recreate the folder.
+
+    This is intended to be called at the start of a report loop so stale processed
+    payloads from previous runs cannot be re-used or uploaded later.
+    """
+    staged_dir = Path(staged_dir)
+    if not staged_dir.is_absolute():
+        repo_root = Path(__file__).resolve().parents[1]
+        staged_dir = (repo_root / staged_dir).resolve()
+
+    processed_dir = staged_dir / 'processed'
+    processed_dir.mkdir(parents=True, exist_ok=True)
+
+    for child in list(processed_dir.iterdir()):
+        try:
+            if child.is_dir():
+                shutil.rmtree(child)
+            else:
+                child.unlink()
+        except Exception:
+            logger.exception('Failed clearing staged processed entry %s', child)
+
+    return processed_dir
 
 
 # small CLI for quick manual staging (not required, but convenient)

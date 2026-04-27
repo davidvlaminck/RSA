@@ -154,9 +154,11 @@ python main.py
 3. Respect execution window from settings (`time.start` / `time.end`)
 4. Execute reports when window is active
 5. Write report files under bucket folders with max 100 files each (`0000-0099`, `0100-0199`, ...)
-6. After run completion, mirror-upload local `RSA_OneDrive` back to Drive, preserving nested bucket folders
-7. Keep summary and mail hyperlink targets aligned with the same bucketed SharePoint path
-8. Append run status lines to `RSA_OneDrive/logs/run_YYYYMMDD.log`
+6. Clear `RSA_OneDrive/staged_summaries/processed` at the start of each report loop
+7. After run completion, mirror-upload local `RSA_OneDrive` back to Drive, preserving nested bucket folders
+8. Keep summary and mail hyperlink targets aligned with the same bucketed SharePoint path
+9. Keep the `RSA_OneDrive` root folder free of workbooks; only folders may appear there
+10. Append run status lines to `RSA_OneDrive/logs/run_YYYYMMDD.log`
 
 **Implementation:**
 ```python
