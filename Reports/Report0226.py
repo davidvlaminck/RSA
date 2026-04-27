@@ -34,7 +34,8 @@ class Report0226(BaseReport):
                                title='Elektrische Keuring invulgraad van de eigenschappen',
                                spreadsheet_id='',
                                datasource='ArangoDB',
-                               persistent_column='')
+                               persistent_column='',
+                               excel_filename='[RSA] Elektrische Keuring invulgraad van de eigenschappen.xlsx')
 
         self.report.result_query = aql_query
 

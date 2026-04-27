@@ -5,36 +5,42 @@ from lib.reports.BaseReport import BaseReport
 class Report0225(BaseReport):
     def init_report(self) -> None:
         aql_query = """
-        /* Report0225: Elektrische Keuring heeft een bijlage */
-        LET vvop_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "lgc:installatie#VVOPGroep" LIMIT 1 RETURN at._key)
-        
-        /* Select assets, filter by assettype + active + locatie */
-        FOR a IN assets
-          FILTER
-            a.assettype_key == vvop_key
-            AND a.AIMDBStatus_isActief == true
-            AND a.loc.Locatie_geometrie == null
-        
-          LET toezichter = (a.tz && a.tz.Toezicht_toezichter && a.tz.Toezicht_toezichter.DtcToezichter_email) ? a.tz.Toezicht_toezichter.DtcToezichter_email : null
-          LET toezichtgroep = (a.tz && a.tz.Toezicht_toezichtgroep && a.tz.Toezicht_toezichtgroep.DtcToezichtGroep_naam) ? a.tz.Toezicht_toezichtgroep.DtcToezichtGroep_naam : null
-          LET schadebeheerder = (a.tz && a.tz.Schadebeheerder_schadebeheerder && a.tz.Schadebeheerder_schadebeheerder.DtcBeheerder_naam) ? a.tz.Schadebeheerder_schadebeheerder.DtcBeheerder_naam : null
-          LET schadebeheerder_referentie = (a.tz && a.tz.Schadebeheerder_schadebeheerder && a.tz.Schadebeheerder_schadebeheerder.DtcBeheerder_referentie) ? a.tz.Schadebeheerder_schadebeheerder.DtcBeheerder_referentie : null
-        
-          RETURN {
-            _key: a._key,
-            naam: a.AIMNaamObject_naam,
-            naampad: a.NaampadObject_naampad,
-            toestand: a.toestand,
-            toezichter: toezichter,
-            toezichtsgroep: toezichtgroep,
-            schadebeheerder: schadebeheerder
-          }
+/* Report0225: Elektrische Keuring heeft een bijlage */
+LET key_elektrische_keuring = FIRST(FOR at IN assettypes FILTER at.short_uri == 'onderdeel#ElektrischeKeuring' LIMIT 1 RETURN at._key)
+
+/* Select assets, filter by assettype + active + locatie */
+FOR a IN assets
+  FILTER a.assettype_key == key_elektrische_keuring AND a.AIMDBStatus_isActief == true
+
+  LET naam = a.AbstracteAanvullendeGeometrie_naam ? a.AbstracteAanvullendeGeometrie_naam : null
+  
+  LET keuringsdatum = a.KeuringObject_keuringsdatum ? a.KeuringObject_keuringsdatum : null
+  LET resultaat = a.ElektrischeKeuring_resultaat ? a.ElektrischeKeuring_resultaat : null
+  
+  LET bestandsnaam = a.AbstracteAanvullendeGeometrie_bijlage && a.AbstracteAanvullendeGeometrie_bijlage.DtcDocument_bestandsnaam ? a.AbstracteAanvullendeGeometrie_bijlage.DtcDocument_bestandsnaam : null
+  LET uri = a.AbstracteAanvullendeGeometrie_bijlage && a.AbstracteAanvullendeGeometrie_bijlage.DtcDocument_uri ? a.AbstracteAanvullendeGeometrie_bijlage.DtcDocument_uri : null
+  
+  // geen bijlage
+  FILTER uri == null 
+  
+  SORT naam asc
+  
+  RETURN {
+    'assetId.identificator': a._key,
+    toestand: a.toestand,
+    naam: naam,
+    keuringsdatum: keuringsdatum,
+    resultaat: resultaat,
+    bestandsnaam: bestandsnaam,
+    uri: uri
+  }
         """
         self.report = DQReport(name='report0225',
                                title='Elektrische Keuring heeft een bijlage',
                                spreadsheet_id='',
                                datasource='ArangoDB',
-                               persistent_column='')
+                               persistent_column='H',
+                               excel_filename='[RSA] Elektrische Keuring heeft een bijlage.xlsx')
 
         self.report.result_query = aql_query
 
