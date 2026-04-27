@@ -540,6 +540,7 @@ class ExcelOutput:
   - `Report0104` -> `0100-0199`
 - Summary (`Overzicht`) and mail body links must be generated from the same canonical SharePoint file URL derived from this bucketed path.
 - Sync scripts must treat these bucket directories as first-class mirrored folders (recursive sync in both directions).
+- The `RSA_OneDrive` root is folder-only: workbooks belong in `Overzicht/` or a bucket folder, and `staged_summaries/` is local-only and excluded from Drive sync.
 
 **Example:**
 ```python

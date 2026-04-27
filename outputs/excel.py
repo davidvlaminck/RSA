@@ -130,6 +130,25 @@ class ExcelOutput:
         self.output_dir = out.resolve()
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
+    def _assert_non_root_workbook_path(self, workbook_path: Path) -> None:
+        """Disallow workbook files directly in the `RSA_OneDrive` root.
+
+        The root folder should only contain subfolders such as `Overzicht/` and bucket
+        directories. Workbooks written directly under the root create sync and routing
+        ambiguity, so reject them early.
+        """
+        try:
+            output_root = Path(self.output_dir).resolve()
+            if output_root.name != 'RSA_OneDrive':
+                return
+            resolved = Path(workbook_path).resolve()
+            if resolved.parent == output_root and resolved.suffix.lower() == '.xlsx':
+                raise ExcelWriterError(f'Root-level workbook writes are not allowed: {resolved}')
+        except ExcelWriterError:
+            raise
+        except Exception:
+            pass
+
     # --- helpers -----------------------------------------------------------------
     def _normalize_value(self, val: Any) -> Any:
         if val is None:
@@ -253,6 +272,7 @@ class ExcelOutput:
     def create_workbook_if_missing(self, workbook_path: Path) -> Path:
         workbook_path = Path(workbook_path)
         _ensure_openpyxl_loaded()
+        self._assert_non_root_workbook_path(workbook_path)
         # Create a minimal workbook file if it does not exist. Many write-paths call
         # this helper expecting a real .xlsx to be present before calling load_workbook.
         # Creation is performed atomically and is a best-effort operation.
@@ -307,6 +327,7 @@ class ExcelOutput:
     def create_sheet(self, workbook_path: Path, sheet_name: str, clear_if_exists: bool = True) -> None:
         workbook_path = Path(workbook_path)
         _ensure_openpyxl_loaded()
+        self._assert_non_root_workbook_path(workbook_path)
         # Do not implicitly create a workbook here; create_workbook_if_missing returns the path
         # but no longer creates files automatically (to avoid accidental overwrite).
         self.create_workbook_if_missing(workbook_path)
@@ -702,6 +723,7 @@ class ExcelOutput:
 
         _ensure_openpyxl_loaded()
         wb_path = self._resolve_workbook_path(spreadsheet_id)
+        self._assert_non_root_workbook_path(wb_path)
         workbook_existed = wb_path.exists()
          # ensure workbook exists
         if not wb_path.exists():
@@ -766,6 +788,7 @@ class ExcelOutput:
 
         _ensure_openpyxl_loaded()
         wb_path = self._resolve_workbook_path(spreadsheet_id)
+        self._assert_non_root_workbook_path(wb_path)
         workbook_existed = wb_path.exists()
 
          # ensure workbook exists
@@ -859,6 +882,7 @@ class ExcelOutput:
         """
         _ensure_openpyxl_loaded()
         wb_path = self._resolve_workbook_path(spreadsheet_id)
+        self._assert_non_root_workbook_path(wb_path)
         if not wb_path.exists():
             # nothing to do
             return
@@ -892,6 +916,7 @@ class ExcelOutput:
             raise ExcelWriterError('openpyxl not available')
 
         workbook_path = Path(workbook_path)
+        self._assert_non_root_workbook_path(workbook_path)
         # ensure parent dir
         workbook_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -986,6 +1011,7 @@ class ExcelOutput:
             report_name=getattr(ctx, 'report_name', None),
             report_title=ctx.report_title,
         )
+        self._assert_non_root_workbook_path(out_path)
 
         # If a legacy root-level workbook still exists, migrate it into the bucket path
         # before writing so the first bucketed run preserves headers, history and any

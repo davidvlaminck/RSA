@@ -41,7 +41,7 @@ from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 SCOPES = ['https://www.googleapis.com/auth/drive']
 FOLDER_MIME = 'application/vnd.google-apps.folder'
 BRUSSELS = ZoneInfo('Europe/Brussels')
-SKIP_NAMES = {'archief', 'archivedreports'}
+SKIP_NAMES = {'archief', 'archivedreports', 'staged_summaries'}
 
 
 def _should_skip(name: str) -> bool:
@@ -163,6 +163,9 @@ def _download_tree(service, folder_id: str, local_path: Path) -> None:
         if child['mimeType'] == FOLDER_MIME:
             _download_tree(service, child['id'], child_path)
         else:
+            if local_path.name == 'RSA_OneDrive':
+                logging.warning('Skipping Drive root file during download mirror: %s', child['name'])
+                continue
             _download_file(service, child['id'], child_path)
 
 
@@ -193,10 +196,14 @@ def _upload_or_update_file(service, parent_id: str, local_file: Path, existing: 
 def _sync_local_dir_to_drive(service, local_dir: Path, remote_folder_id: str) -> None:
     remote_children = {child['name']: child for child in _list_children(service, remote_folder_id)}
     local_entries = sorted(local_dir.iterdir(), key=lambda p: p.name)
+    is_root_onedrive = local_dir.name == 'RSA_OneDrive'
 
     for entry in local_entries:
         if _should_skip(entry.name):
             logging.info('Skipping local item during upload mirror: %s', entry)
+            continue
+        if is_root_onedrive and entry.is_file():
+            logging.warning('Skipping root-level file during upload mirror: %s', entry)
             continue
         remote = remote_children.pop(entry.name, None)
 
@@ -302,6 +309,9 @@ def upload_folder_to_drive(
 
     for filepath in sorted(local_path.iterdir()):
         if not filepath.is_file():
+            continue
+        if local_path.name == 'RSA_OneDrive':
+            logging.warning('Skipping legacy root-level file upload helper item: %s', filepath)
             continue
         if file_extensions and filepath.suffix.lower() not in file_extensions:
             continue

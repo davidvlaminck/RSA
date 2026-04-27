@@ -10,6 +10,7 @@ from __future__ import annotations
 from SettingsManager import SettingsManager
 from lib.reports.ReportLoopRunner import ReportLoopRunner
 from lib.reports.pipeline_runner import run_pipelines_by_datasource
+from outputs.summary_stager import clear_staged_processed
 import logging
 from pathlib import Path
 
@@ -98,6 +99,9 @@ def run_selection(
     mode = exec_cfg.get("mode", "sequential")
 
     use_parallel = force_parallel if force_parallel is not None else mode == "parallel_by_datasource"
+
+    staged_root = Path(settings.get('output', {}).get('excel', {}).get('output_dir') or 'RSA_OneDrive') / 'staged_summaries'
+    clear_staged_processed(staged_root)
 
     if use_parallel:
         return run_pipelines_by_datasource(
