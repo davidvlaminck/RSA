@@ -73,3 +73,27 @@ def test_reject_root_level_workbook_write_in_onedrive(tmp_path):
         writer.write_data_to_sheet(out_dir / 'root.xlsx', 'Overzicht', [['header'], ['value']], overwrite=True)
 
 
+def test_missing_report_workbook_raises_clear_error(tmp_path):
+    out_dir = tmp_path / 'RSA_OneDrive'
+    writer = ExcelOutput(output_dir=str(out_dir))
+    qr = DummyQR([['a', '1']], keys=['uuid', 'naam'], last_data_update='2026-02-11T00:00:00')
+    ctx = OutputWriteContext(
+        spreadsheet_id='x',
+        report_title='Laagspanningsbord heeft minstens 1 Elektrische Keuring',
+        datasource_name='ArangoDB',
+        now_utc='now',
+        report_name='report0223',
+        excel_filename='[RSA] Laagspanningsbord heeft minstens 1 Elektrische Keuring.xlsx',
+        report_number=223,
+        require_existing_workbook=True,
+    )
+
+    with pytest.raises(ExcelWriterError) as excinfo:
+        cast(Any, writer).write_report(ctx, qr)
+
+    message = str(excinfo.value)
+    assert 'report0223' in message
+    assert '[RSA] Laagspanningsbord heeft minstens 1 Elektrische Keuring.xlsx' in message
+    assert '0200-0299' in message
+
+

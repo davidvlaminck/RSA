@@ -14,6 +14,8 @@ class OutputWriteContext:
     now_utc: str
     report_name: Optional[str] = None
     excel_filename: Optional[str] = None
+    report_number: Optional[int] = None
+    require_existing_workbook: bool = False
 
 
 class ReportOutput(Protocol):

@@ -27,6 +27,36 @@ BRUSSELS = ZoneInfo("Europe/Brussels")
 RETRIES = 5
 
 
+def reinitialize_database_connections(settings: dict) -> None:
+    """Re-initialize all database singletons from the current settings."""
+    try:
+        neo4j_settings = settings['databases']['Neo4j']
+        SingleNeo4JConnector.init(uri=neo4j_settings['uri'], user=neo4j_settings['user'],
+                                  password=neo4j_settings['password'], database=neo4j_settings['database'])
+    except Exception as exc:
+        logging.warning(f"Could not reinitialize Neo4J: {exc}")
+
+    try:
+        postgis_settings = settings['databases']['PostGIS']
+        SinglePostGISConnector.init(host=postgis_settings['host'], port=postgis_settings['port'],
+                                    user=postgis_settings['user'], password=postgis_settings['password'],
+                                    database=postgis_settings['database'])
+    except Exception as exc:
+        logging.warning(f"Could not reinitialize PostGIS: {exc}")
+
+    try:
+        arango_settings = settings['databases']['ArangoDB']
+        SingleArangoConnector.init(
+            host=arango_settings['host'],
+            port=arango_settings['port'],
+            user=arango_settings['user'],
+            password=arango_settings['password'],
+            database=arango_settings['database']
+        )
+    except Exception as exc:
+        logging.warning(f"Could not reinitialize ArangoDB: {exc}")
+
+
 class ReportLoopRunner:
     def __init__(self, settings_path, excel_output_dir: str | None = None):
         """Initialize runner.
@@ -88,24 +118,7 @@ class ReportLoopRunner:
             # best-effort: continue without Excel initialization
             pass
 
-        neo4j_settings = self.settings['databases']['Neo4j']
-        SingleNeo4JConnector.init(uri=neo4j_settings['uri'], user=neo4j_settings['user'],
-                                  password=neo4j_settings['password'], database=neo4j_settings['database'])
-
-        postgis_settings = self.settings['databases']['PostGIS']
-        SinglePostGISConnector.init(host=postgis_settings['host'], port=postgis_settings['port'],
-                                    user=postgis_settings['user'], password=postgis_settings['password'],
-                                    database=postgis_settings['database'])
-
-        # Initialize ArangoDB connection (singleton style)
-        arango_settings = self.settings['databases']['ArangoDB']
-        SingleArangoConnector.init(
-            host=arango_settings['host'],
-            port=arango_settings['port'],
-            user=arango_settings['user'],
-            password=arango_settings['password'],
-            database=arango_settings['database']
-        )
+        reinitialize_database_connections(self.settings)
 
         self.reports = None
 
@@ -252,6 +265,8 @@ class ReportLoopRunner:
 
         while reports_run < RETRIES and reports_to_do:
             reports_run += 1
+            if reports_run > 1:
+                reinitialize_database_connections(self.settings)
             for report_name in sorted(reports_to_do.keys()):
                 try:
                     report_instance = reports_to_do[report_name]

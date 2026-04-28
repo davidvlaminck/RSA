@@ -12,7 +12,7 @@ from outputs.sheets_wrapper import SingleSheetsWrapper, SheetsWrapper
 from datasources.datasource_factory import make_datasource
 from outputs.output_factory import make_output
 from outputs.base import OutputWriteContext
-from outputs.report_routes import report_sharepoint_url
+from outputs.report_routes import extract_report_number, report_sharepoint_url
 
 BRUSSELS = ZoneInfo('Europe/Brussels')
 
@@ -260,22 +260,21 @@ class DQReport(Report):
             now_utc=self.now,
             report_name=self.name,
             excel_filename=self.excel_filename or None,
+            report_number=extract_report_number(self.name, self.title, self.excel_filename),
+            require_existing_workbook=bool(self.excel_filename),
         )
         # Capture metadata returned by the output writer (e.g., file path, rows_written)
-        try:
-            meta = out.write_report(
-                ctx,
-                qr,
-                startcell=startcell,
-                add_filter=self.add_filter,
-                persistent_column=self.persistent_column,
-                persistent_dict=self.persistent_dict,
-                convert_columns_to_numbers=self.convert_columns_to_numbers,
-                link_type=self.link_type,
-                recalculate_cells=self.recalculate_cells,
-            )
-        except Exception:
-            meta = None
+        meta = out.write_report(
+            ctx,
+            qr,
+            startcell=startcell,
+            add_filter=self.add_filter,
+            persistent_column=self.persistent_column,
+            persistent_dict=self.persistent_dict,
+            convert_columns_to_numbers=self.convert_columns_to_numbers,
+            link_type=self.link_type,
+            recalculate_cells=self.recalculate_cells,
+        )
 
         # store for diagnostics and log
         self.last_output_meta = meta
