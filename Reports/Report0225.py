@@ -15,7 +15,7 @@ FOR a IN assets
   LET naam = a.AbstracteAanvullendeGeometrie_naam ? a.AbstracteAanvullendeGeometrie_naam : null
   
   LET keuringsdatum = a.KeuringObject_keuringsdatum ? a.KeuringObject_keuringsdatum : null
-  LET resultaat = a.ElektrischeKeuring_resultaat ? a.ElektrischeKeuring_resultaat : null
+  LET resultaat = a.ElektrischeKeuring_resultaat ? split(a.ElektrischeKeuring_resultaat, '/')[-1] : null
   
   LET bestandsnaam = a.AbstracteAanvullendeGeometrie_bijlage && a.AbstracteAanvullendeGeometrie_bijlage.DtcDocument_bestandsnaam ? a.AbstracteAanvullendeGeometrie_bijlage.DtcDocument_bestandsnaam : null
   LET uri = a.AbstracteAanvullendeGeometrie_bijlage && a.AbstracteAanvullendeGeometrie_bijlage.DtcDocument_uri ? a.AbstracteAanvullendeGeometrie_bijlage.DtcDocument_uri : null
