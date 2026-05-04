@@ -1,4 +1,5 @@
 import logging
+import re
 from datetime import datetime, date, timedelta
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -686,18 +687,20 @@ class DQReport(Report):
         sheetrange = mail_receivers_raw['range'].split('!')[1]
         cells = sheetrange.split(':')
         # cells[0] may be empty (e.g. ':B') or may contain only column letters (e.g. 'B').
-        # Normalize to a valid A1-style cell (column+row). Default row is 1 when missing.
+        # Some compatibility paths also return named ranges here (e.g. 'emails').
+        # Normalize to a valid A1-style cell when possible; otherwise fall back to A1.
         raw_start = cells[0].strip() if len(cells) > 0 else ''
         raw_end = cells[1].strip() if len(cells) > 1 else ''
         if not raw_start:
             raw_start = raw_end or 'A1'
-        # if raw_start contains no digits (only column letters), append row 1
-        if not any(ch.isdigit() for ch in raw_start):
-            raw_start = raw_start + '1'
+        raw_start = raw_start.replace('$', '')
+        if re.fullmatch(r'[A-Za-z]{1,3}', raw_start):
+            raw_start = f'{raw_start.upper()}1'
+        elif not re.fullmatch(r'[A-Za-z]{1,3}\d+', raw_start):
+            raw_start = 'A1'
         try:
             startcell = SheetsCell(raw_start)
-        except Exception as e:
-            logging.warning('Could not parse start cell "%s" from range "%s": %s. Falling back to A1', raw_start, sheetrange, e)
+        except Exception:
             startcell = SheetsCell('A1')
         startcell.update_column_by_adding_number(2)
         if 'values' not in mail_receivers_raw:
