@@ -104,7 +104,7 @@ logger = logging.getLogger(__name__)
 
 from datasources.base import QueryResult
 from .base import OutputWriteContext
-from .report_routes import resolve_report_output_path
+from .report_routes import extract_report_number, report_bucket_name, resolve_report_output_path
 
 
 class ExcelWriterError(Exception):
@@ -1030,6 +1030,17 @@ class ExcelOutput:
                     shutil.move(str(legacy_path), str(out_path))
         except Exception:
             pass
+
+        if getattr(ctx, 'require_existing_workbook', False) and not out_path.exists():
+            report_number = getattr(ctx, 'report_number', None)
+            if report_number is None:
+                report_number = extract_report_number(getattr(ctx, 'report_name', None), getattr(ctx, 'report_title', None), getattr(ctx, 'excel_filename', None))
+            bucket = report_bucket_name(report_number) if report_number is not None else out_path.parent.name
+            report_label = getattr(ctx, 'report_name', None) or getattr(ctx, 'report_title', None) or 'unknown report'
+            filename = out_path.name
+            raise ExcelWriterError(
+                f"Missing workbook for {report_label}: expected '{filename}' in bucket '{bucket}' at '{out_path}'."
+            )
 
         # prepare rows generator: include header and metadata lines similar to Google implementation
         def row_generator():

@@ -1,4 +1,5 @@
 import logging
+import re
 from datetime import datetime, date, timedelta
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -12,7 +13,7 @@ from outputs.sheets_wrapper import SingleSheetsWrapper, SheetsWrapper
 from datasources.datasource_factory import make_datasource
 from outputs.output_factory import make_output
 from outputs.base import OutputWriteContext
-from outputs.report_routes import report_sharepoint_url
+from outputs.report_routes import extract_report_number, report_sharepoint_url
 
 BRUSSELS = ZoneInfo('Europe/Brussels')
 
@@ -260,22 +261,21 @@ class DQReport(Report):
             now_utc=self.now,
             report_name=self.name,
             excel_filename=self.excel_filename or None,
+            report_number=extract_report_number(self.name, self.title, self.excel_filename),
+            require_existing_workbook=bool(self.excel_filename),
         )
         # Capture metadata returned by the output writer (e.g., file path, rows_written)
-        try:
-            meta = out.write_report(
-                ctx,
-                qr,
-                startcell=startcell,
-                add_filter=self.add_filter,
-                persistent_column=self.persistent_column,
-                persistent_dict=self.persistent_dict,
-                convert_columns_to_numbers=self.convert_columns_to_numbers,
-                link_type=self.link_type,
-                recalculate_cells=self.recalculate_cells,
-            )
-        except Exception:
-            meta = None
+        meta = out.write_report(
+            ctx,
+            qr,
+            startcell=startcell,
+            add_filter=self.add_filter,
+            persistent_column=self.persistent_column,
+            persistent_dict=self.persistent_dict,
+            convert_columns_to_numbers=self.convert_columns_to_numbers,
+            link_type=self.link_type,
+            recalculate_cells=self.recalculate_cells,
+        )
 
         # store for diagnostics and log
         self.last_output_meta = meta
@@ -687,18 +687,20 @@ class DQReport(Report):
         sheetrange = mail_receivers_raw['range'].split('!')[1]
         cells = sheetrange.split(':')
         # cells[0] may be empty (e.g. ':B') or may contain only column letters (e.g. 'B').
-        # Normalize to a valid A1-style cell (column+row). Default row is 1 when missing.
+        # Some compatibility paths also return named ranges here (e.g. 'emails').
+        # Normalize to a valid A1-style cell when possible; otherwise fall back to A1.
         raw_start = cells[0].strip() if len(cells) > 0 else ''
         raw_end = cells[1].strip() if len(cells) > 1 else ''
         if not raw_start:
             raw_start = raw_end or 'A1'
-        # if raw_start contains no digits (only column letters), append row 1
-        if not any(ch.isdigit() for ch in raw_start):
-            raw_start = raw_start + '1'
+        raw_start = raw_start.replace('$', '')
+        if re.fullmatch(r'[A-Za-z]{1,3}', raw_start):
+            raw_start = f'{raw_start.upper()}1'
+        elif not re.fullmatch(r'[A-Za-z]{1,3}\d+', raw_start):
+            raw_start = 'A1'
         try:
             startcell = SheetsCell(raw_start)
-        except Exception as e:
-            logging.warning('Could not parse start cell "%s" from range "%s": %s. Falling back to A1', raw_start, sheetrange, e)
+        except Exception:
             startcell = SheetsCell('A1')
         startcell.update_column_by_adding_number(2)
         if 'values' not in mail_receivers_raw:

@@ -81,3 +81,22 @@ def test_daily_one_day_passed():
                           named_range=[['david.vlaminck@mow.vlaanderen.be', 'Dagelijks', '2022-01-01 01:00:00']],
                           previous_result=0, result=1)
         assert len(sender.mails_to_send) == 1
+
+
+def test_transform_raw_to_dict_handles_named_range_emails():
+    report = DQReport(name='test report', title='test report title', spreadsheet_id='testsheetId')
+
+    mail_receivers_raw = {
+        'range': 'Overzicht!emails',
+        'values': [
+            ['david.vlaminck@mow.vlaanderen.be', 'Wijziging', ''],
+        ],
+    }
+
+    result = report.transform_raw_to_dict(mail_receivers_raw)
+
+    assert len(result) == 1
+    assert result[0]['mail'] == 'david.vlaminck@mow.vlaanderen.be'
+    assert result[0]['frequency'] == 'Wijziging'
+    assert result[0]['cell'] == 'C1'
+
