@@ -61,7 +61,7 @@ FOR elek_keuring IN assets
                                title='Elektrische Keuring heeft een bijlage',
                                spreadsheet_id='',
                                datasource='ArangoDB',
-                               persistent_column='H',
+                               persistent_column='P',
                                excel_filename='[RSA] Elektrische Keuring heeft een bijlage.xlsx')
 
         self.report.result_query = aql_query
