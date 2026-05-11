@@ -127,10 +127,10 @@ class Report0228(BaseReport):
               }
         """
         self.report = DQReport(name='report0228',
-                               title='lgc#Laagspanningsdeel (inactief) en Elektrische Keuring hebben geen identieke datum en resultaat',
+                               title='lgc#Laagspanningsdeel (inactief) en Elektrische Keuring hebben een identieke datum en identiek resultaat',
                                datasource='ArangoDB',
                                persistent_column='V',
-                               excel_filename='[RSA] lgc#Laagspanningsdeel (inactief) en Elektrische Keuring hebben geen identieke datum en resultaat')
+                               excel_filename='[RSA] lgc#Laagspanningsdeel (inactief) en Elektrische Keuring hebben een identieke datum en identiek resultaat')
 
         self.report.result_query = aql_query
 
