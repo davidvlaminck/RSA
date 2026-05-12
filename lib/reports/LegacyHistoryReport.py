@@ -310,7 +310,7 @@ class LegacyHistoryReport(Report):
                     text = data[type_key].replace('https://wegenenverkeer.data.vlaanderen.be/ns/', '') \
                         .replace('https://lgc.data.wegenenverkeer.be/ns/', '')
                     link = data[type_key]
-                    formula = f'=HYPERLINK("{link}"; "{text}")'
+                    formula = f'=HYPERLINK("{link}", "{text}")'
                     new_type_result.append(formula)
                 else:
                     for col in data.values():
@@ -379,7 +379,7 @@ class LegacyHistoryReport(Report):
             report_name=self.name,
             report_title=self.title,
         )
-        summary_link_value = f'=HYPERLINK("{report_link}"; "Link")' if report_link else 'Link'
+        summary_link_value = f'=HYPERLINK("{report_link}", "Link")' if report_link else 'Link'
         sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.summary_sheet_id,
                                            sheet_name='Overzicht',
                                            start_cell='B' + str(rowFound + 1),

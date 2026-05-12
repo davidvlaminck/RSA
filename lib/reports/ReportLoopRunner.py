@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import sys
 import tempfile
 import time
 import traceback
@@ -21,6 +22,7 @@ from lib.reports.pipeline_runner import run_pipelines_by_datasource
 from outputs.sheets_wrapper import SingleSheetsWrapper
 from SettingsManager import SettingsManager
 from scripts.ops.aggregate_summaries import process_once
+from outputs.summary_stager import clear_staged_processed
 
 ROOT_DIR = (os.path.dirname(os.path.abspath(__file__)))
 BRUSSELS = ZoneInfo("Europe/Brussels")
@@ -72,12 +74,13 @@ class ReportLoopRunner:
         settings_manager = SettingsManager(settings_path=settings_path)
         self.settings = settings_manager.settings
 
-        logging.info = print
-        logging.basicConfig(filename='logs.txt',
-                            filemode='a',
-                            format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
-                            datefmt='%H:%M:%S',
-                            level=logging.INFO)
+        logging.basicConfig(
+            level=logging.INFO,
+            format='%(asctime)s %(levelname)s %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S',
+            handlers=[logging.StreamHandler(sys.stdout)],
+            force=True,
+        )
         # initialize Sheets wrapper if credentials present; allow missing/empty google_api for
         # offline/Excel-only runs (no-Google mode)
         try:
@@ -244,6 +247,12 @@ class ReportLoopRunner:
 
     def _run_sequential(self, report_names: list[str] | None = None):
         """Run reports one at a time (original behavior)."""
+        try:
+            staged_dir = (self.excel_output_dir / 'staged_summaries') if self.excel_output_dir else Path('RSA_OneDrive') / 'staged_summaries'
+            clear_staged_processed(staged_dir)
+        except Exception:
+            logging.exception('Failed to clear staged_summaries/processed before sequential run')
+
         # start running reports now and at midnight
         logging.info(f"{datetime.now(tz=BRUSSELS)}: let's run the reports now")
 
@@ -321,6 +330,12 @@ class ReportLoopRunner:
         - Respects memory constraints (max 2-3 concurrent processes)
         - Provides timeout protection for stuck reports
         """
+        try:
+            staged_dir = (self.excel_output_dir / 'staged_summaries') if self.excel_output_dir else Path('RSA_OneDrive') / 'staged_summaries'
+            clear_staged_processed(staged_dir)
+        except Exception:
+            logging.exception('Failed to clear staged_summaries/processed before parallel run')
+
         logging.info(f"{datetime.now(tz=BRUSSELS)}: starting parallel-by-datasource execution")
 
         # Discover all report names or use provided list

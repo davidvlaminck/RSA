@@ -303,8 +303,14 @@ class DQReport(Report):
                 mapped = None
             excel_fname_for_summary = mapped or '[RSA] Overzicht rapporten.xlsx'
 
-            # determine target workbook identifier for aggregator: prefer excel_filename if created
-            target_workbook = ctx.excel_filename if getattr(ctx, 'excel_filename', None) else self.spreadsheet_id
+            # determine target workbook identifier for aggregator.
+            # Prefer the exact workbook path returned by the writer metadata so staged
+            # Historiek updates always target the same file that received Resultaat.
+            target_workbook = (
+                (meta.get('file') if isinstance(meta, dict) else None)
+                or getattr(ctx, 'excel_filename', None)
+                or self.spreadsheet_id
+            )
 
             # compute rowFound using column F 'rapportnummer' which should contain the report class name.
             # Read the Overzicht sheet and search column F for self.name. Default to row 4 if not found.
@@ -446,17 +452,14 @@ class DQReport(Report):
 
             payload_hist = {
                 'operation': 'append_row',
-                'excel_filename': target_workbook if ctx.excel_filename else None,
-                'spreadsheet_id': None if ctx.excel_filename else self.spreadsheet_id,
                 'sheet': 'Historiek',
                 'row': [self.now, normalized_last, len(qr.rows)],
                 'meta': {'report': self.name}
             }
-            # clean payload: remove None keys
-            if payload_hist.get('excel_filename') is None:
-                del payload_hist['excel_filename']
-            if payload_hist.get('spreadsheet_id') is None:
-                del payload_hist['spreadsheet_id']
+            if target_workbook:
+                payload_hist['excel_filename'] = str(target_workbook)
+            elif self.spreadsheet_id:
+                payload_hist['spreadsheet_id'] = self.spreadsheet_id
 
             try:
                 logging.info('%s: staging historiek payload target=%s payload=%s', self.name, excel_fname_for_summary, payload_hist)
@@ -477,11 +480,11 @@ class DQReport(Report):
                 normalized_for_summary = _normalize_to_brussels_string(self.last_data_update)
 
             report_link = report_sharepoint_url(
-                excel_filename=target_workbook if ctx.excel_filename else self.excel_filename or None,
+                excel_filename=target_workbook or self.excel_filename or None,
                 report_name=self.name,
                 report_title=self.title,
             )
-            summary_link_value = f'=HYPERLINK("{report_link}"; "Link")' if report_link else 'Link'
+            summary_link_value = {'display': 'Link', 'hyperlink': report_link} if report_link else 'Link'
 
             payload_summary_b = {
                 'operation': 'write_cell',
@@ -550,8 +553,7 @@ class DQReport(Report):
                         spreadsheet_id=self.summary_sheet_id,
                         sheet_name='Overzicht',
                         start_cell='B' + str(rowFound),
-                        data=[[summary_link_value]],
-                        value_input_option='USER_ENTERED',
+                        data=[['Link']],
                     )
                 else:
                     sheets_wrapper.write_data_to_sheet(

@@ -350,6 +350,7 @@ def write_daily_run_log(local_folder: str, status: str, details: str = '') -> Pa
     now = datetime.now(BRUSSELS)
     logs_dir = Path(local_folder) / 'logs'
     logs_dir.mkdir(parents=True, exist_ok=True)
+    prune_daily_run_logs(local_folder, keep=14)
     path = logs_dir / f'run_{now:%Y%m%d}.log'
     line = f"{now:%Y-%m-%d %H:%M:%S} | {status}"
     if details:
@@ -357,6 +358,28 @@ def write_daily_run_log(local_folder: str, status: str, details: str = '') -> Pa
     with open(path, 'a', encoding='utf-8') as fh:
         fh.write(line + '\n')
     return path
+
+
+def prune_daily_run_logs(local_folder: str, keep: int = 14) -> None:
+    """Keep only the newest daily run logs under local_folder/logs."""
+    if keep <= 0:
+        return
+    logs_dir = Path(local_folder) / 'logs'
+    if not logs_dir.exists():
+        return
+
+    files = sorted(
+        [p for p in logs_dir.glob('run_*.log') if p.is_file()],
+        key=lambda p: p.name,
+    )
+    if len(files) <= keep:
+        return
+
+    for old in files[:-keep]:
+        try:
+            old.unlink()
+        except Exception:
+            logging.warning('Could not delete old run log: %s', old)
 
 
 def _main() -> None:

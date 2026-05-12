@@ -41,6 +41,9 @@ def resolve_report_output_path(
     else:
         raise ValueError('excel_filename or report_title is required')
 
+    if not filename.lower().endswith('.xlsx'):
+        filename = f'{filename}.xlsx'
+
     if excel_filename and Path(excel_filename).is_absolute():
         return Path(excel_filename)
 
@@ -67,6 +70,8 @@ def report_sharepoint_url(
         return None
 
     filename = Path(excel_filename).name
+    if not filename.lower().endswith('.xlsx'):
+        filename = f'{filename}.xlsx'
     bucket = report_bucket_name(report_number)
     return '/'.join([
         base_url.rstrip('/'),

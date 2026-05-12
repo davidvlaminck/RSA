@@ -2,18 +2,51 @@ from __future__ import annotations
 
 import json
 import os
+import sys
+import atexit
 from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from lib.reports.ReportLoopRunner import ReportLoopRunner
 from scripts.ops.gdrive_upload import (
     sync_drive_to_local,
     sync_local_to_drive,
     write_daily_run_log,
+    prune_daily_run_logs,
 )
 
 
 DEFAULT_SETTINGS_PATH = Path(__file__).resolve().parent / 'settings_sample.json'
+BRUSSELS = ZoneInfo('Europe/Brussels')
+
+
+class _DailyLogTee:
+    def __init__(self, original, sink):
+        self._original = original
+        self._sink = sink
+
+    def write(self, data):
+        self._original.write(data)
+        self._sink.write(data)
+        self._sink.flush()
+        return len(data)
+
+    def flush(self):
+        self._original.flush()
+        self._sink.flush()
+
+
+def _enable_daily_console_capture(local_folder: str) -> None:
+    now = datetime.now(BRUSSELS)
+    logs_dir = Path(local_folder) / 'logs'
+    logs_dir.mkdir(parents=True, exist_ok=True)
+    prune_daily_run_logs(local_folder, keep=14)
+    log_path = logs_dir / f'run_{now:%Y%m%d}.log'
+    sink = open(log_path, 'a', encoding='utf-8', buffering=1)
+    sys.stdout = _DailyLogTee(sys.stdout, sink)
+    sys.stderr = _DailyLogTee(sys.stderr, sink)
+    atexit.register(sink.close)
 
 
 def _resolve_path(path_value: str, base_dir: Path) -> str:
@@ -108,6 +141,8 @@ if __name__ == '__main__':
     settings_path = _default_settings_path()
     cfg = _load_runtime_config(settings_path)
     onedrive_path = cfg['local_folder']
+
+    _enable_daily_console_capture(onedrive_path)
 
     print(f'Using settings: {settings_path}')
 

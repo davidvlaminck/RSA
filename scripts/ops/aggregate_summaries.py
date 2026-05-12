@@ -105,6 +105,43 @@ def apply_payload(excel: ExcelOutput, payload: Dict[str, Any], output_dir: Path)
         value = payload['value']
         wb_path = Path(wb_path).resolve()
         logger.debug('Applying write_cell to workbook %s sheet %s cell %s (report=%s)', wb_path, sheet, cell, payload.get('meta',{}).get('report'))
+        report_name = (payload.get('meta', {}).get('report') or '').strip().lower()
+
+        def _resolve_overzicht_row(target_row: int) -> int:
+            if sheet != 'Overzicht' or not report_name:
+                return target_row
+            try:
+                from openpyxl import load_workbook as _load_wb
+                wb_ro = _load_wb(wb_path, read_only=True)
+                if sheet not in wb_ro.sheetnames:
+                    wb_ro.close()
+                    return target_row
+                ws_ro = wb_ro[sheet]
+                max_search = min(5000, ws_ro.max_row or 1000)
+                for r in range(4, max_search + 1):
+                    fv = ws_ro.cell(row=r, column=6).value
+                    if fv and str(fv).strip().lower() == report_name:
+                        wb_ro.close()
+                        return r
+                wb_ro.close()
+
+                wb_rw = _load_wb(wb_path)
+                if sheet not in wb_rw.sheetnames:
+                    wb_rw.create_sheet(sheet)
+                ws_rw = wb_rw[sheet]
+                append_row = max(4, (ws_rw.max_row or 0) + 1)
+                for r in range(4, max(4, (ws_rw.max_row or 0)) + 1):
+                    fv = ws_rw.cell(row=r, column=6).value
+                    if fv is None or str(fv).strip() == '':
+                        append_row = r
+                        break
+                ws_rw.cell(row=append_row, column=6).value = payload.get('meta', {}).get('report')
+                excel._atomic_save_workbook(wb_rw, Path(wb_path))
+                logger.info('Added missing Overzicht row %s for report %s in %s', append_row, report_name, wb_path)
+                return append_row
+            except Exception:
+                logger.exception('Failed to resolve Overzicht row in %s for report=%s', wb_path, report_name)
+                return target_row
         # If writing to Overzicht column C, normalize the timestamp format to Brussels 'YYYY-MM-DD HH:MM:SS'
         def _normalize_to_brussels_string(val) -> str:
             if val is None:
@@ -244,45 +281,17 @@ def apply_payload(excel: ExcelOutput, payload: Dict[str, Any], output_dir: Path)
                 except Exception:
                     pass
 
+        row_digits = ''.join([c for c in cell if c.isdigit()])
+        base_row_index = int(row_digits) if row_digits else 1
+        target_row_index = _resolve_overzicht_row(base_row_index)
+
         # If value is a list, write horizontally across columns starting at `cell`.
         if isinstance(value, list):
             # compute start column and row
             from outputs.sheets_cell import SheetsCell
             sc = SheetsCell(cell)
             col_index = sc._column_int
-            row_index = sc._row
-            # Verify that the target row contains the expected report name in column F.
-            report_name = (payload.get('meta', {}).get('report') or '').strip().lower()
-            try:
-                if report_name:
-                    from openpyxl import load_workbook as _load_wb
-                    _wb_check = _load_wb(wb_path, read_only=True)
-                    if sheet in _wb_check.sheetnames:
-                        _ws_check = _wb_check[sheet]
-                        existing_f = _ws_check.cell(row=row_index, column=6).value
-                        if not (existing_f and str(existing_f).strip().lower() == report_name):
-                            # search column F for the report_name
-                            found_row = None
-                            max_search = min(2000, _ws_check.max_row or 1000)
-                            for r in range(4, max_search + 1):
-                                try:
-                                    fv = _ws_check.cell(row=r, column=6).value
-                                except Exception:
-                                    fv = None
-                                if fv and str(fv).strip().lower() == report_name:
-                                    found_row = r
-                                    break
-                            if found_row:
-                                old = row_index
-                                row_index = found_row
-                                logger.warning('Report name mismatch in %s: staged cell %s pointed at row %s (F=%r); correcting to row %s', wb_path, cell, old, existing_f, row_index)
-                                # update SheetsCell/target variables accordingly
-                                # col_index remains same; target cell will be recomputed below
-                            else:
-                                logger.warning('Could not find report %s in column F of %s; leaving staged target %s', report_name, wb_path, cell)
-                    _wb_check.close()
-            except Exception:
-                logger.exception('Failed to verify/locate report row in %s for report=%s', wb_path, report_name)
+            row_index = target_row_index
             # write each element to successive columns
             for i, v in enumerate(value):
                 target_col = SheetsCell._convert_number_to_column(col_index + i)
@@ -302,17 +311,35 @@ def apply_payload(excel: ExcelOutput, payload: Dict[str, Any], output_dir: Path)
             return wb_path.resolve()
         else:
             # scalar
-            excel.write_single_cell(wb_path, sheet, cell, value)
+            from outputs.sheets_cell import SheetsCell
+            sc = SheetsCell(cell)
+            target_cell = f"{sc._column_str}{target_row_index}"
+            if isinstance(value, dict) and isinstance(value.get('hyperlink'), str):
+                display = value.get('display', 'Link')
+                try:
+                    from openpyxl import load_workbook as _load_wb
+                    wb = _load_wb(wb_path)
+                    if sheet not in wb.sheetnames:
+                        wb.create_sheet(sheet)
+                    ws = wb[sheet]
+                    ws[target_cell].value = display
+                    ws[target_cell].hyperlink = value['hyperlink']
+                    excel._atomic_save_workbook(wb, Path(wb_path))
+                except Exception:
+                    logger.exception('Failed hyperlink write for %s %s', wb_path, target_cell)
+                    excel.write_single_cell(wb_path, sheet, target_cell, display)
+            else:
+                excel.write_single_cell(wb_path, sheet, target_cell, value)
             # Post-write verification log for Overzicht C scalar writes
             try:
                 from openpyxl import load_workbook as _load_wb
                 _wb = _load_wb(wb_path, read_only=True)
                 if sheet in _wb.sheetnames:
                     _ws = _wb[sheet]
-                    row_idx = int(''.join([c for c in cell if c.isdigit()]))
+                    row_idx = target_row_index
                     new_val = _ws.cell(row=row_idx, column=3).value
                     logger.info('Post-write Overzicht C check (scalar): report=%s workbook=%s cell=%s after=%s',
-                                payload.get('meta', {}).get('report'), str(Path(wb_path).resolve()), cell, new_val)
+                                payload.get('meta', {}).get('report'), str(Path(wb_path).resolve()), f"{sc._column_str}{row_idx}", new_val)
             except Exception:
                 logger.exception('Failed post-write check for %s %s', wb_path, cell)
             return wb_path.resolve()
@@ -410,7 +437,8 @@ def process_once(staged_dir: Path, output_dir: Path, limit: int = 100, dry_run: 
                 if cell and cell.upper().startswith('C'):
                     fname = payload.get('excel_filename') or payload.get('spreadsheet_id')
                     wb_path = excel._resolve_workbook_path(fname)
-                    key = (str(wb_path), payload.get('sheet'), cell.upper())
+                    report_key = (payload.get('meta', {}).get('report') or '').strip().lower()
+                    key = (str(wb_path), payload.get('sheet'), report_key or cell.upper())
                     grouped.setdefault(key, []).append((f, payload))
                     continue
             others.append((f, payload))
