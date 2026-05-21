@@ -41,11 +41,25 @@ from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 SCOPES = ['https://www.googleapis.com/auth/drive']
 FOLDER_MIME = 'application/vnd.google-apps.folder'
 BRUSSELS = ZoneInfo('Europe/Brussels')
-SKIP_NAMES = {'archief', 'archivedreports', 'staged_summaries'}
+SKIP_NAMES = {'archief', 'archivedreports', 'staged_summaries', 'logs'}
 
 
 def _should_skip(name: str) -> bool:
     return name.strip().lower() in SKIP_NAMES
+
+
+def _clear_local_mirror_target(local_path: Path) -> None:
+    """Clear local mirror target while preserving local-only control folders."""
+    if local_path.exists():
+        for child in local_path.iterdir():
+            if _should_skip(child.name):
+                logging.info('Preserving local-only folder during sync-down cleanup: %s', child)
+                continue
+            if child.is_dir():
+                shutil.rmtree(child)
+            else:
+                child.unlink()
+    local_path.mkdir(parents=True, exist_ok=True)
 
 
 def first_login(credentials_json_path: str, token_path: str) -> None:
@@ -125,6 +139,9 @@ def _get_or_create_folder(service, folder_name: str, parent_id: str | None = Non
     ]
     if parent_id:
         query_parts.append(f"'{parent_id}' in parents")
+    else:
+        # Scope top-level searches to Drive root to avoid matching same-name nested folders.
+        query_parts.append("'root' in parents")
 
     result = service.files().list(
         q=' and '.join(query_parts),
@@ -143,6 +160,18 @@ def _get_or_create_folder(service, folder_name: str, parent_id: str | None = Non
     return folder['id']
 
 
+def _get_or_create_folder_path(service, folder_path: str) -> str:
+    """Resolve a Drive folder path like 'RSA/RSA_OneDrive' and create missing segments."""
+    parts = [part.strip() for part in folder_path.replace('\\', '/').split('/') if part.strip()]
+    if not parts:
+        raise ValueError('drive_folder_name cannot be empty')
+
+    parent_id: str | None = None
+    for part in parts:
+        parent_id = _get_or_create_folder(service, part, parent_id)
+    return parent_id
+
+
 def _download_file(service, file_id: str, target_path: Path) -> None:
     target_path.parent.mkdir(parents=True, exist_ok=True)
     request = service.files().get_media(fileId=file_id)
@@ -153,7 +182,7 @@ def _download_file(service, file_id: str, target_path: Path) -> None:
             _, done = downloader.next_chunk()
 
 
-def _download_tree(service, folder_id: str, local_path: Path) -> None:
+def _download_tree(service, folder_id: str, local_path: Path, is_root: bool = False) -> None:
     local_path.mkdir(parents=True, exist_ok=True)
     for child in _list_children(service, folder_id):
         if _should_skip(child['name']):
@@ -161,9 +190,9 @@ def _download_tree(service, folder_id: str, local_path: Path) -> None:
             continue
         child_path = local_path / child['name']
         if child['mimeType'] == FOLDER_MIME:
-            _download_tree(service, child['id'], child_path)
+            _download_tree(service, child['id'], child_path, is_root=False)
         else:
-            if local_path.name == 'RSA_OneDrive':
+            if is_root:
                 logging.warning('Skipping Drive root file during download mirror: %s', child['name'])
                 continue
             _download_file(service, child['id'], child_path)
@@ -193,16 +222,14 @@ def _upload_or_update_file(service, parent_id: str, local_file: Path, existing: 
     logging.info('Drive uploaded: %s', local_file)
 
 
-def _sync_local_dir_to_drive(service, local_dir: Path, remote_folder_id: str) -> None:
+def _sync_local_dir_to_drive(service, local_dir: Path, remote_folder_id: str, is_root: bool = False) -> None:
     remote_children = {child['name']: child for child in _list_children(service, remote_folder_id)}
     local_entries = sorted(local_dir.iterdir(), key=lambda p: p.name)
-    is_root_onedrive = local_dir.name == 'RSA_OneDrive'
-
     for entry in local_entries:
         if _should_skip(entry.name):
             logging.info('Skipping local item during upload mirror: %s', entry)
             continue
-        if is_root_onedrive and entry.is_file():
+        if is_root and entry.is_file():
             logging.warning('Skipping root-level file during upload mirror: %s', entry)
             continue
         remote = remote_children.pop(entry.name, None)
@@ -218,7 +245,7 @@ def _sync_local_dir_to_drive(service, local_dir: Path, remote_folder_id: str) ->
                 ).execute()
                 remote = {'id': created['id'], 'mimeType': FOLDER_MIME}
                 logging.info('Drive created folder: %s', entry)
-            _sync_local_dir_to_drive(service, entry, remote['id'])
+            _sync_local_dir_to_drive(service, entry, remote['id'], is_root=False)
             continue
 
         if entry.is_file():
@@ -239,22 +266,16 @@ def sync_drive_to_local(local_folder: str, drive_folder_name: str, token_path: s
 
     try:
         service = _build_service(token_path)
-        folder_id = _get_or_create_folder(service, drive_folder_name)
+        folder_id = _get_or_create_folder_path(service, drive_folder_name)
     except Exception as exc:
         logging.error('Kon geen verbinding maken met Google Drive: %s', exc)
         return False
 
     local_path = Path(local_folder)
-    if local_path.exists():
-        for child in local_path.iterdir():
-            if child.is_dir():
-                shutil.rmtree(child)
-            else:
-                child.unlink()
-    local_path.mkdir(parents=True, exist_ok=True)
+    _clear_local_mirror_target(local_path)
 
     try:
-        _download_tree(service, folder_id, local_path)
+        _download_tree(service, folder_id, local_path, is_root=True)
         logging.info("Drive download mirror klaar -> '%s'", drive_folder_name)
         return True
     except Exception as exc:
@@ -276,8 +297,8 @@ def sync_local_to_drive(local_folder: str, drive_folder_name: str, token_path: s
 
     try:
         service = _build_service(token_path)
-        folder_id = _get_or_create_folder(service, drive_folder_name)
-        _sync_local_dir_to_drive(service, local_path, folder_id)
+        folder_id = _get_or_create_folder_path(service, drive_folder_name)
+        _sync_local_dir_to_drive(service, local_path, folder_id, is_root=True)
         logging.info("Drive upload mirror klaar -> '%s'", drive_folder_name)
         return True
     except Exception as exc:

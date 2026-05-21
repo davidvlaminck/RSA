@@ -74,11 +74,61 @@ def test_sync_local_dir_skips_root_files_and_staged_summaries(monkeypatch, tmp_p
 
     monkeypatch.setattr(gdrive_upload, '_list_children', fake_list_children)
 
-    gdrive_upload._sync_local_dir_to_drive(service, root, 'root-folder')
+    gdrive_upload._sync_local_dir_to_drive(service, root, 'root-folder', is_root=True)
 
     created_names = [entry.get('name') for entry in service.files().created]
     assert 'root.xlsx' not in created_names
     assert 'staged_summaries' not in created_names
     assert 'report.xlsx' in created_names
+
+
+def test_sync_local_dir_skips_root_files_for_custom_root_name(monkeypatch, tmp_path):
+    root = tmp_path / 'CustomLocalMirror'
+    bucket = root / '0000-0099'
+    bucket.mkdir(parents=True)
+    (root / 'should_not_upload.xlsx').write_text('root', encoding='utf-8')
+    (bucket / 'report.xlsx').write_text('bucket', encoding='utf-8')
+
+    service = _FakeService()
+
+    def fake_list_children(_service, folder_id):
+        if folder_id == 'root-folder':
+            return []
+        return []
+
+    monkeypatch.setattr(gdrive_upload, '_list_children', fake_list_children)
+
+    gdrive_upload._sync_local_dir_to_drive(service, root, 'root-folder', is_root=True)
+
+    created_names = [entry.get('name') for entry in service.files().created]
+    assert 'should_not_upload.xlsx' not in created_names
+    assert 'report.xlsx' in created_names
+
+
+def test_get_or_create_folder_path_uses_root_and_parent_scoped_queries(monkeypatch):
+    queries = []
+
+    class _PathFakeFiles:
+        def list(self, **kwargs):
+            queries.append(kwargs.get('q', ''))
+            q = kwargs.get('q', '')
+            if "name='RSA'" in q:
+                return _FakeRequest({'files': [{'id': 'rsa-root', 'name': 'RSA'}]})
+            if "name='RSA_OneDrive'" in q:
+                return _FakeRequest({'files': []})
+            return _FakeRequest({'files': []})
+
+        def create(self, body=None, media_body=None, fields=None):
+            return _FakeRequest({'id': 'onedrive-folder'})
+
+    class _PathFakeService:
+        def files(self):
+            return _PathFakeFiles()
+
+    folder_id = gdrive_upload._get_or_create_folder_path(_PathFakeService(), 'RSA/RSA_OneDrive')
+
+    assert folder_id == 'onedrive-folder'
+    assert any("name='RSA'" in q and "'root' in parents" in q for q in queries)
+    assert any("name='RSA_OneDrive'" in q and "'rsa-root' in parents" in q for q in queries)
 
 
