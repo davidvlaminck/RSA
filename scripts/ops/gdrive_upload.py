@@ -27,6 +27,7 @@ from __future__ import annotations
 import argparse
 import logging
 import pickle
+import re
 import shutil
 from datetime import datetime
 from pathlib import Path
@@ -42,6 +43,8 @@ SCOPES = ['https://www.googleapis.com/auth/drive']
 FOLDER_MIME = 'application/vnd.google-apps.folder'
 BRUSSELS = ZoneInfo('Europe/Brussels')
 SKIP_NAMES = {'archief', 'archivedreports', 'staged_summaries', 'logs'}
+ROOT_BUCKET_RE = re.compile(r'^\d{4}-\d{4}$')
+REQUIRED_ROOT_FOLDERS = {'overzicht'}
 
 
 def _should_skip(name: str) -> bool:
@@ -97,6 +100,22 @@ def _build_service(token_path: str):
 
 def _safe_name(name: str) -> str:
     return name.replace("'", "\\'")
+
+
+def _is_safe_component_name(name: str) -> bool:
+    """Reject path-like or control-character names when mirroring Drive items locally."""
+    if not name or name in {'.', '..'}:
+        return False
+    if '/' in name or '\\' in name:
+        return False
+    if any(ord(ch) < 32 for ch in name):
+        return False
+    return True
+
+
+def _is_expected_root_folder_name(name: str) -> bool:
+    lowered = name.strip().lower()
+    return lowered in REQUIRED_ROOT_FOLDERS or bool(ROOT_BUCKET_RE.match(name.strip()))
 
 
 def _list_children(service, folder_id: str) -> list[dict]:
@@ -185,16 +204,24 @@ def _download_file(service, file_id: str, target_path: Path) -> None:
 def _download_tree(service, folder_id: str, local_path: Path, is_root: bool = False) -> None:
     local_path.mkdir(parents=True, exist_ok=True)
     for child in _list_children(service, folder_id):
+        if not _is_safe_component_name(child['name']):
+            logging.warning('Skipping unsafe Drive item name during download mirror: %r', child['name'])
+            continue
         if _should_skip(child['name']):
             logging.info('Skipping Drive item during download mirror: %s', child['name'])
             continue
+        if is_root and child['mimeType'] == FOLDER_MIME and not _is_expected_root_folder_name(child['name']):
+            logging.warning('Skipping unexpected root Drive folder during download mirror: %r', child['name'])
+            continue
         child_path = local_path / child['name']
         if child['mimeType'] == FOLDER_MIME:
+            logging.info('SYNC_DOWN_FOLDER: creating local folder: %r', str(child_path))
             _download_tree(service, child['id'], child_path, is_root=False)
         else:
             if is_root:
                 logging.warning('Skipping Drive root file during download mirror: %s', child['name'])
                 continue
+            logging.info('SYNC_DOWN_FILE: downloading: %r -> %r', child['name'], str(child_path))
             _download_file(service, child['id'], child_path)
 
 
@@ -304,6 +331,27 @@ def sync_local_to_drive(local_folder: str, drive_folder_name: str, token_path: s
     except Exception as exc:
         logging.error('Drive upload mirror mislukt: %s', exc)
         return False
+
+
+def validate_local_mirror(local_folder: str) -> tuple[bool, str]:
+    """Validate the minimal folder layout required before report execution."""
+    root = Path(local_folder)
+    if not root.exists():
+        return False, f'local mirror does not exist: {root}'
+
+    overview_dir = root / 'Overzicht'
+    overview_wb = overview_dir / '[RSA] Overzicht rapporten.xlsx'
+    if not overview_dir.exists():
+        return False, f'missing required folder: {overview_dir}'
+    if not overview_wb.exists():
+        return False, f'missing required workbook: {overview_wb}'
+
+    buckets = [p for p in root.iterdir() if p.is_dir() and ROOT_BUCKET_RE.match(p.name)]
+    if not buckets:
+        return False, f'no bucket folders found under {root}'
+
+    logging.info('SYNC_DOWN_VALIDATE: found %s bucket folders and overview workbook', len(buckets))
+    return True, 'ok'
 
 
 def upload_folder_to_drive(

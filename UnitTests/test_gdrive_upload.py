@@ -132,3 +132,65 @@ def test_get_or_create_folder_path_uses_root_and_parent_scoped_queries(monkeypat
     assert any("name='RSA_OneDrive'" in q and "'rsa-root' in parents" in q for q in queries)
 
 
+def test_download_tree_skips_unexpected_root_folder_names(monkeypatch, tmp_path):
+    local_root = tmp_path / 'RSA_OneDrive'
+
+    def fake_list_children(_service, folder_id):
+        if folder_id == 'root-folder':
+            return [
+                {'name': '0100-0199', 'id': 'bucket', 'mimeType': gdrive_upload.FOLDER_MIME},
+                {'name': 'Overzicht', 'id': 'overview', 'mimeType': gdrive_upload.FOLDER_MIME},
+                {'name': 'concat(\nitems(\'Toepassen_op_elk\')?[\'Name\']\n)', 'id': 'weird', 'mimeType': gdrive_upload.FOLDER_MIME},
+            ]
+        return []
+
+    monkeypatch.setattr(gdrive_upload, '_list_children', fake_list_children)
+
+    gdrive_upload._download_tree(service=None, folder_id='root-folder', local_path=local_root, is_root=True)
+
+    assert (local_root / '0100-0199').exists()
+    assert (local_root / 'Overzicht').exists()
+    assert not (local_root / "concat(\nitems('Toepassen_op_elk')?['Name']\n)").exists()
+
+
+def test_download_tree_skips_unsafe_names(monkeypatch, tmp_path):
+    local_root = tmp_path / 'RSA_OneDrive'
+
+    def fake_list_children(_service, folder_id):
+        if folder_id == 'root-folder':
+            return [
+                {'name': '0100-0199', 'id': 'bucket', 'mimeType': gdrive_upload.FOLDER_MIME},
+                {'name': 'bad/name', 'id': 'bad', 'mimeType': gdrive_upload.FOLDER_MIME},
+            ]
+        return []
+
+    monkeypatch.setattr(gdrive_upload, '_list_children', fake_list_children)
+
+    gdrive_upload._download_tree(service=None, folder_id='root-folder', local_path=local_root, is_root=True)
+
+    assert (local_root / '0100-0199').exists()
+    assert not (local_root / 'bad').exists()
+
+
+def test_validate_local_mirror_success(tmp_path):
+    root = tmp_path / 'RSA_OneDrive'
+    (root / 'Overzicht').mkdir(parents=True)
+    (root / 'Overzicht' / '[RSA] Overzicht rapporten.xlsx').write_text('x', encoding='utf-8')
+    (root / '0000-0099').mkdir(parents=True)
+
+    ok, reason = gdrive_upload.validate_local_mirror(str(root))
+
+    assert ok is True
+    assert reason == 'ok'
+
+
+def test_validate_local_mirror_fails_when_overview_missing(tmp_path):
+    root = tmp_path / 'RSA_OneDrive'
+    (root / '0000-0099').mkdir(parents=True)
+
+    ok, reason = gdrive_upload.validate_local_mirror(str(root))
+
+    assert ok is False
+    assert 'missing required folder' in reason
+
+

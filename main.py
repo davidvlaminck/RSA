@@ -12,6 +12,7 @@ from lib.reports.ReportLoopRunner import ReportLoopRunner
 from scripts.ops.gdrive_upload import (
     sync_drive_to_local,
     sync_local_to_drive,
+    validate_local_mirror,
     write_daily_run_log,
     prune_daily_run_logs,
 )
@@ -116,6 +117,11 @@ class DailyDriveSyncGate:
             token_path=self.token_path,
         )
         if ok:
+            valid, reason = validate_local_mirror(self.local_folder)
+            if not valid:
+                write_daily_run_log(self.local_folder, 'PRE_SYNC_INVALID_MIRROR', reason)
+                print(f'[SYNC] Invalid local mirror after sync-down: {reason}')
+                return False
             self._synced_date = now.date()
             write_daily_run_log(self.local_folder, 'PRE_SYNC_DONE', f'drive_folder={self.drive_folder}')
         else:
