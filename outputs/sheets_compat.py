@@ -88,6 +88,11 @@ class SheetsCompatAdapter:
         """Delegate sheet deletion to the ExcelOutput implementation."""
         return self.excel.delete_sheet(spreadsheet_id, sheet_name)
 
+    def create_sheet(self, spreadsheet_id: str | Path, sheet_name: str, clear_if_exists: bool = True) -> None:
+        """Create a new sheet in a workbook, delegating to ExcelOutput."""
+        workbook_path = self.excel._resolve_workbook_path(spreadsheet_id)
+        return self.excel.create_sheet(workbook_path, sheet_name, clear_if_exists=clear_if_exists)
+
     def insert_empty_rows(self, spreadsheet_id: str | Path, sheet_name: str, start_cell: str, number_of_rows: int):
         # Simplest approach: read all rows, insert empty rows at the proper index, rewrite sheet.
         workbook_path = self.excel._resolve_workbook_path(spreadsheet_id)
@@ -115,4 +120,3 @@ class SheetsCompatAdapter:
 
 
 __all__ = ["SheetsCompatAdapter"]
-

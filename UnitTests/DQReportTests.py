@@ -99,4 +99,3 @@ def test_transform_raw_to_dict_handles_named_range_emails():
     assert result[0]['mail'] == 'david.vlaminck@mow.vlaanderen.be'
     assert result[0]['frequency'] == 'Wijziging'
     assert result[0]['cell'] == 'C1'
-

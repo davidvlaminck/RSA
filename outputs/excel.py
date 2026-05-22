@@ -174,6 +174,13 @@ class ExcelOutput:
                 return str(val)
         if isinstance(val, datetime.date):
             return val.strftime('%Y-%m-%d')
+        # Convert complex types (list, dict, etc.) to string to avoid openpyxl ValueError
+        if isinstance(val, (list, dict)):
+            import json
+            try:
+                return json.dumps(val, ensure_ascii=False, default=str)
+            except Exception:
+                return str(val)
         return val
 
     def iter_rows_from_data(self, headers: List[str], rows: Iterable[Iterable[Any]]) -> Iterable[List[Any]]:
