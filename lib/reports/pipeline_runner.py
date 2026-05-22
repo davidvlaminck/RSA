@@ -52,7 +52,7 @@ def run_pipelines_by_datasource(
     """
     exec_cfg = settings.get("report_execution", {})
     max_concurrent = exec_cfg.get("max_concurrent", 2)
-    timeout_seconds = exec_cfg.get("timeout_seconds", 1800)
+    timeout_seconds = exec_cfg.get("timeout_seconds", 60)
 
     groups = group_reports_by_datasource(list(report_names))
     pipelines = {ds: items for ds, items in groups.items() if items}
@@ -69,7 +69,7 @@ def run_pipelines_by_datasource(
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         future_to_pipeline = {}
         for datasource, report_list in pipelines.items():
-            pipeline_timeout = max(timeout_seconds, timeout_seconds * len(report_list))
+            pipeline_timeout = timeout_seconds
             print(f"Starting pipeline [{datasource}] with reports: {report_list}")
             future = executor.submit(
                 _run_worker,
