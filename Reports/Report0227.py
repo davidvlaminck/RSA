@@ -1,5 +1,6 @@
 from lib.reports.DQReport import DQReport
 from lib.reports.BaseReport import BaseReport
+import uuid
 
 
 class Report0227(BaseReport):
@@ -76,6 +77,7 @@ class Report0227(BaseReport):
         """
         self.report = DQReport(name='report0227',
                                title='Laagspanningsdeel met eigenschap datumLaatsteKeuring heeft minstens een Elektrische Keuring',
+                               spreadsheet_id=str(uuid.uuid4()),
                                datasource='ArangoDB',
                                persistent_column='N',
                                excel_filename='[RSA] Laagspanningsdeel met eigenschap datumLaatsteKeuring heeft minstens een Elektrische Keuring.xlsx')

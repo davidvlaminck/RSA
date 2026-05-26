@@ -1,6 +1,6 @@
 from lib.reports.DQReport import DQReport
 from lib.reports.BaseReport import BaseReport
-
+import uuid
 
 class Report0221(BaseReport):
     def init_report(self) -> None:
@@ -32,7 +32,7 @@ class Report0221(BaseReport):
         """
         self.report = DQReport(name='report0221',
                                title='Wegverlichtingsinstallatie (Legacy) heeft steeds een locatie',
-                               spreadsheet_id='1A8jalizscvlw4MzncK3fxnkOzVc1pK0GgeyP3BhLRnY',
+                               spreadsheet_id=str(uuid.uuid4()),
                                datasource='ArangoDB',
                                persistent_column='H')
 

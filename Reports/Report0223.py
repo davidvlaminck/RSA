@@ -1,5 +1,6 @@
 from lib.reports.DQReport import DQReport
 from lib.reports.BaseReport import BaseReport
+import uuid
 
 
 class Report0223(BaseReport):
@@ -56,7 +57,7 @@ class Report0223(BaseReport):
 
         self.report = DQReport(name='report0223',
                                title='Laagspanningsbord heeft minstens 1 Elektrische Keuring ',
-                               spreadsheet_id='',
+                               spreadsheet_id=str(uuid.uuid4()),
                                datasource='ArangoDB',
                                persistent_column='G',
                                excel_filename='[RSA] Laagspanningsbord heeft minstens 1 Elektrische Keuring.xlsx')
