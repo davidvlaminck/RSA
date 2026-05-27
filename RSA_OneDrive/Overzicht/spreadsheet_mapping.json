@@ -190,5 +190,6 @@
   "b12aa819-cd9b-4579-a6d2-2327a0addc22": "[RSA] Elektrische Keuring heeft een bijlage",
   "338e8d0c-fd0f-40da-9473-882dbee0905e": "[RSA] Elektrische Keuring heeft de eigenschappen: naam, keuringsdatum, resultaat",
   "38486b84-cb11-485d-a522-ec85f4633e34": "[RSA] Laagspanningsdeel met eigenschap datumLaatsteKeuring heeft minstens een Elektrische Keuring",
-  "88ecce1a-d98a-4b09-b790-181440833611": "[RSA] lgc#Laagspanningsdeel (inactief) en Elektrische Keuring hebben een identieke datum en identiek resultaat"
+  "88ecce1a-d98a-4b09-b790-181440833611": "[RSA] lgc#Laagspanningsdeel (inactief) en Elektrische Keuring hebben een identieke datum en identiek resultaat",
+  "d72d5033-590b-45b9-84ec-9e458b610886": "[RSA] Laagspanningsbord overzicht"
 }
