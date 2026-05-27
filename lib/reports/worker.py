@@ -16,6 +16,8 @@ from pathlib import Path
 from contextvars import ContextVar
 import warnings
 
+logger = logging.getLogger(__name__)
+
 # Suppress known third-party DeprecationWarnings (narrow filter)
 warnings.filterwarnings('ignore', message='path is deprecated. Use files\(\) instead', category=DeprecationWarning)
 
@@ -71,9 +73,9 @@ def reinitialize_database_connections(settings):
             password=postgis_settings['password'],
             database=postgis_settings['database']
         )
-        logging.info("✓ Reinitialized PostGIS connection")
+        logger.info("✓ Reinitialized PostGIS connection")
     except Exception as e:
-        logging.warning(f"Could not reinitialize PostGIS: {e}")
+        logger.warning(f"Could not reinitialize PostGIS: {e}")
 
     try:
         # ArangoDB connector
@@ -86,9 +88,9 @@ def reinitialize_database_connections(settings):
             password=arango_settings['password'],
             database=arango_settings['database']
         )
-        logging.info("✓ Reinitialized ArangoDB connection")
+        logger.info("✓ Reinitialized ArangoDB connection")
     except Exception as e:
-        logging.warning(f"Could not reinitialize ArangoDB: {e}")
+        logger.warning(f"Could not reinitialize ArangoDB: {e}")
 
     try:
         # Neo4J connector
@@ -100,9 +102,9 @@ def reinitialize_database_connections(settings):
             password=neo4j_settings['password'],
             database=neo4j_settings['database']
         )
-        logging.info("✓ Reinitialized Neo4J connection")
+        logger.info("✓ Reinitialized Neo4J connection")
     except Exception as e:
-        logging.warning(f"Could not reinitialize Neo4J: {e}")
+        logger.warning(f"Could not reinitialize Neo4J: {e}")
 
     try:
         # Sheets wrapper (required for GoogleSheetsOutput)
@@ -110,11 +112,11 @@ def reinitialize_database_connections(settings):
         creds_path = settings.get('google_api', {}).get('credentials_path')
         if creds_path:
             SingleSheetsWrapper.init(service_cred_path=creds_path, readonly_scope=False)
-            logging.info("✓ Reinitialized Google Sheets wrapper")
+            logger.info("✓ Reinitialized Google Sheets wrapper")
         else:
-            logging.warning("Google API credentials_path not set; Sheets wrapper not initialized")
+            logger.warning("Google API credentials_path not set; Sheets wrapper not initialized")
     except Exception as e:
-        logging.warning(f"Could not reinitialize Sheets wrapper: {e}")
+        logger.warning(f"Could not reinitialize Sheets wrapper: {e}")
 
     # Ensure Excel writer singleton is initialized for workers (best-effort)
     try:
@@ -123,7 +125,7 @@ def reinitialize_database_connections(settings):
             out_dir = str(Path(settings.get('workdir', Path.cwd())).resolve().parents[0] / 'RSA_OneDrive')
         from outputs.excel_wrapper import SingleExcelWriter
         SingleExcelWriter.init(output_dir=out_dir)
-        logging.info('✓ Reinitialized Excel writer')
+        logger.info('✓ Reinitialized Excel writer')
 
         # If Google Sheets wrapper is not initialized but Excel is forced/available,
         # register the Excel writer as the sheets wrapper so DQReport and other callers
@@ -134,12 +136,12 @@ def reinitialize_database_connections(settings):
             if getattr(SingleSheetsWrapper, 'sheets_wrapper', None) is None:
                 from outputs.sheets_compat import SheetsCompatAdapter
                 SingleSheetsWrapper.sheets_wrapper = SheetsCompatAdapter(SingleExcelWriter.get_wrapper())
-                logging.info('✓ Registered Excel-backed SheetsCompatAdapter as SingleSheetsWrapper fallback')
+                logger.info('✓ Registered Excel-backed SheetsCompatAdapter as SingleSheetsWrapper fallback')
         except Exception:
             # best-effort: ignore if we can't set fallback
             pass
     except Exception as e:
-        logging.warning(f'Could not initialize Excel writer in worker: {e}')
+        logger.warning(f'Could not initialize Excel writer in worker: {e}')
 
 
 def run_single_report(report_name: str, settings: dict, skip_db_init: bool = False) -> int:
@@ -157,7 +159,7 @@ def run_single_report(report_name: str, settings: dict, skip_db_init: bool = Fal
     current_report.set(report_name)
 
     try:
-        logging.info(f"Starting report")
+        logger.info(f"Starting report")
 
         # Re-initialize database connections only if this is the first report or a single run
         if not skip_db_init:
@@ -168,12 +170,12 @@ def run_single_report(report_name: str, settings: dict, skip_db_init: bool = Fal
         report_instance = create_report_instance(report_name)
 
         if report_instance is None:
-            logging.error(f"Failed to instantiate")
+            logger.error(f"Failed to instantiate")
             return 1
 
         # Initialize the report
         report_instance.init_report()
-        logging.info(f"Initialized")
+        logger.info(f"Initialized")
 
         # Create a MailSender for this worker
         from lib.mail.MailSender import MailSender
@@ -181,12 +183,12 @@ def run_single_report(report_name: str, settings: dict, skip_db_init: bool = Fal
 
         # Run the report
         report_instance.run_report(sender=mail_sender)
-        logging.info(f"✓ Completed successfully")
+        logger.info(f"✓ Completed successfully")
 
         return 0
 
     except Exception as e:
-        logging.error(f"✗ Failed: {e}", exc_info=True)
+        logger.error(f"✗ Failed: {e}", exc_info=True)
         return 1
 
 
@@ -200,7 +202,7 @@ def run_reports(report_names: list[str], settings: dict) -> int:
         0 if all reports succeed, 1 if any report fails
     """
     # Reinitialize DB connections ONCE at the start of the pipeline
-    logging.info(f"Pipeline starting with {len(report_names)} reports")
+    logger.info(f"Pipeline starting with {len(report_names)} reports")
     reinitialize_database_connections(settings)
 
     failed = []
@@ -210,7 +212,7 @@ def run_reports(report_names: list[str], settings: dict) -> int:
             failed.append(report_name)
 
     if failed:
-        logging.error("One or more reports failed in worker: %s", ", ".join(failed))
+        logger.error("One or more reports failed in worker: %s", ", ".join(failed))
         return 1
     return 0
 
@@ -237,7 +239,7 @@ def main():
     elif args.reports:
         report_list = args.reports
     else:
-        logging.error("You must provide --report or --reports")
+        logger.error("You must provide --report or --reports")
         sys.exit(2)
 
     exit_code = run_reports(report_list, settings)

@@ -1,5 +1,7 @@
 import logging
 import re
+
+logger = logging.getLogger(__name__)
 from datetime import datetime, date, timedelta
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -43,7 +45,7 @@ class DQReport(Report):
         self.output_settings = output_settings or {}
 
     def run_report(self, startcell: str = 'A1', sender: MailSender = None):
-        logging.info(f'start running report {self.name}: {self.title}')
+        logger.info(f'start running report {self.name}: {self.title}')
 
         # Resolve adapters
         ds = make_datasource(self.datasource)
@@ -100,7 +102,7 @@ class DQReport(Report):
                 status = None
 
             if status == 403 or 'permission' in str(exc).lower() or 'permission_denied' in str(exc).lower():
-                logging.warning(f'Google Sheets permission error reading Overzicht!emails: {exc}; falling back to Excel or skipping mail receivers')
+                logger.warning(f'Google Sheets permission error reading Overzicht!emails: {exc}; falling back to Excel or skipping mail receivers')
                 # Attempt to register Excel-backed adapter as a fallback and retry once
                 try:
                     from outputs.excel_wrapper import SingleExcelWriter
@@ -120,11 +122,11 @@ class DQReport(Report):
                     # If any of the fallback steps fail, continue with empty receivers
                     mail_receivers_raw = []
             elif getattr(exc, 'error_details', None) == 'Unable to parse range: Overzicht!emails':
-                logging.info(f'{self.__class__.__name__} does not have a range Overzicht!emails')
+                logger.info(f'{self.__class__.__name__} does not have a range Overzicht!emails')
                 mail_receivers_raw = []
             else:
                 # Unknown HttpError: log and continue without mail receivers instead of failing the whole report
-                logging.warning(f'Unexpected HttpError while reading Overzicht!emails: {exc}; continuing without mail receivers')
+                logger.warning(f'Unexpected HttpError while reading Overzicht!emails: {exc}; continuing without mail receivers')
                 mail_receivers_raw = []
 
         previous_result, latest_data_sync = self.get_historiek_record_info(sheets_wrapper)
@@ -242,14 +244,14 @@ class DQReport(Report):
                     if normalized_lu:
                         self.last_data_update = normalized_lu
                         try:
-                            logging.info('%s: last_update_query override supplied last_data_update=%r', self.name, self.last_data_update)
+                            logger.info('%s: last_update_query override supplied last_data_update=%r', self.name, self.last_data_update)
                         except Exception:
                             pass
             except Exception:
-                logging.exception('Failed to execute last_update_query for %s', self.name)
+                logger.exception('Failed to execute last_update_query for %s', self.name)
         # Log datasource-provided last_data_update for troubleshooting Overzicht timestamps
         try:
-            logging.info('%s: datasource last_data_update=%r', self.name, self.last_data_update)
+            logger.info('%s: datasource last_data_update=%r', self.name, self.last_data_update)
         except Exception:
             pass
 
@@ -279,7 +281,7 @@ class DQReport(Report):
 
         # store for diagnostics and log
         self.last_output_meta = meta
-        logging.info('Output writer meta: %s', meta)
+        logger.info('Output writer meta: %s', meta)
 
         # historiek: instead of writing directly to sheets (which may be Google or Excel),
         # stage an append_row payload for the aggregator to apply later. This avoids concurrent
@@ -374,7 +376,7 @@ class DQReport(Report):
 
             try:
                 # Log the resolved target workbook identifier used for summary updates
-                logging.info('%s: determined rowFound=%s for summary target_workbook=%s', self.name, rowFound, target_workbook)
+                logger.info('%s: determined rowFound=%s for summary target_workbook=%s', self.name, rowFound, target_workbook)
             except Exception:
                 pass
 
@@ -462,7 +464,7 @@ class DQReport(Report):
                 payload_hist['spreadsheet_id'] = self.spreadsheet_id
 
             try:
-                logging.info('%s: staging historiek payload target=%s payload=%s', self.name, excel_fname_for_summary, payload_hist)
+                logger.info('%s: staging historiek payload target=%s payload=%s', self.name, excel_fname_for_summary, payload_hist)
             except Exception:
                 pass
             stage_summary_update(payload_hist, staged_dir=staged_dir or 'RSA_OneDrive/staged_summaries')
@@ -517,32 +519,32 @@ class DQReport(Report):
             }
 
             try:
-                logging.info('%s: staging Overzicht B payload target=%s cell=%s payload=%s', self.name, excel_fname_for_summary, f'B{rowFound}', payload_summary_b)
+                logger.info('%s: staging Overzicht B payload target=%s cell=%s payload=%s', self.name, excel_fname_for_summary, f'B{rowFound}', payload_summary_b)
             except Exception:
                 pass
             stage_summary_update(payload_summary_b, staged_dir=staged_dir or 'RSA_OneDrive/staged_summaries')
 
             try:
-                logging.info('%s: staging Overzicht payload target=%s cell=%s payload=%s', self.name, excel_fname_for_summary, c_cell, payload_summary_c)
+                logger.info('%s: staging Overzicht payload target=%s cell=%s payload=%s', self.name, excel_fname_for_summary, c_cell, payload_summary_c)
             except Exception:
                 pass
             stage_summary_update(payload_summary_c, staged_dir=staged_dir or 'RSA_OneDrive/staged_summaries')
             try:
-                logging.info('%s: staging Overzicht H payload target=%s cell=%s payload=%s', self.name, excel_fname_for_summary, h_cell, payload_summary_h)
+                logger.info('%s: staging Overzicht H payload target=%s cell=%s payload=%s', self.name, excel_fname_for_summary, h_cell, payload_summary_h)
             except Exception:
                 pass
             stage_summary_update(payload_summary_h, staged_dir=staged_dir or 'RSA_OneDrive/staged_summaries')
             # Log the exact staged payloads for post-aggregation verification including the target workbook
             try:
-                logging.info('%s: staged Overzicht C payload target=%s cell=%s value=%r', self.name, excel_fname_for_summary, c_cell, payload_summary_c.get('value'))
-                logging.info('%s: staged Overzicht H payload target=%s cell=%s value=%r', self.name, excel_fname_for_summary, h_cell, payload_summary_h.get('value'))
+                logger.info('%s: staged Overzicht C payload target=%s cell=%s value=%r', self.name, excel_fname_for_summary, c_cell, payload_summary_c.get('value'))
+                logger.info('%s: staged Overzicht H payload target=%s cell=%s value=%r', self.name, excel_fname_for_summary, h_cell, payload_summary_h.get('value'))
             except Exception:
                 pass
 
         except Exception as ex:
             # fallback to original direct writes if staging isn't available
             try:
-                logging.warning(f'Summary staging failed: {ex}; falling back to direct writes')
+                logger.warning(f'Summary staging failed: {ex}; falling back to direct writes')
                 if last_data_update != self.last_data_update:
                     sheets_wrapper.insert_empty_rows(spreadsheet_id=self.spreadsheet_id, sheet_name='Historiek', start_cell='A2',
                                                      number_of_rows=1)
@@ -571,13 +573,13 @@ class DQReport(Report):
                 except Exception:
                     pass
             except Exception:
-                logging.exception('Failed both staging and fallback writes for historiek/summary')
+                logger.exception('Failed both staging and fallback writes for historiek/summary')
 
         if mail_receivers is not None and sender is not None:
             self.send_mails(sender=sender, named_range=mail_receivers, previous_result=previous_result,
                             result=len(qr.rows), latest_data_sync=self.last_data_update)
 
-        logging.info(f'finished report {self.name}')
+        logger.info(f'finished report {self.name}')
 
     @staticmethod
     def clean(result_data, headerrow: list[str] | None = None):
@@ -711,7 +713,7 @@ class DQReport(Report):
             if len(list_element) < 2:
                 # Malformed entry: skip and log a warning instead of raising to allow offline runs
                 # e.g. when Overzicht sheet is minimal during Excel-only testing.
-                logging.warning('Skipping malformed mail receiver entry (expected >=2 columns): %s', list_element)
+                logger.warning('Skipping malformed mail receiver entry (expected >=2 columns): %s', list_element)
                 continue
 
             mail_dict = {}

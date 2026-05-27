@@ -14,6 +14,8 @@ import logging
 import pkgutil
 from pathlib import Path
 
+logger = logging.getLogger(__name__)
+
 
 # Default Reports directory candidates: prefer project-root `Reports/`, fall back to `lib/Reports/` (legacy)
 _PROJECT_ROOT = Path(__file__).parent.parent.parent
@@ -30,7 +32,7 @@ def create_report_instance(report_name: str):
         module = importlib.import_module(f"Reports.{report_name}")
         class_ = getattr(module, report_name, None)
         if class_ is None:
-            logging.error("Module Reports.%s does not expose class %s", report_name, report_name)
+            logger.error("Module Reports.%s does not expose class %s", report_name, report_name)
             return None
         return class_()
     except Exception:
@@ -38,21 +40,21 @@ def create_report_instance(report_name: str):
             # Fallback: load directly from file using relative path
             report_file = _DEFAULT_REPORTS_DIR / f"{report_name}.py"
             if not report_file.exists():
-                logging.error("Report file not found: %s", report_file)
+                logger.error("Report file not found: %s", report_file)
                 return None
             module_spec = importlib.util.spec_from_file_location(report_name, report_file)
             if module_spec is None or module_spec.loader is None:
-                logging.error("Could not create module spec for %s", report_file)
+                logger.error("Could not create module spec for %s", report_file)
                 return None
             module = importlib.util.module_from_spec(module_spec)
             module_spec.loader.exec_module(module)
             class_ = getattr(module, report_name, None)
             if class_ is None:
-                logging.error("Module %s does not expose class %s", report_file, report_name)
+                logger.error("Module %s does not expose class %s", report_file, report_name)
                 return None
             return class_()
         except Exception as exc:
-            logging.error("Failed to import/instantiate report %s: %s", report_name, exc)
+            logger.error("Failed to import/instantiate report %s: %s", report_name, exc)
             return None
 
 
@@ -74,7 +76,7 @@ def discover_and_instantiate_reports(reports_dir: Path = None) -> list:
             reports_dir = _LEGACY_REPORTS_DIR
 
     if not reports_dir.exists():
-        logging.error("Reports directory not found: %s", reports_dir)
+        logger.error("Reports directory not found: %s", reports_dir)
         # try legacy fallback if different
         if reports_dir != _LEGACY_REPORTS_DIR and _LEGACY_REPORTS_DIR.exists():
             reports_dir = _LEGACY_REPORTS_DIR

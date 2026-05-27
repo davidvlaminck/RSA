@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import sys
 import atexit
@@ -16,6 +17,8 @@ from scripts.ops.gdrive_upload import (
     write_daily_run_log,
     prune_daily_run_logs,
 )
+
+logger = logging.getLogger(__name__)
 
 
 DEFAULT_SETTINGS_PATH = Path(__file__).resolve().parent / 'settings_sample.json'
@@ -120,7 +123,7 @@ class DailyDriveSyncGate:
             valid, reason = validate_local_mirror(self.local_folder)
             if not valid:
                 write_daily_run_log(self.local_folder, 'PRE_SYNC_INVALID_MIRROR', reason)
-                print(f'[SYNC] Invalid local mirror after sync-down: {reason}')
+                logger.warning('[SYNC] Invalid local mirror after sync-down: %s', reason)
                 return False
             self._synced_date = now.date()
             write_daily_run_log(self.local_folder, 'PRE_SYNC_DONE', f'drive_folder={self.drive_folder}')
@@ -150,7 +153,7 @@ if __name__ == '__main__':
 
     _enable_daily_console_capture(onedrive_path)
 
-    print(f'Using settings: {settings_path}')
+    logger.info('Using settings: %s', settings_path)
 
     reportlooprunner = ReportLoopRunner(settings_path=cfg['settings_path'], excel_output_dir=onedrive_path)
 
@@ -168,7 +171,7 @@ if __name__ == '__main__':
             token_path=cfg['token_path'],
         )
     elif cfg['drive_sync_enabled']:
-        print('Drive sync enabled in settings but token_path is empty; continuing without Drive sync hooks.')
+        logger.warning('Drive sync enabled in settings but token_path is empty; continuing without Drive sync hooks.')
 
     # With scheduled flow, let settings.time control when reports start (e.g. around 06:00).
     reportlooprunner.start(run_right_away=False)

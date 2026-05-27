@@ -1,6 +1,8 @@
 import decimal
 import logging
 import time
+
+logger = logging.getLogger(__name__)
 from datetime import datetime, date, timedelta
 from zoneinfo import ZoneInfo
 
@@ -30,7 +32,7 @@ class LegacyReport(Report):
         self.now = ''
 
     def run_report(self, startcell: str = 'A1', sender=None):
-        logging.info(f'start running report {self.name}: {self.title}')
+        logger.info(f'start running report {self.name}: {self.title}')
 
         sheets_wrapper = SingleSheetsWrapper.get_wrapper()
         start_sheetcell = SheetsCell(startcell)
@@ -66,7 +68,7 @@ class LegacyReport(Report):
             if diff_days >= timedelta(days=self.frequency):
                 pass
             else:
-                logging.info(f'This report ran on {last_update_str}. Running this now would violate the frequency rule: run once every {self.frequency} days')
+                logger.info(f'This report ran on {last_update_str}. Running this now would violate the frequency rule: run once every {self.frequency} days')
                 return
 
         # get and format data
@@ -82,7 +84,7 @@ class LegacyReport(Report):
                 result_data = query_result.data()
             end = time.time()
             query_time = round(end - start, 2)
-            logging.info(f'fetched query result for {self.name} in {query_time} seconds.')
+            logger.info(f'fetched query result for {self.name} in {query_time} seconds.')
 
         elif self.datasource == 'PostGIS':
             connector = SinglePostGISConnector.get_connector()
@@ -101,7 +103,7 @@ class LegacyReport(Report):
 
             end = time.time()
             query_time = round(end - start, 2)
-            logging.info(f'fetched query result for {self.name} in {query_time} seconds.')
+            logger.info(f'fetched query result for {self.name} in {query_time} seconds.')
 
         result_data = self.clean(result_data)
 
@@ -152,7 +154,7 @@ class LegacyReport(Report):
             # if query_time is not available for some reason, skip silently to avoid breaking the report
             pass
 
-        logging.info(f'finished report {self.name}')
+        logger.info(f'finished report {self.name}')
 
     @staticmethod
     def clean(result_data):

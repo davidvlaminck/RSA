@@ -28,6 +28,8 @@ ROOT_DIR = (os.path.dirname(os.path.abspath(__file__)))
 BRUSSELS = ZoneInfo("Europe/Brussels")
 RETRIES = 5
 
+logger = logging.getLogger(__name__)
+
 
 def reinitialize_database_connections(settings: dict) -> None:
     """Re-initialize all database singletons from the current settings."""
@@ -36,7 +38,7 @@ def reinitialize_database_connections(settings: dict) -> None:
         SingleNeo4JConnector.init(uri=neo4j_settings['uri'], user=neo4j_settings['user'],
                                   password=neo4j_settings['password'], database=neo4j_settings['database'])
     except Exception as exc:
-        logging.warning(f"Could not reinitialize Neo4J: {exc}")
+        logger.warning(f"Could not reinitialize Neo4J: {exc}")
 
     try:
         postgis_settings = settings['databases']['PostGIS']
@@ -44,7 +46,7 @@ def reinitialize_database_connections(settings: dict) -> None:
                                     user=postgis_settings['user'], password=postgis_settings['password'],
                                     database=postgis_settings['database'])
     except Exception as exc:
-        logging.warning(f"Could not reinitialize PostGIS: {exc}")
+        logger.warning(f"Could not reinitialize PostGIS: {exc}")
 
     try:
         arango_settings = settings['databases']['ArangoDB']
@@ -56,7 +58,7 @@ def reinitialize_database_connections(settings: dict) -> None:
             database=arango_settings['database']
         )
     except Exception as exc:
-        logging.warning(f"Could not reinitialize ArangoDB: {exc}")
+        logger.warning(f"Could not reinitialize ArangoDB: {exc}")
 
 
 class ReportLoopRunner:
@@ -190,8 +192,8 @@ class ReportLoopRunner:
                             if self.on_before_run(now):
                                 break
                         except Exception as exc:
-                            logging.error(f"on_before_run callback mislukt: {exc}")
-                        logging.info(f"{datetime.now(tz=BRUSSELS)}: waiting for pre-run conditions")
+                            logger.error(f"on_before_run callback mislukt: {exc}")
+                        logger.info(f"{datetime.now(tz=BRUSSELS)}: waiting for pre-run conditions")
                         time.sleep(60)
                 self.run()
                 run_right_away = False
@@ -204,16 +206,16 @@ class ReportLoopRunner:
             if self.on_before_run is not None and last_run_date != now.date():
                 try:
                     if not self.on_before_run(now):
-                        logging.info(f'{datetime.now(tz=BRUSSELS)}: pre-run conditions not yet met.')
+                        logger.info(f'{datetime.now(tz=BRUSSELS)}: pre-run conditions not yet met.')
                         time.sleep(60)
                         continue
                 except Exception as exc:
-                    logging.error(f"on_before_run callback mislukt: {exc}")
+                    logger.error(f"on_before_run callback mislukt: {exc}")
                     time.sleep(60)
                     continue
 
             if last_run_date == now.date() or not self._is_within_run_window(now):
-                logging.info(f'{datetime.now(tz=BRUSSELS)}: not yet the right time to run reports.')
+                logger.info(f'{datetime.now(tz=BRUSSELS)}: not yet the right time to run reports.')
                 time.sleep(60)
                 continue
 
@@ -234,7 +236,7 @@ class ReportLoopRunner:
             try:
                 self.on_run_complete()
             except Exception as exc:
-                logging.error(f"on_run_complete callback mislukt: {exc}")
+                logger.error(f"on_run_complete callback mislukt: {exc}")
 
     def run_selected(self, report_names: list[str]):
         """Run a specific list of reports using the configured execution mode."""
@@ -251,10 +253,10 @@ class ReportLoopRunner:
             staged_dir = (self.excel_output_dir / 'staged_summaries') if self.excel_output_dir else Path('RSA_OneDrive') / 'staged_summaries'
             clear_staged_processed(staged_dir)
         except Exception:
-            logging.exception('Failed to clear staged_summaries/processed before sequential run')
+            logger.exception('Failed to clear staged_summaries/processed before sequential run')
 
         # start running reports now and at midnight
-        logging.info(f"{datetime.now(tz=BRUSSELS)}: let's run the reports now")
+        logger.info(f"{datetime.now(tz=BRUSSELS)}: let's run the reports now")
 
         # detect reports or use the provided list
         if report_names is None:
@@ -265,7 +267,7 @@ class ReportLoopRunner:
             ]
 
         if not report_instances:
-            logging.warning("No reports found to execute.")
+            logger.warning("No reports found to execute.")
             return
 
         # Map instances to their class names for tracking
@@ -292,34 +294,34 @@ class ReportLoopRunner:
                         report_instance.report.rows = self._clean_report_headers(report_instance.report.rows)
                     del reports_to_do[report_name]
                 except Exception as ex:
-                    logging.info(f"exception happened in report {report_name}: {ex}")
-                    logging.exception(ex)
-                    logging.error(f'failed completing report {report_name}')
-            logging.info(
+                    logger.info(f"exception happened in report {report_name}: {ex}")
+                    logger.exception(ex)
+                    logger.error(f'failed completing report {report_name}')
+            logger.info(
                 f'{datetime.now(tz=pytz.timezone("Europe/Brussels"))}: done running report loop {reports_run}. '
                 f'Reports left to do: {len(reports_to_do)}'
             )
 
-        logging.info(f'{datetime.now(tz=pytz.timezone("Europe/Brussels"))}: done running the reports')
+        logger.info(f'{datetime.now(tz=pytz.timezone("Europe/Brussels"))}: done running the reports')
 
         self.mail_sender.send_all_mails()
         self.adjust_mailed_info_in_sheets(sender=self.mail_sender)
 
-        logging.info(f'{datetime.now(tz=pytz.timezone("Europe/Brussels"))}: '
+        logger.info(f'{datetime.now(tz=pytz.timezone("Europe/Brussels"))}: '
                        f'sent all mails_to_send ({len(list(self.mail_sender.mails_to_send))})')
         # After all reports are done, aggregate staged summary updates.
         try:
             staged_dir = (self.excel_output_dir / 'staged_summaries') if hasattr(self, 'excel_output_dir') else Path('RSA_OneDrive') / 'staged_summaries'
             output_dir = self.excel_output_dir if hasattr(self, 'excel_output_dir') else Path('RSA_OneDrive')
-            logging.info(f'Running summary aggregator for staged dir {staged_dir}')
+            logger.info(f'Running summary aggregator for staged dir {staged_dir}')
             # process_once returns number of processed files
             try:
                 processed = process_once(staged_dir, output_dir, limit=1000, dry_run=False)
-                logging.info(f'Aggregate summaries processed {processed} files')
+                logger.info(f'Aggregate summaries processed {processed} files')
             except Exception as ex:
-                logging.error(f'Failed running aggregate_summaries.process_once: {ex}')
+                logger.error(f'Failed running aggregate_summaries.process_once: {ex}')
         except Exception as ex:
-            logging.error(f'Could not run aggregator: {ex}')
+            logger.error(f'Could not run aggregator: {ex}')
 
     def _run_parallel_by_datasource(self, report_names: list[str] | None = None):
         """Run reports in parallel, grouped by datasource to avoid DB contention.
@@ -334,21 +336,21 @@ class ReportLoopRunner:
             staged_dir = (self.excel_output_dir / 'staged_summaries') if self.excel_output_dir else Path('RSA_OneDrive') / 'staged_summaries'
             clear_staged_processed(staged_dir)
         except Exception:
-            logging.exception('Failed to clear staged_summaries/processed before parallel run')
+            logger.exception('Failed to clear staged_summaries/processed before parallel run')
 
-        logging.info(f"{datetime.now(tz=BRUSSELS)}: starting parallel-by-datasource execution")
+        logger.info(f"{datetime.now(tz=BRUSSELS)}: starting parallel-by-datasource execution")
 
         # Discover all report names or use provided list
         if report_names is None:
             report_instances = discover_and_instantiate_reports()
             if not report_instances:
-                logging.warning("No reports found to execute.")
+                logger.warning("No reports found to execute.")
                 return
             report_names = [type(inst).__name__ for inst in report_instances]
         else:
             report_names = list(report_names)
 
-        logging.info(f"Found {len(report_names)} reports to execute")
+        logger.info(f"Found {len(report_names)} reports to execute")
 
         # Write settings to temp file for worker processes
         with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
@@ -370,19 +372,19 @@ class ReportLoopRunner:
             except Exception:
                 pass
 
-        logging.info(f'{datetime.now(tz=pytz.timezone("Europe/Brussels"))}: parallel execution complete')
+        logger.info(f'{datetime.now(tz=pytz.timezone("Europe/Brussels"))}: parallel execution complete')
         # After parallel pipelines completed, run the aggregator once to apply staged summaries
         try:
             staged_dir = (self.excel_output_dir / 'staged_summaries') if hasattr(self, 'excel_output_dir') else Path('RSA_OneDrive') / 'staged_summaries'
             output_dir = self.excel_output_dir if hasattr(self, 'excel_output_dir') else Path('RSA_OneDrive')
-            logging.info(f'Running summary aggregator for staged dir {staged_dir} (parallel mode)')
+            logger.info(f'Running summary aggregator for staged dir {staged_dir} (parallel mode)')
             try:
                 processed = process_once(staged_dir, output_dir, limit=1000, dry_run=False)
-                logging.info(f'Aggregate summaries processed {processed} files')
+                logger.info(f'Aggregate summaries processed {processed} files')
             except Exception as ex:
-                logging.error(f'Failed running aggregate_summaries.process_once: {ex}')
+                logger.error(f'Failed running aggregate_summaries.process_once: {ex}')
         except Exception as ex:
-            logging.error(f'Could not run aggregator after parallel pipelines: {ex}')
+            logger.error(f'Could not run aggregator after parallel pipelines: {ex}')
 
     def run_all_no_google(self, output_dir: str | None = None, limit: int = 1000, timeout_seconds: int | None = None, max_concurrent: int | None = None):
         """Run all reports (discovering from Reports/) in no-Google mode.
@@ -438,7 +440,7 @@ class ReportLoopRunner:
             report_names = [type(inst).__name__ for inst in report_instances] if report_instances else []
 
             if not report_names:
-                logging.warning('No reports discovered to run in no-Google mode')
+                logger.warning('No reports discovered to run in no-Google mode')
                 return
 
             # initialize Excel writer for this process (best-effort)
@@ -463,14 +465,14 @@ class ReportLoopRunner:
             try:
                 staged_dir = (self.excel_output_dir / 'staged_summaries') if hasattr(self, 'excel_output_dir') else Path('RSA_OneDrive') / 'staged_summaries'
                 output_dir_path = self.excel_output_dir if hasattr(self, 'excel_output_dir') else Path('RSA_OneDrive')
-                logging.info(f'Running summary aggregator for staged dir {staged_dir} (no-Google mode)')
+                logger.info(f'Running summary aggregator for staged dir {staged_dir} (no-Google mode)')
                 processed = process_once(staged_dir, output_dir_path, limit=limit, dry_run=False)
-                logging.info(f'Aggregate summaries processed {processed} files')
+                logger.info(f'Aggregate summaries processed {processed} files')
             except Exception as ex:
-                logging.error(f'Failed running aggregate_summaries.process_once (no-Google mode): {ex}')
+                logger.error(f'Failed running aggregate_summaries.process_once (no-Google mode): {ex}')
 
         except Exception as e:
-            logging.exception('run_all_no_google failed: %s', e)
+            logger.exception('run_all_no_google failed: %s', e)
 
     @staticmethod
     def adjust_mailed_info_in_sheets(sender: MailSender):
@@ -497,8 +499,8 @@ class ReportLoopRunner:
                                                            sheet_name='Overzicht',
                                                            data=[[mail_content.mail_sent.strftime("%Y-%m-%d %H:%M:%S")]])
                     except Exception as ex:
-                        logging.error(f"exception {ex} happened in adjusting mailed info in sheet {sheet_id}")
-                        logging.error(traceback.format_exc())
+                        logger.error(f"exception {ex} happened in adjusting mailed info in sheet {sheet_id}")
+                        logger.error(traceback.format_exc())
             except Exception as ex:
-                logging.error(f"exception happened in adjusting mailed info in sheets: {ex}")
-                logging.error(traceback.format_exc())
+                logger.error(f"exception happened in adjusting mailed info in sheets: {ex}")
+                logger.error(traceback.format_exc())

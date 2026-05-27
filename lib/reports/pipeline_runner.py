@@ -5,12 +5,15 @@ sequentially in a single worker subprocess.
 """
 from __future__ import annotations
 
+import logging
 import subprocess
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Iterable
 
 from lib.reports.parallel_utils import group_reports_by_datasource
+
+logger = logging.getLogger(__name__)
 
 
 def _run_worker(report_names: list[str], settings_path: str, timeout_seconds: int, stream_output: bool) -> dict:
@@ -57,11 +60,11 @@ def run_pipelines_by_datasource(
     groups = group_reports_by_datasource(list(report_names))
     pipelines = {ds: items for ds, items in groups.items() if items}
     if not pipelines:
-        print("No reports to run in parallel.")
+        logger.info("No reports to run in parallel.")
         return 0
 
     max_workers = min(max_concurrent, len(pipelines))
-    print(f"Running {len(pipelines)} pipelines in parallel (max_workers={max_workers})")
+    logger.info("Running %d pipelines in parallel (max_workers=%d)", len(pipelines), max_workers)
 
     failed: list[str] = []
     timed_out: list[str] = []
@@ -70,7 +73,7 @@ def run_pipelines_by_datasource(
         future_to_pipeline = {}
         for datasource, report_list in pipelines.items():
             pipeline_timeout = timeout_seconds
-            print(f"Starting pipeline [{datasource}] with reports: {report_list}")
+            logger.info("Starting pipeline [%s] with reports: %s", datasource, report_list)
             future = executor.submit(
                 _run_worker,
                 report_list,
@@ -84,22 +87,22 @@ def run_pipelines_by_datasource(
             datasource, report_list = future_to_pipeline[future]
             result = future.result()
             if result["status"] == "success":
-                print(f"  ✓ [{datasource}] pipeline completed: {report_list}")
+                logger.info("  [%s] pipeline completed: %s", datasource, report_list)
             elif result["status"] == "timeout":
-                print(f"  ⏱ [{datasource}] pipeline timed out: {report_list}")
+                logger.warning("  [%s] pipeline timed out: %s", datasource, report_list)
                 timed_out.extend(report_list)
             else:
-                print(
-                    f"  ✗ [{datasource}] pipeline failed: {report_list} - "
-                    f"{result.get('error', 'Unknown')}"
+                logger.error(
+                    "  [%s] pipeline failed: %s - %s",
+                    datasource, report_list, result.get("error", "Unknown"),
                 )
                 failed.extend(report_list)
 
     if failed or timed_out:
-        print("\nSummary:")
+        logger.warning("Summary:")
         if failed:
-            print(f"  Failed: {failed}")
+            logger.error("  Failed: %s", failed)
         if timed_out:
-            print(f"  Timed out: {timed_out}")
+            logger.warning("  Timed out: %s", timed_out)
         return 1
     return 0

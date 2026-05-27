@@ -67,15 +67,9 @@ def _preflight_check_mappings(report_names: list[str], settings: dict) -> None:
     # emit collected warnings once so they're visible even when logger isn't configured
     if msgs:
         header = f"Spreadsheet mapping preflight: {len(msgs)} potential issues found"
-        try:
-            logger.warning(header)
-            for m in msgs:
-                logger.warning(m)
-        except Exception:
-            # fallback to printing to stdout/stderr so the user sees it
-            print(header)
-            for m in msgs:
-                print(m)
+        logger.warning(header)
+        for m in msgs:
+            logger.warning(m)
 
 
 def run_selection(
