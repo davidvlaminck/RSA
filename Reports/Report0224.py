@@ -24,7 +24,6 @@ LET key_relatie_heeftkeuring = FIRST(FOR rel_type in relatietypes FILTER rel_typ
 /* Alle Laagspanningsborden */
 FOR lsbord IN assets
   FILTER lsbord.assettype_key == key_laagspanningsbord and lsbord.AIMDBStatus_isActief == true
-  LIMIT 100
 
   /* LEFT JOIN: HeeftKeuring-relatie van Laagspanningsbord naar Elektrische Keuring (optional), cardinality > 1 */
   LET elektrische_keuringen = (
