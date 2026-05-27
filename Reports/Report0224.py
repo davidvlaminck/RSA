@@ -67,7 +67,7 @@ FOR lsbord IN assets
 """
         self.report = DQReport(name='report0224',
                                title='Laagspanningsbord heeft meerdere Elektrische Keuringen met toestand in-gebruik',
-                               spreadsheet_id='1',
+                               spreadsheet_id='9d58f5b5-ba90-4c74-ab1c-8b01303f5a2b',
                                datasource='ArangoDB',
                                persistent_column='G',
                                excel_filename='[RSA] Laaspanningsbord heeft hoogstens 1 Elektrische Keuring met als toestand in-gebruik.xlsx')

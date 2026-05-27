@@ -1,6 +1,5 @@
 from lib.reports.DQReport import DQReport
 from lib.reports.BaseReport import BaseReport
-import uuid
 
 
 class Report0222(BaseReport):
@@ -33,7 +32,7 @@ class Report0222(BaseReport):
         """
         self.report = DQReport(name='report0222',
                                title='VVOP groep (Legacy) heeft steeds een locatie',
-                               spreadsheet_id=str(uuid.uuid4()),
+                               spreadsheet_id='690642e9-be7c-4cab-85d7-f9dfea212b7d',
                                datasource='ArangoDB',
                                persistent_column='H')
 
