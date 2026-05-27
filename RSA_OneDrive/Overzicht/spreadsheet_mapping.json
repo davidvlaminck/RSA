@@ -182,5 +182,13 @@
   "1d1OEDsFjaDU11mIi7J5CVVx-UTiP8p0A5VmIO03YuO0": "[RSA] Toezichtsgroep ontbreekt voor voeding-assets (LS, LSDeel, HS, HSDeel, HSCabine).xlsx",
   "1wxPYC35mwexrhWDEX6FQ_xcr_ZdLX6D4PY0g11nwl1U": "[RSA] Locatie ontbreekt voor voeding-assets (LS, LSDeel, HS, HSDeel, HSCabine, SegmentController, Afstandsbewaking).xlsx",
   "1UfYhxcM0z8uq9-GwfDJhHNVpuhoWtUprrPGMfPSXeGk": "[RSA] Netwerkkaart Bevestiging relaties.xlsx",
-  "1s_oro-4tJy_1R1G99TTPnL4-5ACR4BD-R1XWFvFuviQ": "[RSA] Overzicht rapporten.xlsx"
+  "1s_oro-4tJy_1R1G99TTPnL4-5ACR4BD-R1XWFvFuviQ": "[RSA] Overzicht rapporten.xlsx",
+  "21c33fa1-8c28-484a-a8af-703e2ac2484a": "[RSA] Wegverlichtingsinstallatie (Legacy) heeft steeds een locatie",
+  "690642e9-be7c-4cab-85d7-f9dfea212b7d": "[RSA] VVOP groep (Legacy) heeft steeds een locatie",
+  "cce6f271-ee4f-4630-b283-ad2a62e34588": "[RSA] Laagspanningsbord heeft minstens 1 Elektrische Keuring",
+  "9d58f5b5-ba90-4c74-ab1c-8b01303f5a2b": "[RSA] Laaspanningsbord heeft hoogstens 1 Elektrische Keuring met als toestand in-gebruik",
+  "b12aa819-cd9b-4579-a6d2-2327a0addc22": "[RSA] Elektrische Keuring heeft een bijlage",
+  "338e8d0c-fd0f-40da-9473-882dbee0905e": "[RSA] Elektrische Keuring heeft de eigenschappen: naam, keuringsdatum, resultaat",
+  "38486b84-cb11-485d-a522-ec85f4633e34": "[RSA] Laagspanningsdeel met eigenschap datumLaatsteKeuring heeft minstens een Elektrische Keuring",
+  "88ecce1a-d98a-4b09-b790-181440833611": "[RSA] lgc#Laagspanningsdeel (inactief) en Elektrische Keuring hebben een identieke datum en identiek resultaat"
 }
