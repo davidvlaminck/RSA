@@ -24,7 +24,6 @@ LET key_relatie_heeftkeuring = FIRST(FOR rel_type in relatietypes FILTER rel_typ
 /* Alle Laagspanningsborden */
 FOR lsbord IN assets
   FILTER lsbord.assettype_key == key_laagspanningsbord and lsbord.AIMDBStatus_isActief == true
-  LIMIT 100
 
   /* LEFT JOIN: HeeftKeuring-relatie van Laagspanningsbord naar Elektrische Keuring (optional), cardinality > 1 */
   LET elektrische_keuringen = (
@@ -67,7 +66,7 @@ FOR lsbord IN assets
 """
         self.report = DQReport(name='report0224',
                                title='Laagspanningsbord heeft meerdere Elektrische Keuringen met toestand in-gebruik',
-                               spreadsheet_id='1',
+                               spreadsheet_id='9d58f5b5-ba90-4c74-ab1c-8b01303f5a2b',
                                datasource='ArangoDB',
                                persistent_column='G',
                                excel_filename='[RSA] Laaspanningsbord heeft hoogstens 1 Elektrische Keuring met als toestand in-gebruik.xlsx')
