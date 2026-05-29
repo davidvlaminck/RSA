@@ -55,7 +55,7 @@ class Report0223(BaseReport):
         """
 
         self.report = DQReport(name='report0223',
-                               title='Laagspanningsbord heeft minstens 1 Elektrische Keuring ',
+                               title='Laagspanningsbord heeft minstens 1 Elektrische Keuring',
                                spreadsheet_id='cce6f271-ee4f-4630-b283-ad2a62e34588',
                                datasource='ArangoDB',
                                persistent_column='G',

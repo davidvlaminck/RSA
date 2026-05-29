@@ -34,7 +34,8 @@ class Report0222(BaseReport):
                                title='VVOP groep (Legacy) heeft steeds een locatie',
                                spreadsheet_id='690642e9-be7c-4cab-85d7-f9dfea212b7d',
                                datasource='ArangoDB',
-                               persistent_column='H')
+                               persistent_column='H',
+                               excel_filename='[RSA] VVOP groep (Legacy) heeft steeds een locatie.xlsx')
 
         self.report.result_query = aql_query
 

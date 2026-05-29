@@ -131,7 +131,7 @@ class Report0228(BaseReport):
                                spreadsheet_id='88ecce1a-d98a-4b09-b790-181440833611',
                                datasource='ArangoDB',
                                persistent_column='V',
-                               excel_filename='[RSA] lgc#Laagspanningsdeel (inactief) en Elektrische Keuring hebben een identieke datum en identiek resultaat')
+                               excel_filename='[RSA] lgc#Laagspanningsdeel (inactief) en Elektrische Keuring hebben een identieke datum en identiek resultaat.xlsx')
 
         self.report.result_query = aql_query
 

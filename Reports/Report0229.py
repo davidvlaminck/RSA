@@ -163,7 +163,7 @@ class Report0229(BaseReport):
                                spreadsheet_id='d72d5033-590b-45b9-84ec-9e458b610886',
                                datasource='ArangoDB',
                                persistent_column='X',
-                               excel_filename='[RSA] Laagspanningsbord overzicht')
+                               excel_filename='[RSA] Laagspanningsbord overzicht.xlsx')
 
         self.report.result_query = aql_query
 

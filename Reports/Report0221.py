@@ -34,7 +34,8 @@ class Report0221(BaseReport):
                                title='Wegverlichtingsinstallatie (Legacy) heeft steeds een locatie',
                                spreadsheet_id='21c33fa1-8c28-484a-a8af-703e2ac2484a',
                                datasource='ArangoDB',
-                               persistent_column='H')
+                               persistent_column='H',
+                               excel_filename='[RSA] Wegverlichtingsinstallatie (Legacy) heeft steeds een locatie.xlsx')
 
         self.report.result_query = aql_query
 

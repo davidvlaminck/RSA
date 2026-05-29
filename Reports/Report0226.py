@@ -67,11 +67,11 @@ class Report0226(BaseReport):
               }
         """
         self.report = DQReport(name='report0226',
-                               title='Elektrische Keuring invulgraad van de eigenschappen',
+                               title='Elektrische Keuring heeft de eigenschappen: naam, keuringsdatum, resultaat',
                                spreadsheet_id='338e8d0c-fd0f-40da-9473-882dbee0905e',
                                datasource='ArangoDB',
                                persistent_column='P',
-                               excel_filename='[RSA] Elektrische Keuring invulgraad van de eigenschappen.xlsx')
+                               excel_filename='[RSA] Elektrische Keuring heeft de eigenschappen: naam, keuringsdatum, resultaat.xlsx')
 
         self.report.result_query = aql_query
 
