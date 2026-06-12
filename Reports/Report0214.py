@@ -4,33 +4,42 @@ from lib.reports.BaseReport import BaseReport
 
 class Report0214(BaseReport):
     def init_report(self) -> None:
+        aql_query = """
+LET dnblaagspanning_key = (
+  FOR at IN assettypes
+    FILTER at.label == "DNBLaagspanning"
+    LIMIT 1
+    RETURN at._key
+)
+
+FOR a IN assets
+  FILTER a.AIMDBStatus_isActief == true
+  FILTER a.assettype_key == dnblaagspanning_key
+  LET bevestiging = FIRST(
+    FOR v, rel IN ANY a._id bevestiging_relaties
+      LIMIT 1
+      RETURN rel
+  )
+  FILTER bevestiging == null
+  SORT a.AIMNaamObject_naam ASC
+  RETURN {
+    ls_uuid: a._key,
+    ls_label: "DNBLaagspanning",
+    ls_actief: a.AIMDBStatus_isActief,
+    ls_naam: a.AIMNaamObject_naam,
+    ls_naampad: a.NaampadObject_naampad,
+    relatie: "Geen Bevestiging-relatie aanwezig"
+  }
+"""
         self.report = DQReport(name='report0214',
                                title='Laagspanning (LS) is nergens aan bevestigd',
                                spreadsheet_id='1VaF3IRiF5lFOkh_hK4_PvTqYanhiaRzvJX_lqmWbn3g',
-                               datasource='PostGIS',
+                               datasource='ArangoDB',
                                persistent_column='G',
                                link_type='eminfra',
                                excel_filename='[RSA] Laagspanning (LS) is nergens aan bevestigd.xlsx',)
 
-        self.report.result_query = """
-            select
-                a1."uuid" as "ls_uuid", 
-                at1.label as "ls_label",
-                a1.actief as "ls_actief",
-                a1.naam as "ls_naam", 
-                a1.naampad as "ls_naampad",
-                'Geen Bevestiging-relatie aanwezig' as "relatie"
-            from assets a1
-            left join assettypes at1 on a1.assettype = at1.uuid
-            where
-                a1.actief is true
-                and
-                a1.assettype = '80fdf1b4-e311-4270-92ba-6367d2a42d47'  -- Laagspanningsaansluiting (Legacy)
-                and
-                a1.uuid not in (
-                    select rel.bronuuid from assetrelaties rel where rel.relatietype = '3ff9bf1c-d852-442e-a044-6200fe064b20'
-                )
-            """
+        self.report.result_query = aql_query
 
     def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)
