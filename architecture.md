@@ -26,6 +26,24 @@
 
 Three entry points (main.py, run_single_report.py, main_selection_list.py) all use a **shared execution engine** with minimal code duplication. The engine supports two execution modes: **Sequential** (in-process) and **Parallel-by-Datasource** (subprocess isolation).
 
+### Report Definitions (Master Source)
+
+The **`Reports/`** directory is the master source for all report definitions. Each `.py` file in this directory contains:
+- The query (AQL or SQL) executed against the datasource
+- The report metadata (name, title, datasource, link type, etc.)
+- The `excel_filename` that determines the output workbook name
+
+When a report is executed and the corresponding Excel file does not yet exist, it is created automatically with the name specified in `excel_filename`, and placed in the correct bucket folder under `RSA_OneDrive/` (e.g., `0200-0299/` for reports 2200-2299).
+
+### Overzicht (Summary) Registration
+
+Each report definition must also correspond to a record in the **Overzicht** summary workbook (`[RSA] Overzicht rapporten.xlsx` in the `Overzicht/` folder). When a report runs, `DQReport.run_report()` automatically updates this record with:
+- Column B: SharePoint hyperlink to the report workbook
+- Column C: Last data update timestamp and row count
+- Column H: Query execution time
+
+The report is located in Overzicht by matching its class name (`reportXXXX`) against column F (`rapportnummer`). If no matching row exists, the report will not be registered in the summary.
+
 ```
 ┌───────────────────────────────────────────────────────────┐
 │              Shared Execution Engine                      │
