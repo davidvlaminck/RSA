@@ -77,40 +77,38 @@ LET assettype_uuids = [
   "ba0e8976-aff6-43d6-8c3e-db65f096f251",  /* BiFlash */
   "800f0a16-773c-473e-82a3-e471a3c7246f",  /* BiFlashInstallatie */
   /* verweving Q1 2026 */
-  "",  /* Asweger */
-  "",  /* Aswegersite */
-  "",  /* Gebouwuitrusting */
-  "",  /* Gebouw */
-  "",  /* Lokaal */
-  "",  /* Wegkantkast */
-  "",  /* Laagspanningsbord */
-  "",  /* DNB laagspanning */
+  "8a818177-d26b-4164-b1de-031541bd0c78",  /* Asweger */
+  "79d63beb-171e-4e2d-9bab-66aad71071ec",  /* Aswegersite */
+  "6ad65a5b-6378-4397-88c3-21df9a7bf9b3",  /* Gebouwuitrusting */
+  "21566546-01d5-40d5-93c7-ec77a00e5d48",  /* Gebouw */
+  "a2d9b921-fc82-4979-931e-ab85d88f077d",  /* Lokaal */
+  "c3601915-3b66-4bde-9728-25c1bbf2f374",  /* Wegkantkast */
+  "83552f3c-4944-40d8-8e63-33e48533210b",  /* Laagspanningsbord */
+  "b4ee4ea9-edd1-4093-bce1-d58918aee281",  /* DNB laagspanning */
   /* verweving Q2 2026 */  
-  "",  /* Wegverlichting groep */
-  "",  /* Verlichte oversteekplaats groep */
-  "",  /* Segmentcontroller */
-  "",  /* Cabinecontroller */
-  "",  /* DNB hoogspanning */
-  "",  /* HS-cabine */
-  "",  /* HS beveiligingscel */
-  "",  /* HS melder */
-  "",  /* LS schuif */
-  "",  /* Algemeen LaagSpanningsBord */
-  "",  /* Transformator */
-  "",  /* Asweger */
-  "",  /* Pompstation */
-  "",  /* Geleidingsverlichting */
-  "",  /* Deur */
-  "",  /* Waze beacon */
+  "6ea11739-4bba-4a7c-8cac-a2c135d91d9c",  /* Wegverlichting groep */
+  "9e557bed-608b-4704-b1dd-54ad0bb64d7a",  /* Verlichte oversteekplaats groep */
+  "6c1883d1-7e50-441a-854c-b53552001e5f",  /* Segmentcontroller */
+  "a8623da1-6d99-4528-a947-3782984a0294",  /* Cabinecontroller */
+  "8e9307e2-4dd6-4a46-a298-dd0bc8b34236",  /* DNB hoogspanning */
+  "d76cbedd-5488-428c-a221-fe0bc8f74fa2",  /* HS-cabine */
+  "a1a2426e-6b42-4711-b633-6a9ec6bffdfd",  /* HS beveiligingscel */
+  "38d22a37-1775-442d-b077-7970c2e20532",  /* HS melder */
+  "1095d4d7-496e-4747-b0f9-debbb4a6c86c",  /* LS schuif */
+  "d1ad7f5e-ab4a-46e6-9b5d-cd01c9d4c906",  /* Algemeen LaagSpanningsBord */
+  "c763fabc-bdff-464d-b863-877e188618fc",  /* Transformator */
+  "855812a3-a32f-4968-9238-46dbe29e4289",  /* Pompstation */
+  "abb7572e-fa82-4d45-b3ca-b06abdd7cfa4",  /* Geleidingsverlichting */
+  "a9c060db-df8c-49f0-859d-f5455d57f993",  /* Deur */
+  "e745acfa-0224-4dc1-9fdb-e789d64e7e41",  /* Waze beacon */
 
-  
-  /* verweving Q2 2026 (in overleg met Edison) */
-/*  "478add39-e6fb-4b0b-b090-9c65e836f3a0",  /* WVLichtmast */ 
+  /* verweving Q4 2026 (in overleg met Edison) */
+/*  "478add39-e6fb-4b0b-b090-9c65e836f3a0",  /* WVLichtmast */
 /*  "e78ce094-565b-4e8c-a956-88c105367a4f",  /* WVConsole */
 /*  "12b2af6b-72e1-4028-b6ed-3d3b654735d4",  /* WVBevestigd */
 /*  "622ac17d-2ea7-46bb-9c36-c47794404ef2",  /* Punctuele verlichtingsmast */
   /* overige */
-  "e67900b1-88fb-44da-9285-409f7f67147f"   /* BinnenverlichtingGroep */
+  "e67900b1-88fb-44da-9285-409f7f67147f"  /* BinnenverlichtingGroep */
 ]
 
 LET assettype_keys = (
