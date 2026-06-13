@@ -31,8 +31,13 @@ RETRIES = 5
 logger = logging.getLogger(__name__)
 
 
-def reinitialize_database_connections(settings: dict) -> None:
-    """Re-initialize all database singletons from the current settings."""
+def reinitialize_database_connections(settings: dict, arango_timeout: int = 180) -> None:
+    """Re-initialize all database singletons from the current settings.
+    
+    Args:
+        settings: Settings dictionary with database credentials.
+        arango_timeout: ArangoDB request timeout in seconds (default 180).
+    """
     try:
         neo4j_settings = settings['databases']['Neo4j']
         SingleNeo4JConnector.init(uri=neo4j_settings['uri'], user=neo4j_settings['user'],
@@ -50,12 +55,15 @@ def reinitialize_database_connections(settings: dict) -> None:
 
     try:
         arango_settings = settings['databases']['ArangoDB']
+        # Reset the singleton to allow reinitialization with new timeout
+        SingleArangoConnector.reset()
         SingleArangoConnector.init(
             host=arango_settings['host'],
             port=arango_settings['port'],
             user=arango_settings['user'],
             password=arango_settings['password'],
-            database=arango_settings['database']
+            database=arango_settings['database'],
+            request_timeout=arango_timeout,
         )
     except Exception as exc:
         logger.warning(f"Could not reinitialize ArangoDB: {exc}")
@@ -331,6 +339,7 @@ class ReportLoopRunner:
         - Runs one report from each database concurrently
         - Respects memory constraints (max 2-3 concurrent processes)
         - Provides timeout protection for stuck reports
+        - Retries failed/timed out reports with increasing timeout (60s, 120s, 180s, etc.)
         """
         try:
             staged_dir = (self.excel_output_dir / 'staged_summaries') if self.excel_output_dir else Path('RSA_OneDrive') / 'staged_summaries'
@@ -352,25 +361,47 @@ class ReportLoopRunner:
 
         logger.info(f"Found {len(report_names)} reports to execute")
 
-        # Write settings to temp file for worker processes
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-            json.dump(self.settings, f)
-            settings_path = f.name
+        # Get base timeout from settings (default 60)
+        base_timeout = self.settings.get("report_execution", {}).get("timeout_seconds", 60)
 
-        try:
-            run_pipelines_by_datasource(
-                report_names,
-                self.settings,
-                settings_path,
-                stream_output=True,
-            )
+        reports_run = 0
+        reports_to_do = list(report_names)
 
-        finally:
-            # Clean up temp settings file
+        while reports_run < RETRIES and reports_to_do:
+            reports_run += 1
+            current_timeout = base_timeout * reports_run
+            
+            if reports_run > 1:
+                # Reinitialize database connections with increased timeout for retry
+                reinitialize_database_connections(self.settings, arango_timeout=current_timeout)
+            
+            logger.info(f"Parallel run {reports_run}/{RETRIES} with timeout {current_timeout}s for {len(reports_to_do)} reports")
+            
+            # Write settings to temp file for worker processes
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+                json.dump(self.settings, f)
+                settings_path = f.name
+
             try:
-                os.unlink(settings_path)
-            except Exception:
-                pass
+                return_code, failed_reports = run_pipelines_by_datasource(
+                    reports_to_do,
+                    self.settings,
+                    settings_path,
+                    stream_output=True,
+                    timeout_seconds=current_timeout,
+                )
+                
+                if return_code == 0:
+                    reports_to_do = []
+                else:
+                    reports_to_do = failed_reports
+                    logger.warning(f"Run {reports_run} failed for {len(reports_to_do)} reports, will retry")
+            finally:
+                # Clean up temp settings file
+                try:
+                    os.unlink(settings_path)
+                except Exception:
+                    pass
 
         logger.info(f'{datetime.now(tz=pytz.timezone("Europe/Brussels"))}: parallel execution complete')
         # After parallel pipelines completed, run the aggregator once to apply staged summaries
@@ -430,11 +461,6 @@ class ReportLoopRunner:
                 if max_concurrent is not None:
                     base_settings['report_execution']['max_concurrent'] = int(max_concurrent)
 
-            # write temp settings file
-            with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as tmpf:
-                json.dump(base_settings, tmpf, indent=2)
-                tmp_settings_path = tmpf.name
-
             # discover report names
             report_instances = discover_and_instantiate_reports()
             report_names = [type(inst).__name__ for inst in report_instances] if report_instances else []
@@ -453,13 +479,43 @@ class ReportLoopRunner:
 
             # run pipelines grouped by datasource using the temp settings file so workers
             # will not try to initialize Google and will prefer Excel output
-            try:
-                run_pipelines_by_datasource(report_names, base_settings, tmp_settings_path, stream_output=True)
-            finally:
+            # Get base timeout from settings (default 60 seconds)
+            base_timeout = base_settings.get("report_execution", {}).get("timeout_seconds", 60)
+            parallel_run = 0
+            reports_to_do = list(report_names)
+
+            while parallel_run < RETRIES and reports_to_do:
+                parallel_run += 1
+                current_timeout = base_timeout * parallel_run
+                logger.info(
+                    f'no-Google parallel run attempt {parallel_run} '
+                    f'with timeout {current_timeout}s for {len(reports_to_do)} reports'
+                )
+
+                if parallel_run > 1:
+                    reinitialize_database_connections(base_settings, arango_timeout=current_timeout)
+
+                # write temp settings file for this attempt
+                with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as tmpf:
+                    json.dump(base_settings, tmpf, indent=2)
+                    attempt_settings_path = tmpf.name
+
                 try:
-                    os.unlink(tmp_settings_path)
-                except Exception:
-                    pass
+                    return_code, failed_reports = run_pipelines_by_datasource(
+                        reports_to_do, base_settings, attempt_settings_path, stream_output=True,
+                        timeout_seconds=current_timeout
+                    )
+                    reports_to_do = failed_reports
+                finally:
+                    try:
+                        os.unlink(attempt_settings_path)
+                    except Exception:
+                        pass
+
+                logger.info(
+                    f'done running no-Google parallel loop {parallel_run}. '
+                    f'Reports left to do: {len(reports_to_do)}'
+                )
 
             # apply staged summaries
             try:
@@ -504,3 +560,7 @@ class ReportLoopRunner:
             except Exception as ex:
                 logger.error(f"exception happened in adjusting mailed info in sheets: {ex}")
                 logger.error(traceback.format_exc())
+            except Exception as ex:
+                logger.error(f"exception happened in adjusting mailed info in sheets: {ex}")
+                logger.error(traceback.format_exc())
+

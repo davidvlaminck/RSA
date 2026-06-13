@@ -48,20 +48,31 @@ def run_pipelines_by_datasource(
     settings_path: str,
     *,
     stream_output: bool = True,
-) -> int:
+    timeout_seconds: int | None = None,
+) -> tuple[int, list[str]]:
     """Run pipelines per datasource concurrently.
 
-    Returns 0 on success, 1 if any pipeline fails or times out.
+    Args:
+        report_names: List of report names to run.
+        settings: Settings dictionary.
+        settings_path: Path to settings file for worker processes.
+        stream_output: Whether to stream output from worker processes.
+        timeout_seconds: Optional timeout override. If not provided, uses value from settings.
+
+    Returns:
+        tuple: (return_code, failed_reports) where return_code is 0 on success, 1 if any pipeline fails or times out,
+               and failed_reports is a list of report names that failed or timed out.
     """
     exec_cfg = settings.get("report_execution", {})
     max_concurrent = exec_cfg.get("max_concurrent", 2)
-    timeout_seconds = exec_cfg.get("timeout_seconds", 60)
+    if timeout_seconds is None:
+        timeout_seconds = exec_cfg.get("timeout_seconds", 60)
 
     groups = group_reports_by_datasource(list(report_names))
     pipelines = {ds: items for ds, items in groups.items() if items}
     if not pipelines:
         logger.info("No reports to run in parallel.")
-        return 0
+        return 0, []
 
     max_workers = min(max_concurrent, len(pipelines))
     logger.info("Running %d pipelines in parallel (max_workers=%d)", len(pipelines), max_workers)
@@ -104,5 +115,5 @@ def run_pipelines_by_datasource(
             logger.error("  Failed: %s", failed)
         if timed_out:
             logger.warning("  Timed out: %s", timed_out)
-        return 1
-    return 0
+        return 1, failed + timed_out
+    return 0, []

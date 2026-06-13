@@ -98,12 +98,13 @@ def run_selection(
     clear_staged_processed(staged_root)
 
     if use_parallel:
-        return run_pipelines_by_datasource(
+        return_code, _ = run_pipelines_by_datasource(
             report_names,
             settings,
             settings_path,
             stream_output=stream_output,
         )
+        return return_code
 
     # Sequential: reuse ReportLoopRunner logic for consistent behavior
     runner = ReportLoopRunner(settings_path=settings_path)

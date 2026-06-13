@@ -86,7 +86,7 @@ def reinitialize_database_connections(settings):
             port=arango_settings['port'],
             user=arango_settings['user'],
             password=arango_settings['password'],
-            database=arango_settings['database']
+            database=arango_settings['database'],
         )
         logger.info("✓ Reinitialized ArangoDB connection")
     except Exception as e:

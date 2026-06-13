@@ -209,18 +209,34 @@ class SingleArangoConnector:
     _db = None
 
     @classmethod
-    def init(cls, host, port, user, password, database):
+    def init(cls, host, port, user, password, database, request_timeout=180):
+        """Initialize the ArangoDB singleton connection.
+        
+        Args:
+            host: ArangoDB host
+            port: ArangoDB port
+            user: Username
+            password: Password
+            database: Database name
+            request_timeout: Request timeout in seconds (default 180)
+        """
         if cls._instance is None:
             cls._instance = cls()
-            client = ArangoClient(hosts=f'http://{host}:{port}')
-            # Connect to ArangoDB server
-            try:
-                _ = client.db('_system', username=user, password=password)
-            except Exception:
-                # if system DB connect fails, continue and let later calls surface the error
-                pass
-            # Connect to the actual database
-            cls._db = client.db(database, username=user, password=password)
+        client = ArangoClient(hosts=f'http://{host}:{port}', request_timeout=request_timeout)
+        # Connect to ArangoDB server
+        try:
+            _ = client.db('_system', username=user, password=password)
+        except Exception:
+            # if system DB connect fails, continue and let later calls surface the error
+            pass
+        # Connect to the actual database
+        cls._db = client.db(database, username=user, password=password)
+
+    @classmethod
+    def reset(cls):
+        """Reset the singleton to allow reinitialization with new settings."""
+        cls._instance = None
+        cls._db = None
 
     @classmethod
     def get_db(cls):
