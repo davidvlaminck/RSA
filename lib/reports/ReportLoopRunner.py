@@ -285,7 +285,9 @@ class ReportLoopRunner:
         while reports_run < RETRIES and reports_to_do:
             reports_run += 1
             if reports_run > 1:
-                reinitialize_database_connections(self.settings)
+                # Calculate timeout for this retry (60s, 120s, 180s, etc.)
+                retry_timeout = 60 * reports_run
+                reinitialize_database_connections(self.settings, arango_timeout=retry_timeout)
             for report_name in sorted(reports_to_do.keys()):
                 try:
                     report_instance = reports_to_do[report_name]
