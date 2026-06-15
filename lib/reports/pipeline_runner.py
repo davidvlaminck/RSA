@@ -9,11 +9,25 @@ import logging
 import subprocess
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Iterable
+from typing import Iterable, TextIO
 
 from lib.reports.parallel_utils import group_reports_by_datasource
 
 logger = logging.getLogger(__name__)
+
+
+def _stream_worker_output(output: str | None, stream: TextIO) -> None:
+    """Write child output through Python's current stdout/stderr stream.
+
+    ``subprocess.run(..., text=True)`` with inherited stdout writes to the
+    process file descriptor and bypasses Python-level stream wrappers such as
+    ``main.py``'s daily log tee. Piping the child output and writing it back to
+    ``sys.stdout`` ensures terminal output is also captured in the run log.
+    """
+
+    if output:
+        stream.write(output)
+        stream.flush()
 
 
 def _run_worker(report_names: list[str], settings_path: str, timeout_seconds: int, stream_output: bool) -> dict:
@@ -26,17 +40,28 @@ def _run_worker(report_names: list[str], settings_path: str, timeout_seconds: in
         "--settings",
         settings_path,
     ]
+    proc: subprocess.Popen[str] | None = None
     try:
         if stream_output:
-            result = subprocess.run(cmd, timeout=timeout_seconds, text=True)
-        else:
-            result = subprocess.run(cmd, timeout=timeout_seconds, capture_output=True, text=True)
+            proc = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                errors="replace",
+            )
+            output, _ = proc.communicate(timeout=timeout_seconds)
+            _stream_worker_output(output, sys.stdout)
+            return {"status": "success" if proc.returncode == 0 else "error", "error": "Non-zero exit code"}
+        result = subprocess.run(cmd, timeout=timeout_seconds, capture_output=True, text=True, errors="replace")
         if result.returncode == 0:
             return {"status": "success"}
-        if stream_output:
-            return {"status": "error", "error": "Non-zero exit code"}
         return {"status": "error", "error": result.stderr or "Non-zero exit code"}
-    except subprocess.TimeoutExpired:
+    except subprocess.TimeoutExpired as exc:
+        try:
+            (getattr(exc, "process", None) or proc).kill()
+        except Exception:
+            pass
         return {"status": "timeout"}
     except Exception as exc:
         return {"status": "error", "error": str(exc)}

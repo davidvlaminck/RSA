@@ -128,36 +128,46 @@ class DQReport(Report):
                 # Unknown HttpError: log and continue without mail receivers instead of failing the whole report
                 logger.warning(f'Unexpected HttpError while reading Overzicht!emails: {exc}; continuing without mail receivers')
                 mail_receivers_raw = []
+        except Exception as exc:
+            logger.warning('Could not read Overzicht!emails: %s; continuing without mail receivers', exc)
+            mail_receivers_raw = []
 
-        previous_result, latest_data_sync = self.get_historiek_record_info(sheets_wrapper)
+        try:
+            previous_result, latest_data_sync = self.get_historiek_record_info(sheets_wrapper)
+        except Exception as exc:
+            logger.warning('Could not read Historiek summary for %s: %s; continuing with empty history', self.name, exc)
+            previous_result, latest_data_sync = None, ''
 
         # persistent column (unchanged logic): read existing values from current Resultaat sheet
         if self.persistent_column != '':
             self.persistent_dict = {}
+            try:
+                sheets = sheets_wrapper.get_sheets_in_spreadsheet(spreadsheet_id=self.spreadsheet_id)
+                if 'Resultaat' in sheets:
+                    first_cell = SheetsCell(self.persistent_column + '1')
+                    first_nonempty_row = sheets_wrapper.find_first_nonempty_row_from_starting_cell(spreadsheet_id=self.spreadsheet_id,
+                                                                                                   sheet_name='Resultaat',
+                                                                                                   start_cell=first_cell.cell)
 
-            sheets = sheets_wrapper.get_sheets_in_spreadsheet(spreadsheet_id=self.spreadsheet_id)
-            if 'Resultaat' in sheets:
-                first_cell = SheetsCell(self.persistent_column + '1')
-                first_nonempty_row = sheets_wrapper.find_first_nonempty_row_from_starting_cell(spreadsheet_id=self.spreadsheet_id,
-                                                                                               sheet_name='Resultaat',
-                                                                                               start_cell=first_cell.cell)
+                    grid_props = sheets['Resultaat']['gridProperties']
+                    max_row = grid_props['rowCount']
 
-                grid_props = sheets['Resultaat']['gridProperties']
-                max_row = grid_props['rowCount']
+                    ids = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self.spreadsheet_id,
+                                                              sheet_name='Resultaat',
+                                                              sheetrange='A' + str(first_nonempty_row) + ':A' + str(max_row))
+                    persisent_column_data = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self.spreadsheet_id,
+                                                                                sheet_name='Resultaat',
+                                                                                sheetrange=self.persistent_column + str(
+                                                                                    first_nonempty_row) + ':' + self.persistent_column + str(
+                                                                                    max_row))
 
-                ids = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self.spreadsheet_id,
-                                                          sheet_name='Resultaat',
-                                                          sheetrange='A' + str(first_nonempty_row) + ':A' + str(max_row))
-                persisent_column_data = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self.spreadsheet_id,
-                                                                            sheet_name='Resultaat',
-                                                                            sheetrange=self.persistent_column + str(
-                                                                                first_nonempty_row) + ':' + self.persistent_column + str(
-                                                                                max_row))
-
-                combined_list = zip(ids, persisent_column_data)
-                for id, persistent_item in combined_list:
-                    if id != [] and id[0] != '' and persistent_item != [] and persistent_item[0] != '':
-                        self.persistent_dict[id[0]] = persistent_item[0]
+                    combined_list = zip(ids, persisent_column_data)
+                    for id, persistent_item in combined_list:
+                        if id != [] and id[0] != '' and persistent_item != [] and persistent_item[0] != '':
+                            self.persistent_dict[id[0]] = persistent_item[0]
+            except Exception as exc:
+                logger.warning('Could not load persistent notes for %s: %s; continuing without persistent notes', self.name, exc)
+                self.persistent_dict = {}
 
         # execute query via datasource adapter
         query_time = None
@@ -264,7 +274,7 @@ class DQReport(Report):
             report_name=self.name,
             excel_filename=self.excel_filename or None,
             report_number=extract_report_number(self.name, self.title, self.excel_filename),
-            require_existing_workbook=bool(self.excel_filename),
+            require_existing_workbook=False,
         )
         # Capture metadata returned by the output writer (e.g., file path, rows_written)
         meta = out.write_report(

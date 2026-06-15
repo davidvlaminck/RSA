@@ -97,3 +97,31 @@ def test_missing_report_workbook_raises_clear_error(tmp_path):
     assert '0200-0299' in message
 
 
+def test_overview_variant_fallback_repairs_canonical_summary(tmp_path):
+    out_dir = tmp_path / 'RSA_OneDrive'
+    writer = ExcelOutput(output_dir=str(out_dir))
+    overview_dir = out_dir / 'Overzicht'
+    overview_dir.mkdir(parents=True)
+
+    alternate = overview_dir / '[RSA] Overzicht rapporten (3).xlsx'
+    writer.write_data_to_sheet(alternate, 'Overzicht', [['header'], ['alternate']], overwrite=True)
+
+    canonical = overview_dir / '[RSA] Overzicht rapporten.xlsx'
+    canonical.write_text('not a real xlsx', encoding='utf-8')
+
+    assert writer.read_data_from_sheet(canonical, 'Overzicht') == [['header'], ['alternate']]
+    writer.write_single_cell(canonical, 'Overzicht', 'A1', 'fixed')
+    assert writer.read_data_from_sheet(canonical, 'Overzicht') == [['fixed'], ['alternate']]
+
+
+def test_invalid_overview_without_variant_is_recreated_for_writes(tmp_path):
+    out_dir = tmp_path / 'RSA_OneDrive'
+    writer = ExcelOutput(output_dir=str(out_dir))
+    canonical = out_dir / 'Overzicht' / '[RSA] Overzicht rapporten.xlsx'
+    canonical.parent.mkdir(parents=True)
+    canonical.write_text('not a real xlsx', encoding='utf-8')
+
+    writer.write_single_cell(canonical, 'Overzicht', 'A1', 'fixed')
+
+    assert writer.read_data_from_sheet(canonical, 'Overzicht') == [['fixed']]
+

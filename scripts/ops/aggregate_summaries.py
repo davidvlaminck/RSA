@@ -111,8 +111,7 @@ def apply_payload(excel: ExcelOutput, payload: Dict[str, Any], output_dir: Path)
             if sheet != 'Overzicht' or not report_name:
                 return target_row
             try:
-                from openpyxl import load_workbook as _load_wb
-                wb_ro = _load_wb(wb_path, read_only=True)
+                wb_ro = excel._load_workbook_resilient(wb_path, read_only=True)
                 if sheet not in wb_ro.sheetnames:
                     wb_ro.close()
                     return target_row
@@ -125,7 +124,7 @@ def apply_payload(excel: ExcelOutput, payload: Dict[str, Any], output_dir: Path)
                         return r
                 wb_ro.close()
 
-                wb_rw = _load_wb(wb_path)
+                wb_rw = excel._load_workbook_resilient(wb_path)
                 if sheet not in wb_rw.sheetnames:
                     wb_rw.create_sheet(sheet)
                 ws_rw = wb_rw[sheet]
@@ -268,8 +267,7 @@ def apply_payload(excel: ExcelOutput, payload: Dict[str, Any], output_dir: Path)
                     # write back normalized scalar
                     before_val = None
                     try:
-                        from openpyxl import load_workbook
-                        wb_existing = load_workbook(wb_path, read_only=True)
+                        wb_existing = excel._load_workbook_resilient(wb_path, read_only=True)
                         ws_existing = wb_existing['Overzicht']
                         row_idx = int(''.join([c for c in cell if c.isdigit()]))
                         before_val = ws_existing.cell(row=row_idx, column=3).value
@@ -299,8 +297,7 @@ def apply_payload(excel: ExcelOutput, payload: Dict[str, Any], output_dir: Path)
                 excel.write_single_cell(wb_path, sheet, target_cell, v)
             # Post-write verification log: read back the value written to the first column
             try:
-                from openpyxl import load_workbook as _load_wb
-                _wb = _load_wb(wb_path, read_only=True)
+                _wb = excel._load_workbook_resilient(wb_path, read_only=True)
                 if sheet in _wb.sheetnames:
                     _ws = _wb[sheet]
                     new_val = _ws.cell(row=row_index, column=col_index).value
@@ -317,8 +314,7 @@ def apply_payload(excel: ExcelOutput, payload: Dict[str, Any], output_dir: Path)
             if isinstance(value, dict) and isinstance(value.get('hyperlink'), str):
                 display = value.get('display', 'Link')
                 try:
-                    from openpyxl import load_workbook as _load_wb
-                    wb = _load_wb(wb_path)
+                    wb = excel._load_workbook_resilient(wb_path)
                     if sheet not in wb.sheetnames:
                         wb.create_sheet(sheet)
                     ws = wb[sheet]
@@ -332,8 +328,7 @@ def apply_payload(excel: ExcelOutput, payload: Dict[str, Any], output_dir: Path)
                 excel.write_single_cell(wb_path, sheet, target_cell, value)
             # Post-write verification log for Overzicht C scalar writes
             try:
-                from openpyxl import load_workbook as _load_wb
-                _wb = _load_wb(wb_path, read_only=True)
+                _wb = excel._load_workbook_resilient(wb_path, read_only=True)
                 if sheet in _wb.sheetnames:
                     _ws = _wb[sheet]
                     row_idx = target_row_index

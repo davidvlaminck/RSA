@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any, Iterable, Iterator, List
 import datetime
 import decimal
+import re
 import shutil
 import time
 import importlib
@@ -213,8 +214,14 @@ class ExcelOutput:
         except Exception:
             return False
 
+    @staticmethod
+    def _normalized_excel_stem(filename: str) -> str:
+        stem = Path(filename).stem
+        return re.sub(r'^(.*) \(\d+\)$', r'\1', stem)
+
     def _find_existing_workbook_by_name(self, filename: str) -> Path | None:
         filename = Path(filename).name
+        normalized_stem = self._normalized_excel_stem(filename)
         root = Path(self.output_dir)
         if not root.exists():
             return None
@@ -226,6 +233,13 @@ class ExcelOutput:
             for candidate_path in sorted(root.rglob(filename)):
                 if self._is_valid_workbook_file(candidate_path):
                     return candidate_path
+            normalized_root = Path(self.output_dir)
+            if normalized_root.exists():
+                for candidate_path in sorted(normalized_root.rglob('*.xlsx')):
+                    if candidate_path.name == filename:
+                        continue
+                    if self._normalized_excel_stem(candidate_path.name) == normalized_stem and self._is_valid_workbook_file(candidate_path):
+                        return candidate_path
         except Exception:
             return None
         return None
@@ -239,10 +253,13 @@ class ExcelOutput:
             if workbook_path.suffix.lower() != '.xlsx':
                 raise
             alternate = self._find_existing_workbook_by_name(workbook_path.name)
-            if alternate is None or alternate == workbook_path:
-                raise
-            logger.warning('Workbook %s could not be opened (%s); retrying with %s', workbook_path, exc, alternate)
-            return load_workbook(alternate, read_only=read_only)
+            if alternate is not None and alternate.resolve() != workbook_path.resolve():
+                logger.warning('Workbook %s could not be opened (%s); retrying with %s', workbook_path, exc, alternate)
+                try:
+                    return load_workbook(alternate, read_only=read_only)
+                except Exception as alternate_exc:
+                    logger.warning('Alternate workbook %s could not be opened (%s)', alternate, alternate_exc)
+            raise
 
     def _atomic_save_workbook(self, wb, workbook_path: Path) -> None:
         """Save workbook to a temporary file and atomically replace the target path.
@@ -474,6 +491,9 @@ class ExcelOutput:
             overview_candidate = Path(self.output_dir) / OVERVIEW_FOLDER_NAME / p.name
             if overview_candidate.exists():
                 return overview_candidate
+            alternate = self._find_existing_workbook_by_name(p.name)
+            if alternate is not None:
+                return alternate
             legacy_candidate = Path(self.output_dir) / p.name
             if legacy_candidate.exists():
                 return legacy_candidate
@@ -606,7 +626,13 @@ class ExcelOutput:
         wb_path = self._resolve_workbook_path(spreadsheet_id)
         if not wb_path.exists():
             return {} if return_raw_results else []
-        wb = self._load_workbook_resilient(wb_path, read_only=True)
+        try:
+            wb = self._load_workbook_resilient(wb_path, read_only=True)
+        except Exception as exc:
+            if wb_path.name in OVERVIEW_WORKBOOK_NAMES:
+                logger.warning('Summary workbook %s could not be opened (%s); returning empty %s data', wb_path, exc, sheet_name)
+                return {} if return_raw_results else []
+            raise
         if sheet_name not in wb.sheetnames:
             return {} if return_raw_results else []
         ws = wb[sheet_name]
@@ -732,11 +758,21 @@ class ExcelOutput:
         wb_path = self._resolve_workbook_path(spreadsheet_id)
         self._assert_non_root_workbook_path(wb_path)
         workbook_existed = wb_path.exists()
-         # ensure workbook exists
+        # ensure workbook exists
         if not wb_path.exists():
             self.create_workbook_if_missing(wb_path)
 
-        wb = self._load_workbook_resilient(wb_path)
+        try:
+            wb = self._load_workbook_resilient(wb_path)
+        except Exception as exc:
+            if wb_path.name not in OVERVIEW_WORKBOOK_NAMES:
+                raise
+            logger.warning('Summary workbook %s could not be opened (%s); replacing it with a fresh template', wb_path, exc)
+            wb = Workbook()
+            wb.active.title = 'Overzicht'
+            wb.create_sheet('Historiek')
+            self._atomic_save_workbook(wb, wb_path)
+            wb = self._load_workbook_resilient(wb_path)
         if sheet_name not in wb.sheetnames:
             wb.create_sheet(sheet_name)
         ws = wb[sheet_name]
@@ -943,7 +979,17 @@ class ExcelOutput:
         if workbook_exists:
             # Load existing workbook and replace/clear the target sheet to preserve other sheets
             _ensure_openpyxl_loaded()
-            wb = self._load_workbook_resilient(workbook_path)
+            try:
+                wb = self._load_workbook_resilient(workbook_path)
+            except Exception as exc:
+                if workbook_path.name not in OVERVIEW_WORKBOOK_NAMES:
+                    raise
+                logger.warning('Summary workbook %s could not be opened (%s); replacing it with a fresh template', workbook_path, exc)
+                wb = Workbook()
+                wb.active.title = 'Overzicht'
+                wb.create_sheet('Historiek')
+                self._atomic_save_workbook(wb, workbook_path)
+                wb = self._load_workbook_resilient(workbook_path)
             if sheet_name in wb.sheetnames:
                 # remove existing sheet and recreate at same position
                 idx = wb.sheetnames.index(sheet_name)
