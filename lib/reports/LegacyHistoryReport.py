@@ -19,6 +19,14 @@ from outputs.spreadsheet_map import lookup as lookup_spreadsheet_filename
 BRUSSELS = ZoneInfo('Europe/Brussels')
 
 
+def _is_date_sheet_name(name: str) -> bool:
+    try:
+        datetime.strptime(name, '%d/%m/%Y')
+        return True
+    except ValueError:
+        return False
+
+
 def _to_brussels_string(value) -> str:
     if value is None:
         return ''
@@ -115,7 +123,10 @@ class LegacyHistoryReport(Report):
         for sheet_to_ignore in self.sheets_to_ignore:
             if sheet_to_ignore in sheet_names:
                 sheet_names.remove(sheet_to_ignore)
-        sheet_names = list(reversed(sorted(sheet_names, key=lambda x: datetime.strptime(x, '%d/%m/%Y'))))
+        sheet_names = list(reversed(sorted(
+            (s for s in sheet_names if _is_date_sheet_name(s)),
+            key=lambda x: datetime.strptime(x, '%d/%m/%Y')
+        )))
 
         lastest_sheetname = None
         if len(sheet_names) > 0:
