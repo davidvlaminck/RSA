@@ -52,6 +52,14 @@ def _enable_daily_console_capture(local_folder: str) -> None:
     sys.stderr = _DailyLogTee(sys.stderr, sink)
     atexit.register(sink.close)
 
+    root = logging.getLogger()
+    for h in root.handlers[:]:
+        root.removeHandler(h)
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
+    root.addHandler(handler)
+    root.setLevel(logging.INFO)
+
 
 def _resolve_path(path_value: str, base_dir: Path) -> str:
     path = Path(path_value)
