@@ -1,0 +1,64 @@
+// AQL query:
+/*
+Alle assets oplijsten die dit bestek heeft.
+AWV/VW/2025/3
+*/
+LET bestek_key = FIRST(FOR b IN bestekken FILTER b.eDeltaDossiernummer == "AWV/VW/2025/3" AND b.actief == true LIMIT 1 RETURN b._key)
+
+/* 1) collect candidate assets with minimal information */
+LET candidates = (
+  FOR a IN assets
+    FILTER a.AIMDBStatus_isActief == true
+    // DEV
+    //AND a._key == '0005bafb-838f-47e0-a4e2-20dd120ede6b'
+
+    /* Project only the fields we need later to keep memory small */
+    RETURN {
+      _key: a._key,
+      naam: a.AIMNaamObject_naam,
+      naampad: a.NaampadObject_naampad,
+      toestand: a.toestand,
+      assettype: a['@type'],
+      bs: a.bs
+    }
+)
+
+
+/* 2) Iterate candidates
+      For bestek arrays we still may call DOCUMENT(...) for each bestek._to (these are fewer)
+*/
+FOR c IN candidates
+  LET asset_bestekken = (
+    FOR bk IN (c.bs && c.bs.Bestek_bestekkoppeling ? c.bs.Bestek_bestekkoppeling : [])
+      FILTER bk != null AND bk._to != null and (bk._to == concat("bestekken/", bestek_key))
+      LET b = DOCUMENT(bk._to)
+      // FILTER b._key == bestek_key
+      RETURN {b}
+  )
+  FILTER length(asset_bestekken) > 0
+
+  FOR bk in c.bs.Bestek_bestekkoppeling
+    // variables bestekkoppelingen
+    let bk_van = bk.DtcBestekkoppeling_actiefVan ? bk.DtcBestekkoppeling_actiefVan : null
+    let bk_tot = bk.DtcBestekkoppeling_actiefTot ? bk.DtcBestekkoppeling_actiefTot : null
+    LET isActief = (bk_tot == null) OR (DATE_ISO8601(bk_tot) > DATE_ISO8601(DATE_NOW()))
+    
+    // variables bestek
+    let bestek = DOCUMENT(bk._to)
+    let dossiernummer = bestek.eDeltaDossiernummer ? bestek.eDeltaDossiernummer : null
+    let besteknummer = bestek.eDeltaBesteknummer ? bestek.eDeltaBesteknummer : null
+    let aannemer = bestek.aannemerNaam ? bestek.aannemerNaam : null
+
+    RETURN {
+      uuid: c._key,
+      assettype: c.assettype,
+      naam: c.naam,
+      naampad: c.naampad,
+      toestand: c.toestand,
+      dossiernummer: dossiernummer,
+      besteknummer: besteknummer,
+      aannemer: aannemer,
+      van: bk_van,
+      tot: bk_tot,
+      isActief: isActief,
+    }
