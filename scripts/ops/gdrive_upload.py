@@ -38,6 +38,11 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 
+repo_root = Path(__file__).resolve().parents[2]
+if str(repo_root) not in sys.path:
+    sys.path.insert(0, str(repo_root))
+from outputs.report_routes import report_bucket_name
+
 # Full folder mirroring needs broader scope than drive.file.
 SCOPES = ['https://www.googleapis.com/auth/drive']
 FOLDER_MIME = 'application/vnd.google-apps.folder'
@@ -333,6 +338,23 @@ def sync_local_to_drive(local_folder: str, drive_folder_name: str, token_path: s
         return False
 
 
+def _discover_expected_buckets() -> set[str]:
+    expected_buckets: set[str] = set()
+    reports_dir = repo_root / 'Reports'
+    archived_dir = repo_root / 'ArchivedReports'
+    for scan_dir in (reports_dir, archived_dir):
+        if not scan_dir.exists():
+            continue
+        for py_file in scan_dir.glob('Report[0-9][0-9][0-9][0-9].py'):
+            match = re.search(r'Report(\d{4})', py_file.stem)
+            if match:
+                expected_buckets.add(report_bucket_name(int(match.group(1))))
+    if not expected_buckets:
+        for start in range(0, 3000, 100):
+            expected_buckets.add(f'{start:04d}-{start + 99:04d}')
+    return expected_buckets
+
+
 def validate_local_mirror(local_folder: str) -> tuple[bool, str]:
     """Validate the minimal folder layout required before report execution."""
     root = Path(local_folder)
@@ -340,17 +362,38 @@ def validate_local_mirror(local_folder: str) -> tuple[bool, str]:
         return False, f'local mirror does not exist: {root}'
 
     overview_dir = root / 'Overzicht'
-    overview_wb = overview_dir / '[RSA] Overzicht rapporten.xlsx'
+    overview_wb_name = '[RSA] Overzicht rapporteren.xlsx'
     if not overview_dir.exists():
-        return False, f'missing required folder: {overview_dir}'
-    if not overview_wb.exists():
-        return False, f'missing required workbook: {overview_wb}'
+        for child in root.iterdir():
+            if child.is_dir() and child.name.lower() == 'overzicht':
+                overview_dir = child
+                break
+        else:
+            logging.info('SYNC_DOWN_VALIDATE: overview folder missing, creating: %s', overview_dir)
+            overview_dir.mkdir(parents=True, exist_ok=True)
 
-    buckets = [p for p in root.iterdir() if p.is_dir() and ROOT_BUCKET_RE.match(p.name)]
-    if not buckets:
+    overview_wb = overview_dir / overview_wb_name
+    if not overview_wb.exists():
+        logging.warning('SYNC_DOWN_VALIDATE: overview workbook missing: %s', overview_wb)
+
+    logs_dir = root / 'logs'
+    if not logs_dir.exists():
+        logging.info('SYNC_DOWN_VALIDATE: logs folder missing, creating: %s', logs_dir)
+        logs_dir.mkdir(parents=True, exist_ok=True)
+
+    expected_buckets = _discover_expected_buckets()
+    existing_buckets = {p.name for p in root.iterdir() if p.is_dir() and ROOT_BUCKET_RE.match(p.name)}
+    missing_buckets = expected_buckets - existing_buckets
+    for bucket in sorted(missing_buckets):
+        bucket_path = root / bucket
+        logging.info('SYNC_DOWN_VALIDATE: bucket folder missing, creating: %s', bucket_path)
+        bucket_path.mkdir(parents=True, exist_ok=True)
+
+    all_buckets = [p for p in root.iterdir() if p.is_dir() and ROOT_BUCKET_RE.match(p.name)]
+    if not all_buckets:
         return False, f'no bucket folders found under {root}'
 
-    logging.info('SYNC_DOWN_VALIDATE: found %s bucket folders and overview workbook', len(buckets))
+    logging.info('SYNC_DOWN_VALIDATE: found %s bucket folders and overview workbook', len(all_buckets))
     return True, 'ok'
 
 

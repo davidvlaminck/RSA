@@ -175,8 +175,9 @@ def test_download_tree_skips_unsafe_names(monkeypatch, tmp_path):
 def test_validate_local_mirror_success(tmp_path):
     root = tmp_path / 'RSA_OneDrive'
     (root / 'Overzicht').mkdir(parents=True)
-    (root / 'Overzicht' / '[RSA] Overzicht rapporten.xlsx').write_text('x', encoding='utf-8')
+    (root / 'Overzicht' / '[RSA] Overzicht rapporteren.xlsx').write_text('x', encoding='utf-8')
     (root / '0000-0099').mkdir(parents=True)
+    (root / 'logs').mkdir(parents=True)
 
     ok, reason = gdrive_upload.validate_local_mirror(str(root))
 
@@ -184,13 +185,75 @@ def test_validate_local_mirror_success(tmp_path):
     assert reason == 'ok'
 
 
-def test_validate_local_mirror_fails_when_overview_missing(tmp_path):
+def test_validate_local_mirror_creates_overview_when_missing(tmp_path):
     root = tmp_path / 'RSA_OneDrive'
+    (root / '0000-0099').mkdir(parents=True)
+    (root / 'logs').mkdir(parents=True)
+
+    ok, reason = gdrive_upload.validate_local_mirror(str(root))
+
+    assert ok is True
+    assert (root / 'Overzicht').exists()
+    assert (root / 'logs').exists()
+    assert reason == 'ok'
+
+
+def test_validate_local_mirror_resolves_overview_case_insensitively(tmp_path):
+    root = tmp_path / 'RSA_OneDrive'
+    (root / '0000-0099').mkdir(parents=True)
+    (root / 'overzicht').mkdir(parents=True)
+    (root / 'logs').mkdir(parents=True)
+
+    ok, reason = gdrive_upload.validate_local_mirror(str(root))
+
+    assert ok is True
+    assert (root / 'overzicht').exists()
+    assert (root / 'logs').exists()
+    assert reason == 'ok'
+
+
+def test_validate_local_mirror_creates_logs_when_missing(tmp_path):
+    root = tmp_path / 'RSA_OneDrive'
+    (root / 'Overzicht').mkdir(parents=True)
+    (root / 'Overzicht' / '[RSA] Overzicht rapporteren.xlsx').write_text('x', encoding='utf-8')
     (root / '0000-0099').mkdir(parents=True)
 
     ok, reason = gdrive_upload.validate_local_mirror(str(root))
 
-    assert ok is False
-    assert 'missing required folder' in reason
+    assert ok is True
+    assert (root / 'logs').exists()
+    assert reason == 'ok'
+
+
+def test_validate_local_mirror_creates_missing_bucket_folders(tmp_path, monkeypatch):
+    root = tmp_path / 'RSA_OneDrive'
+    (root / 'Overzicht').mkdir(parents=True)
+    (root / 'Overzicht' / '[RSA] Overzicht rapporteren.xlsx').write_text('x', encoding='utf-8')
+    (root / '0000-0099').mkdir(parents=True)
+    (root / 'logs').mkdir(parents=True)
+
+    monkeypatch.setattr(gdrive_upload, '_discover_expected_buckets', lambda: {'0100-0199', '0200-0299'})
+
+    ok, reason = gdrive_upload.validate_local_mirror(str(root))
+
+    assert ok is True
+    assert (root / '0100-0199').exists()
+    assert (root / '0200-0299').exists()
+    assert (root / '0000-0099').exists()
+    assert reason == 'ok'
+
+
+def test_validate_local_mirror_creates_all_required_folders_when_empty(tmp_path, monkeypatch):
+    root = tmp_path / 'RSA_OneDrive'
+
+    monkeypatch.setattr(gdrive_upload, '_discover_expected_buckets', lambda: {'0100-0199'})
+
+    ok, reason = gdrive_upload.validate_local_mirror(str(root))
+
+    assert ok is True
+    assert (root / 'Overzicht').exists()
+    assert (root / 'logs').exists()
+    assert (root / '0100-0199').exists()
+    assert reason == 'ok'
 
 
