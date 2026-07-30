@@ -19,6 +19,7 @@ from lib.mail.MailContent import MailContent
 from lib.mail.MailSender import MailSender
 from lib.reports.instantiator import create_report_instance, discover_and_instantiate_reports
 from lib.reports.pipeline_runner import run_pipelines_by_datasource
+from lib.reports.pipeline_status import PipelineStatusReporter
 from outputs.sheets_wrapper import SingleSheetsWrapper
 from SettingsManager import SettingsManager
 from scripts.ops.aggregate_summaries import process_once
@@ -134,6 +135,7 @@ class ReportLoopRunner:
         reinitialize_database_connections(self.settings)
 
         self.reports = None
+        self.pipeline_status = PipelineStatusReporter(self.settings)
 
         # Optional callback invoked before starting a daily run.
         # Should return True when preconditions are met; False to retry later.
@@ -233,12 +235,19 @@ class ReportLoopRunner:
 
     def run(self):
         """Run all reports either sequentially or in parallel based on settings."""
-        execution_mode = self.settings.get('report_execution', {}).get('mode', 'sequential')
+        self.pipeline_status.update("rsa_queries", "running", "RSA queries gestart")
+        try:
+            execution_mode = self.settings.get('report_execution', {}).get('mode', 'sequential')
 
-        if execution_mode == 'parallel_by_datasource':
-            self._run_parallel_by_datasource()
-        else:
-            self._run_sequential()
+            if execution_mode == 'parallel_by_datasource':
+                self._run_parallel_by_datasource()
+            else:
+                self._run_sequential()
+
+            self.pipeline_status.update("rsa_queries", "completed", "RSA queries voltooid")
+        except Exception as exc:
+            self.pipeline_status.update("rsa_queries", "failed", str(exc))
+            raise
 
         if self.on_run_complete is not None:
             try:
