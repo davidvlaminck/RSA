@@ -1,0 +1,1717 @@
+#! <?xml version="1.0" encoding="UTF-8" ?>
+#! <WORKSPACE
+#    Command line to run this workspace:
+#        "C:\Program Files\FME\b25630\fme.exe" "C:\Users\DriesVerdoodtNordend\OneDrive - Nordend\projects\AWV\0_projecten_awv\_FME_Workspaces\ArangoDB_json2excel.fmw"
+#          --ROOT_FOLDER "C:\Users\DriesVerdoodtNordend\Downloads\BKZ_assets"
+#          --FME_LAUNCH_VIEWER_APP "YES"
+#    
+#!   A0_PREVIEW_IMAGE="data:image/png;base64,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"
+#!   ARCGIS_COMPATIBILITY="ARCGIS_AUTO"
+#!   ATTR_TYPE_ENCODING="SDF"
+#!   BEGIN_PYTHON=""
+#!   BEGIN_PYTHON_DATA_CACHING="No"
+#!   BEGIN_TCL=""
+#!   CATEGORY=""
+#!   DESCRIPTION=""
+#!   DESTINATION="NONE"
+#!   DESTINATION_ROUTING_FILE=""
+#!   DOC_EXTENTS="4342.26 818.958"
+#!   DOC_TOP_LEFT="-1034.39 -823.125"
+#!   ENABLE_DATA_CACHING="Yes"
+#!   ENABLE_FEATURE_COUNTING="Yes"
+#!   ENABLE_PERFORMANCE_PROFILING="No"
+#!   END_PYTHON=""
+#!   END_PYTHON_DATA_CACHING="No"
+#!   END_TCL=""
+#!   EXPLICIT_BOOKMARK_ORDER="false"
+#!   FME_BUILD_NUM="25630"
+#!   FME_BULK_MODE_THRESHOLD="2000"
+#!   FME_DOCUMENT_GUID="6b96e041-a012-463a-8819-71df78a8da7c"
+#!   FME_DOCUMENT_PRIORGUID="d6e26e10-8595-43d4-ac2f-9896c8f5c91a,b4e8cc39-a448-4b7d-92e6-9894e2a21bc2,2c10b991-ee99-4920-9fb9-da3ad3e5fa5f,13000fe2-9672-4a34-a9bc-9b44294a6e99,2e990b73-9c7c-4275-af21-a1ddb5b40291,a6990699-0d32-4937-bbb7-8a30b361c131,b0fbb616-54f9-41e5-ab85-befd4f1fda51,c492d5b3-7cbb-4d0f-a4c5-19aa35d6f2cd"
+#!   FME_GEOMETRY_HANDLING="Enhanced"
+#!   FME_IMPLICIT_CSMAP_REPROJECTION_MODE="Auto"
+#!   FME_NAMES_ENCODING="UTF-8"
+#!   FME_REPROJECTION_ENGINE="FME"
+#!   FME_SERVER_SERVICES=""
+#!   FME_STROKE_MAX_DEVIATION="0"
+#!   HISTORY=""
+#!   IGNORE_READER_FAILURE="No"
+#!   LAST_SAVE_BUILD="FME(R) 2025.1.2.0 (20250829 - Build 25630 - WIN64)"
+#!   LAST_SAVE_DATE="2026-07-29T16:30:09"
+#!   LOG_FILE=""
+#!   LOG_MAX_RECORDED_FEATURES="200"
+#!   MARKDOWN_DESCRIPTION=""
+#!   MARKDOWN_USAGE=""
+#!   MAX_LOG_FEATURES="200"
+#!   MULTI_WRITER_DATASET_ORDER="BY_ID"
+#!   PASSWORD=""
+#!   PROMPT_FOR_PARAMS="Yes"
+#!   PYTHON_COMPATIBILITY="313"
+#!   REDIRECT_TERMINATORS="NONE"
+#!   SAVE_ON_PROMPT_AND_RUN="Yes"
+#!   SHOW_ANNOTATIONS="true"
+#!   SHOW_INFO_NODES="true"
+#!   SOURCE="NONE"
+#!   SOURCE_ROUTING_FILE=""
+#!   STOP_AT_BREAKPOINTS="No"
+#!   TERMINATE_REJECTED="YES"
+#!   TITLE=""
+#!   USAGE=""
+#!   USE_MARKDOWN=""
+#!   VIEW_POSITION="271.878 578.131"
+#!   WARN_INVALID_XFORM_PARAM="Yes"
+#!   WORKSPACE_VERSION="1"
+#!   ZOOM_SCALE="100"
+#! >
+#! <DATASETS>
+#! <DATASET
+#!   IS_SOURCE="true"
+#!   ROLE="READER"
+#!   FORMAT="JSON"
+#!   DATASET="$(SourceDataset_JSON)"
+#!   KEYWORD="JSON_1"
+#!   MULTI_GEOM_ALLOWED="false"
+#!   ATTR_MAX_LENGTH="0"
+#!   ATTR_CASE="ANY"
+#!   FEATURE_TYPE_CASE=""
+#!   FEATURE_TYPE_LENGTH="0"
+#!   FEATURE_TYPE_INVALID_CHARS=""
+#!   ALLOWED_FEAT_TYPES=""
+#!   WRITE_DEFS="true"
+#!   DEFLINE_TEMPLATE=""
+#!   DEFLINE_ATTRS="true"
+#!   EXPOSABLE_ATTRS="fme_basename string fme_color string fme_dataset string fme_feature_type string fme_fill_color string fme_geometry string fme_primary_axis float fme_rotation float fme_secondary_axis float fme_start_angle float fme_sweep_angle float fme_text_size float fme_text_string string fme_type string multi_reader_full_id int multi_reader_id int multi_reader_keyword string multi_reader_type string"
+#!   DEFLINE_PARMS=""
+#!   ATTR_INDEX_TYPES=""
+#!   ATTR_NAME_INVALID_CHARS=""
+#!   SUPPORTS_FEATURE_TYPE_FANOUT="true"
+#!   ENABLED="true"
+#!   DYNAMIC_FEATURE_TYPES_LIST_ON_MERGE="true"
+#!   DATASET_TYPE="FILE"
+#!   FTTR_TYPE="FEATURE_TYPES_ENCODED"
+#!   GENERATE_FME_BUILD_NUM="25630"
+#!   COORDSYS=""
+#!   FEATURE_TYPES=""
+#!   MAX_FEATURES=""
+#!   MAX_FEATURES_PER_FEATURE_TYPE=""
+#!   MIN_FEATURES=""
+#!   START_FEATURE=""
+#! >
+#! <METAFILE_PARAMETER
+#!   NAME="MIME_TYPE"
+#!   VALUE="application/json ADD_DISPOSITION"
+#! />
+#! <METAFILE_PARAMETER
+#!   NAME="READER_DATASET_HINT"
+#!   VALUE="Select the JSON file(s) or Specify the JSON URL"
+#! />
+#! <METAFILE_PARAMETER
+#!   NAME="WRITER_DATASET_HINT"
+#!   VALUE="Specify a name for the JSON file"
+#! />
+#! <METAFILE_PARAMETER
+#!   NAME="WRITER_SPATIAL_DEFINITION_TABLE"
+#!   VALUE="YES"
+#! />
+#! </DATASET>
+#! <DATASET
+#!   IS_SOURCE="false"
+#!   ROLE="WRITER"
+#!   FORMAT="XLSXW"
+#!   DATASET="$(DestDataset_XLSXW)"
+#!   KEYWORD="XLSXW_1"
+#!   MULTI_GEOM_ALLOWED="true"
+#!   ATTR_MAX_LENGTH="255"
+#!   ATTR_CASE="ANY"
+#!   FEATURE_TYPE_CASE="ANY"
+#!   FEATURE_TYPE_LENGTH="0"
+#!   FEATURE_TYPE_INVALID_CHARS="[]*\\?:&apos;"
+#!   ALLOWED_FEAT_TYPES=""
+#!   WRITE_DEFS="true"
+#!   DEFLINE_TEMPLATE="xlsx_drop_sheet No xlsx_trunc_sheet No xlsx_sheet_order &quot;&quot; xlsx_freeze_end_row &quot;&quot; xlsx_names_are_positions No xlsx_field_names_out Yes xlsx_field_names_formatting NO xlsx_field_names_row_height &quot;&lt;Unused&gt;&quot; xlsx_field_names_font_name &quot;&lt;Unused&gt;&quot; xlsx_field_names_font_color &quot;&lt;Unused&gt;&quot; xlsx_field_names_background_color &quot;&lt;Unused&gt;&quot; xlsx_field_names_pattern_color &quot;&lt;Unused&gt;&quot; xlsx_field_names_pattern_style &quot;&lt;Unused&gt;&quot; xlsx_field_names_cell_border_color &quot;&lt;Unused&gt;&quot; xlsx_field_names_cell_border_style &quot;&lt;Unused&gt;&quot; xlsx_field_names_horizontal_alignment &quot;&lt;Unused&gt;&quot; xlsx_field_names_vertical_alignment &quot;&lt;Unused&gt;&quot; xlsx_field_names_text_indent &quot;&lt;Unused&gt;&quot; xlsx_field_names_text_orientation &quot;&lt;Unused&gt;&quot; xlsx_field_names_text_control &quot;&lt;Unused&gt;&quot; xlsx_start_col &quot;&quot; xlsx_start_row &quot;&quot; xlsx_offset_col &quot;&quot; xlsx_offset_row &quot;&quot; xlsx_raster_type PNG xlsx_table_writer_mode Insert xlsx_row_id_column &quot;&quot; xlsx_protect_sheet &quot;NO&quot; xlsx_protect_sheet_level &quot;&lt;Unused&gt;&quot; xlsx_protect_sheet_password &quot;&lt;Unused&gt;&quot; xlsx_protect_sheet_permissions &quot;&lt;Unused&gt;&quot; xlsx_template_sheet &quot;&quot; xlsx_remove_unchanged_template_sheet &quot;No&quot;"
+#!   DEFLINE_ATTRS="true"
+#!   EXPOSABLE_ATTRS="fme_basename string(50,xlsx_col_props) fme_color string(50,xlsx_col_props) fme_dataset string(50,xlsx_col_props) fme_db_operation string(width,xlsx_col_props) fme_feature_type string(50,xlsx_col_props) fme_fill_color string(50,xlsx_col_props) fme_geometry string(50,xlsx_col_props) fme_primary_axis number(width,xlsx_col_props) fme_rotation number(width,xlsx_col_props) fme_secondary_axis number(width,xlsx_col_props) fme_start_angle number(width,xlsx_col_props) fme_sweep_angle number(width,xlsx_col_props) fme_text_size number(width,xlsx_col_props) fme_text_string string(50,xlsx_col_props) fme_type string(50,xlsx_col_props) xlsx_col_id number(width,xlsx_col_props) xlsx_raster_height number(width,xlsx_col_props) xlsx_raster_scale_factor number(width,xlsx_col_props) xlsx_raster_width number(width,xlsx_col_props) xlsx_row_formatting string(width,xlsx_col_props) xlsx_row_id number(width,xlsx_col_props) xlsx_type string(width,xlsx_col_props)"
+#!   DEFLINE_PARMS="&quot;GUI OPTIONAL NAMEDGROUP xlsx_layer_group xlsx_table_writer_mode%xlsx_names_are_positions%xlsx_row_id_column%xlsx_freeze_end_row%xlsx_field_names_out%xlsx_field_names_formatting%xlsx_truncate_group%xlsx_rowcolumn_group%xlsx_template_group%xlsx_protect_sheet%xlsx_advanced_group Sheet Settings&quot; &quot;&quot; &quot;GUI ACTIVECHOICE xlsx_table_writer_mode Insert,+xlsx_row_id_column+%Update,+xlsx_row_id_column%Delete,+xlsx_row_id_column Writer Mode:&quot; Insert &quot;GUI CHOICE xlsx_names_are_positions Yes%No Use Attribute Names As Column Positions:&quot; No &quot;GUI OPTIONAL ATTR xlsx_row_id_column ALLOW_NEW Row Number Attribute:&quot; &quot;&quot; &quot;GUI OPTIONAL RANGE_SLIDER xlsx_freeze_end_row 1%MAX Freeze First Row(s):&quot; &quot;&quot; &quot;GUI ACTIVECHOICE xlsx_field_names_out Yes%No,xlsx_field_names_formatting,++xlsx_field_names_formatting+No Output Field Names:&quot; Yes &quot;GUI ACTIVEDISCLOSUREGROUP xlsx_field_names_formatting xlsx_field_names_row_height%xlsx_field_names_font%xlsx_field_names_fill%xlsx_field_names_cell%xlsx_field_names_alignment Field Names Row Formatting&quot; NO &quot;GUI OPTIONAL RANGE_SLIDER_OR_ATTR xlsx_field_names_row_height 0%409.5%2%OFF Row Height:&quot; &lt;Unused&gt; &quot;GUI OPTIONAL DISCLOSUREGROUP xlsx_field_names_font xlsx_field_names_font_name%xlsx_field_names_font_color Font&quot; &quot;&quot; &quot;GUI OPTIONAL FONT_OR_ATTR_ENCODED xlsx_field_names_font_name Font:&quot; &lt;Unused&gt; &quot;GUI OPTIONAL COLOR_OR_ATTR xlsx_field_names_font_color COLOR_SPEC%RGBF Font Color:&quot; &lt;Unused&gt; &quot;GUI OPTIONAL DISCLOSUREGROUP xlsx_field_names_fill xlsx_field_names_background_color%xlsx_field_names_pattern_color%xlsx_field_names_pattern_style Fill&quot; &quot;&quot; &quot;GUI OPTIONAL COLOR_OR_ATTR xlsx_field_names_background_color COLOR_SPEC%RGBF Background Color:&quot; &lt;Unused&gt; &quot;GUI OPTIONAL COLOR_OR_ATTR xlsx_field_names_pattern_color COLOR_SPEC%RGBF Pattern Color:&quot; &lt;Unused&gt; &quot;GUI OPTIONAL LOOKUP_CHOICE xlsx_field_names_pattern_style None,FILLPATTERN_NONE%Solid,FILLPATTERN_SOLID%Half&lt;space&gt;Filled,FILLPATTERN_GRAY50%75&lt;space&gt;Percent&lt;space&gt;Filled,FILLPATTERN_GRAY75%25&lt;space&gt;Percent&lt;space&gt;Filled,FILLPATTERN_GRAY25%Horizontal&lt;space&gt;Stripe,FILLPATTERN_HORSTRIPE%Vertical&lt;space&gt;Stripe,FILLPATTERN_VERSTRIPE%Reversed&lt;space&gt;Diagonal&lt;space&gt;Stripe,FILLPATTERN_REVDIAGSTRIPE%Diagonal&lt;space&gt;Stripe,FILLPATTERN_DIAGSTRIPE%Diagonal&lt;space&gt;Cross-Hatch,FILLPATTERN_DIAGCROSSHATCH%Thick&lt;space&gt;Diagonal&lt;space&gt;Cross-Hatch,FILLPATTERN_THICKDIAGCROSSHATCH%Thin&lt;space&gt;Horizontal&lt;space&gt;Stripe,FILLPATTERN_THINHORSTRIPE%Thin&lt;space&gt;Vertical&lt;space&gt;Stripe,FILLPATTERN_THINVERSTRIPE%Thin&lt;space&gt;Reversed&lt;space&gt;Diagonal&lt;space&gt;Stripe,FILLPATTERN_THINREVDIAGSTRIPE%Thin&lt;space&gt;Diagonal&lt;space&gt;Stripe,FILLPATTERN_THINDIAGSTRIPE%Thin&lt;space&gt;Horizontal&lt;space&gt;Cross-Hatch,FILLPATTERN_THINHORCROSSHATCH%Thin&lt;space&gt;Diagonal&lt;space&gt;Cross-Hatch,FILLPATTERN_THINDIAGCROSSHATCH%12.5&lt;space&gt;Percent&lt;space&gt;Filled,FILLPATTERN_GRAY12P5%6.25&lt;space&gt;Percent&lt;space&gt;Filled,FILLPATTERN_GRAY6P25 Pattern Style:&quot; &lt;Unused&gt; &quot;GUI OPTIONAL DISCLOSUREGROUP xlsx_field_names_cell xlsx_field_names_cell_border_color%xlsx_field_names_cell_border_style Cell Border&quot; &quot;&quot; &quot;GUI OPTIONAL COLOR_OR_ATTR xlsx_field_names_cell_border_color COLOR_SPEC%RGBF Border Color:&quot; &lt;Unused&gt; &quot;GUI OPTIONAL LOOKUP_CHOICE xlsx_field_names_cell_border_style None,BORDERSTYLE_NONE%Thin,BORDERSTYLE_THIN%Medium,BORDERSTYLE_MEDIUM%Dashed,BORDERSTYLE_DASHED%Dotted,BORDERSTYLE_DOTTED%Thick,BORDERSTYLE_THICK%Double,BORDERSTYLE_DOUBLE%Hair,BORDERSTYLE_HAIR%Medium&lt;space&gt;Dashed,BORDERSTYLE_MEDIUMDASHED%Dash&lt;space&gt;Dot,BORDERSTYLE_DASHDOT%Medium&lt;space&gt;Dash&lt;space&gt;Dot,BORDERSTYLE_MEDIUMDASHDOT%Dash&lt;space&gt;Dot&lt;space&gt;Dot,BORDERSTYLE_DASHDOTDOT%Medium&lt;space&gt;Dash&lt;space&gt;Dot&lt;space&gt;Dot,BORDERSTYLE_MEDIUMDASHDOTDOT%Slant&lt;space&gt;Dash&lt;space&gt;Dot,BORDERSTYLE_SLANTDASHDOT Border Style:&quot; &lt;Unused&gt; &quot;GUI OPTIONAL DISCLOSUREGROUP xlsx_field_names_alignment xlsx_field_names_horizontal_alignment%xlsx_field_names_vertical_alignment%xlsx_field_names_text_indent%xlsx_field_names_text_orientation%xlsx_field_names_text_control Text Alignment:&quot; &quot;&quot; &quot;GUI OPTIONAL LOOKUP_CHOICE xlsx_field_names_horizontal_alignment Left,left%Center,center%Right,right Horizontal Alignment:&quot; &lt;Unused&gt; &quot;GUI OPTIONAL LOOKUP_CHOICE xlsx_field_names_vertical_alignment Top,top%Center,center%Bottom,bottom Vertical Alignment:&quot; &lt;Unused&gt; &quot;GUI OPTIONAL RANGE_SLIDER_OR_ATTR xlsx_field_names_text_indent 0%15%1%OFF Text Indent:&quot; &lt;Unused&gt; &quot;GUI OPTIONAL RANGE_SLIDER_OR_ATTR xlsx_field_names_text_orientation -90%90%0%ON%INCR,15 Text Orientation:&quot; &lt;Unused&gt; &quot;GUI OPTIONAL LOOKUP_CHOICE xlsx_field_names_text_control Wrap&lt;space&gt;text,wrap_text%Shrink&lt;space&gt;text&lt;space&gt;to&lt;space&gt;fit&lt;space&gt;cell,shrink_cells%None,none Text Control:&quot; &lt;Unused&gt; &quot;GUI OPTIONAL DISCLOSUREGROUP xlsx_truncate_group xlsx_drop_sheet%xlsx_trunc_sheet Drop/Truncate&quot; &quot;&quot; &quot;GUI CHOICE xlsx_drop_sheet Yes%No Drop Existing Sheet/Named Range:&quot; No &quot;GUI CHOICE xlsx_trunc_sheet Yes%No Truncate Existing Sheet/Named Range:&quot; No &quot;GUI OPTIONAL DISCLOSUREGROUP xlsx_rowcolumn_group xlsx_start_col%xlsx_start_row%xlsx_offset_col%xlsx_offset_row Start Position&quot; &quot;&quot; &quot;GUI OPTIONAL TEXT xlsx_start_col Named Range Start Column:&quot; &quot;&quot; &quot;GUI OPTIONAL INTEGER xlsx_start_row Named Range Start Row:&quot; &quot;&quot; &quot;GUI OPTIONAL TEXT xlsx_offset_col Start Column:&quot; &quot;&quot; &quot;GUI OPTIONAL INTEGER xlsx_offset_row Start Row:&quot; &quot;&quot; &quot;GUI OPTIONAL DISCLOSUREGROUP xlsx_template_group xlsx_template_sheet%xlsx_remove_unchanged_template_sheet Template Options&quot; &quot;&quot; &quot;GUI OPTIONAL TEXT_EDIT xlsx_template_sheet \&quot; \&quot; Template Sheet:&quot; &quot;&quot; &quot;GUI CHOICE xlsx_remove_unchanged_template_sheet Yes%No Remove Template Sheet if Unchanged:&quot; No &quot;GUI ACTIVEDISCLOSUREGROUP xlsx_protect_sheet xlsx_protect_sheet_password%xlsx_protect_sheet_level%xlsx_protect_sheet_permissions Protect Sheet&quot; NO &quot;GUI OPTIONAL PASSWORD_ENCODED xlsx_protect_sheet_password Password:&quot; &lt;Unused&gt; &quot;GUI ACTIVECHOICE_LOOKUP xlsx_protect_sheet_level Select&lt;space&gt;Only&lt;space&gt;Permissions,PROT_DEFAULT,xlsx_protect_sheet_permissions%View&lt;space&gt;Only&lt;space&gt;Permissions,PROT_ALL,xlsx_protect_sheet_permissions%Specific&lt;space&gt;Permissions Protection Level:&quot; &lt;Unused&gt; &quot;GUI OPTIONAL LOOKUP_LISTBOX xlsx_protect_sheet_permissions Select&lt;space&gt;locked&lt;space&gt;cells,PROT_SEL_LOCKED_CELLS%Select&lt;space&gt;unlocked&lt;space&gt;cells,PROT_SEL_UNLOCKED_CELLS%Format&lt;space&gt;cells,PROT_FORMAT_CELLS%Format&lt;space&gt;columns,PROT_FORMAT_COLUMNS%Format&lt;space&gt;rows,PROT_FORMAT_ROWS%Insert&lt;space&gt;columns,PROT_INSERT_COLUMNS%Insert&lt;space&gt;rows,PROT_INSERT_ROWS%Add&lt;space&gt;hyperlinks&lt;space&gt;to&lt;space&gt;unlocked&lt;space&gt;cells,PROT_INSERT_HYPERLINKS%Delete&lt;space&gt;unlocked&lt;space&gt;columns,PROT_DELETE_COLUMNS%Delete&lt;space&gt;unlocked&lt;space&gt;rows,PROT_DELETE_ROWS%Sort&lt;space&gt;unlocked&lt;space&gt;cells/rows/columns,PROT_SORT%Use&lt;space&gt;Autofilter&lt;space&gt;on&lt;space&gt;unlocked&lt;space&gt;cells,PROT_AUTOFILTER%Use&lt;space&gt;PivotTable&lt;space&gt;&amp;&lt;space&gt;PivotChart&lt;space&gt;on&lt;space&gt;unlocked&lt;space&gt;cells,PROT_PIVOTTABLES%Edit&lt;space&gt;unlocked&lt;space&gt;objects,PROT_OBJECTS%Edit&lt;space&gt;unprotected&lt;space&gt;scenarios,PROT_SCENARIOS Specific Permissions:&quot; &lt;Unused&gt; &quot;GUI OPTIONAL DISCLOSUREGROUP xlsx_advanced_group xlsx_sheet_order%xlsx_raster_type Advanced&quot; &quot;&quot; &quot;GUI OPTIONAL RANGE_SLIDER xlsx_sheet_order 1%MAX Sheet Order (1 - n):&quot; &quot;&quot; &quot;GUI CHOICE xlsx_raster_type BMP%JPEG%PNG Raster Format:&quot; PNG "
+#!   ATTR_INDEX_TYPES=""
+#!   ATTR_NAME_INVALID_CHARS=""
+#!   SUPPORTS_FEATURE_TYPE_FANOUT="true"
+#!   ENABLED="true"
+#!   DYNAMIC_FEATURE_TYPES_LIST_ON_MERGE="true"
+#!   DATASET_TYPE="FILE"
+#!   FTTR_TYPE=""
+#!   GENERATE_FME_BUILD_NUM="25630"
+#!   COORDSYS=""
+#!   FANOUT_EXPRESSION="&lt;Unused&gt;"
+#!   FANOUT_GROUP="NO"
+#! >
+#! <METAFILE_PARAMETER
+#!   NAME="ADVANCED_PARMS"
+#!   VALUE="XLSXW_OUT_ALWAYS_CREATE_FEATURE_TYPES"
+#! />
+#! <METAFILE_PARAMETER
+#!   NAME="ALLOW_DATASET_CONFLICT"
+#!   VALUE="YES"
+#! />
+#! <METAFILE_PARAMETER
+#!   NAME="ATTRIBUTE_READING"
+#!   VALUE="DEFLINE"
+#! />
+#! <METAFILE_PARAMETER
+#!   NAME="DEFAULT_ATTR_TYPE"
+#!   VALUE="auto"
+#! />
+#! <METAFILE_PARAMETER
+#!   NAME="DEFAULT_READER"
+#!   VALUE="XLSXR"
+#! />
+#! <METAFILE_PARAMETER
+#!   NAME="FEATURE_TYPE_DEFAULT_NAME"
+#!   VALUE="Sheet1"
+#! />
+#! <METAFILE_PARAMETER
+#!   NAME="FEATURE_TYPE_NAME"
+#!   VALUE="Sheet"
+#! />
+#! <METAFILE_PARAMETER
+#!   NAME="MIME_TYPE"
+#!   VALUE="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet ADD_DISPOSITION"
+#! />
+#! <METAFILE_PARAMETER
+#!   NAME="USER_ATTRIBUTES_COLUMNS"
+#!   VALUE="Width,Cell Width%Precision,Formatting"
+#! />
+#! <METAFILE_PARAMETER
+#!   NAME="WRITER_DATASET_HINT"
+#!   VALUE="Specify a name for the Microsoft Excel file"
+#! />
+#! </DATASET>
+#! </DATASETS>
+#! <DATA_TYPES>
+#! <DATA_TYPE
+#!   IS_SOURCE="true"
+#!   FORMAT_TYPE="string"
+#!   FME_TYPE="fme_buffer"
+#!   FORMAT="JSON"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="true"
+#!   FORMAT_TYPE="string"
+#!   FME_TYPE="fme_binarybuffer"
+#!   FORMAT="JSON"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="true"
+#!   FORMAT_TYPE="string"
+#!   FME_TYPE="fme_xml"
+#!   FORMAT="JSON"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="true"
+#!   FORMAT_TYPE="string"
+#!   FME_TYPE="fme_varchar(width)"
+#!   FORMAT="JSON"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="true"
+#!   FORMAT_TYPE="string"
+#!   FME_TYPE="fme_varbinary(width)"
+#!   FORMAT="JSON"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="true"
+#!   FORMAT_TYPE="boolean"
+#!   FME_TYPE="fme_boolean"
+#!   FORMAT="JSON"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="true"
+#!   FORMAT_TYPE="string"
+#!   FME_TYPE="fme_char(width)"
+#!   FORMAT="JSON"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="true"
+#!   FORMAT_TYPE="string"
+#!   FME_TYPE="fme_binary(width)"
+#!   FORMAT="JSON"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="true"
+#!   FORMAT_TYPE="string"
+#!   FME_TYPE="fme_datetime"
+#!   FORMAT="JSON"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="true"
+#!   FORMAT_TYPE="string"
+#!   FME_TYPE="fme_time"
+#!   FORMAT="JSON"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="true"
+#!   FORMAT_TYPE="string"
+#!   FME_TYPE="fme_date"
+#!   FORMAT="JSON"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="true"
+#!   FORMAT_TYPE="float"
+#!   FME_TYPE="fme_real64"
+#!   FORMAT="JSON"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="true"
+#!   FORMAT_TYPE="float"
+#!   FME_TYPE="fme_real32"
+#!   FORMAT="JSON"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="true"
+#!   FORMAT_TYPE="int"
+#!   FME_TYPE="fme_int64"
+#!   FORMAT="JSON"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="true"
+#!   FORMAT_TYPE="string"
+#!   FME_TYPE="fme_uint64"
+#!   FORMAT="JSON"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="true"
+#!   FORMAT_TYPE="int"
+#!   FME_TYPE="fme_int32"
+#!   FORMAT="JSON"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="true"
+#!   FORMAT_TYPE="int"
+#!   FME_TYPE="fme_uint32"
+#!   FORMAT="JSON"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="true"
+#!   FORMAT_TYPE="int"
+#!   FME_TYPE="fme_int16"
+#!   FORMAT="JSON"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="true"
+#!   FORMAT_TYPE="int"
+#!   FME_TYPE="fme_uint16"
+#!   FORMAT="JSON"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="true"
+#!   FORMAT_TYPE="int"
+#!   FME_TYPE="fme_int8"
+#!   FORMAT="JSON"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="true"
+#!   FORMAT_TYPE="int"
+#!   FME_TYPE="fme_uint8"
+#!   FORMAT="JSON"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="true"
+#!   FORMAT_TYPE="string"
+#!   FME_TYPE="fme_decimal(width,decimal)"
+#!   FORMAT="JSON"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="true"
+#!   FORMAT_TYPE="json"
+#!   FME_TYPE="fme_json"
+#!   FORMAT="JSON"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="false"
+#!   FORMAT_TYPE="string(width,xlsx_col_props)"
+#!   FME_TYPE="fme_varchar(width)"
+#!   FORMAT="XLSXW"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="false"
+#!   FORMAT_TYPE="string(width,xlsx_col_props)"
+#!   FME_TYPE="fme_varbinary(width)"
+#!   FORMAT="XLSXW"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="false"
+#!   FORMAT_TYPE="string(width,xlsx_col_props)"
+#!   FME_TYPE="fme_char(width)"
+#!   FORMAT="XLSXW"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="false"
+#!   FORMAT_TYPE="string(width,xlsx_col_props)"
+#!   FME_TYPE="fme_binary(width)"
+#!   FORMAT="XLSXW"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="false"
+#!   FORMAT_TYPE="string(width,xlsx_col_props)"
+#!   FME_TYPE="fme_buffer"
+#!   FORMAT="XLSXW"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="false"
+#!   FORMAT_TYPE="string(width,xlsx_col_props)"
+#!   FME_TYPE="fme_binarybuffer"
+#!   FORMAT="XLSXW"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="false"
+#!   FORMAT_TYPE="string(width,xlsx_col_props)"
+#!   FME_TYPE="fme_xml"
+#!   FORMAT="XLSXW"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="false"
+#!   FORMAT_TYPE="string(width,xlsx_col_props)"
+#!   FME_TYPE="fme_json"
+#!   FORMAT="XLSXW"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="false"
+#!   FORMAT_TYPE="auto(width,xlsx_col_props)"
+#!   FME_TYPE="fme_buffer"
+#!   FORMAT="XLSXW"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="false"
+#!   FORMAT_TYPE="datetime(width,xlsx_col_props)"
+#!   FME_TYPE="fme_datetime"
+#!   FORMAT="XLSXW"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="false"
+#!   FORMAT_TYPE="time(width,xlsx_col_props)"
+#!   FME_TYPE="fme_time"
+#!   FORMAT="XLSXW"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="false"
+#!   FORMAT_TYPE="date(width,xlsx_col_props)"
+#!   FME_TYPE="fme_date"
+#!   FORMAT="XLSXW"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="false"
+#!   FORMAT_TYPE="number(width,xlsx_col_props)"
+#!   FME_TYPE="fme_decimal(width,decimal)"
+#!   FORMAT="XLSXW"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="false"
+#!   FORMAT_TYPE="number(width,xlsx_col_props)"
+#!   FME_TYPE="fme_real64"
+#!   FORMAT="XLSXW"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="false"
+#!   FORMAT_TYPE="number(width,xlsx_col_props)"
+#!   FME_TYPE="fme_real32"
+#!   FORMAT="XLSXW"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="false"
+#!   FORMAT_TYPE="number(width,xlsx_col_props)"
+#!   FME_TYPE="fme_int32"
+#!   FORMAT="XLSXW"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="false"
+#!   FORMAT_TYPE="number(width,xlsx_col_props)"
+#!   FME_TYPE="fme_uint32"
+#!   FORMAT="XLSXW"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="false"
+#!   FORMAT_TYPE="number(width,xlsx_col_props)"
+#!   FME_TYPE="fme_int64"
+#!   FORMAT="XLSXW"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="false"
+#!   FORMAT_TYPE="number(width,xlsx_col_props)"
+#!   FME_TYPE="fme_uint64"
+#!   FORMAT="XLSXW"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="false"
+#!   FORMAT_TYPE="number(width,xlsx_col_props)"
+#!   FME_TYPE="fme_int16"
+#!   FORMAT="XLSXW"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="false"
+#!   FORMAT_TYPE="number(width,xlsx_col_props)"
+#!   FME_TYPE="fme_uint16"
+#!   FORMAT="XLSXW"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="false"
+#!   FORMAT_TYPE="number(width,xlsx_col_props)"
+#!   FME_TYPE="fme_int8"
+#!   FORMAT="XLSXW"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="false"
+#!   FORMAT_TYPE="number(width,xlsx_col_props)"
+#!   FME_TYPE="fme_uint8"
+#!   FORMAT="XLSXW"
+#! />
+#! <DATA_TYPE
+#!   IS_SOURCE="false"
+#!   FORMAT_TYPE="boolean(width,xlsx_col_props)"
+#!   FME_TYPE="fme_boolean"
+#!   FORMAT="XLSXW"
+#! />
+#! </DATA_TYPES>
+#! <GEOM_TYPES>
+#! <GEOM_TYPE
+#!   IS_SOURCE="true"
+#!   FORMAT_TYPE="json_point"
+#!   FME_TYPE="fme_point"
+#!   FORMAT="JSON"
+#! />
+#! <GEOM_TYPE
+#!   IS_SOURCE="true"
+#!   FORMAT_TYPE="json_line"
+#!   FME_TYPE="fme_line"
+#!   FORMAT="JSON"
+#! />
+#! <GEOM_TYPE
+#!   IS_SOURCE="true"
+#!   FORMAT_TYPE="json_polygon"
+#!   FME_TYPE="fme_area"
+#!   FORMAT="JSON"
+#! />
+#! <GEOM_TYPE
+#!   IS_SOURCE="true"
+#!   FORMAT_TYPE="json_text"
+#!   FME_TYPE="fme_text"
+#!   FORMAT="JSON"
+#! />
+#! <GEOM_TYPE
+#!   IS_SOURCE="true"
+#!   FORMAT_TYPE="json_ellipse"
+#!   FME_TYPE="fme_ellipse"
+#!   FORMAT="JSON"
+#! />
+#! <GEOM_TYPE
+#!   IS_SOURCE="true"
+#!   FORMAT_TYPE="json_arc"
+#!   FME_TYPE="fme_arc"
+#!   FORMAT="JSON"
+#! />
+#! <GEOM_TYPE
+#!   IS_SOURCE="true"
+#!   FORMAT_TYPE="json_rectangle"
+#!   FME_TYPE="fme_rectangle"
+#!   FORMAT="JSON"
+#! />
+#! <GEOM_TYPE
+#!   IS_SOURCE="true"
+#!   FORMAT_TYPE="json_rounded_rectangle"
+#!   FME_TYPE="fme_rounded_rectangle"
+#!   FORMAT="JSON"
+#! />
+#! <GEOM_TYPE
+#!   IS_SOURCE="true"
+#!   FORMAT_TYPE="json_raster"
+#!   FME_TYPE="fme_raster"
+#!   FORMAT="JSON"
+#! />
+#! <GEOM_TYPE
+#!   IS_SOURCE="true"
+#!   FORMAT_TYPE="json_no_geom"
+#!   FME_TYPE="fme_no_geom"
+#!   FORMAT="JSON"
+#! />
+#! <GEOM_TYPE
+#!   IS_SOURCE="true"
+#!   FORMAT_TYPE="json_collection"
+#!   FME_TYPE="fme_collection"
+#!   FORMAT="JSON"
+#! />
+#! <GEOM_TYPE
+#!   IS_SOURCE="true"
+#!   FORMAT_TYPE="json_line"
+#!   FME_TYPE="fme_surface"
+#!   FORMAT="JSON"
+#! />
+#! <GEOM_TYPE
+#!   IS_SOURCE="true"
+#!   FORMAT_TYPE="json_line"
+#!   FME_TYPE="fme_solid"
+#!   FORMAT="JSON"
+#! />
+#! <GEOM_TYPE
+#!   IS_SOURCE="true"
+#!   FORMAT_TYPE="json_polygon"
+#!   FME_TYPE="fme_point_cloud"
+#!   FORMAT="JSON"
+#! />
+#! <GEOM_TYPE
+#!   IS_SOURCE="true"
+#!   FORMAT_TYPE="json_polygon"
+#!   FME_TYPE="fme_voxel_grid"
+#!   FORMAT="JSON"
+#! />
+#! <GEOM_TYPE
+#!   IS_SOURCE="false"
+#!   FORMAT_TYPE="xlsx_none"
+#!   FME_TYPE="fme_no_geom"
+#!   FORMAT="XLSXW"
+#! />
+#! <GEOM_TYPE
+#!   IS_SOURCE="false"
+#!   FORMAT_TYPE="xlsx_none"
+#!   FME_TYPE="fme_point"
+#!   FORMAT="XLSXW"
+#! />
+#! <GEOM_TYPE
+#!   IS_SOURCE="false"
+#!   FORMAT_TYPE="xlsx_point"
+#!   FME_TYPE="fme_point"
+#!   FORMAT="XLSXW"
+#! />
+#! <GEOM_TYPE
+#!   IS_SOURCE="false"
+#!   FORMAT_TYPE="xlsx_none"
+#!   FME_TYPE="fme_line"
+#!   FORMAT="XLSXW"
+#! />
+#! <GEOM_TYPE
+#!   IS_SOURCE="false"
+#!   FORMAT_TYPE="xlsx_none"
+#!   FME_TYPE="fme_area"
+#!   FORMAT="XLSXW"
+#! />
+#! <GEOM_TYPE
+#!   IS_SOURCE="false"
+#!   FORMAT_TYPE="xlsx_none"
+#!   FME_TYPE="fme_text"
+#!   FORMAT="XLSXW"
+#! />
+#! <GEOM_TYPE
+#!   IS_SOURCE="false"
+#!   FORMAT_TYPE="xlsx_none"
+#!   FME_TYPE="fme_ellipse"
+#!   FORMAT="XLSXW"
+#! />
+#! <GEOM_TYPE
+#!   IS_SOURCE="false"
+#!   FORMAT_TYPE="xlsx_none"
+#!   FME_TYPE="fme_arc"
+#!   FORMAT="XLSXW"
+#! />
+#! <GEOM_TYPE
+#!   IS_SOURCE="false"
+#!   FORMAT_TYPE="xlsx_none"
+#!   FME_TYPE="fme_rectangle"
+#!   FORMAT="XLSXW"
+#! />
+#! <GEOM_TYPE
+#!   IS_SOURCE="false"
+#!   FORMAT_TYPE="xlsx_none"
+#!   FME_TYPE="fme_rounded_rectangle"
+#!   FORMAT="XLSXW"
+#! />
+#! <GEOM_TYPE
+#!   IS_SOURCE="false"
+#!   FORMAT_TYPE="xlsx_none"
+#!   FME_TYPE="fme_collection"
+#!   FORMAT="XLSXW"
+#! />
+#! <GEOM_TYPE
+#!   IS_SOURCE="false"
+#!   FORMAT_TYPE="xlsx_none"
+#!   FME_TYPE="fme_surface"
+#!   FORMAT="XLSXW"
+#! />
+#! <GEOM_TYPE
+#!   IS_SOURCE="false"
+#!   FORMAT_TYPE="xlsx_none"
+#!   FME_TYPE="fme_solid"
+#!   FORMAT="XLSXW"
+#! />
+#! <GEOM_TYPE
+#!   IS_SOURCE="false"
+#!   FORMAT_TYPE="xlsx_raster"
+#!   FME_TYPE="fme_raster"
+#!   FORMAT="XLSXW"
+#! />
+#! <GEOM_TYPE
+#!   IS_SOURCE="false"
+#!   FORMAT_TYPE="xlsx_none"
+#!   FME_TYPE="fme_point_cloud"
+#!   FORMAT="XLSXW"
+#! />
+#! <GEOM_TYPE
+#!   IS_SOURCE="false"
+#!   FORMAT_TYPE="xlsx_none"
+#!   FME_TYPE="fme_voxel_grid"
+#!   FORMAT="XLSXW"
+#! />
+#! </GEOM_TYPES>
+#! <FEATURE_TYPES>
+#! <FEATURE_TYPE
+#!   IS_SOURCE="true"
+#!   NODE_NAME="JSONFeature"
+#!   FEATURE_TYPE_NAME=""
+#!   FEATURE_TYPE_NAME_QUALIFIER=""
+#!   IS_EDITABLE="false"
+#!   IDENTIFIER="2"
+#!   POSITION="-1034.3853438534386 -216.25581255812563"
+#!   BOUNDING_RECT="-1034.3853438534386 -216.25581255812563 578.129781297813 65"
+#!   ORDER="500000000000004"
+#!   COLLAPSED="false"
+#!   KEYWORD="JSON_1"
+#!   PARMS_EDITED="true"
+#!   ENABLED="true"
+#!   FEAT_GEOMTYPE="json_no_geom"
+#!   HIDDEN_USER_ATTRS="bestek_info.bestek_aannemer bestekken_info naampad uuid bestek_info.besteknummer bestek_besteknummer toestand bestek_info.aannemer naam bestek_info.dossiernummer bestek_info.van bestek_info.tot"
+#!   MERGE_FILTER="*"
+#!   MERGE_FILTER_TYPE="FILTER_TYPE_GLOB"
+#!   MERGE_FILTER_CASE_SENSITIVE="true"
+#!   DYNAMIC_SCHEMA="true"
+#! >
+#!     <FEAT_GEOMETRY NAME="" TYPE="json_no_geom" SPATIAL_TYPE=""/>
+#!     <FEAT_ATTRIBUTE ATTR_NAME="uuid" ATTR_TYPE="string" ATTR_HAS_PORT="true" ATTR_VALUE=""/>
+#!     <FEAT_ATTRIBUTE ATTR_NAME="naam" ATTR_TYPE="string" ATTR_HAS_PORT="true" ATTR_VALUE=""/>
+#!     <FEAT_ATTRIBUTE ATTR_NAME="naampad" ATTR_TYPE="string" ATTR_HAS_PORT="true" ATTR_VALUE=""/>
+#!     <FEAT_ATTRIBUTE ATTR_NAME="toestand" ATTR_TYPE="string" ATTR_HAS_PORT="true" ATTR_VALUE=""/>
+#!     <FEAT_ATTRIBUTE ATTR_NAME="bestek_info.dossiernummer" ATTR_TYPE="string" ATTR_HAS_PORT="true" ATTR_VALUE=""/>
+#!     <FEAT_ATTRIBUTE ATTR_NAME="bestek_info.besteknummer" ATTR_TYPE="string" ATTR_HAS_PORT="true" ATTR_VALUE=""/>
+#!     <FEAT_ATTRIBUTE ATTR_NAME="bestek_info.aannemer" ATTR_TYPE="string" ATTR_HAS_PORT="true" ATTR_VALUE=""/>
+#!     <FEAT_ATTRIBUTE ATTR_NAME="bestek_info.van" ATTR_TYPE="string" ATTR_HAS_PORT="true" ATTR_VALUE=""/>
+#!     <FEAT_ATTRIBUTE ATTR_NAME="bestek_info.tot" ATTR_TYPE="string" ATTR_HAS_PORT="true" ATTR_VALUE=""/>
+#!     <FEAT_ATTRIBUTE ATTR_NAME="bestek_info.bestek_aannemer" ATTR_TYPE="string" ATTR_HAS_PORT="true" ATTR_VALUE=""/>
+#!     <FEAT_ATTRIBUTE ATTR_NAME="bestek_besteknummer" ATTR_TYPE="string" ATTR_HAS_PORT="true" ATTR_VALUE=""/>
+#!     <FEAT_ATTRIBUTE ATTR_NAME="bestekken_info" ATTR_TYPE="string" ATTR_HAS_PORT="true" ATTR_VALUE=""/>
+#!     <FEAT_ATTRIBUTE ATTR_NAME="fme_feature_type" ATTR_TYPE="string"  EXPOSABLE_ATTR="true" ATTR_HAS_PORT="true" ATTR_VALUE=""/>
+#! </FEATURE_TYPE>
+#! <FEATURE_TYPE
+#!   IS_SOURCE="false"
+#!   NODE_NAME="Sheet1"
+#!   FEATURE_TYPE_NAME="@Value(fme_feature_type)"
+#!   FEATURE_TYPE_NAME_QUALIFIER=""
+#!   IS_EDITABLE="true"
+#!   IDENTIFIER="3"
+#!   POSITION="2871.8727187271879 -273.12478124781251"
+#!   BOUNDING_RECT="2871.8727187271879 -273.12478124781251 436 65"
+#!   ORDER="500000000000000"
+#!   COLLAPSED="true"
+#!   KEYWORD="XLSXW_1"
+#!   PARMS_EDITED="true"
+#!   ENABLED="true"
+#!   FEAT_GEOMTYPE=""
+#!   SCHEMA_ATTRIBUTE_SOURCE="2"
+#!   DYNAMIC_SCHEMA="true"
+#!   DYNAMIC_SCHEMA_SOURCES="SCHEMA_FROM_FIRST_FEATURE"
+#!   DYNAMIC_SCHEMA_FEATURE_TYPE="AUTOMATIC"
+#!   DYNAMIC_SCHEMA_FEATURE_TYPE_NAME="@Value(fme_feature_type)"
+#!   DYNAMIC_SCHEMA_DEFINITION="AUTOMATIC"
+#!   DYNAMIC_SCHEMA_DEFINITION_NAME=""
+#!   DYNAMIC_SCHEMA_GEOMETRY="AUTOMATIC"
+#!   DYNAMIC_SCHEMA_GEOMETRY_NAME="from_schema_definition"
+#!   DYNAMIC_SCHEMA_ATTRIBUTES_TO_REMOVE=""
+#! >
+#!     <FEAT_GEOMETRY NAME="" TYPE="" SPATIAL_TYPE=""/>
+#!     <NON_GUI_DEFLINE_PARM VALUE="fme_constant_feature_type,NO"/>
+#!     <DEFLINE_PARM PARM_NAME="xlsx_advanced_group" PARM_VALUE="FME_DISCLOSURE_CLOSED"/>
+#!     <DEFLINE_PARM PARM_NAME="xlsx_drop_sheet" PARM_VALUE="No"/>
+#!     <DEFLINE_PARM PARM_NAME="xlsx_field_names_alignment" PARM_VALUE=""/>
+#!     <DEFLINE_PARM PARM_NAME="xlsx_field_names_background_color" PARM_VALUE=""/>
+#!     <DEFLINE_PARM PARM_NAME="xlsx_field_names_cell" PARM_VALUE=""/>
+#!     <DEFLINE_PARM PARM_NAME="xlsx_field_names_cell_border_color" PARM_VALUE=""/>
+#!     <DEFLINE_PARM PARM_NAME="xlsx_field_names_cell_border_style" PARM_VALUE=""/>
+#!     <DEFLINE_PARM PARM_NAME="xlsx_field_names_fill" PARM_VALUE=""/>
+#!     <DEFLINE_PARM PARM_NAME="xlsx_field_names_font" PARM_VALUE="FME_DISCLOSURE_OPEN"/>
+#!     <DEFLINE_PARM PARM_NAME="xlsx_field_names_font_color" PARM_VALUE=""/>
+#!     <DEFLINE_PARM PARM_NAME="xlsx_field_names_font_name" PARM_VALUE="Arial&lt;comma&gt;9&lt;comma&gt;BOLD"/>
+#!     <DEFLINE_PARM PARM_NAME="xlsx_field_names_formatting" PARM_VALUE="NO"/>
+#!     <DEFLINE_PARM PARM_NAME="xlsx_field_names_horizontal_alignment" PARM_VALUE=""/>
+#!     <DEFLINE_PARM PARM_NAME="xlsx_field_names_out" PARM_VALUE="Yes"/>
+#!     <DEFLINE_PARM PARM_NAME="xlsx_field_names_pattern_color" PARM_VALUE=""/>
+#!     <DEFLINE_PARM PARM_NAME="xlsx_field_names_pattern_style" PARM_VALUE=""/>
+#!     <DEFLINE_PARM PARM_NAME="xlsx_field_names_row_height" PARM_VALUE="1"/>
+#!     <DEFLINE_PARM PARM_NAME="xlsx_field_names_text_control" PARM_VALUE=""/>
+#!     <DEFLINE_PARM PARM_NAME="xlsx_field_names_text_indent" PARM_VALUE=""/>
+#!     <DEFLINE_PARM PARM_NAME="xlsx_field_names_text_orientation" PARM_VALUE=""/>
+#!     <DEFLINE_PARM PARM_NAME="xlsx_field_names_vertical_alignment" PARM_VALUE=""/>
+#!     <DEFLINE_PARM PARM_NAME="xlsx_freeze_end_row" PARM_VALUE="1"/>
+#!     <DEFLINE_PARM PARM_NAME="xlsx_layer_group" PARM_VALUE=""/>
+#!     <DEFLINE_PARM PARM_NAME="xlsx_names_are_positions" PARM_VALUE="No"/>
+#!     <DEFLINE_PARM PARM_NAME="xlsx_offset_col" PARM_VALUE=""/>
+#!     <DEFLINE_PARM PARM_NAME="xlsx_offset_row" PARM_VALUE=""/>
+#!     <DEFLINE_PARM PARM_NAME="xlsx_protect_sheet" PARM_VALUE="NO"/>
+#!     <DEFLINE_PARM PARM_NAME="xlsx_protect_sheet_level" PARM_VALUE="&lt;Unused&gt;"/>
+#!     <DEFLINE_PARM PARM_NAME="xlsx_protect_sheet_password" PARM_VALUE="&lt;Unused&gt;"/>
+#!     <DEFLINE_PARM PARM_NAME="xlsx_protect_sheet_permissions" PARM_VALUE="&lt;Unused&gt;"/>
+#!     <DEFLINE_PARM PARM_NAME="xlsx_raster_type" PARM_VALUE="PNG"/>
+#!     <DEFLINE_PARM PARM_NAME="xlsx_remove_unchanged_template_sheet" PARM_VALUE="No"/>
+#!     <DEFLINE_PARM PARM_NAME="xlsx_row_id_column" PARM_VALUE=""/>
+#!     <DEFLINE_PARM PARM_NAME="xlsx_rowcolumn_group" PARM_VALUE="FME_DISCLOSURE_CLOSED"/>
+#!     <DEFLINE_PARM PARM_NAME="xlsx_sheet_order" PARM_VALUE=""/>
+#!     <DEFLINE_PARM PARM_NAME="xlsx_start_col" PARM_VALUE=""/>
+#!     <DEFLINE_PARM PARM_NAME="xlsx_start_row" PARM_VALUE=""/>
+#!     <DEFLINE_PARM PARM_NAME="xlsx_table_writer_mode" PARM_VALUE="Insert"/>
+#!     <DEFLINE_PARM PARM_NAME="xlsx_template_group" PARM_VALUE=""/>
+#!     <DEFLINE_PARM PARM_NAME="xlsx_template_sheet" PARM_VALUE=""/>
+#!     <DEFLINE_PARM PARM_NAME="xlsx_trunc_sheet" PARM_VALUE="No"/>
+#!     <DEFLINE_PARM PARM_NAME="xlsx_truncate_group" PARM_VALUE="FME_DISCLOSURE_CLOSED"/>
+#! </FEATURE_TYPE>
+#! </FEATURE_TYPES>
+#! <FMESERVER>
+#! <READER_DATASETS>
+#! <DATASET
+#!   NAME="JSON_1"
+#!   OVERRIDE="-JSON_1_DATASET"
+#!   DATASET="JSON_1/*.json"
+#! />
+#! </READER_DATASETS>
+#! <WRITER_DATASETS>
+#! <DATASET
+#!   NAME="XLSXW_1"
+#!   OVERRIDE="-XLSXW_1_DATASET"
+#!   DATASET="XLSXW_1/.xlsx"
+#! />
+#! </WRITER_DATASETS>
+#! </FMESERVER>
+#! <GLOBAL_PARAMETERS>
+#! <GLOBAL_PARAMETER
+#!   GUI_LINE="GUI DIRNAME_SRC ROOT_FOLDER Select the root folder (contains input JSON-file)"
+#!   DEFAULT_VALUE="C:\Users\DriesVerdoodtNordend\Downloads\BKZ_assets"
+#!   IS_STAND_ALONE="true"
+#! />
+#! <GLOBAL_PARAMETER
+#!   GUI_LINE="GUI IGNORE LITERAL NO_EDIT TEXT_EDIT_PYTHON_PARM ROOT_FOLDER_NAME Scripted Parameter Value"
+#!   DEFAULT_VALUE="import&lt;space&gt;fme&lt;lf&gt;from&lt;space&gt;pathlib&lt;space&gt;import&lt;space&gt;Path&lt;lf&gt;&lt;lf&gt;def&lt;space&gt;get_root_folder_name&lt;openparen&gt;&lt;closeparen&gt;:&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;quote&gt;&lt;quote&gt;&lt;quote&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;Retrieves&lt;space&gt;the&lt;space&gt;name&lt;space&gt;of&lt;space&gt;the&lt;space&gt;root&lt;space&gt;folder.&lt;lf&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;Returns:&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;str:&lt;space&gt;The&lt;space&gt;name&lt;space&gt;of&lt;space&gt;the&lt;space&gt;root&lt;space&gt;folder.&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;quote&gt;&lt;quote&gt;&lt;quote&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;root_folder&lt;space&gt;=&lt;space&gt;fme.macroValues&lt;openbracket&gt;&lt;apos&gt;ROOT_FOLDER&lt;apos&gt;&lt;closebracket&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;root_folder_path&lt;space&gt;=&lt;space&gt;Path&lt;openparen&gt;root_folder&lt;closeparen&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;return&lt;space&gt;root_folder_path.name&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;lf&gt;get_root_folder_name&lt;openparen&gt;&lt;closeparen&gt;"
+#!   IS_STAND_ALONE="true"
+#! />
+#! <GLOBAL_PARAMETER
+#!   GUI_LINE="GUI IGNORE NO_EDIT FILE_OR_URL SourceDataset_JSON INCLUDE_WEB_BROWSER%JSON_Documents(*.json)|*.json|Archive_Files(*.7z;*.7zip;*.rar;*.rvz;*.tar;*.tar.bz2;*.tar.gz;*.tgz;*.zip;*.zipx)|*.7z;*.7zip;*.rar;*.rvz;*.tar;*.tar.bz2;*.tar.gz;*.tgz;*.zip;*.zipx|Compressed_Files(*.bz2;*.gz)|*.bz2;*.gz|All_Files(*)|* Source JSON (JavaScript Object Notation) File or URL"
+#!   DEFAULT_VALUE="$(ROOT_FOLDER)/*.json"
+#!   IS_STAND_ALONE="false"
+#! />
+#! <GLOBAL_PARAMETER
+#!   GUI_LINE="GUI IGNORE NO_EDIT FILENAME DestDataset_XLSXW Excel_Files(*.xlsx;*.xlsm;*.xls)|*.xlsx;*.xlsm;*.xls|Microsoft_Excel_2007+_Workbook(*.xlsx)|*.xlsx|Microsoft_Excel_2007+_Macro_Workbook(*.xlsm)|*.xlsm|Microsoft_Excel_Pre-2007_Workbook(*.xls)|*.xls|All_Files(*)|* Destination Microsoft Excel File"
+#!   DEFAULT_VALUE="$(ROOT_FOLDER)/$(ROOT_FOLDER_NAME).xlsx"
+#!   IS_STAND_ALONE="false"
+#! />
+#! </GLOBAL_PARAMETERS>
+#! <USER_PARAMETERS
+#!   FORM="eyJwYXJhbWV0ZXJzIjpbeyJuYW1lIjoiUk9PVF9GT0xERVIiLCJwcm9tcHQiOiJTZWxlY3QgdGhlIHJvb3QgZm9sZGVyIChjb250YWlucyBpbnB1dCBKU09OLWZpbGUpIiwidmFsdWVUeXBlIjoic3RyaW5nIiwiZGVmYXVsdFZhbHVlIjoiQzpcXFVzZXJzXFxEcmllc1ZlcmRvb2R0Tm9yZGVuZFxcRG93bmxvYWRzXFxCS1pfYXNzZXRzIiwidHlwZSI6ImZpbGUiLCJzZWxlY3RNdWx0aXBsZSI6ZmFsc2UsIml0ZW1zVG9TZWxlY3QiOiJmb2xkZXJzIiwiYWNjZXNzTW9kZSI6InJlYWQiLCJ2YWxpZGF0ZUV4aXN0ZW5jZSI6dHJ1ZX0seyJuYW1lIjoiUk9PVF9GT0xERVJfTkFNRSIsInByb21wdCI6IlNjcmlwdGVkIFBhcmFtZXRlciBWYWx1ZSIsInZhbHVlVHlwZSI6InN0cmluZ0VuY29kZWQiLCJkZWZhdWx0VmFsdWUiOiJpbXBvcnQ8c3BhY2U+Zm1lPGxmPmZyb208c3BhY2U+cGF0aGxpYjxzcGFjZT5pbXBvcnQ8c3BhY2U+UGF0aDxsZj48bGY+ZGVmPHNwYWNlPmdldF9yb290X2ZvbGRlcl9uYW1lPG9wZW5wYXJlbj48Y2xvc2VwYXJlbj46PGxmPjxzcGFjZT48c3BhY2U+PHNwYWNlPjxzcGFjZT48cXVvdGU+PHF1b3RlPjxxdW90ZT48bGY+PHNwYWNlPjxzcGFjZT48c3BhY2U+PHNwYWNlPlJldHJpZXZlczxzcGFjZT50aGU8c3BhY2U+bmFtZTxzcGFjZT5vZjxzcGFjZT50aGU8c3BhY2U+cm9vdDxzcGFjZT5mb2xkZXIuPGxmPjxsZj48c3BhY2U+PHNwYWNlPjxzcGFjZT48c3BhY2U+UmV0dXJuczo8bGY+PHNwYWNlPjxzcGFjZT48c3BhY2U+PHNwYWNlPjxzcGFjZT48c3BhY2U+PHNwYWNlPjxzcGFjZT5zdHI6PHNwYWNlPlRoZTxzcGFjZT5uYW1lPHNwYWNlPm9mPHNwYWNlPnRoZTxzcGFjZT5yb290PHNwYWNlPmZvbGRlci48bGY+PHNwYWNlPjxzcGFjZT48c3BhY2U+PHNwYWNlPjxxdW90ZT48cXVvdGU+PHF1b3RlPjxsZj48c3BhY2U+PHNwYWNlPjxzcGFjZT48c3BhY2U+cm9vdF9mb2xkZXI8c3BhY2U+PTxzcGFjZT5mbWUubWFjcm9WYWx1ZXM8b3BlbmJyYWNrZXQ+PGFwb3M+Uk9PVF9GT0xERVI8YXBvcz48Y2xvc2VicmFja2V0PjxsZj48c3BhY2U+PHNwYWNlPjxzcGFjZT48c3BhY2U+cm9vdF9mb2xkZXJfcGF0aDxzcGFjZT49PHNwYWNlPlBhdGg8b3BlbnBhcmVuPnJvb3RfZm9sZGVyPGNsb3NlcGFyZW4+PGxmPjxzcGFjZT48c3BhY2U+PHNwYWNlPjxzcGFjZT5yZXR1cm48c3BhY2U+cm9vdF9mb2xkZXJfcGF0aC5uYW1lPGxmPjxzcGFjZT48c3BhY2U+PHNwYWNlPjxzcGFjZT48bGY+Z2V0X3Jvb3RfZm9sZGVyX25hbWU8b3BlbnBhcmVuPjxjbG9zZXBhcmVuPiIsInZpc2liaWxpdHkiOiJoaWRkZW5FbmFibGVkIiwic3VwcG9ydGVkVmFsdWVUeXBlcyI6WyJub25lIl0sInR5cGUiOiJ0ZXh0IiwiZWRpdG9yIjoicHl0aG9uIiwicnVubmFibGUiOnRydWV9LHsibmFtZSI6IlNvdXJjZURhdGFzZXRfSlNPTiIsInByb21wdCI6IlNvdXJjZSBKU09OIChKYXZhU2NyaXB0IE9iamVjdCBOb3RhdGlvbikgRmlsZSBvciBVUkwiLCJ2YWx1ZVR5cGUiOiJzdHJpbmciLCJkZWZhdWx0VmFsdWUiOiIkKFJPT1RfRk9MREVSKS8qLmpzb24iLCJ2aXNpYmlsaXR5IjoiaGlkZGVuRW5hYmxlZCIsInR5cGUiOiJmaWxlIiwic2VsZWN0TXVsdGlwbGUiOnRydWUsIml0ZW1zVG9TZWxlY3QiOiJmaWxlcyIsImFjY2Vzc01vZGUiOiJyZWFkIiwidmFsaWRhdGVFeGlzdGVuY2UiOmZhbHNlLCJhbGxvd1VSTCI6dHJ1ZSwiaW5jbHVkZVdlYkJyb3dzZXIiOnRydWUsImZpbHRlcnMiOlt7ImRlc2NyaXB0aW9uIjoiSlNPTiBEb2N1bWVudHMiLCJmaWx0ZXIiOlsiKi5qc29uIl19LHsiZGVzY3JpcHRpb24iOiJBcmNoaXZlIEZpbGVzIiwiZmlsdGVyIjpbIiouN3oiLCIqLjd6aXAiLCIqLnJhciIsIioucnZ6IiwiKi50YXIiLCIqLnRhci5iejIiLCIqLnRhci5neiIsIioudGd6IiwiKi56aXAiLCIqLnppcHgiXX0seyJkZXNjcmlwdGlvbiI6IkNvbXByZXNzZWQgRmlsZXMiLCJmaWx0ZXIiOlsiKi5iejIiLCIqLmd6Il19LHsiZGVzY3JpcHRpb24iOiJBbGwgRmlsZXMiLCJmaWx0ZXIiOlsiKiJdfV19LHsibmFtZSI6IkRlc3REYXRhc2V0X1hMU1hXIiwicHJvbXB0IjoiRGVzdGluYXRpb24gTWljcm9zb2Z0IEV4Y2VsIEZpbGUiLCJ2YWx1ZVR5cGUiOiJzdHJpbmciLCJkZWZhdWx0VmFsdWUiOiIkKFJPT1RfRk9MREVSKS8kKFJPT1RfRk9MREVSX05BTUUpLnhsc3giLCJ2aXNpYmlsaXR5IjoiaGlkZGVuRW5hYmxlZCIsInR5cGUiOiJmaWxlIiwic2VsZWN0TXVsdGlwbGUiOmZhbHNlLCJpdGVtc1RvU2VsZWN0IjoiZmlsZXMiLCJhY2Nlc3NNb2RlIjoid3JpdGUiLCJ2YWxpZGF0ZUV4aXN0ZW5jZSI6ZmFsc2UsImZpbHRlcnMiOlt7ImRlc2NyaXB0aW9uIjoiRXhjZWwgRmlsZXMiLCJmaWx0ZXIiOlsiKi54bHN4IiwiKi54bHNtIiwiKi54bHMiXX0seyJkZXNjcmlwdGlvbiI6Ik1pY3Jvc29mdCBFeGNlbCAyMDA3KyBXb3JrYm9vayIsImZpbHRlciI6WyIqLnhsc3giXX0seyJkZXNjcmlwdGlvbiI6Ik1pY3Jvc29mdCBFeGNlbCAyMDA3KyBNYWNybyBXb3JrYm9vayIsImZpbHRlciI6WyIqLnhsc20iXX0seyJkZXNjcmlwdGlvbiI6Ik1pY3Jvc29mdCBFeGNlbCBQcmUtMjAwNyBXb3JrYm9vayIsImZpbHRlciI6WyIqLnhscyJdfSx7ImRlc2NyaXB0aW9uIjoiQWxsIEZpbGVzIiwiZmlsdGVyIjpbIioiXX1dfV19"
+#! >
+#! <PARAMETER_INFO>
+#!     <INFO NAME="ROOT_FOLDER" 
+#!   DEFAULT_VALUE="C:\Users\DriesVerdoodtNordend\Downloads\BKZ_assets"
+#!   SCOPE="STAND_ALONE"
+#!   GENERATED_GUI_LINE="true"
+#!   GUI_LINE="GUI DIRNAME_SRC ROOT_FOLDER Select the root folder (contains input JSON-file)"
+#! />
+#!     <INFO NAME="ROOT_FOLDER_NAME" 
+#!   DEFAULT_VALUE="import&lt;space&gt;fme&lt;lf&gt;from&lt;space&gt;pathlib&lt;space&gt;import&lt;space&gt;Path&lt;lf&gt;&lt;lf&gt;def&lt;space&gt;get_root_folder_name&lt;openparen&gt;&lt;closeparen&gt;:&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;quote&gt;&lt;quote&gt;&lt;quote&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;Retrieves&lt;space&gt;the&lt;space&gt;name&lt;space&gt;of&lt;space&gt;the&lt;space&gt;root&lt;space&gt;folder.&lt;lf&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;Returns:&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;str:&lt;space&gt;The&lt;space&gt;name&lt;space&gt;of&lt;space&gt;the&lt;space&gt;root&lt;space&gt;folder.&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;quote&gt;&lt;quote&gt;&lt;quote&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;root_folder&lt;space&gt;=&lt;space&gt;fme.macroValues&lt;openbracket&gt;&lt;apos&gt;ROOT_FOLDER&lt;apos&gt;&lt;closebracket&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;root_folder_path&lt;space&gt;=&lt;space&gt;Path&lt;openparen&gt;root_folder&lt;closeparen&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;return&lt;space&gt;root_folder_path.name&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;lf&gt;get_root_folder_name&lt;openparen&gt;&lt;closeparen&gt;"
+#!   SCOPE="STAND_ALONE"
+#!   GENERATED_GUI_LINE="true"
+#!   GUI_LINE="GUI IGNORE LITERAL NO_EDIT TEXT_EDIT_PYTHON_PARM ROOT_FOLDER_NAME Scripted Parameter Value"
+#! />
+#!     <INFO NAME="SourceDataset_JSON" 
+#!   DEFAULT_VALUE="$(ROOT_FOLDER)/*.json"
+#!   SCOPE="DEPENDENT"
+#!   GENERATED_GUI_LINE="true"
+#!   GUI_LINE="GUI IGNORE NO_EDIT FILE_OR_URL SourceDataset_JSON INCLUDE_WEB_BROWSER%JSON_Documents(*.json)|*.json|Archive_Files(*.7z;*.7zip;*.rar;*.rvz;*.tar;*.tar.bz2;*.tar.gz;*.tgz;*.zip;*.zipx)|*.7z;*.7zip;*.rar;*.rvz;*.tar;*.tar.bz2;*.tar.gz;*.tgz;*.zip;*.zipx|Compressed_Files(*.bz2;*.gz)|*.bz2;*.gz|All_Files(*)|* Source JSON (JavaScript Object Notation) File or URL"
+#! />
+#!     <INFO NAME="DestDataset_XLSXW" 
+#!   DEFAULT_VALUE="$(ROOT_FOLDER)/$(ROOT_FOLDER_NAME).xlsx"
+#!   SCOPE="DEPENDENT"
+#!   GENERATED_GUI_LINE="true"
+#!   GUI_LINE="GUI IGNORE NO_EDIT FILENAME DestDataset_XLSXW Excel_Files(*.xlsx;*.xlsm;*.xls)|*.xlsx;*.xlsm;*.xls|Microsoft_Excel_2007+_Workbook(*.xlsx)|*.xlsx|Microsoft_Excel_2007+_Macro_Workbook(*.xlsm)|*.xlsm|Microsoft_Excel_Pre-2007_Workbook(*.xls)|*.xls|All_Files(*)|* Destination Microsoft Excel File"
+#! />
+#! </PARAMETER_INFO>
+#! </USER_PARAMETERS>
+#! <COMMENTS>
+#! <COMMENT
+#!   IDENTIFIER="13"
+#!   COMMENT_VALUE="&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;&#10;&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;meta charset=&quot;utf-8&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;&#10;p, li { white-space: pre-wrap; }&#10;hr { height: 1px; border-width: 0; }&#10;li.unchecked::marker { content: &quot;\2610&quot;; }&#10;li.checked::marker { content: &quot;\2612&quot;; }&#10;&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Segoe UI&apos;; font-size:9pt; font-weight:400; font-style:normal;&quot;&gt;&#10;&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;set hyperlink to schema&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;"
+#!   POSITION="578.24506245062491 -448.12778127781303"
+#!   TOP_LEFT="578.24506245062491 -448.12778127781303"
+#!   BOTTOM_RIGHT="1014.2352504775051 -449.12778127781303"
+#!   BOUNDING_RECT="578.24506245062491 -448.12778127781303 435.99018802688028 1"
+#!   ORDER="500000000000012"
+#!   FOLLOW_ANCHOR="true"
+#!   INFO_NODE="false"
+#!   CUSTOM_USER_COLOR="false"
+#!   UUID="{320fb2b0-3956-4c31-a6bf-1ed34d5837b8}"
+#!   COLOUR="1,0.95686274509803926,0.80000000000000004,0.90196078431372551"
+#!   SIZE_POLICY="10"
+#!   ANCHORED_NODE="15"
+#! />
+#! <COMMENT
+#!   IDENTIFIER="19"
+#!   COMMENT_VALUE="&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;&#10;&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;meta charset=&quot;utf-8&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;&#10;p, li { white-space: pre-wrap; }&#10;hr { height: 1px; border-width: 0; }&#10;li.unchecked::marker { content: &quot;\2610&quot;; }&#10;li.checked::marker { content: &quot;\2612&quot;; }&#10;&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Segoe UI&apos;; font-size:9pt; font-weight:400; font-style:normal;&quot;&gt;&#10;&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Custom Transformer relict&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;"
+#!   POSITION="2028.2872050810788 -623.12403124031243"
+#!   TOP_LEFT="2028.2872050810788 -623.12403124031243"
+#!   BOTTOM_RIGHT="2578.9758057170852 -624.12403124031243"
+#!   BOUNDING_RECT="2028.2872050810788 -623.12403124031243 550.68860063600641 1"
+#!   ORDER="500000000000017"
+#!   FOLLOW_ANCHOR="true"
+#!   INFO_NODE="false"
+#!   CUSTOM_USER_COLOR="false"
+#!   UUID="{afd88296-ca80-41aa-a9eb-681dadb400ec}"
+#!   COLOUR="1,0.95686274509803926,0.80000000000000004,0.90196078431372551"
+#!   SIZE_POLICY="10"
+#!   ANCHORED_NODE="5"
+#! />
+#! <COMMENT
+#!   IDENTIFIER="20"
+#!   COMMENT_VALUE="&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;&#10;&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;meta charset=&quot;utf-8&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;&#10;p, li { white-space: pre-wrap; }&#10;hr { height: 1px; border-width: 0; }&#10;li.unchecked::marker { content: &quot;\2610&quot;; }&#10;li.checked::marker { content: &quot;\2612&quot;; }&#10;&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Segoe UI&apos;; font-size:9pt; font-weight:400; font-style:normal;&quot;&gt;&#10;&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Initieel bestand: 124538 assets&lt;/p&gt;&#10;&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Update 29.7.2026: 120228 assets&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;"
+#!   POSITION="-1034.3853438534386 -4.1667083337499946"
+#!   TOP_LEFT="-1034.3853438534386 -4.1667083337499946"
+#!   BOTTOM_RIGHT="-284.42717239672402 -54.166708333749995"
+#!   BOUNDING_RECT="-1034.3853438534386 -4.1667083337499946 749.95817145671458 50"
+#!   ORDER="500000000000018"
+#!   FOLLOW_ANCHOR="true"
+#!   INFO_NODE="false"
+#!   CUSTOM_USER_COLOR="false"
+#!   UUID="{b8866c23-6020-49a7-a9a5-d82ed3961562}"
+#!   COLOUR="1,0.95686274509803926,0.80000000000000004,0.90196078431372551"
+#!   SIZE_POLICY="10"
+#!   ANCHORED_NODE="0"
+#! />
+#! </COMMENTS>
+#! <CONSTANTS>
+#! </CONSTANTS>
+#! <BOOKMARKS>
+#! </BOOKMARKS>
+#! <TRANSFORMERS>
+#! <TRANSFORMER
+#!   IDENTIFIER="5"
+#!   TYPE="SubDocumentTransformer"
+#!   VERSION="1"
+#!   POSITION="2028.2872050810788 -758.12478124781251"
+#!   BOUNDING_RECT="2028.2872050810788 -758.12478124781251 550.71875 65"
+#!   ORDER="500000000000000"
+#!   PARMS_EDITED="true"
+#!   ENABLED="false"
+#!   LAST_PARM_EDIT="25630"
+#! >
+#!     <OUTPUT_FEAT NAME="Output"/>
+#!     <XFORM_ATTR ATTR_NAME="uuid.hyperlink" IS_USER_CREATED="false" FEAT_INDEX="0" />
+#!     <XFORM_PARM PARM_NAME="ATTRIBUTE" PARM_VALUE="&lt;at&gt;Value&lt;openparen&gt;attribute&lt;opencurly&gt;0&lt;closecurly&gt;.name&lt;closeparen&gt;"/>
+#!     <XFORM_PARM PARM_NAME="SUB_DOC_NAME" PARM_VALUE="setHyperlink"/>
+#!     <XFORM_PARM PARM_NAME="TRANSFORMER_GROUP" PARM_VALUE=""/>
+#!     <XFORM_PARM PARM_NAME="XFORMER_NAME" PARM_VALUE="setHyperlink"/>
+#!     <XFORM_PARM PARM_NAME="__COMPOUND_PARAMETERS" PARM_VALUE=""/>
+#! </TRANSFORMER>
+#! <TRANSFORMER
+#!   IDENTIFIER="11"
+#!   TYPE="SchemaScanner"
+#!   VERSION="2"
+#!   POSITION="-196.87696876968744 -216.25581255812563"
+#!   BOUNDING_RECT="-196.87696876968744 -216.25581255812563 436 65"
+#!   ORDER="500000000000005"
+#!   PARMS_EDITED="true"
+#!   ENABLED="true"
+#!   LAST_PARM_EDIT="25630"
+#! >
+#!     <OUTPUT_FEAT NAME="Output"/>
+#!     <FEAT_COLLAPSED COLLAPSED="0"/>
+#!     <XFORM_ATTR ATTR_NAME="fme_feature_type" IS_USER_CREATED="false" FEAT_INDEX="0" />
+#!     <XFORM_ATTR ATTR_NAME="fme_feature_type_name" IS_USER_CREATED="false" FEAT_INDEX="0" />
+#!     <OUTPUT_FEAT NAME="&lt;SCHEMA&gt;"/>
+#!     <FEAT_COLLAPSED COLLAPSED="1"/>
+#!     <XFORM_ATTR ATTR_NAME="fme_feature_type_name" IS_USER_CREATED="false" FEAT_INDEX="1" />
+#!     <XFORM_ATTR ATTR_NAME="attribute{}.name" IS_USER_CREATED="false" FEAT_INDEX="1" />
+#!     <XFORM_ATTR ATTR_NAME="attribute{}.fme_data_type" IS_USER_CREATED="false" FEAT_INDEX="1" />
+#!     <OUTPUT_FEAT NAME="&lt;REJECTED&gt;"/>
+#!     <FEAT_COLLAPSED COLLAPSED="2"/>
+#!     <XFORM_ATTR ATTR_NAME="fme_feature_type" IS_USER_CREATED="false" FEAT_INDEX="2" />
+#!     <XFORM_ATTR ATTR_NAME="fme_rejection_code" IS_USER_CREATED="false" FEAT_INDEX="2" />
+#!     <XFORM_PARM PARM_NAME="CASE" PARM_VALUE="No"/>
+#!     <XFORM_PARM PARM_NAME="DATE_OPTIONS_GROUP" PARM_VALUE="NO_DATE"/>
+#!     <XFORM_PARM PARM_NAME="DATE_OPTIONS_GRP" PARM_VALUE=""/>
+#!     <XFORM_PARM PARM_NAME="DATE_TIME_ATTRIBUTE_FORMAT" PARM_VALUE="&lt;Unused&gt;"/>
+#!     <XFORM_PARM PARM_NAME="EMPTY_ATTR_HANDLING" PARM_VALUE="IGNORE"/>
+#!     <XFORM_PARM PARM_NAME="FME_DATE" PARM_VALUE="&lt;Unused&gt;"/>
+#!     <XFORM_PARM PARM_NAME="GROUP_BY" PARM_VALUE="&lt;Unused&gt;"/>
+#!     <XFORM_PARM PARM_NAME="GROUP_BY_MODE" PARM_VALUE="&lt;Unused&gt;"/>
+#!     <XFORM_PARM PARM_NAME="GROUP_PROCESSING_GROUP" PARM_VALUE="NO"/>
+#!     <XFORM_PARM PARM_NAME="HOLD" PARM_VALUE="Yes"/>
+#!     <XFORM_PARM PARM_NAME="IGNORE_REGEXP" PARM_VALUE="^fme_&lt;pipe&gt;^multi_"/>
+#!     <XFORM_PARM PARM_NAME="INCLUDE_FORMAT_ATTR" PARM_VALUE="No"/>
+#!     <XFORM_PARM PARM_NAME="MAX_FEATURES" PARM_VALUE=""/>
+#!     <XFORM_PARM PARM_NAME="NO_DATE" PARM_VALUE=""/>
+#!     <XFORM_PARM PARM_NAME="NUMERIC_ALLOW_LEADING_ZEROES" PARM_VALUE="Yes"/>
+#!     <XFORM_PARM PARM_NAME="OUTPUT_ATTR_GROUP" PARM_VALUE=""/>
+#!     <XFORM_PARM PARM_NAME="PARAMETERS_GROUP" PARM_VALUE=""/>
+#!     <XFORM_PARM PARM_NAME="SCHEMA_NAME_ATTR" PARM_VALUE="fme_feature_type_name"/>
+#!     <XFORM_PARM PARM_NAME="TEST_STRING" PARM_VALUE=""/>
+#!     <XFORM_PARM PARM_NAME="TRANSFORMER_GROUP" PARM_VALUE=""/>
+#!     <XFORM_PARM PARM_NAME="TYPE_OPTIONS_GROUP" PARM_VALUE=""/>
+#!     <XFORM_PARM PARM_NAME="UNBOUNDED_NUMBERS" PARM_VALUE="Yes"/>
+#!     <XFORM_PARM PARM_NAME="UNBOUNDED_STRINGS" PARM_VALUE="No"/>
+#!     <XFORM_PARM PARM_NAME="XFORMER_NAME" PARM_VALUE="SchemaScanner"/>
+#! </TRANSFORMER>
+#! <TRANSFORMER
+#!   IDENTIFIER="15"
+#!   TYPE="PythonCaller"
+#!   VERSION="6"
+#!   POSITION="578.24506245062491 -633.12903129031315"
+#!   BOUNDING_RECT="578.24506245062491 -633.12903129031315 436 65"
+#!   ORDER="500000000000008"
+#!   PARMS_EDITED="true"
+#!   ENABLED="true"
+#!   LAST_PARM_EDIT="25630"
+#! >
+#!     <OUTPUT_FEAT NAME="OUTPUT"/>
+#!     <FEAT_COLLAPSED COLLAPSED="0"/>
+#!     <XFORM_ATTR ATTR_NAME="fme_feature_type_name" IS_USER_CREATED="false" FEAT_INDEX="0" />
+#!     <XFORM_ATTR ATTR_NAME="attribute{}.name" IS_USER_CREATED="false" FEAT_INDEX="0" />
+#!     <XFORM_ATTR ATTR_NAME="attribute{}.fme_data_type" IS_USER_CREATED="false" FEAT_INDEX="0" />
+#!     <OUTPUT_FEAT NAME="&lt;Rejected&gt;"/>
+#!     <FEAT_COLLAPSED COLLAPSED="1"/>
+#!     <XFORM_ATTR ATTR_NAME="fme_feature_type_name" IS_USER_CREATED="false" FEAT_INDEX="1" />
+#!     <XFORM_ATTR ATTR_NAME="attribute{}.name" IS_USER_CREATED="false" FEAT_INDEX="1" />
+#!     <XFORM_ATTR ATTR_NAME="attribute{}.fme_data_type" IS_USER_CREATED="false" FEAT_INDEX="1" />
+#!     <XFORM_ATTR ATTR_NAME="fme_rejection_code" IS_USER_CREATED="false" FEAT_INDEX="1" />
+#!     <XFORM_ATTR ATTR_NAME="fme_rejection_message" IS_USER_CREATED="false" FEAT_INDEX="1" />
+#!     <XFORM_PARM PARM_NAME="ADVANCED_GROUP" PARM_VALUE=""/>
+#!     <XFORM_PARM PARM_NAME="GROUP_BY" PARM_VALUE="&lt;Unused&gt;"/>
+#!     <XFORM_PARM PARM_NAME="GROUP_BY_MODE" PARM_VALUE="&lt;Unused&gt;"/>
+#!     <XFORM_PARM PARM_NAME="GROUP_PROCESSING_GROUP" PARM_VALUE="NO"/>
+#!     <XFORM_PARM PARM_NAME="HIDE_ATTRIBUTES" PARM_VALUE=""/>
+#!     <XFORM_PARM PARM_NAME="LIST_ATTRS" PARM_VALUE=""/>
+#!     <XFORM_PARM PARM_NAME="NEW_ATTRIBUTES" PARM_VALUE=""/>
+#!     <XFORM_PARM PARM_NAME="PARAMETERS_GROUP" PARM_VALUE=""/>
+#!     <XFORM_PARM PARM_NAME="PYTHONSOURCE" PARM_VALUE="import&lt;space&gt;fme&lt;lf&gt;from&lt;space&gt;fme&lt;space&gt;import&lt;space&gt;BaseTransformer&lt;lf&gt;import&lt;space&gt;fmeobjects&lt;lf&gt;&lt;lf&gt;&lt;lf&gt;class&lt;space&gt;FeatureProcessor&lt;openparen&gt;BaseTransformer&lt;closeparen&gt;:&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;quote&gt;&lt;quote&gt;&lt;quote&gt;Template&lt;space&gt;Class&lt;space&gt;Interface:&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;When&lt;space&gt;using&lt;space&gt;this&lt;space&gt;class&lt;comma&gt;&lt;space&gt;make&lt;space&gt;sure&lt;space&gt;its&lt;space&gt;name&lt;space&gt;is&lt;space&gt;set&lt;space&gt;as&lt;space&gt;the&lt;space&gt;value&lt;space&gt;of&lt;space&gt;the&lt;space&gt;&lt;apos&gt;Class&lt;space&gt;to&lt;space&gt;Process&lt;space&gt;Features&lt;apos&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;transformer&lt;space&gt;parameter.&lt;lf&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;This&lt;space&gt;class&lt;space&gt;inherits&lt;space&gt;from&lt;space&gt;&lt;apos&gt;fme.BaseTransformer&lt;apos&gt;.&lt;space&gt;For&lt;space&gt;full&lt;space&gt;details&lt;space&gt;of&lt;space&gt;this&lt;space&gt;class&lt;comma&gt;&lt;space&gt;its&lt;space&gt;methods&lt;comma&gt;&lt;space&gt;and&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;expected&lt;space&gt;usage&lt;comma&gt;&lt;space&gt;see&lt;space&gt;https:&lt;solidus&gt;&lt;solidus&gt;docs.safe.com&lt;solidus&gt;fme&lt;solidus&gt;html&lt;solidus&gt;fmepython&lt;solidus&gt;api&lt;solidus&gt;fme.html#fme.BaseTransformer.&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;quote&gt;&lt;quote&gt;&lt;quote&gt;&lt;lf&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;def&lt;space&gt;__init__&lt;openparen&gt;self&lt;closeparen&gt;:&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;quote&gt;&lt;quote&gt;&lt;quote&gt;Base&lt;space&gt;constructor&lt;space&gt;for&lt;space&gt;class&lt;space&gt;members.&lt;quote&gt;&lt;quote&gt;&lt;quote&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;self.log&lt;space&gt;=&lt;space&gt;fmeobjects.FMELogFile&lt;openparen&gt;&lt;closeparen&gt;&lt;space&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;def&lt;space&gt;log2FME&lt;openparen&gt;self&lt;comma&gt;&lt;space&gt;message&lt;comma&gt;&lt;space&gt;severity=fmeobjects.FME_INFORM&lt;closeparen&gt;:&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;quote&gt;&lt;quote&gt;&lt;quote&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;Sends&lt;space&gt;message&lt;space&gt;to&lt;space&gt;the&lt;space&gt;FME&lt;space&gt;log&lt;space&gt;file&lt;space&gt;and&lt;space&gt;console&lt;space&gt;window.&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;Severity&lt;space&gt;must&lt;space&gt;be&lt;space&gt;one&lt;space&gt;of&lt;space&gt;FME_INFORM&lt;comma&gt;&lt;space&gt;FME_WARN&lt;comma&gt;&lt;space&gt;FME_ERROR&lt;comma&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;FME_FATAL&lt;comma&gt;&lt;space&gt;FME_STATISTIC&lt;comma&gt;&lt;space&gt;or&lt;space&gt;FME_STATUSREPORT.&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;quote&gt;&lt;quote&gt;&lt;quote&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;self.log.logMessageString&lt;openparen&gt;message&lt;comma&gt;&lt;space&gt;severity&lt;closeparen&gt;&lt;lf&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;def&lt;space&gt;has_support_for&lt;openparen&gt;self&lt;comma&gt;&lt;space&gt;support_type:&lt;space&gt;int&lt;closeparen&gt;:&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;quote&gt;&lt;quote&gt;&lt;quote&gt;This&lt;space&gt;method&lt;space&gt;is&lt;space&gt;called&lt;space&gt;by&lt;space&gt;FME&lt;space&gt;to&lt;space&gt;determine&lt;space&gt;if&lt;space&gt;the&lt;space&gt;PythonCaller&lt;space&gt;supports&lt;space&gt;Bulk&lt;space&gt;mode&lt;comma&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;which&lt;space&gt;allows&lt;space&gt;for&lt;space&gt;significant&lt;space&gt;performance&lt;space&gt;gains&lt;space&gt;when&lt;space&gt;processing&lt;space&gt;large&lt;space&gt;numbers&lt;space&gt;of&lt;space&gt;features.&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;quote&gt;&lt;quote&gt;&lt;quote&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;return&lt;space&gt;support_type&lt;space&gt;==&lt;space&gt;fmeobjects.FME_SUPPORT_FEATURE_TABLE_SHIM&lt;lf&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;def&lt;space&gt;input&lt;openparen&gt;self&lt;comma&gt;&lt;space&gt;feature:&lt;space&gt;fmeobjects.FMEFeature&lt;closeparen&gt;:&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;attr_names&lt;space&gt;=&lt;space&gt;feature.getAttribute&lt;openparen&gt;&lt;apos&gt;attribute&lt;opencurly&gt;&lt;closecurly&gt;.name&lt;apos&gt;&lt;closeparen&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;attr_types&lt;space&gt;=&lt;space&gt;feature.getAttribute&lt;openparen&gt;&lt;apos&gt;attribute&lt;opencurly&gt;&lt;closecurly&gt;.fme_data_type&lt;apos&gt;&lt;closeparen&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;#&lt;space&gt;Create&lt;space&gt;an&lt;space&gt;attribute&lt;space&gt;with&lt;space&gt;suffix&lt;space&gt;&lt;quote&gt;.hyperlink&lt;quote&gt;&lt;space&gt;from&lt;space&gt;the&lt;space&gt;attribute&lt;space&gt;at&lt;space&gt;the&lt;space&gt;first&lt;space&gt;index&lt;space&gt;position&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;index&lt;space&gt;=&lt;space&gt;0&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;attr_names.insert&lt;openparen&gt;index&lt;space&gt;+&lt;space&gt;1&lt;comma&gt;&lt;space&gt;f&lt;apos&gt;&lt;opencurly&gt;attr_names&lt;openbracket&gt;index&lt;closebracket&gt;&lt;closecurly&gt;.hyperlink&lt;apos&gt;&lt;closeparen&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;attr_types.insert&lt;openparen&gt;index&lt;space&gt;+&lt;space&gt;1&lt;comma&gt;&lt;space&gt;attr_types&lt;openbracket&gt;index&lt;closebracket&gt;&lt;closeparen&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;feature.setAttribute&lt;openparen&gt;&lt;apos&gt;attribute&lt;opencurly&gt;&lt;closecurly&gt;.name&lt;apos&gt;&lt;comma&gt;&lt;space&gt;attr_names&lt;closeparen&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;feature.setAttribute&lt;openparen&gt;&lt;apos&gt;attribute&lt;opencurly&gt;&lt;closecurly&gt;.fme_data_type&lt;apos&gt;&lt;comma&gt;&lt;space&gt;attr_types&lt;closeparen&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;self.pyoutput&lt;openparen&gt;feature&lt;comma&gt;&lt;space&gt;output_tag=&lt;quote&gt;PYOUTPUT&lt;quote&gt;&lt;closeparen&gt;&lt;lf&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;def&lt;space&gt;close&lt;openparen&gt;self&lt;closeparen&gt;:&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;quote&gt;&lt;quote&gt;&lt;quote&gt;This&lt;space&gt;method&lt;space&gt;is&lt;space&gt;called&lt;space&gt;once&lt;space&gt;all&lt;space&gt;the&lt;space&gt;FME&lt;space&gt;Features&lt;space&gt;have&lt;space&gt;been&lt;space&gt;processed&lt;space&gt;from&lt;space&gt;input&lt;openparen&gt;&lt;closeparen&gt;.&lt;quote&gt;&lt;quote&gt;&lt;quote&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;pass&lt;lf&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;def&lt;space&gt;process_group&lt;openparen&gt;self&lt;closeparen&gt;:&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;quote&gt;&lt;quote&gt;&lt;quote&gt;This&lt;space&gt;method&lt;space&gt;is&lt;space&gt;called&lt;space&gt;by&lt;space&gt;FME&lt;space&gt;for&lt;space&gt;each&lt;space&gt;group&lt;space&gt;when&lt;space&gt;group&lt;space&gt;processing&lt;space&gt;mode&lt;space&gt;is&lt;space&gt;enabled.&lt;quote&gt;&lt;quote&gt;&lt;quote&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;pass&lt;lf&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;def&lt;space&gt;reject_feature&lt;openparen&gt;self&lt;comma&gt;&lt;space&gt;feature:&lt;space&gt;fmeobjects.FMEFeature&lt;comma&gt;&lt;space&gt;code:&lt;space&gt;str&lt;comma&gt;&lt;space&gt;message:&lt;space&gt;str&lt;closeparen&gt;:&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;quote&gt;&lt;quote&gt;&lt;quote&gt;This&lt;space&gt;method&lt;space&gt;can&lt;space&gt;be&lt;space&gt;used&lt;space&gt;to&lt;space&gt;output&lt;space&gt;a&lt;space&gt;feature&lt;space&gt;to&lt;space&gt;the&lt;space&gt;&lt;lt&gt;Rejected&lt;gt&gt;&lt;space&gt;port.&lt;quote&gt;&lt;quote&gt;&lt;quote&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;feature.setAttribute&lt;openparen&gt;&lt;quote&gt;fme_rejection_code&lt;quote&gt;&lt;comma&gt;&lt;space&gt;code&lt;closeparen&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;feature.setAttribute&lt;openparen&gt;&lt;quote&gt;fme_rejection_message&lt;quote&gt;&lt;comma&gt;&lt;space&gt;message&lt;closeparen&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;self.pyoutput&lt;openparen&gt;feature&lt;comma&gt;&lt;space&gt;output_tag=&lt;quote&gt;&lt;lt&gt;Rejected&lt;gt&gt;&lt;quote&gt;&lt;closeparen&gt;&lt;lf&gt;"/>
+#!     <XFORM_PARM PARM_NAME="PYTHONSYMBOL" PARM_VALUE="FeatureProcessor"/>
+#!     <XFORM_PARM PARM_NAME="TRANSFORMER_GROUP" PARM_VALUE=""/>
+#!     <XFORM_PARM PARM_NAME="XFORMER_NAME" PARM_VALUE="PythonCaller"/>
+#! </TRANSFORMER>
+#! <TRANSFORMER
+#!   IDENTIFIER="14"
+#!   TYPE="FeatureMerger"
+#!   VERSION="21"
+#!   POSITION="1278.1067810678112 -273.12478124781251"
+#!   BOUNDING_RECT="1278.1067810678112 -273.12478124781251 459.09375 65"
+#!   ORDER="500000000000013"
+#!   PARMS_EDITED="true"
+#!   ENABLED="true"
+#!   LAST_PARM_EDIT="25630"
+#! >
+#!     <OUTPUT_FEAT NAME="MERGED"/>
+#!     <FEAT_COLLAPSED COLLAPSED="0"/>
+#!     <XFORM_ATTR ATTR_NAME="fme_feature_type" IS_USER_CREATED="false" FEAT_INDEX="0" />
+#!     <XFORM_ATTR ATTR_NAME="fme_feature_type_name" IS_USER_CREATED="false" FEAT_INDEX="0" />
+#!     <XFORM_ATTR ATTR_NAME="attribute{}.name" IS_USER_CREATED="false" FEAT_INDEX="0" />
+#!     <XFORM_ATTR ATTR_NAME="attribute{}.fme_data_type" IS_USER_CREATED="false" FEAT_INDEX="0" />
+#!     <OUTPUT_FEAT NAME="UNMERGED_REQUESTOR"/>
+#!     <FEAT_COLLAPSED COLLAPSED="1"/>
+#!     <XFORM_ATTR ATTR_NAME="fme_feature_type" IS_USER_CREATED="false" FEAT_INDEX="1" />
+#!     <XFORM_ATTR ATTR_NAME="fme_feature_type_name" IS_USER_CREATED="false" FEAT_INDEX="1" />
+#!     <OUTPUT_FEAT NAME="USED_SUPPLIER"/>
+#!     <FEAT_COLLAPSED COLLAPSED="2"/>
+#!     <XFORM_ATTR ATTR_NAME="fme_feature_type_name" IS_USER_CREATED="false" FEAT_INDEX="2" />
+#!     <XFORM_ATTR ATTR_NAME="attribute{}.name" IS_USER_CREATED="false" FEAT_INDEX="2" />
+#!     <XFORM_ATTR ATTR_NAME="attribute{}.fme_data_type" IS_USER_CREATED="false" FEAT_INDEX="2" />
+#!     <XFORM_ATTR ATTR_NAME="numReferences" IS_USER_CREATED="false" FEAT_INDEX="2" />
+#!     <OUTPUT_FEAT NAME="UNUSED_SUPPLIER"/>
+#!     <FEAT_COLLAPSED COLLAPSED="3"/>
+#!     <XFORM_ATTR ATTR_NAME="fme_feature_type_name" IS_USER_CREATED="false" FEAT_INDEX="3" />
+#!     <XFORM_ATTR ATTR_NAME="attribute{}.name" IS_USER_CREATED="false" FEAT_INDEX="3" />
+#!     <XFORM_ATTR ATTR_NAME="attribute{}.fme_data_type" IS_USER_CREATED="false" FEAT_INDEX="3" />
+#!     <OUTPUT_FEAT NAME="&lt;REJECTED&gt;"/>
+#!     <FEAT_COLLAPSED COLLAPSED="4"/>
+#!     <XFORM_ATTR ATTR_NAME="fme_feature_type" IS_USER_CREATED="false" FEAT_INDEX="4" />
+#!     <XFORM_ATTR ATTR_NAME="fme_feature_type_name" IS_USER_CREATED="false" FEAT_INDEX="4" />
+#!     <XFORM_ATTR ATTR_NAME="attribute{}.name" IS_USER_CREATED="false" FEAT_INDEX="4" />
+#!     <XFORM_ATTR ATTR_NAME="attribute{}.fme_data_type" IS_USER_CREATED="false" FEAT_INDEX="4" />
+#!     <XFORM_ATTR ATTR_NAME="fme_rejection_code" IS_USER_CREATED="false" FEAT_INDEX="4" />
+#!     <XFORM_PARM PARM_NAME="ADVANCED_GROUP" PARM_VALUE=""/>
+#!     <XFORM_PARM PARM_NAME="ATTR_ACCUM_GROUP" PARM_VALUE=""/>
+#!     <XFORM_PARM PARM_NAME="ATTR_ACCUM_MODE" PARM_VALUE="Merge Supplier"/>
+#!     <XFORM_PARM PARM_NAME="ATTR_CONFLICT_RES_LOOKUP" PARM_VALUE="REQUESTOR_IF_CONFLICT"/>
+#!     <XFORM_PARM PARM_NAME="CLEANING_TOLERANCE_LOOKUP" PARM_VALUE="&lt;Unused&gt;"/>
+#!     <XFORM_PARM PARM_NAME="CONNECT_Z_MODE_LOOKUP" PARM_VALUE="&lt;Unused&gt;"/>
+#!     <XFORM_PARM PARM_NAME="GENERATE_LIST_GROUP" PARM_VALUE="NO"/>
+#!     <XFORM_PARM PARM_NAME="GEOM_TYPE_VAL" PARM_VALUE="&lt;Unused&gt;"/>
+#!     <XFORM_PARM PARM_NAME="GROUP_BY" PARM_VALUE="&lt;Unused&gt;"/>
+#!     <XFORM_PARM PARM_NAME="GROUP_BY_MODE" PARM_VALUE="&lt;Unused&gt;"/>
+#!     <XFORM_PARM PARM_NAME="GROUP_PROCESSING_GROUP" PARM_VALUE="NO"/>
+#!     <XFORM_PARM PARM_NAME="IGNORE_NULLS" PARM_VALUE="No"/>
+#!     <XFORM_PARM PARM_NAME="JOIN_ATTRIBUTES_GROUP" PARM_VALUE=""/>
+#!     <XFORM_PARM PARM_NAME="JOIN_KEYS" PARM_VALUE="1 1 AUTO"/>
+#!     <XFORM_PARM PARM_NAME="LIST_ATTRS_TO_INCLUDE" PARM_VALUE="&lt;Unused&gt;"/>
+#!     <XFORM_PARM PARM_NAME="LIST_ATTRS_TO_INCLUDE_MODE_LU" PARM_VALUE="&lt;Unused&gt;"/>
+#!     <XFORM_PARM PARM_NAME="LIST_NAME" PARM_VALUE="&lt;Unused&gt;"/>
+#!     <XFORM_PARM PARM_NAME="MERGE_COUNT_ATTR" PARM_VALUE="&lt;Unused&gt;"/>
+#!     <XFORM_PARM PARM_NAME="MERGE_TYPE_VAL" PARM_VALUE="ATTRIBUTES"/>
+#!     <XFORM_PARM PARM_NAME="MODE_GROUP" PARM_VALUE=""/>
+#!     <XFORM_PARM PARM_NAME="PARAMETERS" PARM_VALUE=""/>
+#!     <XFORM_PARM PARM_NAME="PRESERVE_FEATURE_ORDER" PARM_VALUE="PER_OUTPUT_PORT"/>
+#!     <XFORM_PARM PARM_NAME="PROCESS_DUPS" PARM_VALUE="NO"/>
+#!     <XFORM_PARM PARM_NAME="REJECT_NULL_MISSING_KEYS" PARM_VALUE="No"/>
+#!     <XFORM_PARM PARM_NAME="SUPPLIERS_FIRST" PARM_VALUE="No"/>
+#!     <XFORM_PARM PARM_NAME="SUPPLIER_PREFIX" PARM_VALUE="&lt;Unused&gt;"/>
+#!     <XFORM_PARM PARM_NAME="TRANSFORMER_GROUP" PARM_VALUE=""/>
+#!     <XFORM_PARM PARM_NAME="XFORMER_NAME" PARM_VALUE="FeatureMerger"/>
+#!     <XFORM_PARM PARM_NAME="ATTR_CONFLICT_RES" PARM_IS_LOOKUP="true" PARM_VALUE="Use Requestor"/>
+#!     <XFORM_PARM PARM_NAME="CLEANING_TOLERANCE" PARM_IS_LOOKUP="true" PARM_VALUE="&lt;Unused&gt;"/>
+#!     <XFORM_PARM PARM_NAME="CONNECT_Z_MODE" PARM_IS_LOOKUP="true" PARM_VALUE="&lt;Unused&gt;"/>
+#!     <XFORM_PARM PARM_NAME="GEOM_TYPE" PARM_IS_LOOKUP="true" PARM_VALUE="&lt;Unused&gt;"/>
+#!     <XFORM_PARM PARM_NAME="LIST_ATTRS_TO_INCLUDE_MODE" PARM_IS_LOOKUP="true" PARM_VALUE="&lt;Unused&gt;"/>
+#!     <XFORM_PARM PARM_NAME="MERGE_TYPE" PARM_IS_LOOKUP="true" PARM_VALUE="Attributes Only"/>
+#! </TRANSFORMER>
+#! <TRANSFORMER
+#!   IDENTIFIER="24"
+#!   TYPE="PythonCaller"
+#!   VERSION="6"
+#!   POSITION="2030.911861327641 -262.49787497875013"
+#!   BOUNDING_RECT="2030.911861327641 -262.49787497875013 436 65"
+#!   ORDER="500000000000016"
+#!   PARMS_EDITED="true"
+#!   ENABLED="true"
+#!   LAST_PARM_EDIT="25630"
+#! >
+#!     <OUTPUT_FEAT NAME="OUTPUT"/>
+#!     <FEAT_COLLAPSED COLLAPSED="0"/>
+#!     <XFORM_ATTR ATTR_NAME="fme_feature_type" IS_USER_CREATED="false" FEAT_INDEX="0" />
+#!     <XFORM_ATTR ATTR_NAME="fme_feature_type_name" IS_USER_CREATED="false" FEAT_INDEX="0" />
+#!     <XFORM_ATTR ATTR_NAME="attribute{}.name" IS_USER_CREATED="false" FEAT_INDEX="0" />
+#!     <XFORM_ATTR ATTR_NAME="attribute{}.fme_data_type" IS_USER_CREATED="false" FEAT_INDEX="0" />
+#!     <OUTPUT_FEAT NAME="&lt;Rejected&gt;"/>
+#!     <FEAT_COLLAPSED COLLAPSED="1"/>
+#!     <XFORM_ATTR ATTR_NAME="fme_feature_type" IS_USER_CREATED="false" FEAT_INDEX="1" />
+#!     <XFORM_ATTR ATTR_NAME="fme_feature_type_name" IS_USER_CREATED="false" FEAT_INDEX="1" />
+#!     <XFORM_ATTR ATTR_NAME="attribute{}.name" IS_USER_CREATED="false" FEAT_INDEX="1" />
+#!     <XFORM_ATTR ATTR_NAME="attribute{}.fme_data_type" IS_USER_CREATED="false" FEAT_INDEX="1" />
+#!     <XFORM_ATTR ATTR_NAME="fme_rejection_code" IS_USER_CREATED="false" FEAT_INDEX="1" />
+#!     <XFORM_ATTR ATTR_NAME="fme_rejection_message" IS_USER_CREATED="false" FEAT_INDEX="1" />
+#!     <XFORM_PARM PARM_NAME="ADVANCED_GROUP" PARM_VALUE=""/>
+#!     <XFORM_PARM PARM_NAME="GROUP_BY" PARM_VALUE="&lt;Unused&gt;"/>
+#!     <XFORM_PARM PARM_NAME="GROUP_BY_MODE" PARM_VALUE="&lt;Unused&gt;"/>
+#!     <XFORM_PARM PARM_NAME="GROUP_PROCESSING_GROUP" PARM_VALUE="NO"/>
+#!     <XFORM_PARM PARM_NAME="HIDE_ATTRIBUTES" PARM_VALUE=""/>
+#!     <XFORM_PARM PARM_NAME="LIST_ATTRS" PARM_VALUE=""/>
+#!     <XFORM_PARM PARM_NAME="NEW_ATTRIBUTES" PARM_VALUE=""/>
+#!     <XFORM_PARM PARM_NAME="PARAMETERS_GROUP" PARM_VALUE=""/>
+#!     <XFORM_PARM PARM_NAME="PYTHONSOURCE" PARM_VALUE="import&lt;space&gt;fme&lt;lf&gt;from&lt;space&gt;fme&lt;space&gt;import&lt;space&gt;BaseTransformer&lt;lf&gt;import&lt;space&gt;fmeobjects&lt;lf&gt;&lt;lf&gt;&lt;lf&gt;class&lt;space&gt;FeatureProcessor&lt;openparen&gt;BaseTransformer&lt;closeparen&gt;:&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;quote&gt;&lt;quote&gt;&lt;quote&gt;Template&lt;space&gt;Class&lt;space&gt;Interface:&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;When&lt;space&gt;using&lt;space&gt;this&lt;space&gt;class&lt;comma&gt;&lt;space&gt;make&lt;space&gt;sure&lt;space&gt;its&lt;space&gt;name&lt;space&gt;is&lt;space&gt;set&lt;space&gt;as&lt;space&gt;the&lt;space&gt;value&lt;space&gt;of&lt;space&gt;the&lt;space&gt;&lt;apos&gt;Class&lt;space&gt;to&lt;space&gt;Process&lt;space&gt;Features&lt;apos&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;transformer&lt;space&gt;parameter.&lt;lf&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;This&lt;space&gt;class&lt;space&gt;inherits&lt;space&gt;from&lt;space&gt;&lt;apos&gt;fme.BaseTransformer&lt;apos&gt;.&lt;space&gt;For&lt;space&gt;full&lt;space&gt;details&lt;space&gt;of&lt;space&gt;this&lt;space&gt;class&lt;comma&gt;&lt;space&gt;its&lt;space&gt;methods&lt;comma&gt;&lt;space&gt;and&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;expected&lt;space&gt;usage&lt;comma&gt;&lt;space&gt;see&lt;space&gt;https:&lt;solidus&gt;&lt;solidus&gt;docs.safe.com&lt;solidus&gt;fme&lt;solidus&gt;html&lt;solidus&gt;fmepython&lt;solidus&gt;api&lt;solidus&gt;fme.html#fme.BaseTransformer.&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;quote&gt;&lt;quote&gt;&lt;quote&gt;&lt;lf&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;def&lt;space&gt;__init__&lt;openparen&gt;self&lt;closeparen&gt;:&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;quote&gt;&lt;quote&gt;&lt;quote&gt;Base&lt;space&gt;constructor&lt;space&gt;for&lt;space&gt;class&lt;space&gt;members.&lt;quote&gt;&lt;quote&gt;&lt;quote&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;pass&lt;lf&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;def&lt;space&gt;has_support_for&lt;openparen&gt;self&lt;comma&gt;&lt;space&gt;support_type:&lt;space&gt;int&lt;closeparen&gt;:&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;quote&gt;&lt;quote&gt;&lt;quote&gt;This&lt;space&gt;method&lt;space&gt;is&lt;space&gt;called&lt;space&gt;by&lt;space&gt;FME&lt;space&gt;to&lt;space&gt;determine&lt;space&gt;if&lt;space&gt;the&lt;space&gt;PythonCaller&lt;space&gt;supports&lt;space&gt;Bulk&lt;space&gt;mode&lt;comma&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;which&lt;space&gt;allows&lt;space&gt;for&lt;space&gt;significant&lt;space&gt;performance&lt;space&gt;gains&lt;space&gt;when&lt;space&gt;processing&lt;space&gt;large&lt;space&gt;numbers&lt;space&gt;of&lt;space&gt;features.&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;quote&gt;&lt;quote&gt;&lt;quote&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;return&lt;space&gt;support_type&lt;space&gt;==&lt;space&gt;fmeobjects.FME_SUPPORT_FEATURE_TABLE_SHIM&lt;lf&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;def&lt;space&gt;input&lt;openparen&gt;self&lt;comma&gt;&lt;space&gt;feature:&lt;space&gt;fmeobjects.FMEFeature&lt;closeparen&gt;:&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;attr_name&lt;space&gt;=&lt;space&gt;feature.getAttribute&lt;openparen&gt;&lt;apos&gt;attribute&lt;opencurly&gt;0&lt;closecurly&gt;.name&lt;apos&gt;&lt;closeparen&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;attr_value&lt;space&gt;=&lt;space&gt;feature.getAttribute&lt;openparen&gt;attr_name&lt;closeparen&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;attr_name_hyperlink&lt;space&gt;=&lt;space&gt;f&lt;apos&gt;&lt;opencurly&gt;attr_name&lt;closecurly&gt;.hyperlink&lt;apos&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;attr_value_hyperlink&lt;space&gt;=&lt;space&gt;f&lt;apos&gt;https:&lt;solidus&gt;&lt;solidus&gt;apps.mow.vlaanderen.be&lt;solidus&gt;eminfra&lt;solidus&gt;assets&lt;solidus&gt;&lt;opencurly&gt;attr_value&lt;closecurly&gt;&lt;apos&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;feature.setAttribute&lt;openparen&gt;attr_name_hyperlink&lt;comma&gt;&lt;space&gt;attr_value_hyperlink&lt;closeparen&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;self.pyoutput&lt;openparen&gt;feature&lt;comma&gt;&lt;space&gt;output_tag=&lt;quote&gt;PYOUTPUT&lt;quote&gt;&lt;closeparen&gt;&lt;lf&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;def&lt;space&gt;close&lt;openparen&gt;self&lt;closeparen&gt;:&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;quote&gt;&lt;quote&gt;&lt;quote&gt;This&lt;space&gt;method&lt;space&gt;is&lt;space&gt;called&lt;space&gt;once&lt;space&gt;all&lt;space&gt;the&lt;space&gt;FME&lt;space&gt;Features&lt;space&gt;have&lt;space&gt;been&lt;space&gt;processed&lt;space&gt;from&lt;space&gt;input&lt;openparen&gt;&lt;closeparen&gt;.&lt;quote&gt;&lt;quote&gt;&lt;quote&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;pass&lt;lf&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;def&lt;space&gt;process_group&lt;openparen&gt;self&lt;closeparen&gt;:&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;quote&gt;&lt;quote&gt;&lt;quote&gt;This&lt;space&gt;method&lt;space&gt;is&lt;space&gt;called&lt;space&gt;by&lt;space&gt;FME&lt;space&gt;for&lt;space&gt;each&lt;space&gt;group&lt;space&gt;when&lt;space&gt;group&lt;space&gt;processing&lt;space&gt;mode&lt;space&gt;is&lt;space&gt;enabled.&lt;quote&gt;&lt;quote&gt;&lt;quote&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;pass&lt;lf&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;def&lt;space&gt;reject_feature&lt;openparen&gt;self&lt;comma&gt;&lt;space&gt;feature:&lt;space&gt;fmeobjects.FMEFeature&lt;comma&gt;&lt;space&gt;code:&lt;space&gt;str&lt;comma&gt;&lt;space&gt;message:&lt;space&gt;str&lt;closeparen&gt;:&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;quote&gt;&lt;quote&gt;&lt;quote&gt;This&lt;space&gt;method&lt;space&gt;can&lt;space&gt;be&lt;space&gt;used&lt;space&gt;to&lt;space&gt;output&lt;space&gt;a&lt;space&gt;feature&lt;space&gt;to&lt;space&gt;the&lt;space&gt;&lt;lt&gt;Rejected&lt;gt&gt;&lt;space&gt;port.&lt;quote&gt;&lt;quote&gt;&lt;quote&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;feature.setAttribute&lt;openparen&gt;&lt;quote&gt;fme_rejection_code&lt;quote&gt;&lt;comma&gt;&lt;space&gt;code&lt;closeparen&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;feature.setAttribute&lt;openparen&gt;&lt;quote&gt;fme_rejection_message&lt;quote&gt;&lt;comma&gt;&lt;space&gt;message&lt;closeparen&gt;&lt;lf&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;&lt;space&gt;self.pyoutput&lt;openparen&gt;feature&lt;comma&gt;&lt;space&gt;output_tag=&lt;quote&gt;&lt;lt&gt;Rejected&lt;gt&gt;&lt;quote&gt;&lt;closeparen&gt;&lt;lf&gt;"/>
+#!     <XFORM_PARM PARM_NAME="PYTHONSYMBOL" PARM_VALUE="FeatureProcessor"/>
+#!     <XFORM_PARM PARM_NAME="TRANSFORMER_GROUP" PARM_VALUE=""/>
+#!     <XFORM_PARM PARM_NAME="XFORMER_NAME" PARM_VALUE="PythonCaller_2"/>
+#! </TRANSFORMER>
+#! </TRANSFORMERS>
+#! <FEAT_LINKS>
+#! <FEAT_LINK
+#!   IDENTIFIER="12"
+#!   SOURCE_NODE="2"
+#!   TARGET_NODE="11"
+#!   SOURCE_PORT_DESC="-1"
+#!   TARGET_PORT_DESC="fi 0 "
+#!   ENABLED="true"
+#!   EXECUTION_IDX="0"
+#!   HIDDEN="false"
+#!   COLOUR="0.30196078431372547,0.30196078431372547,0.30196078431372547,1"
+#!   PEN_WIDTH="4"
+#!   PEN_STYLE="1"
+#!   LINK_STYLE_NAME="&lt;Default&gt;"
+#!   EXTRA_POINTS=""
+#! />
+#! <FEAT_LINK
+#!   IDENTIFIER="18"
+#!   SOURCE_NODE="11"
+#!   TARGET_NODE="14"
+#!   SOURCE_PORT_DESC="fo 0 Output"
+#!   TARGET_PORT_DESC="fi 0 REQUESTOR"
+#!   ENABLED="true"
+#!   EXECUTION_IDX="0"
+#!   HIDDEN="false"
+#!   COLOUR="0.30196078431372547,0.30196078431372547,0.30196078431372547,1"
+#!   PEN_WIDTH="4"
+#!   PEN_STYLE="1"
+#!   LINK_STYLE_NAME="&lt;Default&gt;"
+#!   EXTRA_POINTS=""
+#! />
+#! <FEAT_LINK
+#!   IDENTIFIER="25"
+#!   SOURCE_NODE="14"
+#!   TARGET_NODE="24"
+#!   SOURCE_PORT_DESC="fo 0 MERGED"
+#!   TARGET_PORT_DESC="fi 0 "
+#!   ENABLED="true"
+#!   EXECUTION_IDX="0"
+#!   HIDDEN="false"
+#!   COLOUR="0.30196078431372547,0.30196078431372547,0.30196078431372547,1"
+#!   PEN_WIDTH="4"
+#!   PEN_STYLE="1"
+#!   LINK_STYLE_NAME="&lt;Default&gt;"
+#!   EXTRA_POINTS=""
+#! />
+#! <FEAT_LINK
+#!   IDENTIFIER="16"
+#!   SOURCE_NODE="15"
+#!   TARGET_NODE="14"
+#!   SOURCE_PORT_DESC="fo 0 OUTPUT"
+#!   TARGET_PORT_DESC="fi 1 SUPPLIER"
+#!   ENABLED="true"
+#!   EXECUTION_IDX="0"
+#!   HIDDEN="false"
+#!   COLOUR="0.30196078431372547,0.30196078431372547,0.30196078431372547,1"
+#!   PEN_WIDTH="4"
+#!   PEN_STYLE="1"
+#!   LINK_STYLE_NAME="&lt;Default&gt;"
+#!   EXTRA_POINTS=""
+#! />
+#! <FEAT_LINK
+#!   IDENTIFIER="26"
+#!   SOURCE_NODE="24"
+#!   TARGET_NODE="3"
+#!   SOURCE_PORT_DESC="fo 0 OUTPUT"
+#!   TARGET_PORT_DESC="-1"
+#!   ENABLED="true"
+#!   EXECUTION_IDX="0"
+#!   HIDDEN="false"
+#!   COLOUR="0.30196078431372547,0.30196078431372547,0.30196078431372547,1"
+#!   PEN_WIDTH="4"
+#!   PEN_STYLE="1"
+#!   LINK_STYLE_NAME="&lt;Default&gt;"
+#!   EXTRA_POINTS=""
+#! />
+#! <FEAT_LINK
+#!   IDENTIFIER="17"
+#!   SOURCE_NODE="11"
+#!   TARGET_NODE="15"
+#!   SOURCE_PORT_DESC="fo 1 &lt;lt&gt;SCHEMA&lt;gt&gt;"
+#!   TARGET_PORT_DESC="fi 0 "
+#!   ENABLED="true"
+#!   EXECUTION_IDX="0"
+#!   HIDDEN="false"
+#!   COLOUR="0.30196078431372547,0.30196078431372547,0.30196078431372547,1"
+#!   PEN_WIDTH="4"
+#!   PEN_STYLE="1"
+#!   LINK_STYLE_NAME="&lt;Default&gt;"
+#!   EXTRA_POINTS=""
+#! />
+#! </FEAT_LINKS>
+#! <BREAKPOINTS>
+#! </BREAKPOINTS>
+#! <ATTR_LINKS>
+#! </ATTR_LINKS>
+#! <SUBDOCUMENTS>
+#! <SUBDOCUMENT
+#!   NAME="setHyperlink"
+#!   ARCGIS_COMPATIBILITY=""
+#!   CATEGORY=""
+#!   DESCRIPTION=""
+#!   DOC_DYNAMIC_INPUT_ATTRS="0"
+#!   DOC_EXTENTS="2243.8 275.002"
+#!   DOC_TOP_LEFT="-1245.16 -137.501"
+#!   FME_DOCUMENT_GUID=""
+#!   FME_DOCUMENT_PRIORGUID=""
+#!   FME_NAMES_ENCODING="UTF-8"
+#!   FME_PROCESS_COUNT="NO_PARALLELISM"
+#!   FME_PROCESS_GROUPS_ORDERED="No"
+#!   FME_PROCESS_GROUP_BY=""
+#!   FME_PROCESS_PRESERVE_GROUP_ATTR="No"
+#!   FMX_ATTRIBUTE_PROPOGATION_MODE="AUTO"
+#!   HISTORY=""
+#!   IS_VISIBLE="true"
+#!   LAST_SAVE_BUILD=""
+#!   LAST_SAVE_DATE=""
+#!   MARKDOWN_DESCRIPTION=""
+#!   MARKDOWN_USAGE=""
+#!   PYTHON_COMPATIBILITY=""
+#!   REPLACED_BY=""
+#!   SUPPRESS_UPGRADE="false"
+#!   TITLE="setHyperlink"
+#!   USAGE=""
+#!   USE_MARKDOWN="NO"
+#!   VIEW_POSITION="-1946.89 334.378"
+#!   XFORM_DEPRECATED="No"
+#!   ZOOM_SCALE="100"
+#! >
+#! <GLOBAL_PARAMETERS>
+#! <GLOBAL_PARAMETER
+#!   GUI_LINE="GUI TEXT_EDIT_OR_ATTR ATTRIBUTE FME_SYNTAX%FME%FME_SUPPORTSNUMERIC%YES uuid"
+#!   DEFAULT_VALUE="&lt;at&gt;Value&lt;openparen&gt;uuid&lt;closeparen&gt;"
+#!   IS_STAND_ALONE="false"
+#! />
+#! </GLOBAL_PARAMETERS>
+#! <USER_PARAMETERS
+#!   FORM="eyJwYXJhbWV0ZXJzIjpbeyJuYW1lIjoiQVRUUklCVVRFIiwicHJvbXB0IjoidXVpZCIsInNob3dQcm9tcHQiOmZhbHNlLCJ2YWx1ZVR5cGUiOiJzdHJpbmdFbmNvZGVkIiwiZGVmYXVsdFZhbHVlIjoiPGF0PlZhbHVlPG9wZW5wYXJlbj51dWlkPGNsb3NlcGFyZW4+Iiwic3VwcG9ydGVkVmFsdWVUeXBlcyI6WyJleHByZXNzaW9uIiwiZ2xvYmFsUGFyYW1ldGVyIl0sInR5cGUiOiJ0ZXh0Iiwic2hvd0FyaXRobWV0aWNFZGl0b3IiOnRydWV9XX0="
+#! >
+#! <PARAMETER_INFO>
+#!     <INFO NAME="ATTRIBUTE" 
+#!   DEFAULT_VALUE="&lt;at&gt;Value&lt;openparen&gt;uuid&lt;closeparen&gt;"
+#!   SCOPE="DEPENDENT"
+#!   GENERATED_GUI_LINE="true"
+#!   GUI_LINE="GUI TEXT_EDIT_OR_ATTR ATTRIBUTE FME_SYNTAX%FME%FME_SUPPORTSNUMERIC%YES uuid"
+#! />
+#! </PARAMETER_INFO>
+#! </USER_PARAMETERS>
+#! <COMMENTS>
+#! <COMMENT
+#!   IDENTIFIER="7"
+#!   COMMENT_VALUE="&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;&#10;&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;meta charset=&quot;utf-8&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;&#10;p, li { white-space: pre-wrap; }&#10;hr { height: 1px; border-width: 0; }&#10;li.unchecked::marker { content: &quot;\2610&quot;; }&#10;li.checked::marker { content: &quot;\2612&quot;; }&#10;&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Segoe UI&apos;; font-size:9pt; font-weight:400; font-style:normal;&quot;&gt;&#10;&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Hyperlinks maken voor de asset-uuid&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;"
+#!   POSITION="-387.63523854407458 137.50098996992165"
+#!   TOP_LEFT="-387.63523854407458 137.50098996992165"
+#!   BOTTOM_RIGHT="48.354949482805694 136.50098996992165"
+#!   BOUNDING_RECT="-387.63523854407458 137.50098996992165 435.99018802688028 1"
+#!   ORDER="500000000000244"
+#!   FOLLOW_ANCHOR="true"
+#!   INFO_NODE="false"
+#!   CUSTOM_USER_COLOR="false"
+#!   UUID="{53a101ea-8af7-4942-9849-7ad1f0613301}"
+#!   COLOUR="1,0.95686274509803926,0.80000000000000004,0.90196078431372551"
+#!   SIZE_POLICY="10"
+#!   ANCHORED_NODE="4"
+#! />
+#! </COMMENTS>
+#! <CONSTANTS>
+#! </CONSTANTS>
+#! <BOOKMARKS>
+#! </BOOKMARKS>
+#! <TRANSFORMERS>
+#! <TRANSFORMER
+#!   IDENTIFIER="4"
+#!   TYPE="AttributeCreator"
+#!   VERSION="10"
+#!   POSITION="-387.64505051719425 -72.500510045078499"
+#!   BOUNDING_RECT="-387.64505051719425 -72.500510045078499 712.77870333390842 65"
+#!   ORDER="500000000000239"
+#!   PARMS_EDITED="true"
+#!   ENABLED="true"
+#!   LAST_PARM_EDIT="25630"
+#! >
+#!     <OUTPUT_FEAT NAME="OUTPUT"/>
+#!     <XFORM_ATTR ATTR_NAME="uuid.hyperlink" IS_USER_CREATED="false" FEAT_INDEX="0" />
+#!     <XFORM_PARM PARM_NAME="ATTRIBUTE_GRP" PARM_VALUE=""/>
+#!     <XFORM_PARM PARM_NAME="ATTRIBUTE_HANDLING" PARM_VALUE=""/>
+#!     <XFORM_PARM PARM_NAME="ATTR_TABLE" PARM_VALUE="&quot;&quot; uuid.hyperlink SET_TO https:&lt;solidus&gt;&lt;solidus&gt;apps.mow.vlaanderen.be&lt;solidus&gt;eminfra&lt;solidus&gt;assets&lt;solidus&gt;$(ATTRIBUTE) varchar&lt;openparen&gt;200&lt;closeparen&gt;"/>
+#!     <XFORM_PARM PARM_NAME="MULTI_FEATURE_MODE" PARM_VALUE="NO"/>
+#!     <XFORM_PARM PARM_NAME="NULL_ATTR_MODE" PARM_VALUE="NO_OP"/>
+#!     <XFORM_PARM PARM_NAME="NULL_ATTR_VALUE" PARM_VALUE="&lt;Unused&gt;"/>
+#!     <XFORM_PARM PARM_NAME="NUM_PRIOR_FEATURES" PARM_VALUE="&lt;Unused&gt;"/>
+#!     <XFORM_PARM PARM_NAME="NUM_SUBSEQUENT_FEATURES" PARM_VALUE="&lt;Unused&gt;"/>
+#!     <XFORM_PARM PARM_NAME="TRANSFORMER_GROUP" PARM_VALUE=""/>
+#!     <XFORM_PARM PARM_NAME="USER_MODIFIED_ATTRIBUTE_TYPES" PARM_VALUE=""/>
+#!     <XFORM_PARM PARM_NAME="XFORMER_NAME" PARM_VALUE="AttributeCreator_2"/>
+#!     <XFORM_PARM PARM_NAME="NULL_ATTR_MODE_DISPLAY" PARM_IS_LOOKUP="true" PARM_VALUE="No Substitution"/>
+#! </TRANSFORMER>
+#! </TRANSFORMERS>
+#! <SUBDOCUMENT_IOS>
+#! <SUBDOCUMENT_IO
+#!   IDENTIFIER="2"
+#!   NAME="Input"
+#!   POSITION="-1245.1606755171942 -72.500510045078499"
+#!   BOUNDING_RECT="-1245.1606755171942 -72.500510045078499 436 65"
+#!   COLLAPSED="false"
+#!   PUBLISHED="true"
+#!   IS_SOURCE="true"
+#!   ATTR_MODE="0"
+#! >
+#! </SUBDOCUMENT_IO>
+#! <SUBDOCUMENT_IO
+#!   IDENTIFIER="3"
+#!   NAME="Output"
+#!   POSITION="562.63602784046452 -72.500510045078499"
+#!   BOUNDING_RECT="562.63602784046452 -72.500510045078499 436 65"
+#!   COLLAPSED="false"
+#!   IS_SOURCE="false"
+#!   ATTR_MODE="0"
+#! >
+#! </SUBDOCUMENT_IO>
+#! </SUBDOCUMENT_IOS>
+#! <FEAT_LINKS>
+#! <FEAT_LINK
+#!   IDENTIFIER="5"
+#!   SOURCE_NODE="2"
+#!   TARGET_NODE="4"
+#!   SOURCE_PORT_DESC="0"
+#!   TARGET_PORT_DESC="fi 0 "
+#!   ENABLED="true"
+#!   EXECUTION_IDX="0"
+#!   HIDDEN="false"
+#!   COLOUR="0.30196078431372547,0.30196078431372547,0.30196078431372547,1"
+#!   PEN_WIDTH="4"
+#!   PEN_STYLE="1"
+#!   LINK_STYLE_NAME="&lt;Default&gt;"
+#!   EXTRA_POINTS=""
+#! />
+#! <FEAT_LINK
+#!   IDENTIFIER="6"
+#!   SOURCE_NODE="4"
+#!   TARGET_NODE="3"
+#!   SOURCE_PORT_DESC="fo 0 OUTPUT"
+#!   TARGET_PORT_DESC="0"
+#!   ENABLED="true"
+#!   EXECUTION_IDX="0"
+#!   HIDDEN="false"
+#!   COLOUR="0.30196078431372547,0.30196078431372547,0.30196078431372547,1"
+#!   PEN_WIDTH="4"
+#!   PEN_STYLE="1"
+#!   LINK_STYLE_NAME="&lt;Default&gt;"
+#!   EXTRA_POINTS=""
+#! />
+#! </FEAT_LINKS>
+#! <BREAKPOINTS>
+#! </BREAKPOINTS>
+#! <ATTR_LINKS>
+#! </ATTR_LINKS>
+#! </SUBDOCUMENT>
+#! </SUBDOCUMENTS>
+#! <LOOKUP_TABLES>
+#! </LOOKUP_TABLES>
+#! </WORKSPACE>
+
+FME_PYTHON_VERSION 313
+ARCGIS_COMPATIBILITY ARCGIS_AUTO
+GUI IGNORE SourceDataset_JSON_1,JSON_IN_FME_GROUP_NAMED1_JSON_1,JSON_IN_SCAN_MODE_JSON_1,JSON_IN_QUERY_TABLE_JSON_1,JSON_IN_FME_GROUP_NAMED2_JSON_1,JSON_IN_FEATURE_TYPE_KEY_JSON_1,JSON_IN_GEOMETRY_FORMAT_JSON_1,JSON_IN_GEOMETRY_KEY_JSON_1,JSON_IN_COORDINATE_SYSTEM_KEY_JSON_1,JSON_IN_SAVE_FRAGMENTS_JSON_1,JSON_IN_USE_SEARCH_ENVELOPE_JSON_1,JSON_IN_SEARCH_ENVELOPE_MINX_JSON_1,JSON_IN_SEARCH_ENVELOPE_MINY_JSON_1,JSON_IN_SEARCH_ENVELOPE_MAXX_JSON_1,JSON_IN_SEARCH_ENVELOPE_MAXY_JSON_1,JSON_IN_SEARCH_ENVELOPE_COORDINATE_SYSTEM_JSON_1,JSON_IN_CLIP_TO_ENVELOPE_JSON_1,JSON_IN_NETWORK_AUTHENTICATION_JSON_1,DestDataset_XLSXW_1,XLSXW_OUT_FME_GROUP_NAMED1_XLSXW_1,XLSXW_OUT_OVERWRITE_FILE_XLSXW_1,XLSXW_OUT_TEMPLATEFILE_XLSXW_1,XLSXW_OUT_ALWAYS_CREATE_FEATURE_TYPES_XLSXW_1
+# ============================================================================
+DEFAULT_MACRO ROOT_FOLDER C:\Users\DriesVerdoodtNordend\Downloads\BKZ_assets
+
+INCLUDE PYTHON
+def ParamFunc():
+  import fme
+  from pathlib import Path
+
+  def get_root_folder_name():
+      """
+      Retrieves the name of the root folder.
+
+      Returns:
+          str: The name of the root folder.
+      """
+      root_folder = fme.macroValues['ROOT_FOLDER']
+      root_folder_path = Path(root_folder)
+      return root_folder_path.name
+
+  return get_root_folder_name()
+value = ParamFunc()
+macroName = 'ROOT_FOLDER_NAME'
+if value == None:
+  return { macroName : u'' }
+else:
+  import six
+  try:
+    value = six.text_type(value)
+  except UnicodeDecodeError:
+    value = six.text_type(value, 'utf-8')
+  return { macroName : value }
+END_INCLUDE
+DEFAULT_MACRO SourceDataset_JSON $(ROOT_FOLDER)/*.json
+
+DEFAULT_MACRO DestDataset_XLSXW $(ROOT_FOLDER)/$(ROOT_FOLDER_NAME).xlsx
+
+# ============================================================================
+INCLUDE [ if {{$(ROOT_FOLDER$encode)} == {}} { puts_real {Parameter 'ROOT_FOLDER' must be given a value.}; exit 1; }; ]
+INCLUDE [ if {{$(ROOT_FOLDER_NAME$encode)} == {}} { puts_real {Parameter 'ROOT_FOLDER_NAME' must be given a value.}; exit 1; }; ]
+INCLUDE [ if {{$(SourceDataset_JSON$encode)} == {}} { puts_real {Parameter 'SourceDataset_JSON' must be given a value.}; exit 1; }; ]
+INCLUDE [ if {{$(DestDataset_XLSXW$encode)} == {}} { puts_real {Parameter 'DestDataset_XLSXW' must be given a value.}; exit 1; }; ]
+#! START_HEADER
+#! START_WB_HEADER
+READER_TYPE MULTI_READER
+MULTI_READER_TYPE{0} JSON
+MULTI_READER_KEYWORD{0} JSON_1
+MULTI_READER_GEN_DIRECTIVES{0} SCAN_MODE,AUTO,SEARCH_ENVELOPE_MAXY,0,SEARCH_ENVELOPE_MINX,0,USE_SEARCH_ENVELOPE,NO,FEATURE_TYPE_KEY,json_featuretype,FLATTEN_MODE,ALL_LEVELS,JSON_EXPOSE_FORMAT_ATTRS,,QUERY_TABLE,<lt>Unused<gt>,SEARCH_ENVELOPE_MINY,0,GEOMETRY_KEY,<lt>Unused<gt>,USE_BASENAME_AS_DEFAULT_FEATURE_TYPE,No,COORDINATE_SYSTEM_KEY,<lt>Unused<gt>,SEARCH_ENVELOPE_COORDINATE_SYSTEM,,GEOMETRY_FORMAT,None,_MERGE_SCHEMAS,YES,SEARCH_ENVELOPE_MAXX,0,DECODE_TEXT_STRINGS,Yes,SAVE_FRAGMENTS,NO,CLIP_TO_ENVELOPE,NO,EXPOSE_ATTRS_GROUP,FME_DISCLOSURE_OPEN
+WRITER_TYPE MULTI_WRITER
+WRITER_KEYWORD PRIMARY_DEST
+PRIMARY_DEST_DATASET_ORDER BY_ID
+PRIMARY_DEST_FIRST_WRITER_ID 0
+PRIMARY_DEST_TYPE{0} XLSXW
+PRIMARY_DEST_KEYWORD{0} XLSXW_1
+PRIMARY_DEST_GEN_DIRECTIVES{0} FIELD_NAMES_PATTERN_STYLE,<lt>Unused<gt>,FIELD_NAMES_CELL_BORDER_COLOR,<lt>Unused<gt>,INSERT_IGNORE_DB_OP,Yes,ADD_WRITER_NEXT_ACTION,copy_from_reader,PROTECT_SHEET_PASSWORD,<lt>Unused<gt>,MULTIPLE_TEMPLATE_SHEETS,Yes,FIELD_NAMES_CELL_BORDER_STYLE,<lt>Unused<gt>,TEMPLATEFILE,,STRICT_SCHEMA_ADDITIONAL_ATTRIBUTE_MATCHING,yes,DESTINATION_DATASETTYPE_VALIDATION,Yes,FIELD_NAMES_CELL_BORDER,<lt>Unused<gt>,OVERWRITE_FILE,Yes,RASTER_FORMAT,PNG,PROTECT_SHEET,NO,COORDINATE_SYSTEM_GRANULARITY,FEATURE,PROTECT_SHEET_LEVEL,<lt>Unused<gt>,FIELD_NAMES_TEXT_CONTROL,<lt>Unused<gt>,FIELD_NAMES_HORIZONTAL_ALIGNMENT,<lt>Unused<gt>,FIELD_NAMES_VERTICAL_ALIGNMENT,<lt>Unused<gt>,FIELD_NAMES_ROW_HEIGHT,<lt>Unused<gt>,FIELD_NAMES_FORMATTING,NO,FIELD_NAMES_PATTERN_COLOR,<lt>Unused<gt>,TEMPLATE_SHEET,,FIELD_NAMES_OUT,Yes,FIELD_NAMES_FONT_COLOR,<lt>Unused<gt>,FIELD_NAMES_FILL,<lt>Unused<gt>,FIELD_NAMES_TEXT_ALIGNMENT,<lt>Unused<gt>,DROP_TABLE,No,FIELD_NAMES_TEXT_ORIENTATION,<lt>Unused<gt>,FIELD_NAMES_TEXT_INDENT,<lt>Unused<gt>,FIELD_NAMES_FONT_NAME,<lt>Unused<gt>,WRITER_MODE,Insert,FIELD_NAMES_FONT,<lt>Unused<gt>,REMOVE_UNCHANGED_TEMPLATE_SHEET,No,ALWAYS_CREATE_FEATURE_TYPES,NO,CUSTOM_NUMBER_FORMATTING,ENABLE_NATIVE,TRUNCATE_TABLE,No,FIELD_NAMES_BACKGROUND_COLOR,<lt>Unused<gt>,PROTECT_SHEET_PERMISSIONS,<lt>Unused<gt>
+#! END_WB_HEADER
+#! START_WB_HEADER
+MACRO WB_KEYWORD "JSON_1"
+#! END_WB_HEADER
+#! START_SOURCE_HEADER JSON JSON_1
+JSON_1_DYNAMIC_WORKFLOW YES
+# The dataset this mapping file was generated from was:
+#! END_SOURCE_HEADER
+#! START_WB_HEADER
+DEFAULT_MACRO SourceDataset
+INCLUDE [ if {{$(SourceDataset)} != ""} {                        \
+ puts {DEFAULT_MACRO SourceDataset_JSON_1 $(SourceDataset)}     \
+ } ]
+#! END_WB_HEADER
+#! START_SOURCE_HEADER JSON JSON_1
+DEFAULT_MACRO SourceDataset_JSON_1 $(SourceDataset_JSON)
+GUI FILE_OR_URL SourceDataset_JSON_1 JSON_Documents(*.json)|*.json|All_Files(*)|* Source JSON (JavaScript Object Notation) File or URL:
+DEFAULT_MACRO JSON_IN_FME_GROUP_NAMED1_JSON_1 
+GUI OPTIONAL DISCLOSUREGROUP JSON_IN_FME_GROUP_NAMED1_JSON_1 JSON_IN_SCAN_MODE_JSON_1%JSON_IN_QUERY_TABLE_JSON_1%JSON_IN_FLATTEN_MODE Schema Scan
+DEFAULT_MACRO JSON_IN_SCAN_MODE_JSON_1 AUTO
+JSON_1_SCAN_MODE "$(JSON_IN_SCAN_MODE_JSON_1)"
+GUI ACTIVECHOICE_LOOKUP JSON_IN_SCAN_MODE_JSON_1 Auto,AUTO,JSON_IN_QUERY_TABLE_JSON_1%JSON<space>Query,QUERY Schema Scan Mode
+DEFAULT_MACRO JSON_IN_QUERY_TABLE_JSON_1 <Unused>
+JSON_1_QUERY_TABLE "$(JSON_IN_QUERY_TABLE_JSON_1)"
+GUI GUI_LINE_TABLE JSON_IN_QUERY_TABLE_JSON_1 NO_LABEL%NOT_OK_IF_INVALID%START_NUM_ROWS:1%"Feature Type"%"STRING_ENCODED FTYPE"%Query%"DYNAMIC_SINGLE_SELECT_ENCODED QUERY $[SourceDataset_JSON_1],_FORMAT_OVERRIDE_,JSON,_GET_ATTRIBUTE_VALUES_,,JSON_SCAN_FOR_QUERIES,YES,FME_DELIM,<u001F>,FME_PARENT_SELECTION,root_node,FME_READ_SCHEMA,NO,FME_DN_ATTR,display_value,FME_PATH_ATTR,query_string,FME_EXPAND,json" JSON Queries for Feature Objects:
+DEFAULT_MACRO JSON_IN_FLATTEN_MODE_JSON_1 ALL_LEVELS
+JSON_1_FLATTEN_MODE "$(JSON_IN_FLATTEN_MODE_JSON_1)"
+DEFAULT_MACRO JSON_IN_FME_GROUP_NAMED2_JSON_1 
+GUI OPTIONAL DISCLOSUREGROUP JSON_IN_FME_GROUP_NAMED2_JSON_1 JSON_IN_FEATURE_TYPE_KEY_JSON_1%JSON_IN_GEOMETRY_FORMAT_JSON_1%JSON_IN_GEOMETRY_KEY_JSON_1%JSON_IN_COORDINATE_SYSTEM_KEY_JSON_1%JSON_IN_SAVE_FRAGMENTS_JSON_1 Feature Parameters
+DEFAULT_MACRO JSON_IN_FEATURE_TYPE_KEY_JSON_1 json_featuretype
+JSON_1_FEATURE_TYPE_KEY "$(JSON_IN_FEATURE_TYPE_KEY_JSON_1)"
+GUI OPTIONAL TEXT JSON_IN_FEATURE_TYPE_KEY_JSON_1 Feature Type Key Name:
+DEFAULT_MACRO JSON_IN_GEOMETRY_FORMAT_JSON_1 None
+JSON_1_GEOMETRY_FORMAT "$(JSON_IN_GEOMETRY_FORMAT_JSON_1)"
+GUI ACTIVECHOICE JSON_IN_GEOMETRY_FORMAT_JSON_1 GeoJSON%OGC-WKT%None,JSON_IN_GEOMETRY_KEY_JSON_1,JSON_IN_COORDINATE_SYSTEM_KEY_JSON_1 Geometry Format:
+DEFAULT_MACRO JSON_IN_GEOMETRY_KEY_JSON_1 
+JSON_1_GEOMETRY_KEY "$(JSON_IN_GEOMETRY_KEY_JSON_1)"
+GUI OPTIONAL TEXT JSON_IN_GEOMETRY_KEY_JSON_1 Geometry Key Name:
+DEFAULT_MACRO JSON_IN_COORDINATE_SYSTEM_KEY_JSON_1 <Unused>
+JSON_1_COORDINATE_SYSTEM_KEY "$(JSON_IN_COORDINATE_SYSTEM_KEY_JSON_1)"
+GUI TEXT JSON_IN_COORDINATE_SYSTEM_KEY_JSON_1 Coordinate System Key Name:
+DEFAULT_MACRO JSON_IN_SAVE_FRAGMENTS_JSON_1 NO
+JSON_1_SAVE_FRAGMENTS "$(JSON_IN_SAVE_FRAGMENTS_JSON_1)"
+GUI LOOKUP_CHOICE JSON_IN_SAVE_FRAGMENTS_JSON_1 Yes,YES%No,NO Read Entire Feature as JSON Fragment:
+DEFAULT_MACRO JSON_IN_DECODE_TEXT_STRINGS_JSON_1 Yes
+JSON_1_DECODE_TEXT_STRINGS "$(JSON_IN_DECODE_TEXT_STRINGS_JSON_1)"
+DEFAULT_MACRO JSON_IN_EXPOSE_ATTRS_GROUP_JSON_1 FME_DISCLOSURE_OPEN
+JSON_1_EXPOSE_ATTRS_GROUP "$(JSON_IN_EXPOSE_ATTRS_GROUP_JSON_1)"
+DEFAULT_MACRO JSON_IN_USE_BASENAME_AS_DEFAULT_FEATURE_TYPE_JSON_1 No
+JSON_1_USE_BASENAME_AS_DEFAULT_FEATURE_TYPE "$(JSON_IN_USE_BASENAME_AS_DEFAULT_FEATURE_TYPE_JSON_1)"
+# Include this file in source setting section to add external search envelope processing
+# Zero as a default means we don't do any search -- this makes workbench happier
+DEFAULT_MACRO JSON_IN_USE_SEARCH_ENVELOPE_JSON_1 NO
+JSON_1_USE_SEARCH_ENVELOPE "$(JSON_IN_USE_SEARCH_ENVELOPE_JSON_1)"
+GUI ACTIVEDISCLOSUREGROUP JSON_IN_USE_SEARCH_ENVELOPE_JSON_1 JSON_IN_SEARCH_ENVELOPE_MINX_JSON_1%JSON_IN_SEARCH_ENVELOPE_MINY_JSON_1%JSON_IN_SEARCH_ENVELOPE_MAXX_JSON_1%JSON_IN_SEARCH_ENVELOPE_MAXY_JSON_1%JSON_IN_SEARCH_ENVELOPE_COORDINATE_SYSTEM_JSON_1%JSON_IN_CLIP_TO_ENVELOPE_JSON_1%JSON_IN_SEARCH_METHOD%JSON_IN_SEARCH_METHOD_FILTER%JSON_IN_SEARCH_ORDER%JSON_IN_SEARCH_FEATURE%JSON_IN_DUMMY_SEARCH_ENVELOPE_PARAMETER Use Search Envelope
+# ===========================================================================
+GUI LOOKUP JSON_IN_SEARCH_ENVELOPE_MINX_JSON_1 <Unused>,0 
+DEFAULT_MACRO JSON_IN_SEARCH_ENVELOPE_MINX_JSON_1 0
+JSON_1_SEARCH_ENVELOPE "$(JSON_IN_SEARCH_ENVELOPE_MINX_JSON_1)"
+GUI OPTIONAL FLOAT JSON_IN_SEARCH_ENVELOPE_MINX_JSON_1 Minimum X:
+# ===========================================================================
+GUI LOOKUP JSON_IN_SEARCH_ENVELOPE_MINY_JSON_1 <Unused>,0 
+DEFAULT_MACRO JSON_IN_SEARCH_ENVELOPE_MINY_JSON_1 0
+JSON_1_SEARCH_ENVELOPE "$(JSON_IN_SEARCH_ENVELOPE_MINY_JSON_1)"
+GUI OPTIONAL FLOAT JSON_IN_SEARCH_ENVELOPE_MINY_JSON_1 Minimum Y:
+# ===========================================================================
+GUI LOOKUP JSON_IN_SEARCH_ENVELOPE_MAXX_JSON_1 <Unused>,0 
+DEFAULT_MACRO JSON_IN_SEARCH_ENVELOPE_MAXX_JSON_1 0
+JSON_1_SEARCH_ENVELOPE "$(JSON_IN_SEARCH_ENVELOPE_MAXX_JSON_1)"
+GUI OPTIONAL FLOAT JSON_IN_SEARCH_ENVELOPE_MAXX_JSON_1 Maximum X:
+# ===========================================================================
+GUI LOOKUP JSON_IN_SEARCH_ENVELOPE_MAXY_JSON_1 <Unused>,0 
+DEFAULT_MACRO JSON_IN_SEARCH_ENVELOPE_MAXY_JSON_1 0
+JSON_1_SEARCH_ENVELOPE "$(JSON_IN_SEARCH_ENVELOPE_MAXY_JSON_1)"
+GUI OPTIONAL FLOAT JSON_IN_SEARCH_ENVELOPE_MAXY_JSON_1 Maximum Y:
+# ===========================================================================
+GUI LOOKUP JSON_IN_SEARCH_ENVELOPE_COORDINATE_SYSTEM_JSON_1 <Unused>, 
+DEFAULT_MACRO JSON_IN_SEARCH_ENVELOPE_COORDINATE_SYSTEM_JSON_1 
+JSON_1_SEARCH_ENVELOPE "$(JSON_IN_SEARCH_ENVELOPE_COORDINATE_SYSTEM_JSON_1)"
+GUI OPTIONAL COORDSYS JSON_IN_SEARCH_ENVELOPE_COORDINATE_SYSTEM_JSON_1 Search Envelope Coordinate System:
+# ===========================================================================
+# BUG18999: We now have a soft clip to fall back on like native spatial index
+# thus we are reintroducing the clip to envelop as an option for users.
+# Defualt to soft clip as per the existing database readers we are emulating
+GUI LOOKUP JSON_IN_CLIP_TO_ENVELOPE_JSON_1 <Unused>,NO 
+DEFAULT_MACRO JSON_IN_CLIP_TO_ENVELOPE_JSON_1 NO
+JSON_1_CLIP_TO_ENVELOPE "$(JSON_IN_CLIP_TO_ENVELOPE_JSON_1)"
+GUI OPTIONAL CHECKBOX JSON_IN_CLIP_TO_ENVELOPE_JSON_1 YES%NO Clip to Search Envelope
+# ===========================================================================
+DEFAULT_MACRO JSON_IN_NETWORK_AUTHENTICATION_JSON_1 
+JSON_1_NETWORK_AUTHENTICATION "$(JSON_IN_NETWORK_AUTHENTICATION_JSON_1)"
+GUI OPTIONAL AUTHENTICATOR JSON_IN_NETWORK_AUTHENTICATION_JSON_1 CONTAINER%GROUP%CONTAINER_TITLE%"Network Authentication"%PROMPT_TYPE%NETWORK Network Authentication
+# ============================================================================
+DEFAULT_MACRO JSON_IN_ATTRIBUTE_READING_JSON_1 ALL
+JSON_1_ATTRIBUTE_READING "$(JSON_IN_ATTRIBUTE_READING_JSON_1)"
+# ============================================================================
+JSON_1_GENERATE_FME_BUILD_NUM 25630
+JSON_1_DATASET "$(SourceDataset_JSON_1)"
+#! END_SOURCE_HEADER
+#! START_WB_HEADER
+MACRO WB_KEYWORD "XLSXW_1"
+#! END_WB_HEADER
+#! START_DEST_HEADER XLSXW XLSXW_1
+# ============================================================================
+# First get the dataset for the database. For Excel, it's the file name.
+# For now we'll use whatever they had when they generated this mapping file,
+# and not reprompt
+#! END_DEST_HEADER
+#! START_WB_HEADER
+DEFAULT_MACRO DestDataset
+INCLUDE [ if {"$(DestDataset)" != ""} {                          \
+ puts {DEFAULT_MACRO DestDataset_XLSXW_1 $(DestDataset)}         \
+ } ]
+#! END_WB_HEADER
+#! START_DEST_HEADER XLSXW XLSXW_1
+DEFAULT_MACRO DestDataset_XLSXW_1 $(DestDataset_XLSXW)
+GUI FILENAME DestDataset_XLSXW_1 Excel_Files(*.xlsx;*.xlsm;*.xls)|*.xlsx;*.xlsm;*.xls|Microsoft_Excel_2007+_Workbook(*.xlsx)|*.xlsx|Microsoft_Excel_2007+_Macro_Workbook(*.xlsm)|*.xlsm|Microsoft_Excel_Pre-2007_Workbook(*.xls)|*.xls|All_Files(*)|* Destination Microsoft Excel File:
+CHECK_RASTER_ATTRIBUTES YES
+# ============================================================================
+DEFAULT_MACRO XLSXW_OUT_FME_GROUP_NAMED1_XLSXW_1 FME_DISCLOSURE_OPEN
+GUI OPTIONAL DISCLOSUREGROUP XLSXW_OUT_FME_GROUP_NAMED1_XLSXW_1 XLSXW_OUT_OVERWRITE_FILE_XLSXW_1%XLSXW_OUT_TEMPLATEFILE_XLSXW_1%XLSXW_OUT_TEMPLATE_SHEET%XLSXW_OUT_REMOVE_UNCHANGED_TEMPLATE_SHEET Writer Parameters
+# Whether or not to overwrite the file
+DEFAULT_MACRO XLSXW_OUT_OVERWRITE_FILE_XLSXW_1 Yes
+XLSXW_1_OVERWRITE_FILE "$(XLSXW_OUT_OVERWRITE_FILE_XLSXW_1)"
+GUI ACTIVECHOICE XLSXW_OUT_OVERWRITE_FILE_XLSXW_1 Yes%No,XLSXW_OUT_TEMPLATEFILE_XLSXW_1,XLSXW_OUT_TEMPLATE_SHEET,XLSXW_OUT_REMOVE_UNCHANGED_TEMPLATE_SHEET Overwrite Existing File:
+# Template file option
+DEFAULT_MACRO XLSXW_OUT_TEMPLATEFILE_XLSXW_1 
+XLSXW_1_TEMPLATEFILE "$(XLSXW_OUT_TEMPLATEFILE_XLSXW_1)"
+GUI OPTIONAL FILENAME_MUSTEXIST XLSXW_OUT_TEMPLATEFILE_XLSXW_1 Excel_Files(*.xlsx;*.xlsm;*.xls)|*.xlsx;*.xlsm;*.xls|Microsoft_Excel_2007+_Workbook(*.xlsx)|*.xlsx|Microsoft_Excel_2007+_Macro_Workbook(*.xlsm)|*.xlsm|Microsoft_Excel_Pre-2007_Workbook(*.xls)|*.xls|All_Files(*)|* Template File:
+GUI LOOKUP XLSXW_OUT_TEMPLATEFILE_XLSXW_1 <Unused>, 
+DEFAULT_MACRO XLSXW_OUT_TEMPLATE_SHEET_XLSXW_1 
+XLSXW_1_TEMPLATE_SHEET "$(XLSXW_OUT_TEMPLATE_SHEET_XLSXW_1)"
+DEFAULT_MACRO XLSXW_OUT_REMOVE_UNCHANGED_TEMPLATE_SHEET_XLSXW_1 No
+XLSXW_1_REMOVE_UNCHANGED_TEMPLATE_SHEET "$(XLSXW_OUT_REMOVE_UNCHANGED_TEMPLATE_SHEET_XLSXW_1)"
+# Compatibility case to support reading old workspaces which have one template sheet per writer
+DEFAULT_MACRO XLSXW_OUT_MULTIPLE_TEMPLATE_SHEETS_XLSXW_1 Yes
+XLSXW_1_MULTIPLE_TEMPLATE_SHEETS "$(XLSXW_OUT_MULTIPLE_TEMPLATE_SHEETS_XLSXW_1)"
+# Compatibility case to support old case where insert would allow fme_db_operation
+DEFAULT_MACRO XLSXW_OUT_INSERT_IGNORE_DB_OP_XLSXW_1 Yes
+XLSXW_1_INSERT_IGNORE_DB_OP "$(XLSXW_OUT_INSERT_IGNORE_DB_OP_XLSXW_1)"
+# ============================================================================
+# Parameters whose values will be percolated to the feature types, but will not
+# remain as writer level settings
+# Default to not drop feature type first
+DEFAULT_MACRO XLSXW_OUT_DROP_TABLE_XLSXW_1 No
+XLSXW_1_DROP_TABLE "$(XLSXW_OUT_DROP_TABLE_XLSXW_1)"
+# Default to not truncate feature type first (removeallcelldata,retainformatting/headers,etc.)
+DEFAULT_MACRO XLSXW_OUT_TRUNCATE_TABLE_XLSXW_1 No
+XLSXW_1_TRUNCATE_TABLE "$(XLSXW_OUT_TRUNCATE_TABLE_XLSXW_1)"
+# Maintain compatibility with lenient attrName.* matching
+DEFAULT_MACRO XLSXW_OUT_STRICT_SCHEMA_ADDITIONAL_ATTRIBUTE_MATCHING_XLSXW_1 yes
+XLSXW_1_STRICT_SCHEMA_ADDITIONAL_ATTRIBUTE_MATCHING "$(XLSXW_OUT_STRICT_SCHEMA_ADDITIONAL_ATTRIBUTE_MATCHING_XLSXW_1)"
+# Default to write out the field names
+DEFAULT_MACRO XLSXW_OUT_FIELD_NAMES_OUT_XLSXW_1 Yes
+XLSXW_1_FIELD_NAMES_OUT "$(XLSXW_OUT_FIELD_NAMES_OUT_XLSXW_1)"
+# This keyword determines whether we enable creating sheets when only
+# receiving a schema feature or not receiving any data.
+DEFAULT_MACRO XLSXW_OUT_ALWAYS_CREATE_FEATURE_TYPES_XLSXW_1 NO
+XLSXW_1_ALWAYS_CREATE_FEATURE_TYPES "$(XLSXW_OUT_ALWAYS_CREATE_FEATURE_TYPES_XLSXW_1)"
+GUI LOOKUP_CHOICE XLSXW_OUT_ALWAYS_CREATE_FEATURE_TYPES_XLSXW_1 YES,YES%NO,NO Always Create Sheets
+# Allow header row to be unformatted
+DEFAULT_MACRO XLSXW_OUT_FIELD_NAMES_FORMATTING_XLSXW_1 NO
+XLSXW_1_FIELD_NAMES_FORMATTING "$(XLSXW_OUT_FIELD_NAMES_FORMATTING_XLSXW_1)"
+DEFAULT_MACRO XLSXW_OUT_FIELD_NAMES_ROW_HEIGHT_XLSXW_1 <Unused>
+XLSXW_1_FIELD_NAMES_ROW_HEIGHT "$(XLSXW_OUT_FIELD_NAMES_ROW_HEIGHT_XLSXW_1)"
+DEFAULT_MACRO XLSXW_OUT_FIELD_NAMES_FONT_NAME_XLSXW_1 <Unused>
+XLSXW_1_FIELD_NAMES_FONT_NAME "$(XLSXW_OUT_FIELD_NAMES_FONT_NAME_XLSXW_1)"
+DEFAULT_MACRO XLSXW_OUT_FIELD_NAMES_FONT_COLOR_XLSXW_1 <Unused>
+XLSXW_1_FIELD_NAMES_FONT_COLOR "$(XLSXW_OUT_FIELD_NAMES_FONT_COLOR_XLSXW_1)"
+DEFAULT_MACRO XLSXW_OUT_FIELD_NAMES_BACKGROUND_COLOR_XLSXW_1 <Unused>
+XLSXW_1_FIELD_NAMES_BACKGROUND_COLOR "$(XLSXW_OUT_FIELD_NAMES_BACKGROUND_COLOR_XLSXW_1)"
+DEFAULT_MACRO XLSXW_OUT_FIELD_NAMES_PATTERN_COLOR_XLSXW_1 <Unused>
+XLSXW_1_FIELD_NAMES_PATTERN_COLOR "$(XLSXW_OUT_FIELD_NAMES_PATTERN_COLOR_XLSXW_1)"
+DEFAULT_MACRO XLSXW_OUT_FIELD_NAMES_PATTERN_STYLE_XLSXW_1 <Unused>
+XLSXW_1_FIELD_NAMES_PATTERN_STYLE "$(XLSXW_OUT_FIELD_NAMES_PATTERN_STYLE_XLSXW_1)"
+DEFAULT_MACRO XLSXW_OUT_FIELD_NAMES_CELL_BORDER_COLOR_XLSXW_1 <Unused>
+XLSXW_1_FIELD_NAMES_CELL_BORDER_COLOR "$(XLSXW_OUT_FIELD_NAMES_CELL_BORDER_COLOR_XLSXW_1)"
+DEFAULT_MACRO XLSXW_OUT_FIELD_NAMES_CELL_BORDER_STYLE_XLSXW_1 <Unused>
+XLSXW_1_FIELD_NAMES_CELL_BORDER_STYLE "$(XLSXW_OUT_FIELD_NAMES_CELL_BORDER_STYLE_XLSXW_1)"
+DEFAULT_MACRO XLSXW_OUT_FIELD_NAMES_HORIZONTAL_ALIGNMENT_XLSXW_1 <Unused>
+XLSXW_1_FIELD_NAMES_HORIZONTAL_ALIGNMENT "$(XLSXW_OUT_FIELD_NAMES_HORIZONTAL_ALIGNMENT_XLSXW_1)"
+DEFAULT_MACRO XLSXW_OUT_FIELD_NAMES_VERTICAL_ALIGNMENT_XLSXW_1 <Unused>
+XLSXW_1_FIELD_NAMES_VERTICAL_ALIGNMENT "$(XLSXW_OUT_FIELD_NAMES_VERTICAL_ALIGNMENT_XLSXW_1)"
+DEFAULT_MACRO XLSXW_OUT_FIELD_NAMES_TEXT_INDENT_XLSXW_1 <Unused>
+XLSXW_1_FIELD_NAMES_TEXT_INDENT "$(XLSXW_OUT_FIELD_NAMES_TEXT_INDENT_XLSXW_1)"
+DEFAULT_MACRO XLSXW_OUT_FIELD_NAMES_TEXT_ORIENTATION_XLSXW_1 <Unused>
+XLSXW_1_FIELD_NAMES_TEXT_ORIENTATION "$(XLSXW_OUT_FIELD_NAMES_TEXT_ORIENTATION_XLSXW_1)"
+DEFAULT_MACRO XLSXW_OUT_FIELD_NAMES_TEXT_CONTROL_XLSXW_1 <Unused>
+XLSXW_1_FIELD_NAMES_TEXT_CONTROL "$(XLSXW_OUT_FIELD_NAMES_TEXT_CONTROL_XLSXW_1)"
+# Default writer mode
+DEFAULT_MACRO XLSXW_OUT_WRITER_MODE_XLSXW_1 Insert
+XLSXW_1_WRITER_MODE "$(XLSXW_OUT_WRITER_MODE_XLSXW_1)"
+# Default raster writing type
+DEFAULT_MACRO XLSXW_OUT_RASTER_FORMAT_XLSXW_1 PNG
+XLSXW_1_RASTER_FORMAT "$(XLSXW_OUT_RASTER_FORMAT_XLSXW_1)"
+# ============================================================================
+# Choose excel file protection mode
+DEFAULT_MACRO XLSXW_OUT_PROTECT_SHEET_XLSXW_1 NO
+XLSXW_1_PROTECT_SHEET "$(XLSXW_OUT_PROTECT_SHEET_XLSXW_1)"
+# Whether or not to enable sheet password protection
+DEFAULT_MACRO XLSXW_OUT_PROTECT_SHEET_PASSWORD_XLSXW_1 <Unused>
+XLSXW_1_PROTECT_SHEET_PASSWORD "$(XLSXW_OUT_PROTECT_SHEET_PASSWORD_XLSXW_1)"
+# Which kind of protection level
+DEFAULT_MACRO XLSXW_OUT_PROTECT_SHEET_LEVEL_XLSXW_1 <Unused>
+XLSXW_1_PROTECT_SHEET_LEVEL "$(XLSXW_OUT_PROTECT_SHEET_LEVEL_XLSXW_1)"
+# Which kind of specific permissions will be enabled
+DEFAULT_MACRO XLSXW_OUT_PROTECT_SHEET_PERMISSIONS_XLSXW_1 <Unused>
+XLSXW_1_PROTECT_SHEET_PERMISSIONS "$(XLSXW_OUT_PROTECT_SHEET_PERMISSIONS_XLSXW_1)"
+# ============================================================================
+# Opt in for destination dataset type vs format type validation
+DEFAULT_MACRO XLSXW_OUT_DESTINATION_DATASETTYPE_VALIDATION_XLSXW_1 Yes
+XLSXW_1_DESTINATION_DATASETTYPE_VALIDATION "$(XLSXW_OUT_DESTINATION_DATASETTYPE_VALIDATION_XLSXW_1)"
+DEFAULT_MACRO XLSXW_OUT_COORDINATE_SYSTEM_GRANULARITY_XLSXW_1 FEATURE
+XLSXW_1_COORDINATE_SYSTEM_GRANULARITY "$(XLSXW_OUT_COORDINATE_SYSTEM_GRANULARITY_XLSXW_1)"
+DEFAULT_MACRO XLSXW_OUT_CUSTOM_NUMBER_FORMATTING_XLSXW_1 ENABLE_NATIVE
+XLSXW_1_CUSTOM_NUMBER_FORMATTING "$(XLSXW_OUT_CUSTOM_NUMBER_FORMATTING_XLSXW_1)"
+# ============================================================================
+XLSXW_1_GENERATE_FME_BUILD_NUM 25630
+XLSXW_1_DATASET "$(DestDataset_XLSXW_1)"
+#! END_DEST_HEADER
+#! START_WB_HEADER
+#! END_WB_HEADER
+#! END_HEADER
+
+LOG_FILENAME "$(FME_MF_DIR)$(WORKSPACE_NAME).log"
+LOG_APPEND NO
+LOG_TIMINGS YES
+LOG_MAX_FEATURES 200
+LOG_MAX_RECORDED_FEATURES 200
+FME_REPROJECTION_ENGINE FME
+FME_IMPLICIT_CSMAP_REPROJECTION_MODE Auto
+FME_GEOMETRY_HANDLING Enhanced
+FME_STROKE_MAX_DEVIATION 0
+FME_NAMES_ENCODING UTF-8
+FME_BULK_MODE_THRESHOLD 2000
+LAST_SAVE_BUILD "FME 2025.1.2.0 (20250829 - Build 25630 - WIN64)"
+DEFAULT_MACRO DATASET_KEYWORD_JSON_1 JSON_1
+DEFAULT_MACRO DATASET_KEYWORD_XLSXW_1 XLSXW_1
+# -------------------------------------------------------------------------
+
+JSON_1_READER_META_ATTRIBUTES fme_feature_type
+
+# -------------------------------------------------------------------------
+
+MULTI_READER_CONTINUE_ON_READER_FAILURE No
+
+# -------------------------------------------------------------------------
+
+MACRO FME_VIEWER_APP fmedatainspector
+# -------------------------------------------------------------------------
+JSON_1_DEF JSONFeature   uuid                         string   naam                         string   naampad                      string   toestand                     string   bestek_info.dossiernummer    string   bestek_info.besteknummer     string   bestek_info.aannemer         string   bestek_info.van              string   bestek_info.tot              string   bestek_info.bestek_aannemer  string   bestek_besteknummer          string   bestekken_info               string
+# -------------------------------------------------------------------------
+
+FACTORY_DEF * RoutingFactory   FACTORY_NAME "Router and Unexpected Input Remover"   COMMAND_PARM_EVALUATION SINGLE_PASS   MULTI_READER_KEYWORD $(DATASET_KEYWORD_JSON_1)   INPUT FEATURE_TYPE *    ROUTE JSON JSON_1::JSONFeature multi_reader_keyword,$(DATASET_KEYWORD_JSON_1) TO FME_GENERIC ::JSONFeature ALIAS_GEOMETRY    MERGE_INPUT Yes   OUTPUT ROUTED FEATURE_TYPE *
+JSON_1_MERGE_DEF JSON_1::JSONFeature GLOB *
+# -------------------------------------------------------------------------
+
+FACTORY_DEF * TeeFactory    FACTORY_NAME "JSONFeature_JSON_1 Splitter"    INPUT FEATURE_TYPE JSONFeature    OUTPUT FEATURE_TYPE JSONFeature_JSON_1
+DEFAULT_MACRO WB_CURRENT_CONTEXT
+# -------------------------------------------------------------------------
+INCLUDE [    set dateTimeFormat FME;    set fixDateAttrs No;    switch NO_DATE {       NO_DATE                    { set dateTimeFormat <Invalid>; }       DATE_TIME_ATTRIBUTE_FORMAT { set dateTimeFormat {<Unused>};                                    set fixDateAttrs Yes; }    };    puts "MACRO SSFACT_DATE_TIME_ATTRIBUTE_FORMAT $dateTimeFormat";    puts "MACRO SSFACT_FIX_DATE_ATTRS $fixDateAttrs";    ;    set inferEmptySchema No;    set scanEmptyAttributes No;    switch IGNORE {       IGNORE              {}       SCANNER_DEFAULT     { set scanEmptyAttributes Yes; }       INFER_EMPTY_SCHEMA  { set inferEmptySchema Yes; }    };    puts "MACRO SSFACT_INFER_EMPTY_SCHEMA $inferEmptySchema";    puts "MACRO SSFACT_SCAN_EMPTY_ATTRIBUTES $scanEmptyAttributes"; ]
+FACTORY_DEF {*} SchemaScannerFactory    FACTORY_NAME { SchemaScanner }    COMMAND_PARM_EVALUATION SINGLE_PASS    INPUT  FEATURE_TYPE JSONFeature_JSON_1    FLUSH_WHEN_GROUPS_CHANGE { <Unused> }    SCHEMA_FEATURES_FIRST { Yes }    SCHEMA_DEF_NAME_ATTR { "fme_feature_type_name" }    IGNORE_ATTRIBUTES_CONTAINING_REGEX { ^fme_<pipe>^multi_ }    IGNORE_ATTRIBUTES_CASE_SENSITIVE { No }    INCLUDE_FORMAT_ATTRIBUTES { No }    COERCE_CHAR_TO_VARCHAR { Yes }    FIX_DATE_ATTRS { $(SSFACT_FIX_DATE_ATTRS) }    INFER_EMPTY_SCHEMA { $(SSFACT_INFER_EMPTY_SCHEMA) }    TEMPLATE_SCHEMA { fme_feature_type,buffer }    TYPE_OPTIONS { SCAN_USE_UNBOUNDED_STRINGS=No                   SCAN_USE_UNBOUNDED_TYPES=Yes                   SCAN_PREFER_UNSIGNED_TYPES_FOR_INTEGERS=Yes                   SCAN_FOR_DATE_ATTRIBUTES=Yes                   SCAN_FORCE_DATETIME=No                   SCAN_EMPTY_ATTRIBUTES=$(SSFACT_SCAN_EMPTY_ATTRIBUTES);                   SCAN_FOR_DATE_ATTRIBUTE_FORMAT=$(SSFACT_DATE_TIME_ATTRIBUTE_FORMAT)                   SCAN_ALLOW_NUMERIC_LEADING_ZEROES=Yes }    OUTPUT { SCANNED FEATURE_TYPE SchemaScanner_Output        }    OUTPUT { SCHEMA FEATURE_TYPE SchemaScanner_<SCHEMA>           }    OUTPUT { REJECTED FEATURE_TYPE SchemaScanner_<REJECTED>        }
+DEFAULT_MACRO _WB_BYPASS_TERMINATION No
+FACTORY_DEF * TeeFactory FACTORY_NAME SchemaScanner_<Rejected> INPUT FEATURE_TYPE SchemaScanner_<REJECTED>  NO_LOGGING   OUTPUT FAILED FEATURE_TYPE * @Abort(ENCODED, SchemaScanner<space>output<space>a<space><lt>Rejected<gt><space>feature.<space><space>To<space>continue<space>translation<space>when<space>features<space>are<space>rejected<comma><space>change<space><apos>Workspace<space>Parameters<apos><space><gt><space>Log<space>and<space>Troubleshoot<space><gt><space><apos>Rejected<space>Feature<space>Handling<apos><space>to<space><apos>Continue<space>Translation<apos>)
+# -------------------------------------------------------------------------
+FME_PYTHON_PATH "$(FME_MF_DIR)"
+FACTORY_DEF {*} PythonFactory    FACTORY_NAME { PythonCaller }    FLUSH_WHEN_GROUPS_CHANGE { <Unused> }    INPUT  FEATURE_TYPE SchemaScanner_<SCHEMA>    SYMBOL_NAME { FeatureProcessor }    SOURCE_CODE { import<space>fme<lf>from<space>fme<space>import<space>BaseTransformer<lf>import<space>fmeobjects<lf><lf><lf>class<space>FeatureProcessor<openparen>BaseTransformer<closeparen>:<lf><space><space><space><space><quote><quote><quote>Template<space>Class<space>Interface:<lf><space><space><space><space>When<space>using<space>this<space>class<comma><space>make<space>sure<space>its<space>name<space>is<space>set<space>as<space>the<space>value<space>of<space>the<space><apos>Class<space>to<space>Process<space>Features<apos><lf><space><space><space><space>transformer<space>parameter.<lf><lf><space><space><space><space>This<space>class<space>inherits<space>from<space><apos>fme.BaseTransformer<apos>.<space>For<space>full<space>details<space>of<space>this<space>class<comma><space>its<space>methods<comma><space>and<lf><space><space><space><space>expected<space>usage<comma><space>see<space>https:<solidus><solidus>docs.safe.com<solidus>fme<solidus>html<solidus>fmepython<solidus>api<solidus>fme.html#fme.BaseTransformer.<lf><space><space><space><space><quote><quote><quote><lf><lf><space><space><space><space>def<space>__init__<openparen>self<closeparen>:<lf><space><space><space><space><space><space><space><space><quote><quote><quote>Base<space>constructor<space>for<space>class<space>members.<quote><quote><quote><lf><space><space><space><space><space><space><space><space>self.log<space>=<space>fmeobjects.FMELogFile<openparen><closeparen><space><lf><space><space><space><space><space><space><space><space><lf><space><space><space><space>def<space>log2FME<openparen>self<comma><space>message<comma><space>severity=fmeobjects.FME_INFORM<closeparen>:<lf><space><space><space><space><space><space><space><space><quote><quote><quote><lf><space><space><space><space><space><space><space><space>Sends<space>message<space>to<space>the<space>FME<space>log<space>file<space>and<space>console<space>window.<lf><space><space><space><space><space><space><space><space>Severity<space>must<space>be<space>one<space>of<space>FME_INFORM<comma><space>FME_WARN<comma><space>FME_ERROR<comma><lf><space><space><space><space><space><space><space><space>FME_FATAL<comma><space>FME_STATISTIC<comma><space>or<space>FME_STATUSREPORT.<lf><space><space><space><space><space><space><space><space><quote><quote><quote><lf><space><space><space><space><space><space><space><space>self.log.logMessageString<openparen>message<comma><space>severity<closeparen><lf><lf><space><space><space><space>def<space>has_support_for<openparen>self<comma><space>support_type:<space>int<closeparen>:<lf><space><space><space><space><space><space><space><space><quote><quote><quote>This<space>method<space>is<space>called<space>by<space>FME<space>to<space>determine<space>if<space>the<space>PythonCaller<space>supports<space>Bulk<space>mode<comma><lf><space><space><space><space><space><space><space><space>which<space>allows<space>for<space>significant<space>performance<space>gains<space>when<space>processing<space>large<space>numbers<space>of<space>features.<lf><space><space><space><space><space><space><space><space><quote><quote><quote><lf><space><space><space><space><space><space><space><space>return<space>support_type<space>==<space>fmeobjects.FME_SUPPORT_FEATURE_TABLE_SHIM<lf><lf><space><space><space><space>def<space>input<openparen>self<comma><space>feature:<space>fmeobjects.FMEFeature<closeparen>:<lf><space><space><space><space><space><space><space><space>attr_names<space>=<space>feature.getAttribute<openparen><apos>attribute<opencurly><closecurly>.name<apos><closeparen><lf><space><space><space><space><space><space><space><space>attr_types<space>=<space>feature.getAttribute<openparen><apos>attribute<opencurly><closecurly>.fme_data_type<apos><closeparen><lf><space><space><space><space><space><space><space><space><lf><space><space><space><space><space><space><space><space>#<space>Create<space>an<space>attribute<space>with<space>suffix<space><quote>.hyperlink<quote><space>from<space>the<space>attribute<space>at<space>the<space>first<space>index<space>position<lf><space><space><space><space><space><space><space><space>index<space>=<space>0<lf><space><space><space><space><space><space><space><space>attr_names.insert<openparen>index<space>+<space>1<comma><space>f<apos><opencurly>attr_names<openbracket>index<closebracket><closecurly>.hyperlink<apos><closeparen><lf><space><space><space><space><space><space><space><space>attr_types.insert<openparen>index<space>+<space>1<comma><space>attr_types<openbracket>index<closebracket><closeparen><lf><space><space><space><space><space><space><space><space><lf><space><space><space><space><space><space><space><space>feature.setAttribute<openparen><apos>attribute<opencurly><closecurly>.name<apos><comma><space>attr_names<closeparen><lf><space><space><space><space><space><space><space><space>feature.setAttribute<openparen><apos>attribute<opencurly><closecurly>.fme_data_type<apos><comma><space>attr_types<closeparen><lf><space><space><space><space><space><space><space><space>self.pyoutput<openparen>feature<comma><space>output_tag=<quote>PYOUTPUT<quote><closeparen><lf><lf><space><space><space><space>def<space>close<openparen>self<closeparen>:<lf><space><space><space><space><space><space><space><space><quote><quote><quote>This<space>method<space>is<space>called<space>once<space>all<space>the<space>FME<space>Features<space>have<space>been<space>processed<space>from<space>input<openparen><closeparen>.<quote><quote><quote><lf><space><space><space><space><space><space><space><space>pass<lf><lf><space><space><space><space>def<space>process_group<openparen>self<closeparen>:<lf><space><space><space><space><space><space><space><space><quote><quote><quote>This<space>method<space>is<space>called<space>by<space>FME<space>for<space>each<space>group<space>when<space>group<space>processing<space>mode<space>is<space>enabled.<quote><quote><quote><lf><space><space><space><space><space><space><space><space>pass<lf><lf><space><space><space><space>def<space>reject_feature<openparen>self<comma><space>feature:<space>fmeobjects.FMEFeature<comma><space>code:<space>str<comma><space>message:<space>str<closeparen>:<lf><space><space><space><space><space><space><space><space><quote><quote><quote>This<space>method<space>can<space>be<space>used<space>to<space>output<space>a<space>feature<space>to<space>the<space><lt>Rejected<gt><space>port.<quote><quote><quote><lf><space><space><space><space><space><space><space><space>feature.setAttribute<openparen><quote>fme_rejection_code<quote><comma><space>code<closeparen><lf><space><space><space><space><space><space><space><space>feature.setAttribute<openparen><quote>fme_rejection_message<quote><comma><space>message<closeparen><lf><space><space><space><space><space><space><space><space>self.pyoutput<openparen>feature<comma><space>output_tag=<quote><lt>Rejected<gt><quote><closeparen><lf> }    PY_OUTPUT_TAGS { PYOUTPUT <Rejected> }    OUTPUT { PYOUTPUT FEATURE_TYPE PythonCaller_OUTPUT         }    OUTPUT { <Rejected> FEATURE_TYPE PythonCaller_<Rejected>         }
+DEFAULT_MACRO _WB_BYPASS_TERMINATION No
+FACTORY_DEF * TeeFactory FACTORY_NAME PythonCaller_<Rejected> INPUT FEATURE_TYPE PythonCaller_<Rejected>  NO_LOGGING   OUTPUT FAILED FEATURE_TYPE * @Abort(ENCODED, PythonCaller<space>output<space>a<space><lt>Rejected<gt><space>feature.<space><space>To<space>continue<space>translation<space>when<space>features<space>are<space>rejected<comma><space>change<space><apos>Workspace<space>Parameters<apos><space><gt><space>Log<space>and<space>Troubleshoot<space><gt><space><apos>Rejected<space>Feature<space>Handling<apos><space>to<space><apos>Continue<space>Translation<apos>)
+# -------------------------------------------------------------------------
+INCLUDE [if { {ATTRIBUTES} == {ATTRIBUTES} } {                puts "MACRO FeatureMerger_REFERENCE_INFO ATTRIBUTES";             }          elseif { {ATTRIBUTES} == {GEOM_BUILD} && {<Unused>} == {POLYGONS}} {                puts "MACRO FeatureMerger_REFERENCE_INFO GEOM_BUILD_POLYS";             }          elseif { {ATTRIBUTES} == {GEOM_BUILD} && {<Unused>} == {AGGREGATES}} {                puts "MACRO FeatureMerger_REFERENCE_INFO GEOM_BUILD_AGGREGATES";             }          elseif { {ATTRIBUTES} == {GEOM_BUILD} && {<Unused>} == {LINESFROMPOINTS}} {                puts "MACRO FeatureMerger_REFERENCE_INFO GEOM_BUILD_LINES_FROM_POINTS";             }          elseif { {ATTRIBUTES} == {GEOM_AND_ATTRS} && {<Unused>} == {POLYGONS}} {                puts "MACRO FeatureMerger_REFERENCE_INFO GEOM_AND_ATTR_BUILD_POLYS";             }          elseif { {ATTRIBUTES} == {GEOM_AND_ATTRS} && {<Unused>} == {AGGREGATES}} {                puts "MACRO FeatureMerger_REFERENCE_INFO GEOM_AND_ATTR_BUILD_AGGREGATES";             }          elseif { {ATTRIBUTES} == {GEOM_AND_ATTRS} && {<Unused>} == {LINESFROMPOINTS}} {                puts "MACRO FeatureMerger_REFERENCE_INFO GEOM_AND_ATTR_BUILD_LINES_FROM_POINTS";             }          elseif { {ATTRIBUTES} == {GEOM_BUILD} } {                puts "MACRO FeatureMerger_REFERENCE_INFO GEOM_BUILD_AGGREGATES";             }          elseif { {ATTRIBUTES} == {GEOM_AND_ATTRS} } {                puts "MACRO FeatureMerger_REFERENCE_INFO GEOM_AND_ATTR_BUILD_AGGREGATES";             }          else {}; ]
+FACTORY_DEF {*} ReferenceFactory    FACTORY_NAME { FeatureMerger }    FLUSH_WHEN_GROUPS_CHANGE { <Unused> }    INPUT REFERENCER FEATURE_TYPE SchemaScanner_Output    INPUT REFERENCEE FEATURE_TYPE PythonCaller_OUTPUT    REFERENCE_INFO { $(FeatureMerger_REFERENCE_INFO) }    REFERENCE_TABLE { 1 1 AUTO }    ATTR_ACCUM_MODE { "HANDLE_CONFLICT" }    ATTR_CONFLICT_RES { "REQUESTOR_IF_CONFLICT" }    IGNORE_NULLS { "No" }    HANDLE_NULL_MISSING_KEYS_LIKE_FME2013 { No }    LIST_ATTRS_TO_INCLUDE { <Unused> }    LIST_ATTRS_TO_INCLUDE_MODE { <Unused> }    MERGE_ATTRIBUTES Yes    MANAGE_FME_TYPE Yes    MODE COMPLETE    PROCESS_DUPLICATE_REFERENCEES { NO }    REFERENCEES_FIRST { No }    REJECT_INVALID_GEOM YES    CLEANING_TOLERANCE { <Unused> }    PRESERVE_FEATURE_ORDER { PER_OUTPUT_PORT }    COMPARE_WHITESPACE Yes    OUTPUT { COMPLETE FEATURE_TYPE FeatureMerger_MERGED         }    OUTPUT { REJECTED FEATURE_TYPE FeatureMerger_<REJECTED>         }
+DEFAULT_MACRO _WB_BYPASS_TERMINATION No
+FACTORY_DEF * TeeFactory FACTORY_NAME FeatureMerger_<Rejected> INPUT FEATURE_TYPE FeatureMerger_<REJECTED>  NO_LOGGING   OUTPUT FAILED FEATURE_TYPE * @Abort(ENCODED, FeatureMerger<space>output<space>a<space><lt>Rejected<gt><space>feature.<space><space>To<space>continue<space>translation<space>when<space>features<space>are<space>rejected<comma><space>change<space><apos>Workspace<space>Parameters<apos><space><gt><space>Log<space>and<space>Troubleshoot<space><gt><space><apos>Rejected<space>Feature<space>Handling<apos><space>to<space><apos>Continue<space>Translation<apos>)
+# -------------------------------------------------------------------------
+FME_PYTHON_PATH "$(FME_MF_DIR)"
+FACTORY_DEF {*} PythonFactory    FACTORY_NAME { PythonCaller_2 }    FLUSH_WHEN_GROUPS_CHANGE { <Unused> }    INPUT  FEATURE_TYPE FeatureMerger_MERGED    SYMBOL_NAME { FeatureProcessor }    SOURCE_CODE { import<space>fme<lf>from<space>fme<space>import<space>BaseTransformer<lf>import<space>fmeobjects<lf><lf><lf>class<space>FeatureProcessor<openparen>BaseTransformer<closeparen>:<lf><space><space><space><space><quote><quote><quote>Template<space>Class<space>Interface:<lf><space><space><space><space>When<space>using<space>this<space>class<comma><space>make<space>sure<space>its<space>name<space>is<space>set<space>as<space>the<space>value<space>of<space>the<space><apos>Class<space>to<space>Process<space>Features<apos><lf><space><space><space><space>transformer<space>parameter.<lf><lf><space><space><space><space>This<space>class<space>inherits<space>from<space><apos>fme.BaseTransformer<apos>.<space>For<space>full<space>details<space>of<space>this<space>class<comma><space>its<space>methods<comma><space>and<lf><space><space><space><space>expected<space>usage<comma><space>see<space>https:<solidus><solidus>docs.safe.com<solidus>fme<solidus>html<solidus>fmepython<solidus>api<solidus>fme.html#fme.BaseTransformer.<lf><space><space><space><space><quote><quote><quote><lf><lf><space><space><space><space>def<space>__init__<openparen>self<closeparen>:<lf><space><space><space><space><space><space><space><space><quote><quote><quote>Base<space>constructor<space>for<space>class<space>members.<quote><quote><quote><lf><space><space><space><space><space><space><space><space>pass<lf><lf><space><space><space><space>def<space>has_support_for<openparen>self<comma><space>support_type:<space>int<closeparen>:<lf><space><space><space><space><space><space><space><space><quote><quote><quote>This<space>method<space>is<space>called<space>by<space>FME<space>to<space>determine<space>if<space>the<space>PythonCaller<space>supports<space>Bulk<space>mode<comma><lf><space><space><space><space><space><space><space><space>which<space>allows<space>for<space>significant<space>performance<space>gains<space>when<space>processing<space>large<space>numbers<space>of<space>features.<lf><space><space><space><space><space><space><space><space><quote><quote><quote><lf><space><space><space><space><space><space><space><space>return<space>support_type<space>==<space>fmeobjects.FME_SUPPORT_FEATURE_TABLE_SHIM<lf><lf><space><space><space><space>def<space>input<openparen>self<comma><space>feature:<space>fmeobjects.FMEFeature<closeparen>:<lf><space><space><space><space><space><space><space><space>attr_name<space>=<space>feature.getAttribute<openparen><apos>attribute<opencurly>0<closecurly>.name<apos><closeparen><lf><space><space><space><space><space><space><space><space>attr_value<space>=<space>feature.getAttribute<openparen>attr_name<closeparen><lf><space><space><space><space><space><space><space><space><lf><space><space><space><space><space><space><space><space>attr_name_hyperlink<space>=<space>f<apos><opencurly>attr_name<closecurly>.hyperlink<apos><lf><space><space><space><space><space><space><space><space>attr_value_hyperlink<space>=<space>f<apos>https:<solidus><solidus>apps.mow.vlaanderen.be<solidus>eminfra<solidus>assets<solidus><opencurly>attr_value<closecurly><apos><lf><space><space><space><space><space><space><space><space><lf><space><space><space><space><space><space><space><space>feature.setAttribute<openparen>attr_name_hyperlink<comma><space>attr_value_hyperlink<closeparen><lf><space><space><space><space><space><space><space><space><lf><space><space><space><space><space><space><space><space>self.pyoutput<openparen>feature<comma><space>output_tag=<quote>PYOUTPUT<quote><closeparen><lf><lf><space><space><space><space>def<space>close<openparen>self<closeparen>:<lf><space><space><space><space><space><space><space><space><quote><quote><quote>This<space>method<space>is<space>called<space>once<space>all<space>the<space>FME<space>Features<space>have<space>been<space>processed<space>from<space>input<openparen><closeparen>.<quote><quote><quote><lf><space><space><space><space><space><space><space><space>pass<lf><lf><space><space><space><space>def<space>process_group<openparen>self<closeparen>:<lf><space><space><space><space><space><space><space><space><quote><quote><quote>This<space>method<space>is<space>called<space>by<space>FME<space>for<space>each<space>group<space>when<space>group<space>processing<space>mode<space>is<space>enabled.<quote><quote><quote><lf><space><space><space><space><space><space><space><space>pass<lf><lf><space><space><space><space>def<space>reject_feature<openparen>self<comma><space>feature:<space>fmeobjects.FMEFeature<comma><space>code:<space>str<comma><space>message:<space>str<closeparen>:<lf><space><space><space><space><space><space><space><space><quote><quote><quote>This<space>method<space>can<space>be<space>used<space>to<space>output<space>a<space>feature<space>to<space>the<space><lt>Rejected<gt><space>port.<quote><quote><quote><lf><space><space><space><space><space><space><space><space>feature.setAttribute<openparen><quote>fme_rejection_code<quote><comma><space>code<closeparen><lf><space><space><space><space><space><space><space><space>feature.setAttribute<openparen><quote>fme_rejection_message<quote><comma><space>message<closeparen><lf><space><space><space><space><space><space><space><space>self.pyoutput<openparen>feature<comma><space>output_tag=<quote><lt>Rejected<gt><quote><closeparen><lf> }    PY_OUTPUT_TAGS { PYOUTPUT <Rejected> }    OUTPUT { PYOUTPUT FEATURE_TYPE PythonCaller_2_OUTPUT         }    OUTPUT { <Rejected> FEATURE_TYPE PythonCaller_2_<Rejected>         }
+DEFAULT_MACRO _WB_BYPASS_TERMINATION No
+FACTORY_DEF * TeeFactory FACTORY_NAME PythonCaller_2_<Rejected> INPUT FEATURE_TYPE PythonCaller_2_<Rejected>  NO_LOGGING   OUTPUT FAILED FEATURE_TYPE * @Abort(ENCODED, PythonCaller_2<space>output<space>a<space><lt>Rejected<gt><space>feature.<space><space>To<space>continue<space>translation<space>when<space>features<space>are<space>rejected<comma><space>change<space><apos>Workspace<space>Parameters<apos><space><gt><space>Log<space>and<space>Troubleshoot<space><gt><space><apos>Rejected<space>Feature<space>Handling<apos><space>to<space><apos>Continue<space>Translation<apos>)
+# -------------------------------------------------------------------------
+
+FACTORY_DEF * RoutingFactory FACTORY_NAME "Destination Feature Type Routing Correlator"   COMMAND_PARM_EVALUATION SINGLE_PASS   INPUT FEATURE_TYPE *    ROUTE FME_GENERIC PythonCaller_2_OUTPUT TO XLSXW __GO_TO_FINAL_OUTPUT_ROUTER__ multi_writer_id,0,<at>SupplyAttributes<openparen>ENCODED<comma>fme_template_feature_type<comma>Sheet1<closeparen>,<at>SupplyAttributes<openparen>ENCODED<comma>__wb_out_feat_type__<comma>Sheet1<closeparen>,<at>EvaluateExpression<openparen>ATTR_CREATE_EXPR<comma>__wb_out_feat_type__<comma><lt>at<gt>Value<lt>openparen<gt>fme_feature_type<lt>closeparen<gt><comma>Sheet1<closeparen> GEOMETRY   FEATURE_TYPE_ATTRIBUTE __wb_out_feat_type__   OUTPUT ROUTED FEATURE_TYPE *    OUTPUT NOT_ROUTED FEATURE_TYPE __nuke_me__ @Tcl2("FME_StatMessage 818059 [FME_GetAttribute fme_template_feature_type] 818060 818061 fme_warn")
+# -------------------------------------------------------------------------
+
+FACTORY_DEF * TeeFactory   FACTORY_NAME "Final Output Nuker"   INPUT FEATURE_TYPE __nuke_me__
+
+# -------------------------------------------------------------------------
+XLSXW_1_DEF_TEMPLATE Sheet1   xlsx_drop_sheet              No   xlsx_trunc_sheet             No   xlsx_sheet_order             ""   xlsx_freeze_end_row          1   xlsx_names_are_positions     No   xlsx_field_names_out         Yes   xlsx_field_names_formatting  NO   xlsx_field_names_row_height  1   xlsx_field_names_font_name   Arial<comma>9<comma>BOLD   xlsx_field_names_font_color  ""   xlsx_field_names_background_color ""   xlsx_field_names_pattern_color ""   xlsx_field_names_pattern_style ""   xlsx_field_names_cell_border_color ""   xlsx_field_names_cell_border_style ""   xlsx_field_names_horizontal_alignment ""   xlsx_field_names_vertical_alignment ""   xlsx_field_names_text_indent ""   xlsx_field_names_text_orientation ""   xlsx_field_names_text_control ""   xlsx_start_col               ""   xlsx_start_row               ""   xlsx_offset_col              ""   xlsx_offset_row              ""   xlsx_raster_type             PNG   xlsx_table_writer_mode       Insert   xlsx_row_id_column           ""   xlsx_protect_sheet           NO   xlsx_protect_sheet_level     <Unused>   xlsx_protect_sheet_password  <Unused>   xlsx_protect_sheet_permissions <Unused>   xlsx_template_sheet          ""   xlsx_remove_unchanged_template_sheet No   fme_constant_feature_type    NO   fme_schema_feature_first     yes   fme_schema_attributes_to_remove ""
