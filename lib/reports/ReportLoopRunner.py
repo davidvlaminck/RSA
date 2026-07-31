@@ -18,8 +18,8 @@ from lib.connectors.PostGISConnector import SinglePostGISConnector
 from lib.mail.MailContent import MailContent
 from lib.mail.MailSender import MailSender
 from lib.reports.instantiator import create_report_instance, discover_and_instantiate_reports
+from lib.connectors.pipeline_state import PipelineState
 from lib.reports.pipeline_runner import run_pipelines_by_datasource
-from lib.reports.pipeline_status import PipelineStatusReporter
 from outputs.sheets_wrapper import SingleSheetsWrapper
 from SettingsManager import SettingsManager
 from scripts.ops.aggregate_summaries import process_once
@@ -137,7 +137,13 @@ class ReportLoopRunner:
         reinitialize_database_connections(self.settings)
 
         self.reports = None
-        self.pipeline_status = PipelineStatusReporter(self.settings)
+        pipeline_state_cfg = self.settings.get("pipeline_state", {}) if isinstance(self.settings, dict) else {}
+        self.pipeline_status = None
+        if pipeline_state_cfg.get("enabled", True):
+            db_path = pipeline_state_cfg.get("db_path", "")
+            if db_path:
+                self.pipeline_status = PipelineState(db_path)
+                self.pipeline_status.ensure()
 
         # Optional callback invoked before starting a daily run.
         # Should return True when preconditions are met; False to retry later.
@@ -237,7 +243,8 @@ class ReportLoopRunner:
 
     def run(self):
         """Run all reports either sequentially or in parallel based on settings."""
-        self.pipeline_status.update("rsa_queries", "running", "RSA queries gestart")
+        if self.pipeline_status is not None:
+            self.pipeline_status.update("rsa_queries", "running", "RSA queries gestart")
         try:
             execution_mode = self.settings.get('report_execution', {}).get('mode', 'sequential')
 
@@ -246,9 +253,11 @@ class ReportLoopRunner:
             else:
                 self._run_sequential()
 
-            self.pipeline_status.update("rsa_queries", "completed", "RSA queries voltooid")
+            if self.pipeline_status is not None:
+                self.pipeline_status.update("rsa_queries", "completed", "RSA queries voltooid")
         except Exception as exc:
-            self.pipeline_status.update("rsa_queries", "failed", str(exc))
+            if self.pipeline_status is not None:
+                self.pipeline_status.update("rsa_queries", "failed", str(exc))
             raise
 
         if self.on_run_complete is not None:

@@ -105,12 +105,13 @@ def _default_settings_path() -> str:
 class DailyDriveSyncGate:
     """Ensures one Drive->local sync is completed each day before reports can run."""
 
-    def __init__(self, local_folder: str, drive_folder: str, token_path: str, earliest_sync_hms: str = '01:00:00'):
+    def __init__(self, local_folder: str, drive_folder: str, token_path: str, earliest_sync_hms: str = '01:00:00', pipeline_state=None):
         self.local_folder = local_folder
         self.drive_folder = drive_folder
         self.token_path = token_path
         self.earliest_sync_seconds = self._parse_hms(earliest_sync_hms)
         self._synced_date = None
+        self.pipeline_state = pipeline_state
 
     @staticmethod
     def _parse_hms(hms: str) -> int:
@@ -126,6 +127,8 @@ class DailyDriveSyncGate:
             return False
 
         write_daily_run_log(self.local_folder, 'PRE_SYNC_START', f'drive_folder={self.drive_folder}')
+        if self.pipeline_state is not None and getattr(self.pipeline_state, 'db_path', ''):
+            self.pipeline_state.update('drive_download', 'running', f'drive_folder={self.drive_folder}')
         ok = sync_drive_to_local(
             local_folder=self.local_folder,
             drive_folder_name=self.drive_folder,
@@ -135,17 +138,25 @@ class DailyDriveSyncGate:
             valid, reason = validate_local_mirror(self.local_folder)
             if not valid:
                 write_daily_run_log(self.local_folder, 'PRE_SYNC_INVALID_MIRROR', reason)
+                if self.pipeline_state is not None:
+                    self.pipeline_state.update('drive_download', 'failed', reason)
                 logger.warning('[SYNC] Invalid local mirror after sync-down: %s', reason)
                 return False
             self._synced_date = now.date()
             write_daily_run_log(self.local_folder, 'PRE_SYNC_DONE', f'drive_folder={self.drive_folder}')
+            if self.pipeline_state is not None:
+                self.pipeline_state.update('drive_download', 'completed', f'drive_folder={self.drive_folder}')
         else:
             write_daily_run_log(self.local_folder, 'PRE_SYNC_FAILED', f'drive_folder={self.drive_folder}')
+            if self.pipeline_state is not None:
+                self.pipeline_state.update('drive_download', 'failed', f'drive_folder={self.drive_folder}')
 
         return ok
 
 
-def upload_after_run(local_folder: str, drive_folder: str, token_path: str) -> None:
+def upload_after_run(local_folder: str, drive_folder: str, token_path: str, pipeline_state=None) -> None:
+    if pipeline_state is not None and getattr(pipeline_state, 'db_path', ''):
+        pipeline_state.update('drive_upload', 'running', f'drive_folder={drive_folder}')
     write_daily_run_log(local_folder, 'POST_RUN_UPLOAD_START', f'drive_folder={drive_folder}')
     ok = sync_local_to_drive(
         local_folder=local_folder,
@@ -154,8 +165,12 @@ def upload_after_run(local_folder: str, drive_folder: str, token_path: str) -> N
     )
     if ok:
         write_daily_run_log(local_folder, 'POST_RUN_UPLOAD_DONE', f'drive_folder={drive_folder}')
+        if pipeline_state is not None:
+            pipeline_state.update('drive_upload', 'completed', f'drive_folder={drive_folder}')
     else:
         write_daily_run_log(local_folder, 'POST_RUN_UPLOAD_FAILED', f'drive_folder={drive_folder}')
+        if pipeline_state is not None:
+            pipeline_state.update('drive_upload', 'failed', f'drive_folder={drive_folder}')
 
 
 if __name__ == '__main__':
@@ -170,17 +185,28 @@ if __name__ == '__main__':
     reportlooprunner = ReportLoopRunner(settings_path=cfg['settings_path'], excel_output_dir=onedrive_path)
 
     if cfg['drive_sync_enabled'] and cfg['token_path']:
+        pipeline_state = None
+        pipeline_state_cfg = cfg.get('pipeline_state', {})
+        if pipeline_state_cfg.get('enabled', True):
+            db_path = pipeline_state_cfg.get('db_path', '')
+            if db_path:
+                from lib.connectors.pipeline_state import PipelineState
+                pipeline_state = PipelineState(db_path)
+                pipeline_state.ensure()
+
         sync_gate = DailyDriveSyncGate(
             local_folder=onedrive_path,
             drive_folder=cfg['drive_folder'],
             token_path=cfg['token_path'],
             earliest_sync_hms=cfg['drive_sync_after'],
+            pipeline_state=pipeline_state,
         )
         reportlooprunner.on_before_run = sync_gate.ensure_synced
         reportlooprunner.on_run_complete = lambda: upload_after_run(
             local_folder=onedrive_path,
             drive_folder=cfg['drive_folder'],
             token_path=cfg['token_path'],
+            pipeline_state=pipeline_state,
         )
     elif cfg['drive_sync_enabled']:
         logger.warning('Drive sync enabled in settings but token_path is empty; continuing without Drive sync hooks.')

@@ -71,6 +71,10 @@
       "credentials_path": "/path/to/external/resources/gdrive_oauth_credentials.json",
       "local_folder": "./RSA_OneDrive",
       "token_path": "/path/to/external/resources/gdrive_token.pkl"
+    },
+    "pipeline_state": {
+      "enabled": true,
+      "db_path": "/home/davidlinux/PycharmProjects/RSA_Health/health.db"
     }
   }
 }
