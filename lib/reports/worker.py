@@ -126,7 +126,9 @@ def reinitialize_database_connections(settings):
 
     # Ensure Excel writer singleton is initialized for workers (best-effort)
     try:
-        out_dir = settings.get('output', {}).get('excel', {}).get('output_dir', None)
+        drive_cfg = settings.get('drive_sync', {}) if isinstance(settings, dict) else {}
+        excel_cfg = settings.get('output', {}).get('excel', {}) if isinstance(settings, dict) else {}
+        out_dir = drive_cfg.get('local_folder') or excel_cfg.get('output_dir')
         if out_dir is None:
             out_dir = str(Path(settings.get('workdir', Path.cwd())).resolve().parents[0] / 'RSA_OneDrive')
         from outputs.excel_wrapper import SingleExcelWriter

@@ -38,7 +38,9 @@ def _maybe_init_excel(settings_path: str):
             settings = json.load(fh)
     except Exception:
         return
-    out_dir = settings.get('output', {}).get('excel', {}).get('output_dir', None)
+    drive_cfg = settings.get('drive_sync', {}) if isinstance(settings, dict) else {}
+    excel_cfg = settings.get('output', {}).get('excel', {}) if isinstance(settings, dict) else {}
+    out_dir = drive_cfg.get('local_folder') or excel_cfg.get('output_dir')
     if out_dir is None:
         out_dir = str(Path(settings_path).resolve().parents[1] / 'RSA_OneDrive')
     try:

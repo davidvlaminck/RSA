@@ -94,7 +94,10 @@ def run_selection(
 
     use_parallel = force_parallel if force_parallel is not None else mode == "parallel_by_datasource"
 
-    staged_root = Path(settings.get('output', {}).get('excel', {}).get('output_dir') or 'RSA_OneDrive') / 'staged_summaries'
+    drive_cfg = settings.get('drive_sync', {}) if isinstance(settings, dict) else {}
+    excel_cfg = settings.get('output', {}).get('excel', {}) if isinstance(settings, dict) else {}
+    out_dir = drive_cfg.get('local_folder') or excel_cfg.get('output_dir') or 'RSA_OneDrive'
+    staged_root = Path(out_dir) / 'staged_summaries'
     clear_staged_processed(staged_root)
 
     if use_parallel:
@@ -107,6 +110,6 @@ def run_selection(
         return return_code
 
     # Sequential: reuse ReportLoopRunner logic for consistent behavior
-    runner = ReportLoopRunner(settings_path=settings_path)
+    runner = ReportLoopRunner(settings_path=settings_path, excel_output_dir=out_dir)
     runner.run_selected(report_names)
     return 0

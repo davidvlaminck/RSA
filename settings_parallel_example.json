@@ -13,6 +13,15 @@
     }
   },
 
+  "drive_sync": {
+    "enabled": true,
+    "sync_after": "01:00:00",
+    "drive_folder": "RSA",
+    "credentials_path": "/path/to/external/resources/gdrive_oauth_credentials.json",
+    "local_folder": "./RSA_OneDrive",
+    "token_path": "/path/to/external/resources/gdrive_token.pkl"
+  },
+
   "_example_full_settings": {
     "google_api": {
       "credentials_path": "/path/to/credentials.json"
@@ -54,6 +63,14 @@
       "mode": "parallel_by_datasource",
       "max_concurrent": 2,
       "timeout_seconds": 1800
+    },
+    "drive_sync": {
+      "enabled": true,
+      "sync_after": "01:00:00",
+      "drive_folder": "RSA",
+      "credentials_path": "/path/to/external/resources/gdrive_oauth_credentials.json",
+      "local_folder": "./RSA_OneDrive",
+      "token_path": "/path/to/external/resources/gdrive_token.pkl"
     }
   }
 }

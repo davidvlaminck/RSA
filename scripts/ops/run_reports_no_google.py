@@ -67,7 +67,9 @@ def prepare_temp_settings(orig_settings_path: str | None, excel_output_dir: str 
         settings['output']['excel'] = {}
 
     # Choose output_dir
-    out_dir = excel_output_dir or settings['output']['excel'].get('output_dir')
+    drive_cfg = settings.get('drive_sync', {}) if isinstance(settings, dict) else {}
+    excel_cfg = settings.get('output', {}).get('excel', {}) if isinstance(settings, dict) else {}
+    out_dir = excel_output_dir or drive_cfg.get('local_folder') or excel_cfg.get('output_dir')
     if out_dir is None:
         # default inside project root
         proj_root = Path(__file__).resolve().parents[2]
@@ -123,7 +125,19 @@ def main():
             else:
                 output_dir_choice = out_choice
         else:
-            output_dir_choice = repo_root / 'RSA_OneDrive'
+            with open(args.settings, 'r', encoding='utf-8') as fh:
+                settings = json.load(fh)
+            drive_cfg = settings.get('drive_sync', {}) if isinstance(settings, dict) else {}
+            excel_cfg = settings.get('output', {}).get('excel', {}) if isinstance(settings, dict) else {}
+            out_dir = drive_cfg.get('local_folder') or excel_cfg.get('output_dir')
+            if out_dir is None:
+                output_dir_choice = repo_root / 'RSA_OneDrive'
+            else:
+                out_choice = Path(out_dir)
+                if not out_choice.is_absolute():
+                    output_dir_choice = repo_root / out_choice
+                else:
+                    output_dir_choice = out_choice
 
         output_dir_choice = output_dir_choice.resolve()
         agg_staged = output_dir_choice / 'staged_summaries'

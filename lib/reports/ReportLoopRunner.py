@@ -111,7 +111,9 @@ class ReportLoopRunner:
             if self._excel_output_dir_override is not None:
                 out_dir = str(Path(self._excel_output_dir_override))
             else:
-                out_dir = self.settings.get('output', {}).get('excel', {}).get('output_dir')
+                drive_cfg = self.settings.get('drive_sync', {}) if isinstance(self.settings, dict) else {}
+                excel_cfg = self.settings.get('output', {}).get('excel', {}) if isinstance(self.settings, dict) else {}
+                out_dir = drive_cfg.get('local_folder') or excel_cfg.get('output_dir')
                 if out_dir is None:
                     out_dir = str(Path(self.settings_path).resolve().parents[0] / 'RSA_OneDrive')
 
@@ -453,7 +455,9 @@ class ReportLoopRunner:
                 base_settings['output']['excel'] = {}
 
             # Determine output directory
-            out_dir = output_dir or base_settings['output']['excel'].get('output_dir')
+            drive_cfg = base_settings.get('drive_sync', {}) if isinstance(base_settings, dict) else {}
+            excel_cfg = base_settings.get('output', {}).get('excel', {}) if isinstance(base_settings, dict) else {}
+            out_dir = output_dir or drive_cfg.get('local_folder') or excel_cfg.get('output_dir')
             if out_dir is None:
                 repo_root = Path(self.settings_path).resolve().parents[0]
                 out_dir = str(repo_root / 'RSA_OneDrive')

@@ -48,7 +48,9 @@ def prepare_temp_settings(orig_settings_path: str | None, excel_output_dir: str 
     if 'excel' not in settings['output'] or not isinstance(settings['output']['excel'], dict):
         settings['output']['excel'] = {}
 
-    out_dir = excel_output_dir or settings['output']['excel'].get('output_dir')
+    drive_cfg = settings.get('drive_sync', {}) if isinstance(settings, dict) else {}
+    excel_cfg = settings.get('output', {}).get('excel', {}) if isinstance(settings, dict) else {}
+    out_dir = excel_output_dir or drive_cfg.get('local_folder') or excel_cfg.get('output_dir')
     if out_dir is None:
         out_dir = str(repo_root / 'RSA_OneDrive')
     settings['output']['excel']['output_dir'] = out_dir
@@ -108,8 +110,14 @@ def main():
             return
 
         # Ensure Excel writer is initialized in this process so aggregator and other helpers can use it
-        out_dir = chosen_output or (repo_root / 'RSA_OneDrive')
-        out_dir = Path(out_dir)
+        if chosen_output:
+            out_dir = Path(chosen_output)
+        else:
+            with open(args.settings, 'r', encoding='utf-8') as fh:
+                settings = json.load(fh)
+            drive_cfg = settings.get('drive_sync', {}) if isinstance(settings, dict) else {}
+            excel_cfg = settings.get('output', {}).get('excel', {}) if isinstance(settings, dict) else {}
+            out_dir = Path(drive_cfg.get('local_folder') or excel_cfg.get('output_dir') or (repo_root / 'RSA_OneDrive'))
         try:
             SingleExcelWriter.init(output_dir=str(out_dir))
             print('Initialized SingleExcelWriter with dir:', out_dir)
