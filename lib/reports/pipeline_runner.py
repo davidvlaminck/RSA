@@ -8,6 +8,7 @@ from __future__ import annotations
 import logging
 import subprocess
 import sys
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Iterable, TextIO
 
@@ -49,14 +50,36 @@ def _run_worker(report_names: list[str], settings_path: str, timeout_seconds: in
                 stderr=subprocess.STDOUT,
                 text=True,
                 errors="replace",
+                bufsize=1,
             )
-            output, _ = proc.communicate(timeout=timeout_seconds)
-            _stream_worker_output(output, sys.stdout)
-            return {"status": "success" if proc.returncode == 0 else "error", "error": "Non-zero exit code"}
+            output_chunks: list[str] = []
+            start = time.time()
+            while True:
+                ret = proc.poll()
+                if ret is not None:
+                    for line in proc.stdout:
+                        output_chunks.append(line)
+                        _stream_worker_output(line, sys.stdout)
+                    break
+                if timeout_seconds and (time.time() - start) > timeout_seconds:
+                    try:
+                        proc.kill()
+                    except Exception:
+                        pass
+                    return {"status": "timeout"}
+                line = proc.stdout.readline()
+                if line:
+                    output_chunks.append(line)
+                    _stream_worker_output(line, sys.stdout)
+            return {
+                "status": "success" if proc.returncode == 0 else "error",
+                "error": "Non-zero exit code",
+                "output": "".join(output_chunks),
+            }
         result = subprocess.run(cmd, timeout=timeout_seconds, capture_output=True, text=True, errors="replace")
         if result.returncode == 0:
-            return {"status": "success"}
-        return {"status": "error", "error": result.stderr or "Non-zero exit code"}
+            return {"status": "success", "output": result.stdout or ""}
+        return {"status": "error", "error": result.stdout or result.stderr or "Non-zero exit code", "output": result.stdout or ""}
     except subprocess.TimeoutExpired as exc:
         try:
             (getattr(exc, "process", None) or proc).kill()
@@ -128,10 +151,17 @@ def run_pipelines_by_datasource(
                 logger.warning("  [%s] pipeline timed out: %s", datasource, report_list)
                 timed_out.extend(report_list)
             else:
-                logger.error(
-                    "  [%s] pipeline failed: %s - %s",
-                    datasource, report_list, result.get("error", "Unknown"),
-                )
+                output = result.get("output", "")
+                if output:
+                    logger.error(
+                        "  [%s] pipeline failed: %s - %s\nOutput:\n%s",
+                        datasource, report_list, result.get("error", "Unknown"), output,
+                    )
+                else:
+                    logger.error(
+                        "  [%s] pipeline failed: %s - %s",
+                        datasource, report_list, result.get("error", "Unknown"),
+                    )
                 failed.extend(report_list)
 
     if failed or timed_out:

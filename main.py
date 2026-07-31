@@ -5,6 +5,7 @@ import logging
 import os
 import sys
 import atexit
+import threading
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -29,16 +30,19 @@ class _DailyLogTee:
     def __init__(self, original, sink):
         self._original = original
         self._sink = sink
+        self._lock = threading.Lock()
 
     def write(self, data):
-        self._original.write(data)
-        self._sink.write(data)
-        self._sink.flush()
+        with self._lock:
+            self._original.write(data)
+            self._sink.write(data)
+            self._sink.flush()
         return len(data)
 
     def flush(self):
-        self._original.flush()
-        self._sink.flush()
+        with self._lock:
+            self._original.flush()
+            self._sink.flush()
 
 
 def _enable_daily_console_capture(local_folder: str) -> None:

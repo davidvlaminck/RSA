@@ -43,7 +43,13 @@ class ReportContextFilter(logging.Filter):
 
 def setup_logging():
     """Configure logging for the worker process."""
-    handler = logging.StreamHandler()
+    
+    class _FlushingStreamHandler(logging.StreamHandler):
+        def emit(self, record):
+            super().emit(record)
+            self.flush()
+    
+    handler = _FlushingStreamHandler(sys.stdout)
     handler.addFilter(ReportContextFilter())
     formatter = logging.Formatter(
         '[Worker %(process)d] [%(report_name)s] %(asctime)s - %(levelname)s - %(message)s',
