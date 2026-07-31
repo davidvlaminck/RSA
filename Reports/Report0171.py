@@ -12,7 +12,7 @@ class Report0171(BaseReport):
                                excel_filename='[RSA] Assets conform naamconventies OTL EW-Infrastructuur.xlsx',
                                )
 
-        self.report.result_query = """
+        self.report.result_query = r"""
 with cte_lookup_table ("assettype", "assetnaam", "regexp_pattern") as (
     values
         -- HS/LS

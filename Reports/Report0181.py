@@ -9,7 +9,7 @@ class Report0181(BaseReport):
                                persistent_column='G', link_type='eminfra',
                                excel_filename='[RSA] Wetenschappelijke notaties komen niet voor.xlsx',)
 
-        self.report.result_query = """
+        self.report.result_query = r"""
         SELECT 
             a.uuid
             , at.naam as assettype

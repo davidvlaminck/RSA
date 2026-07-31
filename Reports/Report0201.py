@@ -12,7 +12,7 @@ class Report0201(BaseReport):
                                link_type='eminfra',
                                excel_filename='[RSA] Naamgeving overzicht.xlsx',)
 
-        self.report.result_query = """
+        self.report.result_query = r"""
 /*
  * Query1
  * UPSERT bestaande of nieuwe assettypes in tabel regex

@@ -9,7 +9,7 @@ class Report0180(BaseReport):
                                persistent_column='F', link_type='eminfra',
                                excel_filename='[RSA] SegmentControllers hun serienummer volgt een bepaalde regex validatie.xlsx',)
 
-        self.report.result_query = """
+        self.report.result_query = r"""
         WITH cte_segmentcontroller AS (
             SELECT 
                 a.uuid,
