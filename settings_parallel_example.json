@@ -74,7 +74,8 @@
     },
     "pipeline_state": {
       "enabled": true,
-      "db_path": "/home/davidlinux/PycharmProjects/RSA_Health/health.db"
+      "db_path": "/home/davidlinux/PycharmProjects/RSA_Health/health.db",
+      "wait_timeout_seconds": 7200
     }
   }
 }

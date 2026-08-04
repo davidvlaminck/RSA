@@ -198,7 +198,7 @@ class ReportLoopRunner:
         return report_rows
 
     def start(self, run_right_away: bool):
-        last_run_date = datetime.now(tz=BRUSSELS).date()
+        last_run_date = None
 
         while True:
             if run_right_away:
@@ -213,6 +213,12 @@ class ReportLoopRunner:
                             logger.error(f"on_before_run callback mislukt: {exc}")
                         logger.info(f"{datetime.now(tz=BRUSSELS)}: waiting for pre-run conditions")
                         time.sleep(60)
+                if self.pipeline_status is not None:
+                    now = datetime.now(tz=BRUSSELS)
+                    if not self._wait_for_preconditions(now):
+                        run_right_away = False
+                        last_run_date = now.date()
+                        continue
                 self.run()
                 run_right_away = False
                 last_run_date = datetime.now(tz=BRUSSELS).date()
@@ -232,7 +238,13 @@ class ReportLoopRunner:
                     time.sleep(60)
                     continue
 
-            if last_run_date == now.date() or not self._is_within_run_window(now):
+            # Signal-based mode: pipeline_state controls when to run, no time window.
+            # Backward-compatible mode (no pipeline_state): once-per-day + time window.
+            if self.pipeline_status is not None:
+                if not self._wait_for_preconditions(now):
+                    last_run_date = now.date()
+                    continue
+            elif last_run_date == now.date() or not self._is_within_run_window(now):
                 logger.info(f'{datetime.now(tz=BRUSSELS)}: not yet the right time to run reports.')
                 time.sleep(60)
                 continue
@@ -240,6 +252,37 @@ class ReportLoopRunner:
             # start running reports now
             self.run()
             last_run_date = datetime.now(tz=BRUSSELS).date()
+
+    def _wait_for_preconditions(self, now: datetime) -> bool:
+        """Wait until pipeline preconditions are met.
+
+        Returns True when ready, False if timeout expired (reports aborted).
+        """
+        timeout = self.settings.get('pipeline_state', {}).get('wait_timeout_seconds', 7200)
+        deadline = time.time() + timeout
+        while time.time() < deadline:
+            current = self.pipeline_status.get()
+            if current:
+                phase = current.get('phase', '')
+                status = current.get('status', '')
+                drive_ready = phase == 'drive_download' and status == 'completed'
+                postgis_ready = phase in ('postgis_sync_paused', 'postgis_sync_running', 'postgis_sync_resuming')
+                if drive_ready and postgis_ready:
+                    return True
+            time.sleep(60)
+
+        self.pipeline_status.update("rsa_queries", "aborted", f"Timeout waiting for preconditions after {timeout}s")
+        logger.warning(f'{datetime.now(tz=BRUSSELS)}: pipeline preconditions not met within {timeout}s; rsa_queries aborted.')
+        return False
+
+    def _update_pipeline_message(self, message: str) -> None:
+        if self.pipeline_status is not None:
+            try:
+                current = self.pipeline_status.get()
+                if current:
+                    self.pipeline_status.update(current.get('phase', ''), current.get('status', ''), message)
+            except Exception:
+                pass
 
     def run(self):
         """Run all reports either sequentially or in parallel based on settings."""
@@ -308,8 +351,10 @@ class ReportLoopRunner:
                 # Calculate timeout for this retry (60s, 120s, 180s, etc.)
                 retry_timeout = 60 * reports_run
                 reinitialize_database_connections(self.settings, arango_timeout=retry_timeout)
-            for report_name in sorted(reports_to_do.keys()):
+            total = len(reports_to_do)
+            for idx, report_name in enumerate(sorted(reports_to_do.keys()), 1):
                 try:
+                    self._update_pipeline_message(f"Verwerken: {report_name} ({idx}/{total})")
                     report_instance = reports_to_do[report_name]
                     report_instance.init_report()
                     # set pipeline-wide defaults (reports can override)
@@ -398,6 +443,7 @@ class ReportLoopRunner:
                 reinitialize_database_connections(self.settings, arango_timeout=current_timeout)
             
             logger.info(f"Parallel run {reports_run}/{RETRIES} with timeout {current_timeout}s for {len(reports_to_do)} reports")
+            self._update_pipeline_message(f"Parallel: {len(reports_to_do)} rapporten, poging {reports_run}/{RETRIES}")
             
             # Write settings to temp file for worker processes
             with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:

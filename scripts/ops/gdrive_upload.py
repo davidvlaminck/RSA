@@ -363,7 +363,7 @@ def validate_local_mirror(local_folder: str) -> tuple[bool, str]:
         return False, f'local mirror does not exist: {root}'
 
     overview_dir = root / 'Overzicht'
-    overview_wb_name = '[RSA] Overzicht rapporteren.xlsx'
+    overview_wb_name = '[RSA] Overzicht rapporten.xlsx'
     if not overview_dir.exists():
         for child in root.iterdir():
             if child.is_dir() and child.name.lower() == 'overzicht':

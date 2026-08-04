@@ -37,6 +37,12 @@ class DailyDriveSyncGate:
         if now_seconds < self.earliest_sync_seconds:
             return False
 
+        # Orchestrator-driven: wacht tot pipeline_state = drive_download / starting
+        if self.pipeline_state is not None and getattr(self.pipeline_state, 'db_path', ''):
+            current = self.pipeline_state.get()
+            if not (current and current.get('phase') == 'drive_download' and current.get('status') == 'starting'):
+                return False
+
         write_daily_run_log(self.local_folder, 'PRE_SYNC_START', f'drive_folder={self.drive_folder}')
         if self.pipeline_state is not None and getattr(self.pipeline_state, 'db_path', ''):
             self.pipeline_state.update('drive_download', 'running', f'drive_folder={self.drive_folder}')
@@ -66,8 +72,20 @@ class DailyDriveSyncGate:
 
 
 def upload_after_run(local_folder: str, drive_folder: str, token_path: str, pipeline_state=None) -> None:
+    # Orchestrator-driven: wacht tot pipeline_state = drive_upload / starting
     if pipeline_state is not None and getattr(pipeline_state, 'db_path', ''):
+        import time
+        timeout = 1800
+        deadline = time.time() + timeout
+        while time.time() < deadline:
+            current = pipeline_state.get()
+            if current and current.get('phase') == 'drive_upload' and current.get('status') == 'starting':
+                break
+            time.sleep(30)
+        else:
+            logger.warning('[UPLOAD] Timeout waiting for drive_upload/starting signal; proceeding with upload anyway.')
         pipeline_state.update('drive_upload', 'running', f'drive_folder={drive_folder}')
+
     write_daily_run_log(local_folder, 'POST_RUN_UPLOAD_START', f'drive_folder={drive_folder}')
     ok = sync_local_to_drive(
         local_folder=local_folder,

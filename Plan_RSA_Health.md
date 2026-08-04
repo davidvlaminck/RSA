@@ -24,7 +24,7 @@ Dit plan legt uit welke zaken al geïmplementeerd zijn, wat nog mist, en hoe dat
 
 - `lib/connectors/pipeline_state.py` → `PipelineState` schrijft direct naar SQLite (`health.db`), tabel `pipeline_state`. Geen HTTP API meer. Dit is de geëvolueerde implementatie van het oorspronkelijk geplande HTTP-based `PipelineStatusReporter`-model.
 - `lib/reports/ReportLoopRunner.py` (`run()`, ~244:261) rapporteert `rsa_queries` running/completed/failed via `self.pipeline_status` (een `PipelineState`-instantie). → **Stap 5 gedeeltelijk ✓**
-- `scripts/ops/drive_sync_gate.py` → `DailyDriveSyncGate.ensure_synced` rapporteert `drive_download` running/completed/failed; `upload_after_run` rapporteert `drive_upload` running/completed/failed. Beide via directe `PipelineState.update()` calls. → **Stap 5T2 gereed**
+- `scripts/ops/drive_sync_gate.py` → `DailyDriveSyncGate.ensure_synced` rapporteert `drive_download` running/completed/failed en wacht op orchestrator-signaal `drive_download/starting`; `upload_after_run` rapporteert `drive_upload` running/completed/failed en wacht op `drive_upload/starting`. → **T2 gereed**
 - `settings_sample.json` + `settings_parallel_example.json` bevatten een `pipeline_state`-blok met `enabled` + `db_path`. → **Stap 5T1 gereed**
 - Nog niet geïmplementeerd:
   - Geen precondition-gating voor `drive_download=completed` + `postgis_sync=paused` voor `rsa_queries` start. → **T3 open**
@@ -47,26 +47,26 @@ Deze taken zijn de verantwoordelijkheid van de RSA-repo en vormen de minimale in
 
 **Status: ✓ Gereed**
 
-- `scripts/ops/drive_sync_gate.py:42` — `drive_download/running` bij start sync.
-- `scripts/ops/drive_sync_gate.py:59` — `drive_download/completed` bij succes; `drive_download/failed` bij falen of invalid mirror.
-- `scripts/ops/drive_sync_gate.py:70` — `drive_upload/running` bij start upload.
-- `scripts/ops/drive_sync_gate.py:80` — `drive_upload/completed` bij succes; `drive_upload/failed` bij falen.
+- `scripts/ops/drive_sync_gate.py:32-43` — `DailyDriveSyncGate.ensure_synced` wacht eerst tot `pipeline_state` = `drive_download / starting` (gezet door orchestrator). Zodra dat signaal komt, start de sync, wordt fase -> `running` gezet, en na afronding -> `completed` of `failed`.
+- `scripts/ops/drive_sync_gate.py:68-84` — `upload_after_run` wacht tot `pipeline_state` = `drive_upload / starting`. Bij timeout (30 min) wordt de upload toch gestart. Fase -> `running` tijdens upload, -> `completed` of `failed` na afronding.
 
 ### T3 — RSA wacht op preconditions vóór rapportage start
 
-**Status: Open**
+**Status: ✓ Gereed**
 
-- RSA moet wachten tot `drive_download = completed` **en** `postgis_sync = paused` (of `postgis_sync_running` buiten de pauze-periode) is, vóór `rsa_queries` start.
-- Huidige `_is_within_run_window(05:00–23:59)` in `ReportLoopRunner` blijft als **time-based fallback**, maar signal-based gating heeft voorrang.
-- Implementatie-optie: `ReportLoopRunner` leest `PipelineState.get()` vóór `run()`. Wacht met timeout (bijv. `pipeline_state.wait_timeout_seconds`, default 7200s) en rapporteer `aborted` bij expiry.
-- Idempotentie: alleen rapporteren wanneer de fase zich daadwerkelijk wijzigt.
+- `ReportLoopRunner.start()` (signal-based mode): leest `pipeline_state.get()` en wacht tot `drive_download = completed` én `postgis_sync` in `paused / running / resuming` is.
+- Timeout via `pipeline_state.wait_timeout_seconds` (default 7200s). Bij timeout: rapporteer `rsa_queries / aborted` en overslaan van de rest van de dag.
+- Idempotentie: alleen rapporteren wanneer de fase zich daadwerkelijk wijzigt (via `pipeline_status.update()` in `run()`).
 
 ### T4 — RSA rapporteert fase-overgangen en fouten robuust
 
-**Status: Open**
+**Status: ✓ Gereed**
 
-- Bestaande `rsa_queries` reporting in `run()` blijft; zorg dat `failed` incl. exception-message wordt gemeld (reeds zo, `str(exc)`).
-- Voeg optionele finer-grained sub-statussen toe (bv. per datasource) via `message`-veld, zonder nieuwe fasen.
+- Bestaande `rsa_queries` reporting in `run()` blijft; `failed` incl. exception-message (`str(exc)`).
+- Finer-grained sub-statussen via `message`-veld:
+  - Sequentieel: `_run_sequential` update `message` met `Verwerken: ReportName (idx/totaal)` vóór elk rapport.
+  - Parallel: `_run_parallel_by_datasource` update `message` met `Parallel: N rapporten, poging X/Y`.
+- Geen nieuwe fasen nodig; `phase` blijft `rsa_queries`, enkel `message` verrijkt.
 
 ### T5 — Tests
 
@@ -84,7 +84,7 @@ Deze taken zijn de verantwoordelijkheid van de RSA-repo en vormen de minimale in
 | 2 | `POST /pipeline/update` + `GET /pipeline/state` | ✓ | RSA_Health |
 | 3 | Health-pagina polling van fase/status | ✓ | RSA_Health |
 | 4 | Arango-sync rapporteert `arango_sync` | ~ (sync functie bestaat; moet onafh. service + reporter worden) | InfraDbToArangoDb |
-| 5 | RSA rapporteert `rsa_queries` + drive-phases, wacht op preconditions | ~ (reporting ✓; drive-phases ✓; preconditions ✗) | RSA (T3/T4) |
+| 5 | RSA rapporteert `rsa_queries` + drive-phases, wacht op preconditions, sub-statussen | ~ (reporting ✓; drive-phases met signal-gating ✓; preconditions ✓; sub-statussen ✓) | RSA (T5) |
 | 6 | Power-Automate via Drive marker-bestanden | ✗ (detectie ontbreekt) | RSA_Health (marker polling) + Power Automate |
 | 7 | PostGIS sync pauzeren/hervatten via `pipeline_state` | ✗ (sync script leest fase) | AWVInfraPostGISSyncer |
 | 8 | Achtergrond-orchestrator (drive-steps, sequencing, reset, markers) | ✗ | RSA_Health |
@@ -94,13 +94,11 @@ Deze taken zijn de verantwoordelijkheid van de RSA-repo en vormen de minimale in
 
 Gewicht: prioriteit binnen deze repo (RSA) eerst, rest als afhankelijkheid/blok.
 
-1. **RSA:** T3 — preconditions wachten (na Stap 8/6/7 klaar in RSA_Health). Timeout + fallback op time-window.
-2. **RSA:** T4 — sub-status/robuuste errors (incrementeel, achteraf).
-3. **RSA:** T5 — tests + lint.
-4. **RSA_Health:** Stap 8/6 — orchestrator + Power-Automate marker polling. *(Blok voor RSA T3, want `drive_download`/`completed` en `postgis_sync`/`paused` komen uit de orchestrator of externe signalen.)*
-5. **RSA_Health:** Stap 7 — PostGIS pause/resume endpoint/signaling. *(Blok voor RSA T3 precondition `postgis_sync_paused`.)*
-6. **InfraDbToArangoDb:** Stap 4 — Arango-sync onafhankelijke service + reporter.
-7. **AWVInfraPostGISSyncer:** Stap 7 — sync leest `pipeline_state` fase; pauzeert maximaal 4u; autonome hervatting.
+1. **RSA:** T5 — tests + lint.
+3. **RSA_Health:** Stap 8/6 — orchestrator + Power-Automate marker polling.
+4. **RSA_Health:** Stap 7 — PostGIS pause/resume endpoint/signaling.
+5. **InfraDbToArangoDb:** Stap 4 — Arango-sync onafhankelijke service + reporter.
+6. **AWVInfraPostGISSyncer:** Stap 7 — sync leest `pipeline_state` fase; pauzeert maximaal 4u; autonome hervatting.
 
 ## Configuratie-overeenkomsten
 
@@ -126,4 +124,4 @@ Gewicht: prioriteit binnen deze repo (RSA) eerst, rest als afhankelijkheid/blok.
 
 ## Conclusie
 
-T1 (config) en T2 (drive-phases rapporteren) zijn reeds geïmplementeerd in deze repo, maar via directe SQLite-toegang in plaats van het oorspronkelijk geplande HTTP-model. De overige RSA-taken (T3 preconditions, T4 robuustheid, T5 tests) zijn open en wachten op de voltooiing van Stap 6/7/8 in RSA_Health respectievelijk Stap 4 in InfraDbToArangoDb. Implementeer T3 eerst; T4 en T5 zijn daarna incrementeel uit te voeren.
+T1 (config), T2 (drive-phases rapporteren met orchestrator-signaal-gating), T3 (precondition-gating met timeout) en T4 (sub-statussen via `message`-veld) zijn reeds geïmplementeerd in deze repo via directe SQLite-toegang in plaats van het oorspronkelijk geplande HTTP-model. De enige open RSA-taak is T5 (tests). De overige Stappen in RSA_Health (6/7/8) respectievelijk InfraDbToArangoDb (4) en AWVInfraPostGISSyncer (7) zijn nog in uitvoering.
