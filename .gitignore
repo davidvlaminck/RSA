@@ -20,6 +20,7 @@ env/
 
 # OS files
 .DS_Store
+/RSA_OneDrive/
 /RSA_OneDrive/Archief/[ontbrekende gegevens] onderdelen BMI.xlsx
 /RSA_OneDrive/Archief/[ontbrekende gegevens] onderdelen EW Antwerpen.xlsx
 /RSA_OneDrive/Archief/[ontbrekende gegevens] onderdelen EW Limburg.xlsx
