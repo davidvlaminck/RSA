@@ -20,6 +20,7 @@ from lib.mail.MailSender import MailSender
 from lib.reports.instantiator import create_report_instance, discover_and_instantiate_reports
 from lib.connectors.pipeline_state import PipelineState
 from lib.reports.pipeline_runner import run_pipelines_by_datasource
+from lib.sqlite_queue_client import enqueue_sqlite_job
 from outputs.sheets_wrapper import SingleSheetsWrapper
 from SettingsManager import SettingsManager
 from scripts.ops.aggregate_summaries import process_once
@@ -139,10 +140,12 @@ class ReportLoopRunner:
         self.reports = None
         pipeline_state_cfg = self.settings.get("pipeline_state", {}) if isinstance(self.settings, dict) else {}
         self.pipeline_status = None
+        self._pipeline_state_db_path = None
         if pipeline_state_cfg.get("enabled", True):
             db_path = pipeline_state_cfg.get("db_path", "")
             if db_path:
                 self.pipeline_status = PipelineState(db_path)
+                self._pipeline_state_db_path = db_path
 
         # Optional callback invoked before starting a daily run.
         # Should return True when preconditions are met; False to retry later.
@@ -292,7 +295,13 @@ class ReportLoopRunner:
                     return True
             time.sleep(60)
 
-        self.pipeline_status.update("rsa_queries", "aborted", f"Timeout waiting for postgis_sync after {active_timeout}s")
+        if self.pipeline_status is not None:
+            enqueue_sqlite_job("update_pipeline_state", {
+                "db_path": self._pipeline_state_db_path,
+                "phase": "rsa_queries",
+                "status": "aborted",
+                "message": f"Timeout waiting for postgis_sync after {active_timeout}s"
+            })
         logger.warning(f'{datetime.now(tz=BRUSSELS)}: postgis_sync preconditions not met within {active_timeout}s; rsa_queries aborted.')
         return False
 
@@ -301,14 +310,24 @@ class ReportLoopRunner:
             try:
                 current = self.pipeline_status.get()
                 if current:
-                    self.pipeline_status.update(current.get('phase', ''), current.get('status', ''), message)
+                    enqueue_sqlite_job("update_pipeline_state", {
+                        "db_path": self._pipeline_state_db_path,
+                        "phase": current.get('phase', ''),
+                        "status": current.get('status', ''),
+                        "message": message
+                    })
             except Exception:
                 pass
 
     def run(self):
         """Run all reports either sequentially or in parallel based on settings."""
         if self.pipeline_status is not None:
-            self.pipeline_status.update("rsa_queries", "running", "RSA queries gestart")
+            enqueue_sqlite_job("update_pipeline_state", {
+                "db_path": self._pipeline_state_db_path,
+                "phase": "rsa_queries",
+                "status": "running",
+                "message": "RSA queries gestart"
+            })
         try:
             execution_mode = self.settings.get('report_execution', {}).get('mode', 'sequential')
 
@@ -318,10 +337,20 @@ class ReportLoopRunner:
                 self._run_sequential()
 
             if self.pipeline_status is not None:
-                self.pipeline_status.update("rsa_queries", "completed", "RSA queries voltooid")
+                enqueue_sqlite_job("update_pipeline_state", {
+                    "db_path": self._pipeline_state_db_path,
+                    "phase": "rsa_queries",
+                    "status": "completed",
+                    "message": "RSA queries voltooid"
+                })
         except Exception as exc:
             if self.pipeline_status is not None:
-                self.pipeline_status.update("rsa_queries", "failed", str(exc))
+                enqueue_sqlite_job("update_pipeline_state", {
+                    "db_path": self._pipeline_state_db_path,
+                    "phase": "rsa_queries",
+                    "status": "failed",
+                    "message": str(exc)
+                })
             raise
 
         if self.on_run_complete is not None:

@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 
+from lib.sqlite_queue_client import enqueue_sqlite_job
 from scripts.ops.gdrive_upload import (
     sync_drive_to_local,
     sync_local_to_drive,
@@ -29,6 +30,15 @@ class DailyDriveSyncGate:
         hh, mm, ss = (int(part) for part in hms.split(':'))
         return hh * 3600 + mm * 60 + ss
 
+    def _enqueue_pipeline_update(self, phase: str, status: str, message: str) -> None:
+        if self.pipeline_state is not None and getattr(self.pipeline_state, 'db_path', ''):
+            enqueue_sqlite_job('update_pipeline_state', {
+                'db_path': self.pipeline_state.db_path,
+                'phase': phase,
+                'status': status,
+                'message': message,
+            })
+
     def ensure_synced(self, now: datetime) -> bool:
         if self._synced_date == now.date():
             return True
@@ -37,7 +47,6 @@ class DailyDriveSyncGate:
         if now_seconds < self.earliest_sync_seconds:
             return False
 
-        # Orchestrator-driven: wacht tot pipeline_state = drive_download / starting
         if self.pipeline_state is not None and getattr(self.pipeline_state, 'db_path', ''):
             current = self.pipeline_state.get()
             if current and current.get('phase') == 'drive_download' and current.get('status') == 'completed':
@@ -47,8 +56,7 @@ class DailyDriveSyncGate:
                 return False
 
         write_daily_run_log(self.local_folder, 'PRE_SYNC_START', f'drive_folder={self.drive_folder}')
-        if self.pipeline_state is not None and getattr(self.pipeline_state, 'db_path', ''):
-            self.pipeline_state.update('drive_download', 'running', f'drive_folder={self.drive_folder}')
+        self._enqueue_pipeline_update('drive_download', 'running', f'drive_folder={self.drive_folder}')
         ok = sync_drive_to_local(
             local_folder=self.local_folder,
             drive_folder_name=self.drive_folder,
@@ -58,24 +66,20 @@ class DailyDriveSyncGate:
             valid, reason = validate_local_mirror(self.local_folder)
             if not valid:
                 write_daily_run_log(self.local_folder, 'PRE_SYNC_INVALID_MIRROR', reason)
-                if self.pipeline_state is not None:
-                    self.pipeline_state.update('drive_download', 'failed', reason)
+                self._enqueue_pipeline_update('drive_download', 'failed', reason)
                 logger.warning('[SYNC] Invalid local mirror after sync-down: %s', reason)
                 return False
             self._synced_date = now.date()
             write_daily_run_log(self.local_folder, 'PRE_SYNC_DONE', f'drive_folder={self.drive_folder}')
-            if self.pipeline_state is not None:
-                self.pipeline_state.update('drive_download', 'completed', f'drive_folder={self.drive_folder}')
+            self._enqueue_pipeline_update('drive_download', 'completed', f'drive_folder={self.drive_folder}')
         else:
             write_daily_run_log(self.local_folder, 'PRE_SYNC_FAILED', f'drive_folder={self.drive_folder}')
-            if self.pipeline_state is not None:
-                self.pipeline_state.update('drive_download', 'failed', f'drive_folder={self.drive_folder}')
+            self._enqueue_pipeline_update('drive_download', 'failed', f'drive_folder={self.drive_folder}')
 
         return ok
 
 
 def upload_after_run(local_folder: str, drive_folder: str, token_path: str, pipeline_state=None) -> None:
-    # Orchestrator-driven: wacht tot pipeline_state = drive_upload / starting
     if pipeline_state is not None and getattr(pipeline_state, 'db_path', ''):
         import time
         timeout = 3600
@@ -87,7 +91,13 @@ def upload_after_run(local_folder: str, drive_folder: str, token_path: str, pipe
             time.sleep(30)
         else:
             logger.warning('[UPLOAD] Timeout waiting for drive_upload/starting signal; proceeding with upload anyway.')
-        pipeline_state.update('drive_upload', 'running', f'drive_folder={drive_folder}')
+
+        enqueue_sqlite_job('update_pipeline_state', {
+            'db_path': pipeline_state.db_path,
+            'phase': 'drive_upload',
+            'status': 'running',
+            'message': f'drive_folder={drive_folder}',
+        })
 
     write_daily_run_log(local_folder, 'POST_RUN_UPLOAD_START', f'drive_folder={drive_folder}')
     ok = sync_local_to_drive(
@@ -98,8 +108,18 @@ def upload_after_run(local_folder: str, drive_folder: str, token_path: str, pipe
     if ok:
         write_daily_run_log(local_folder, 'POST_RUN_UPLOAD_DONE', f'drive_folder={drive_folder}')
         if pipeline_state is not None:
-            pipeline_state.update('drive_upload', 'completed', f'drive_folder={drive_folder}')
+            enqueue_sqlite_job('update_pipeline_state', {
+                'db_path': pipeline_state.db_path,
+                'phase': 'drive_upload',
+                'status': 'completed',
+                'message': f'drive_folder={drive_folder}',
+            })
     else:
         write_daily_run_log(local_folder, 'POST_RUN_UPLOAD_FAILED', f'drive_folder={drive_folder}')
         if pipeline_state is not None:
-            pipeline_state.update('drive_upload', 'failed', f'drive_folder={drive_folder}')
+            enqueue_sqlite_job('update_pipeline_state', {
+                'db_path': pipeline_state.db_path,
+                'phase': 'drive_upload',
+                'status': 'failed',
+                'message': f'drive_folder={drive_folder}',
+            })
