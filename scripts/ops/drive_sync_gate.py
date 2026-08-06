@@ -40,6 +40,9 @@ class DailyDriveSyncGate:
         # Orchestrator-driven: wacht tot pipeline_state = drive_download / starting
         if self.pipeline_state is not None and getattr(self.pipeline_state, 'db_path', ''):
             current = self.pipeline_state.get()
+            if current and current.get('phase') == 'drive_download' and current.get('status') == 'completed':
+                self._synced_date = now.date()
+                return True
             if not (current and current.get('phase') == 'drive_download' and current.get('status') == 'starting'):
                 return False
 
@@ -75,7 +78,7 @@ def upload_after_run(local_folder: str, drive_folder: str, token_path: str, pipe
     # Orchestrator-driven: wacht tot pipeline_state = drive_upload / starting
     if pipeline_state is not None and getattr(pipeline_state, 'db_path', ''):
         import time
-        timeout = 1800
+        timeout = 3600
         deadline = time.time() + timeout
         while time.time() < deadline:
             current = pipeline_state.get()

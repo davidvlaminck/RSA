@@ -122,7 +122,6 @@ if __name__ == '__main__':
             if db_path:
                 from lib.connectors.pipeline_state import PipelineState
                 pipeline_state = PipelineState(db_path)
-                pipeline_state.ensure()
 
         sync_gate = DailyDriveSyncGate(
             local_folder=onedrive_path,

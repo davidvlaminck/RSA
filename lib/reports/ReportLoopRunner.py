@@ -143,7 +143,6 @@ class ReportLoopRunner:
             db_path = pipeline_state_cfg.get("db_path", "")
             if db_path:
                 self.pipeline_status = PipelineState(db_path)
-                self.pipeline_status.ensure()
 
         # Optional callback invoked before starting a daily run.
         # Should return True when preconditions are met; False to retry later.
@@ -226,6 +225,15 @@ class ReportLoopRunner:
 
             now = datetime.now(tz=pytz.timezone("Europe/Brussels"))
 
+            # Sleep until next midnight if we haven't run today yet
+            if last_run_date != now.date():
+                now_seconds = now.hour * 3600 + now.minute * 60 + now.second
+                seconds_until_midnight = 86400 - now_seconds
+                if seconds_until_midnight > 0:
+                    logger.info(f"{now}: sleeping until midnight ({seconds_until_midnight}s)")
+                    time.sleep(seconds_until_midnight)
+                    continue
+
             # Allow external pre-run prerequisites (e.g. daily Drive download sync).
             if self.on_before_run is not None and last_run_date != now.date():
                 try:
@@ -243,6 +251,10 @@ class ReportLoopRunner:
             if self.pipeline_status is not None:
                 if not self._wait_for_preconditions(now):
                     last_run_date = now.date()
+                    now_seconds = now.hour * 3600 + now.minute * 60 + now.second
+                    sleep_seconds = 86400 - now_seconds
+                    if sleep_seconds > 0:
+                        time.sleep(sleep_seconds)
                     continue
             elif last_run_date == now.date() or not self._is_within_run_window(now):
                 logger.info(f'{datetime.now(tz=BRUSSELS)}: not yet the right time to run reports.')
@@ -256,23 +268,32 @@ class ReportLoopRunner:
     def _wait_for_preconditions(self, now: datetime) -> bool:
         """Wait until pipeline preconditions are met.
 
+        Passive wait until 4am, then active wait up to 3 hours for postgis_sync signal.
         Returns True when ready, False if timeout expired (reports aborted).
         """
-        timeout = self.settings.get('pipeline_state', {}).get('wait_timeout_seconds', 7200)
-        deadline = time.time() + timeout
+        passive_until_hms = self.settings.get('pipeline_state', {}).get('passive_wait_until', '04:00:00')
+        active_timeout = self.settings.get('pipeline_state', {}).get('postgis_wait_timeout_seconds', 10800)
+
+        passive_until_seconds = self._parse_hms_to_seconds(passive_until_hms)
+        now_seconds = now.hour * 3600 + now.minute * 60 + now.second
+
+        if now_seconds < passive_until_seconds:
+            sleep_seconds = passive_until_seconds - now_seconds
+            logger.info(f"{now}: passive wait until {passive_until_hms} ({sleep_seconds}s)")
+            time.sleep(sleep_seconds)
+            now_seconds = passive_until_seconds
+
+        deadline = time.time() + active_timeout
         while time.time() < deadline:
             current = self.pipeline_status.get()
             if current:
                 phase = current.get('phase', '')
-                status = current.get('status', '')
-                drive_ready = phase == 'drive_download' and status == 'completed'
-                postgis_ready = phase in ('postgis_sync_paused', 'postgis_sync_running', 'postgis_sync_resuming')
-                if drive_ready and postgis_ready:
+                if phase in ('postgis_sync_paused', 'postgis_sync_running', 'postgis_sync_resuming'):
                     return True
             time.sleep(60)
 
-        self.pipeline_status.update("rsa_queries", "aborted", f"Timeout waiting for preconditions after {timeout}s")
-        logger.warning(f'{datetime.now(tz=BRUSSELS)}: pipeline preconditions not met within {timeout}s; rsa_queries aborted.')
+        self.pipeline_status.update("rsa_queries", "aborted", f"Timeout waiting for postgis_sync after {active_timeout}s")
+        logger.warning(f'{datetime.now(tz=BRUSSELS)}: postgis_sync preconditions not met within {active_timeout}s; rsa_queries aborted.')
         return False
 
     def _update_pipeline_message(self, message: str) -> None:
