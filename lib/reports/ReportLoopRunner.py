@@ -228,15 +228,6 @@ class ReportLoopRunner:
 
             now = datetime.now(tz=pytz.timezone("Europe/Brussels"))
 
-            # Sleep until next midnight if we haven't run today yet
-            if last_run_date != now.date():
-                now_seconds = now.hour * 3600 + now.minute * 60 + now.second
-                seconds_until_midnight = 86400 - now_seconds
-                if seconds_until_midnight > 0:
-                    logger.info(f"{now}: sleeping until midnight ({seconds_until_midnight}s)")
-                    time.sleep(seconds_until_midnight)
-                    continue
-
             # Allow external pre-run prerequisites (e.g. daily Drive download sync).
             if self.on_before_run is not None and last_run_date != now.date():
                 try:
