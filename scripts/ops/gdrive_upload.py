@@ -101,7 +101,7 @@ def _load_credentials(token_path: str) -> Credentials:
 
 def _build_service(token_path: str):
     creds = _load_credentials(token_path)
-    return build('drive', 'v3', credentials=creds)
+    return build('drive', 'v3', credentials=creds, cache_discovery=False)
 
 
 def _safe_name(name: str) -> str:

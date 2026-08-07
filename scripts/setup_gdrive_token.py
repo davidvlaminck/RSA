@@ -84,7 +84,7 @@ def check_folder_access(token_path: str, drive_folder: str, create_if_missing: b
     from googleapiclient.discovery import build
 
     creds = _load_credentials(token_path)
-    service = build('drive', 'v3', credentials=creds)
+    service = build('drive', 'v3', credentials=creds, cache_discovery=False)
 
     query = (
         f"name='{_safe_name(drive_folder)}' "
