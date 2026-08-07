@@ -23,7 +23,7 @@ from scripts.ops.gdrive_upload import (
 logger = logging.getLogger(__name__)
 
 
-DEFAULT_SETTINGS_PATH = Path(__file__).parent.parent / 'settings_RSA.json'
+DEFAULT_SETTINGS_PATH = Path(__file__).parent.parent / 'config' / 'settings_RSA.json'
 BRUSSELS = ZoneInfo('Europe/Brussels')
 
 
