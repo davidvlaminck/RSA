@@ -5,7 +5,7 @@ import sys
 import tempfile
 import time
 import traceback
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
 from typing import Callable
@@ -288,7 +288,7 @@ class ReportLoopRunner:
 
         if self.pipeline_status is not None:
             enqueue_sqlite_job("update_pipeline_state", {
-                "db_path": self._pipeline_state_db_path,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
                 "phase": "rsa_queries",
                 "status": "aborted",
                 "message": f"Timeout waiting for postgis_sync after {active_timeout}s"
@@ -302,7 +302,7 @@ class ReportLoopRunner:
                 current = self.pipeline_status.get()
                 if current:
                     enqueue_sqlite_job("update_pipeline_state", {
-                        "db_path": self._pipeline_state_db_path,
+                        "updated_at": datetime.now(timezone.utc).isoformat(),
                         "phase": current.get('phase', ''),
                         "status": current.get('status', ''),
                         "message": message
@@ -314,7 +314,7 @@ class ReportLoopRunner:
         """Run all reports either sequentially or in parallel based on settings."""
         if self.pipeline_status is not None:
             enqueue_sqlite_job("update_pipeline_state", {
-                "db_path": self._pipeline_state_db_path,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
                 "phase": "rsa_queries",
                 "status": "running",
                 "message": "RSA queries gestart"
@@ -329,7 +329,7 @@ class ReportLoopRunner:
 
             if self.pipeline_status is not None:
                 enqueue_sqlite_job("update_pipeline_state", {
-                    "db_path": self._pipeline_state_db_path,
+                    "updated_at": datetime.now(timezone.utc).isoformat(),
                     "phase": "rsa_queries",
                     "status": "completed",
                     "message": "RSA queries voltooid"
@@ -337,7 +337,7 @@ class ReportLoopRunner:
         except Exception as exc:
             if self.pipeline_status is not None:
                 enqueue_sqlite_job("update_pipeline_state", {
-                    "db_path": self._pipeline_state_db_path,
+                    "updated_at": datetime.now(timezone.utc).isoformat(),
                     "phase": "rsa_queries",
                     "status": "failed",
                     "message": str(exc)

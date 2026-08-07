@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
 from lib.sqlite_queue_client import enqueue_sqlite_job
 from scripts.ops.gdrive_upload import (
@@ -33,7 +33,7 @@ class DailyDriveSyncGate:
     def _enqueue_pipeline_update(self, phase: str, status: str, message: str) -> None:
         if self.pipeline_state is not None and getattr(self.pipeline_state, 'db_path', ''):
             enqueue_sqlite_job('update_pipeline_state', {
-                'db_path': self.pipeline_state.db_path,
+                'updated_at': datetime.now(timezone.utc).isoformat(),
                 'phase': phase,
                 'status': status,
                 'message': message,
@@ -93,7 +93,7 @@ def upload_after_run(local_folder: str, drive_folder: str, token_path: str, pipe
             logger.warning('[UPLOAD] Timeout waiting for drive_upload/starting signal; proceeding with upload anyway.')
 
         enqueue_sqlite_job('update_pipeline_state', {
-            'db_path': pipeline_state.db_path,
+            'updated_at': datetime.now(timezone.utc).isoformat(),
             'phase': 'drive_upload',
             'status': 'running',
             'message': f'drive_folder={drive_folder}',
@@ -109,7 +109,7 @@ def upload_after_run(local_folder: str, drive_folder: str, token_path: str, pipe
         write_daily_run_log(local_folder, 'POST_RUN_UPLOAD_DONE', f'drive_folder={drive_folder}')
         if pipeline_state is not None:
             enqueue_sqlite_job('update_pipeline_state', {
-                'db_path': pipeline_state.db_path,
+                'updated_at': datetime.now(timezone.utc).isoformat(),
                 'phase': 'drive_upload',
                 'status': 'completed',
                 'message': f'drive_folder={drive_folder}',
@@ -118,7 +118,7 @@ def upload_after_run(local_folder: str, drive_folder: str, token_path: str, pipe
         write_daily_run_log(local_folder, 'POST_RUN_UPLOAD_FAILED', f'drive_folder={drive_folder}')
         if pipeline_state is not None:
             enqueue_sqlite_job('update_pipeline_state', {
-                'db_path': pipeline_state.db_path,
+                'updated_at': datetime.now(timezone.utc).isoformat(),
                 'phase': 'drive_upload',
                 'status': 'failed',
                 'message': f'drive_folder={drive_folder}',

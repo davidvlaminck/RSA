@@ -59,9 +59,9 @@ Ondersteunde actions:
 
     update_pipeline_state
         payload: {
-            "db_path": str (verplicht),
             "phase": str (verplicht),
             "status": str (verplicht),
+            "updated_at": str (verplicht, ISO-8601),
             "message": str (optioneel, default ""),
         }
 
