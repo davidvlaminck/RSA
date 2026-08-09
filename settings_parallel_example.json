@@ -67,6 +67,8 @@
     "drive_sync": {
       "enabled": true,
       "sync_after": "01:00:00",
+      "poll_after": "04:00:00",
+      "poll_deadline": "06:00:00",
       "drive_folder": "RSA",
       "credentials_path": "/path/to/external/resources/gdrive_oauth_credentials.json",
       "local_folder": "./RSA_OneDrive",

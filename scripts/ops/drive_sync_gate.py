@@ -4,31 +4,55 @@ import logging
 from datetime import datetime, timezone
 
 from lib.sqlite_queue_client import enqueue_sqlite_job
-from scripts.ops.gdrive_upload import (
-    sync_drive_to_local,
-    sync_local_to_drive,
-    validate_local_mirror,
-    write_daily_run_log,
-)
 
 logger = logging.getLogger(__name__)
 
 
 class DailyDriveSyncGate:
-    """Ensures one Drive->local sync is completed each day before reports can run."""
+    """Polls SQLite for an external orchestrator's drive-download signal.
 
-    def __init__(self, local_folder: str, drive_folder: str, token_path: str, earliest_sync_hms: str = '01:00:00', pipeline_state=None):
+    The gate no longer performs the Drive download itself. It only observes
+    ``pipeline_state`` for ``drive_download`` / ``completed``. Polling starts
+    at ``poll_start_hms`` and is abandoned at ``hard_deadline_hms``, after
+    which reports are allowed to proceed anyway.
+    """
+
+    def __init__(
+        self,
+        local_folder: str,
+        drive_folder: str,
+        token_path: str,
+        poll_start_hms: str = '04:00:00',
+        hard_deadline_hms: str = '06:00:00',
+        pipeline_state=None,
+    ):
         self.local_folder = local_folder
         self.drive_folder = drive_folder
         self.token_path = token_path
-        self.earliest_sync_seconds = self._parse_hms(earliest_sync_hms)
+        self.poll_start_seconds = self._parse_hms(poll_start_hms)
+        self.hard_deadline_seconds = self._parse_hms(hard_deadline_hms)
         self._synced_date = None
         self.pipeline_state = pipeline_state
+
+        logger.info(
+            '[DRIVE_SYNC_GATE] Initialized: poll_start=%s, hard_deadline=%s, local_folder=%s, drive_folder=%s',
+            poll_start_hms,
+            hard_deadline_hms,
+            local_folder,
+            drive_folder,
+        )
 
     @staticmethod
     def _parse_hms(hms: str) -> int:
         hh, mm, ss = (int(part) for part in hms.split(':'))
         return hh * 3600 + mm * 60 + ss
+
+    @staticmethod
+    def _format_hms(total_seconds: int) -> str:
+        hh = total_seconds // 3600
+        mm = (total_seconds % 3600) // 60
+        ss = total_seconds % 60
+        return f'{hh:02d}:{mm:02d}:{ss:02d}'
 
     def _enqueue_pipeline_update(self, phase: str, status: str, message: str) -> None:
         if self.pipeline_state is not None and getattr(self.pipeline_state, 'db_path', ''):
@@ -41,42 +65,68 @@ class DailyDriveSyncGate:
 
     def ensure_synced(self, now: datetime) -> bool:
         if self._synced_date == now.date():
+            logger.debug('[DRIVE_SYNC_GATE] Already synced today (%s).', now.date())
             return True
 
         now_seconds = now.hour * 3600 + now.minute * 60 + now.second
-        if now_seconds < self.earliest_sync_seconds:
+        logger.debug(
+            '[DRIVE_SYNC_GATE] Checking sync for %s at %02d:%02d:%02d (poll_start=%s, hard_deadline=%s)',
+            now.date(), now.hour, now.minute, now.second,
+            self._format_hms(self.poll_start_seconds),
+            self._format_hms(self.hard_deadline_seconds),
+        )
+
+        if now_seconds < self.poll_start_seconds:
+            wait_seconds = self.poll_start_seconds - now_seconds
+            logger.info(
+                '[DRIVE_SYNC_GATE] Too early (%02d:%02d:%02d). Waiting %d seconds until poll window opens at %s.',
+                now.hour, now.minute, now.second,
+                wait_seconds,
+                self._format_hms(self.poll_start_seconds),
+            )
             return False
+
+        if now_seconds >= self.hard_deadline_seconds:
+            logger.warning(
+                '[DRIVE_SYNC_GATE] Hard deadline (%s) reached without external confirmation. '
+                'Proceeding with reports.',
+                self._format_hms(self.hard_deadline_seconds),
+            )
+            self._synced_date = now.date()
+            return True
 
         if self.pipeline_state is not None and getattr(self.pipeline_state, 'db_path', ''):
             current = self.pipeline_state.get()
             if current and current.get('phase') == 'drive_download' and current.get('status') == 'completed':
                 self._synced_date = now.date()
+                logger.info(
+                    '[DRIVE_SYNC_GATE] External orchestrator confirmed drive_download completed. '
+                    'Reports can proceed.'
+                )
                 return True
-            if not (current and current.get('phase') == 'drive_download' and current.get('status') == 'starting'):
+            if current and current.get('phase') == 'drive_download' and current.get('status') == 'starting':
+                self._enqueue_pipeline_update(
+                    'drive_download', 'running',
+                    'Waiting for external orchestrator to complete drive download',
+                )
+                logger.info(
+                    '[DRIVE_SYNC_GATE] External orchestrator started drive_download. Waiting for completion...'
+                )
                 return False
 
-        write_daily_run_log(self.local_folder, 'PRE_SYNC_START', f'drive_folder={self.drive_folder}')
-        self._enqueue_pipeline_update('drive_download', 'running', f'drive_folder={self.drive_folder}')
-        ok = sync_drive_to_local(
-            local_folder=self.local_folder,
-            drive_folder_name=self.drive_folder,
-            token_path=self.token_path,
-        )
-        if ok:
-            valid, reason = validate_local_mirror(self.local_folder)
-            if not valid:
-                write_daily_run_log(self.local_folder, 'PRE_SYNC_INVALID_MIRROR', reason)
-                self._enqueue_pipeline_update('drive_download', 'failed', reason)
-                logger.warning('[SYNC] Invalid local mirror after sync-down: %s', reason)
-                return False
-            self._synced_date = now.date()
-            write_daily_run_log(self.local_folder, 'PRE_SYNC_DONE', f'drive_folder={self.drive_folder}')
-            self._enqueue_pipeline_update('drive_download', 'completed', f'drive_folder={self.drive_folder}')
-        else:
-            write_daily_run_log(self.local_folder, 'PRE_SYNC_FAILED', f'drive_folder={self.drive_folder}')
-            self._enqueue_pipeline_update('drive_download', 'failed', f'drive_folder={self.drive_folder}')
+            self._enqueue_pipeline_update(
+                'drive_download', 'running',
+                'Waiting for external orchestrator to start drive download',
+            )
+            logger.info(
+                '[DRIVE_SYNC_GATE] Waiting for external orchestrator to start drive_download. '
+                'Current state: %s',
+                current if current else 'no state yet',
+            )
+            return False
 
-        return ok
+        self._synced_date = now.date()
+        return True
 
 
 def upload_after_run(local_folder: str, drive_folder: str, token_path: str, pipeline_state=None) -> None:
@@ -98,6 +148,8 @@ def upload_after_run(local_folder: str, drive_folder: str, token_path: str, pipe
             'status': 'running',
             'message': f'drive_folder={drive_folder}',
         })
+
+    from scripts.ops.gdrive_upload import sync_local_to_drive, write_daily_run_log
 
     write_daily_run_log(local_folder, 'POST_RUN_UPLOAD_START', f'drive_folder={drive_folder}')
     ok = sync_local_to_drive(

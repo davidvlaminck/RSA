@@ -12,13 +12,7 @@ from zoneinfo import ZoneInfo
 
 from lib.reports.ReportLoopRunner import ReportLoopRunner
 from scripts.ops.drive_sync_gate import DailyDriveSyncGate, upload_after_run
-from scripts.ops.gdrive_upload import (
-    sync_drive_to_local,
-    sync_local_to_drive,
-    validate_local_mirror,
-    write_daily_run_log,
-    prune_daily_run_logs,
-)
+from scripts.ops.gdrive_upload import prune_daily_run_logs
 
 logger = logging.getLogger(__name__)
 
@@ -91,6 +85,8 @@ def _load_runtime_config(settings_path: str) -> dict:
         'drive_sync_after': drive_cfg.get('sync_after', '01:00:00'),
         'drive_folder': drive_cfg.get('drive_folder', 'RSA'),
         'token_path': drive_cfg.get('token_path', ''),
+        'drive_poll_after': drive_cfg.get('poll_after', '04:00:00'),
+        'drive_poll_deadline': drive_cfg.get('poll_deadline', '06:00:00'),
     }
 
 
@@ -111,6 +107,15 @@ if __name__ == '__main__':
     _enable_daily_console_capture(onedrive_path)
 
     logger.info('Using settings: %s', settings_path)
+    logger.info(
+        'Runtime config: local_folder=%s, drive_sync_enabled=%s, drive_folder=%s, '
+        'poll_after=%s, poll_deadline=%s',
+        onedrive_path,
+        cfg['drive_sync_enabled'],
+        cfg['drive_folder'],
+        cfg.get('drive_poll_after', '04:00:00'),
+        cfg.get('drive_poll_deadline', '06:00:00'),
+    )
 
     reportlooprunner = ReportLoopRunner(settings_path=cfg['settings_path'], excel_output_dir=onedrive_path)
 
@@ -122,12 +127,18 @@ if __name__ == '__main__':
             if db_path:
                 from lib.connectors.pipeline_state import PipelineState
                 pipeline_state = PipelineState(db_path)
+                logger.info('PipelineState initialized with db_path=%s', db_path)
+            else:
+                logger.warning('pipeline_state enabled but db_path is empty; drive gate will not poll SQLite.')
+        else:
+            logger.info('pipeline_state disabled; drive gate will not poll SQLite.')
 
         sync_gate = DailyDriveSyncGate(
             local_folder=onedrive_path,
             drive_folder=cfg['drive_folder'],
             token_path=cfg['token_path'],
-            earliest_sync_hms=cfg['drive_sync_after'],
+            poll_start_hms=cfg.get('drive_poll_after', '04:00:00'),
+            hard_deadline_hms=cfg.get('drive_poll_deadline', '06:00:00'),
             pipeline_state=pipeline_state,
         )
         reportlooprunner.on_before_run = sync_gate.ensure_synced
@@ -137,10 +148,11 @@ if __name__ == '__main__':
             token_path=cfg['token_path'],
             pipeline_state=pipeline_state,
         )
+        logger.info('Drive sync gate and upload hooks attached to ReportLoopRunner.')
     elif cfg['drive_sync_enabled']:
         logger.warning('Drive sync enabled in settings but token_path is empty; continuing without Drive sync hooks.')
 
-    # With scheduled flow, let settings.time control when reports start (e.g. around 06:00).
+    logger.info('Starting ReportLoopRunner (run_right_away=False).')
     reportlooprunner.start(run_right_away=False)
 
 # first on linux do: pip install psycopg2-binary
