@@ -75,8 +75,10 @@ def _load_runtime_config(settings_path: str) -> dict:
     drive_cfg = settings.get('drive_sync', {}) if isinstance(settings, dict) else {}
     output_cfg = settings.get('output', {}) if isinstance(settings, dict) else {}
     excel_cfg = output_cfg.get('excel', {}) if isinstance(output_cfg, dict) else {}
+    pipeline_state_cfg = settings.get('pipeline_state', {}) if isinstance(settings, dict) else {}
 
     local_folder_raw = drive_cfg.get('local_folder') or excel_cfg.get('output_dir') or 'RSA_OneDrive'
+    pipeline_state_raw = pipeline_state_cfg.get('db_path', '')
 
     return {
         'settings_path': settings_path,
@@ -87,6 +89,13 @@ def _load_runtime_config(settings_path: str) -> dict:
         'token_path': drive_cfg.get('token_path', ''),
         'drive_poll_after': drive_cfg.get('poll_after', '04:00:00'),
         'drive_poll_deadline': drive_cfg.get('poll_deadline', '06:00:00'),
+        'pipeline_state': {
+            'enabled': bool(pipeline_state_cfg.get('enabled', True)),
+            'db_path': _resolve_path(pipeline_state_raw, settings_dir) if pipeline_state_raw else '',
+            'wait_timeout_seconds': pipeline_state_cfg.get('wait_timeout_seconds', 7200),
+            'passive_wait_until': pipeline_state_cfg.get('passive_wait_until', '04:00:00'),
+            'postgis_wait_timeout_seconds': pipeline_state_cfg.get('postgis_wait_timeout_seconds', 10800),
+        },
     }
 
 
