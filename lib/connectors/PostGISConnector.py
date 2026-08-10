@@ -292,6 +292,23 @@ class SinglePostGISConnector:
         cls.postgis_connector = PostGISConnector(host, port, user, password, database)
 
     @classmethod
+    def reset(cls):
+        if cls.postgis_connector is not None:
+            try:
+                cls.postgis_connector.pool.closeall()
+            except Exception:
+                pass
+            try:
+                if getattr(cls.postgis_connector, 'main_connection', None) is not None:
+                    try:
+                        cls.postgis_connector.main_connection.close()
+                    except Exception:
+                        pass
+            except Exception:
+                pass
+        cls.postgis_connector = None
+
+    @classmethod
     def get_connector(cls) -> PostGISConnector:
         if cls.postgis_connector is None:
             raise RuntimeError('Run the init method of this class first')

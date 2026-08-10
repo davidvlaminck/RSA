@@ -68,49 +68,72 @@ def reinitialize_database_connections(settings):
     Critical: Forked processes inherit parent connections which are NOT safe to use.
     Each child must create fresh connections.
     """
-    try:
-        # PostGIS connector
-        postgis_settings = settings['databases']['PostGIS']
-        from lib.connectors.PostGISConnector import SinglePostGISConnector
-        SinglePostGISConnector.init(
-            host=postgis_settings['host'],
-            port=postgis_settings['port'],
-            user=postgis_settings['user'],
-            password=postgis_settings['password'],
-            database=postgis_settings['database']
-        )
-        logger.info("✓ Reinitialized PostGIS connection")
-    except Exception as e:
-        logger.warning(f"Could not reinitialize PostGIS: {e}")
+    databases = settings.get('databases', {}) if isinstance(settings, dict) else {}
+    
+    neo4j_settings = databases.get('Neo4j')
+    if neo4j_settings:
+        try:
+            SingleNeo4JConnector.reset()
+        except Exception:
+            pass
+        try:
+            # Neo4J connector
+            from lib.connectors.Neo4JConnector import SingleNeo4JConnector
+            SingleNeo4JConnector.init(
+                uri=neo4j_settings['uri'],
+                user=neo4j_settings['user'],
+                password=neo4j_settings['password'],
+                database=neo4j_settings['database']
+            )
+            logger.info("✓ Reinitialized Neo4J connection")
+        except Exception as e:
+            logger.warning(f"Could not reinitialize Neo4J: {e}")
+    else:
+        logger.debug("Neo4j settings not configured; skipping reinitialization")
 
-    try:
-        # ArangoDB connector
-        arango_settings = settings['databases']['ArangoDB']
-        from datasources.arango import SingleArangoConnector
-        SingleArangoConnector.init(
-            host=arango_settings['host'],
-            port=arango_settings['port'],
-            user=arango_settings['user'],
-            password=arango_settings['password'],
-            database=arango_settings['database'],
-        )
-        logger.info("✓ Reinitialized ArangoDB connection")
-    except Exception as e:
-        logger.warning(f"Could not reinitialize ArangoDB: {e}")
+    postgis_settings = databases.get('PostGIS')
+    if postgis_settings:
+        try:
+            SinglePostGISConnector.reset()
+        except Exception:
+            pass
+        try:
+            # PostGIS connector
+            from lib.connectors.PostGISConnector import SinglePostGISConnector
+            SinglePostGISConnector.init(
+                host=postgis_settings['host'],
+                port=postgis_settings['port'],
+                user=postgis_settings['user'],
+                password=postgis_settings['password'],
+                database=postgis_settings['database']
+            )
+            logger.info("✓ Reinitialized PostGIS connection")
+        except Exception as e:
+            logger.warning(f"Could not reinitialize PostGIS: {e}")
+    else:
+        logger.debug("PostGIS settings not configured; skipping reinitialization")
 
-    try:
-        # Neo4J connector
-        neo4j_settings = settings['databases']['Neo4j']
-        from lib.connectors.Neo4JConnector import SingleNeo4JConnector
-        SingleNeo4JConnector.init(
-            uri=neo4j_settings['uri'],
-            user=neo4j_settings['user'],
-            password=neo4j_settings['password'],
-            database=neo4j_settings['database']
-        )
-        logger.info("✓ Reinitialized Neo4J connection")
-    except Exception as e:
-        logger.warning(f"Could not reinitialize Neo4J: {e}")
+    arango_settings = databases.get('ArangoDB')
+    if arango_settings:
+        try:
+            SingleArangoConnector.reset()
+        except Exception:
+            pass
+        try:
+            # ArangoDB connector
+            from datasources.arango import SingleArangoConnector
+            SingleArangoConnector.init(
+                host=arango_settings['host'],
+                port=arango_settings['port'],
+                user=arango_settings['user'],
+                password=arango_settings['password'],
+                database=arango_settings['database'],
+            )
+            logger.info("✓ Reinitialized ArangoDB connection")
+        except Exception as e:
+            logger.warning(f"Could not reinitialize ArangoDB: {e}")
+    else:
+        logger.debug("ArangoDB settings not configured; skipping reinitialization")
 
     try:
         # Sheets wrapper (required for GoogleSheetsOutput)

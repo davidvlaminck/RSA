@@ -261,6 +261,17 @@ class ExcelOutput:
                     logger.warning('Alternate workbook %s could not be opened (%s)', alternate, alternate_exc)
             raise
 
+        Waar    @contextmanager
+    def _workbook_context(self, workbook_path: Path, *, read_only: bool = False):
+        wb = self._load_workbook_resilient(workbook_path, read_only=read_only)
+        try:
+            yield wb
+        finally:
+            try:
+                wb.close()
+            except Exception:
+                pass
+
     def _atomic_save_workbook(self, wb, workbook_path: Path) -> None:
         """Save workbook to a temporary file and atomically replace the target path.
 
@@ -437,13 +448,13 @@ class ExcelOutput:
             return
             yield  # pragma: no cover
         _ensure_openpyxl_loaded()
-        wb = self._load_workbook_resilient(workbook_path, read_only=True)
-        if sheet_name not in wb.sheetnames:
-            return
-            yield  # pragma: no cover
-        ws = wb[sheet_name]
-        for row in ws.iter_rows(values_only=True):
-            yield [self._normalize_value(c) for c in row]
+        with self._workbook_context(workbook_path, read_only=True) as wb:
+            if sheet_name not in wb.sheetnames:
+                return
+                yield  # pragma: no cover
+            ws = wb[sheet_name]
+            for row in ws.iter_rows(values_only=True):
+                yield [self._normalize_value(c) for c in row]
 
     def clear_sheet_range(self, workbook_path: Path, sheet_name: str, cell_range: str) -> None:
         workbook_path = Path(workbook_path)
@@ -572,15 +583,15 @@ class ExcelOutput:
             if Path(self.output_dir).exists():
                 for p in sorted(Path(self.output_dir).glob('*.xlsx')):
                     try:
-                        wb_tmp = self._load_workbook_resilient(p, read_only=True)
-                        if 'Overzicht' in wb_tmp.sheetnames or 'Historiek' in wb_tmp.sheetnames:
-                            # register mapping for future fast lookup if possible (non-persistent)
-                            try:
-                                from outputs.spreadsheet_map import add_mapping
-                                add_mapping(sp, p.name, persist=False)
-                            except Exception:
-                                pass
-                            return p
+                        with self._workbook_context(p, read_only=True) as wb_tmp:
+                            if 'Overzicht' in wb_tmp.sheetnames or 'Historiek' in wb_tmp.sheetnames:
+                                # register mapping for future fast lookup if possible (non-persistent)
+                                try:
+                                    from outputs.spreadsheet_map import add_mapping
+                                    add_mapping(sp, p.name, persist=False)
+                                except Exception:
+                                    pass
+                                return p
                     except Exception:
                         continue
         except Exception:
@@ -601,19 +612,19 @@ class ExcelOutput:
         wb_path = self._resolve_workbook_path(spreadsheet_id)
         if not wb_path.exists():
             return {}
-        wb = self._load_workbook_resilient(wb_path, read_only=True)
-        out = {}
-        for name in wb.sheetnames:
-            ws = wb[name]
-            # best-effort grid properties
-            try:
-                row_count = ws.max_row or 0
-                col_count = ws.max_column or 0
-            except Exception:
-                row_count = 0
-                col_count = 0
-            out[name] = {'gridProperties': {'rowCount': row_count, 'columnCount': col_count}}
-        return out
+        with self._workbook_context(wb_path, read_only=True) as wb:
+            out = {}
+            for name in wb.sheetnames:
+                ws = wb[name]
+                # best-effort grid properties
+                try:
+                    row_count = ws.max_row or 0
+                    col_count = ws.max_column or 0
+                except Exception:
+                    row_count = 0
+                    col_count = 0
+                out[name] = {'gridProperties': {'rowCount': row_count, 'columnCount': col_count}}
+            return out
 
     def read_data_from_sheet(self, spreadsheet_id: str, sheet_name: str, sheetrange: str | None = None, *,
                              return_raw_results: bool = False, value_render_option: str ='FORMATTED_VALUE') -> list[list[Any]] | dict:
@@ -627,61 +638,61 @@ class ExcelOutput:
         if not wb_path.exists():
             return {} if return_raw_results else []
         try:
-            wb = self._load_workbook_resilient(wb_path, read_only=True)
+            with self._workbook_context(wb_path, read_only=True) as wb:
+                if sheet_name not in wb.sheetnames:
+                    return {} if return_raw_results else []
+                ws = wb[sheet_name]
+
+                from openpyxl.utils import range_boundaries
+
+                # Determine boundaries
+                if sheetrange is None or sheetrange == '':
+                    min_col, min_row, max_col, max_row = 1, 1, ws.max_column or 1, ws.max_row or 1
+                else:
+                    # handle patterns like 'A1:' or 'A:' -> treat as until max
+                    if ':' in sheetrange:
+                        left, right = sheetrange.split(':', 1)
+                        if left == '' and right == '':
+                            min_col, min_row, max_col, max_row = 1, 1, ws.max_column or 1, ws.max_row or 1
+                        else:
+                            if right == '' or right is None:
+                                # open range, compute right using ws max
+                                try:
+                                    min_col, min_row, _, _ = range_boundaries(left + ':' + left)
+                                except Exception:
+                                    # fallback to column letter
+                                    from openpyxl.utils import column_index_from_string
+                                    col = ''.join([c for c in left if c.isalpha()])
+                                    min_col = column_index_from_string(col) if col else 1
+                                    min_row = int(''.join([c for c in left if c.isdigit()]) or 1)
+                                max_col, max_row = ws.max_column or min_col, ws.max_row or min_row
+                            else:
+                                try:
+                                    min_col, min_row, max_col, max_row = range_boundaries(sheetrange)
+                                except Exception:
+                                    # if parsing fails, fallback to whole sheet
+                                    min_col, min_row, max_col, max_row = 1, 1, ws.max_column or 1, ws.max_row or 1
+                    else:
+                        # single column like 'A' or single cell 'A1'
+                        try:
+                            min_col, min_row, max_col, max_row = range_boundaries(sheetrange + ':' + sheetrange)
+                        except Exception:
+                            min_col, min_row, max_col, max_row = 1, 1, ws.max_column or 1, ws.max_row or 1
+
+                rows_out = []
+                for row in ws.iter_rows(min_row=min_row, max_row=max_row, min_col=min_col, max_col=max_col, values_only=True):
+                    rows_out.append([self._normalize_value(c) for c in row])
+
+                if return_raw_results:
+                    # build a simple range string
+                    rng = sheetrange or (f'A1:{chr(64 + (len(rows_out[0]) if rows_out else 1))}{len(rows_out) if rows_out else 1}')
+                    return {'values': rows_out, 'range': f'{sheet_name}!{rng}'}
+                return rows_out
         except Exception as exc:
             if wb_path.name in OVERVIEW_WORKBOOK_NAMES:
                 logger.warning('Summary workbook %s could not be opened (%s); returning empty %s data', wb_path, exc, sheet_name)
                 return {} if return_raw_results else []
             raise
-        if sheet_name not in wb.sheetnames:
-            return {} if return_raw_results else []
-        ws = wb[sheet_name]
-
-        from openpyxl.utils import range_boundaries
-
-        # Determine boundaries
-        if sheetrange is None or sheetrange == '':
-            min_col, min_row, max_col, max_row = 1, 1, ws.max_column or 1, ws.max_row or 1
-        else:
-            # handle patterns like 'A1:' or 'A:' -> treat as until max
-            if ':' in sheetrange:
-                left, right = sheetrange.split(':', 1)
-                if left == '' and right == '':
-                    min_col, min_row, max_col, max_row = 1, 1, ws.max_column or 1, ws.max_row or 1
-                else:
-                    if right == '' or right is None:
-                        # open range, compute right using ws max
-                        try:
-                            min_col, min_row, _, _ = range_boundaries(left + ':' + left)
-                        except Exception:
-                            # fallback to column letter
-                            from openpyxl.utils import column_index_from_string
-                            col = ''.join([c for c in left if c.isalpha()])
-                            min_col = column_index_from_string(col) if col else 1
-                            min_row = int(''.join([c for c in left if c.isdigit()]) or 1)
-                        max_col, max_row = ws.max_column or min_col, ws.max_row or min_row
-                    else:
-                        try:
-                            min_col, min_row, max_col, max_row = range_boundaries(sheetrange)
-                        except Exception:
-                            # if parsing fails, fallback to whole sheet
-                            min_col, min_row, max_col, max_row = 1, 1, ws.max_column or 1, ws.max_row or 1
-            else:
-                # single column like 'A' or single cell 'A1'
-                try:
-                    min_col, min_row, max_col, max_row = range_boundaries(sheetrange + ':' + sheetrange)
-                except Exception:
-                    min_col, min_row, max_col, max_row = 1, 1, ws.max_column or 1, ws.max_row or 1
-
-        rows_out = []
-        for row in ws.iter_rows(min_row=min_row, max_row=max_row, min_col=min_col, max_col=max_col, values_only=True):
-            rows_out.append([self._normalize_value(c) for c in row])
-
-        if return_raw_results:
-            # build a simple range string
-            rng = sheetrange or (f'A1:{chr(64 + (len(rows_out[0]) if rows_out else 1))}{len(rows_out) if rows_out else 1}')
-            return {'values': rows_out, 'range': f'{sheet_name}!{rng}'}
-        return rows_out
 
     def read_celldata_from_sheet(self, spreadsheet_id: str, sheet_name: str, sheetrange: str | None = None, return_raw_results: bool = True) -> dict:
         """Return a minimal raw-style dict with 'values' and 'range' to mimic Sheets API basic shape.
@@ -697,46 +708,46 @@ class ExcelOutput:
         try:
             wb_path = self._resolve_workbook_path(spreadsheet_id)
             if wb_path.exists():
-                wb = self._load_workbook_resilient(wb_path, read_only=True)
-                if sheet_name in wb.sheetnames:
-                    ws = wb[sheet_name]
-                    rowData = []
-                    # determine boundaries for iteration used earlier
-                    from openpyxl.utils import range_boundaries
-                    if sheetrange is None or sheetrange == '':
-                        min_col, min_row, max_col, max_row = 1, 1, ws.max_column or 1, ws.max_row or 1
-                    else:
-                        try:
-                            min_col, min_row, max_col, max_row = range_boundaries(sheetrange)
-                        except Exception:
+                with self._workbook_context(wb_path, read_only=True) as wb:
+                    if sheet_name in wb.sheetnames:
+                        ws = wb[sheet_name]
+                        rowData = []
+                        # determine boundaries for iteration used earlier
+                        from openpyxl.utils import range_boundaries
+                        if sheetrange is None or sheetrange == '':
                             min_col, min_row, max_col, max_row = 1, 1, ws.max_column or 1, ws.max_row or 1
+                        else:
+                            try:
+                                min_col, min_row, max_col, max_row = range_boundaries(sheetrange)
+                            except Exception:
+                                min_col, min_row, max_col, max_row = 1, 1, ws.max_column or 1, ws.max_row or 1
 
-                    for r in ws.iter_rows(min_row=min_row, max_row=max_row, min_col=min_col, max_col=max_col):
-                        values = []
-                        for c in r:
-                            cell_info: dict = {}
-                            # userEnteredValue: raw python value
-                            cell_info['userEnteredValue'] = c.value
-                            # formattedValue: string representation
-                            try:
-                                cell_info['formattedValue'] = str(c.value) if c.value is not None else ''
-                            except Exception:
-                                cell_info['formattedValue'] = ''
-                            # hyperlink if present
-                            try:
-                                if hasattr(c, 'hyperlink') and c.hyperlink:
-                                    cell_info['hyperlink'] = str(c.hyperlink.target if hasattr(c.hyperlink, 'target') else c.hyperlink)
-                            except Exception:
-                                pass
-                            # formula detection: in openpyxl formula is string starting with '=' or c.data_type
-                            try:
-                                if isinstance(c.value, str) and c.value.startswith('='):
-                                    cell_info['formula'] = c.value
-                            except Exception:
-                                pass
-                            values.append(cell_info)
-                        rowData.append({'values': values})
-                    result['rowData'] = rowData
+                        for r in ws.iter_rows(min_row=min_row, max_row=max_row, min_col=min_col, max_col=max_col):
+                            values = []
+                            for c in r:
+                                cell_info: dict = {}
+                                # userEnteredValue: raw python value
+                                cell_info['userEnteredValue'] = c.value
+                                # formattedValue: string representation
+                                try:
+                                    cell_info['formattedValue'] = str(c.value) if c.value is not None else ''
+                                except Exception:
+                                    cell_info['formattedValue'] = ''
+                                # hyperlink if present
+                                try:
+                                    if hasattr(c, 'hyperlink') and c.hyperlink:
+                                        cell_info['hyperlink'] = str(c.hyperlink.target if hasattr(c.hyperlink, 'target') else c.hyperlink)
+                                except Exception:
+                                    pass
+                                # formula detection: in openpyxl formula is string starting with '=' or c.data_type
+                                try:
+                                    if isinstance(c.value, str) and c.value.startswith('='):
+                                        cell_info['formula'] = c.value
+                                except Exception:
+                                    pass
+                                values.append(cell_info)
+                            rowData.append({'values': values})
+                        result['rowData'] = rowData
         except Exception:
             # best-effort: if rich read fails, return only simple 'values'
             pass
@@ -891,32 +902,32 @@ class ExcelOutput:
         wb_path = self._resolve_workbook_path(spreadsheet_id)
         if not wb_path.exists():
             return 1
-        wb = self._load_workbook_resilient(wb_path, read_only=True)
-        if sheet_name not in wb.sheetnames:
-            return 1
-        ws = wb[sheet_name]
+        with self._workbook_context(wb_path, read_only=True) as wb:
+            if sheet_name not in wb.sheetnames:
+                return 1
+            ws = wb[sheet_name]
 
-        # parse start_cell like 'A1'
-        col_letters = ''.join([c for c in start_cell if c.isalpha()])
-        row_digits = ''.join([c for c in start_cell if c.isdigit()])
-        if not col_letters:
-            col_index = 1
-        else:
-            from openpyxl.utils import column_index_from_string
-            col_index = column_index_from_string(col_letters)
-        start_row = int(row_digits) if row_digits else 1
+            # parse start_cell like 'A1'
+            col_letters = ''.join([c for c in start_cell if c.isalpha()])
+            row_digits = ''.join([c for c in start_cell if c.isdigit()])
+            if not col_letters:
+                col_index = 1
+            else:
+                from openpyxl.utils import column_index_from_string
+                col_index = column_index_from_string(col_letters)
+            start_row = int(row_digits) if row_digits else 1
 
-        max_row = ws.max_row or start_row
-        limit = min(max_row, start_row + max_rows - 1)
-        for r in range(start_row, limit + 1):
-            try:
-                val = ws.cell(row=r, column=col_index).value
-            except Exception:
-                val = None
-            if val is not None and val != '':
-                return r
-        # if none found, return next row after existing max
-        return max_row + 1
+            max_row = ws.max_row or start_row
+            limit = min(max_row, start_row + max_rows - 1)
+            for r in range(start_row, limit + 1):
+                try:
+                    val = ws.cell(row=r, column=col_index).value
+                except Exception:
+                    val = None
+                if val is not None and val != '':
+                    return r
+            # if none found, return next row after existing max
+            return max_row + 1
 
     def insert_empty_rows(self, spreadsheet_id: str | Path, sheet_name: str, start_cell: str = 'A2', number_of_rows: int = 1) -> None:
         """Insert empty rows at start_cell by shifting existing rows down.

@@ -19,6 +19,15 @@ class SingleNeo4JConnector:
         cls._instance = Neo4JConnector(uri, user, password, database)
 
     @classmethod
+    def reset(cls):
+        if cls._instance is not None:
+            try:
+                cls._instance.driver.close()
+            except Exception:
+                pass
+        cls._instance = None
+
+    @classmethod
     def get_connector(cls):
         if cls._instance is None:
             raise RuntimeError('Run SingleNeo4JConnector.init(...) before calling get_connector')

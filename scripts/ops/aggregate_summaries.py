@@ -267,10 +267,10 @@ def apply_payload(excel: ExcelOutput, payload: Dict[str, Any], output_dir: Path)
                     # write back normalized scalar
                     before_val = None
                     try:
-                        wb_existing = excel._load_workbook_resilient(wb_path, read_only=True)
-                        ws_existing = wb_existing['Overzicht']
-                        row_idx = int(''.join([c for c in cell if c.isdigit()]))
-                        before_val = ws_existing.cell(row=row_idx, column=3).value
+                        with excel._workbook_context(wb_path, read_only=True) as wb_existing:
+                            ws_existing = wb_existing['Overzicht']
+                            row_idx = int(''.join([c for c in cell if c.isdigit()]))
+                            before_val = ws_existing.cell(row=row_idx, column=3).value
                     except Exception:
                         before_val = None
                     value = normalized
@@ -297,12 +297,12 @@ def apply_payload(excel: ExcelOutput, payload: Dict[str, Any], output_dir: Path)
                 excel.write_single_cell(wb_path, sheet, target_cell, v)
             # Post-write verification log: read back the value written to the first column
             try:
-                _wb = excel._load_workbook_resilient(wb_path, read_only=True)
-                if sheet in _wb.sheetnames:
-                    _ws = _wb[sheet]
-                    new_val = _ws.cell(row=row_index, column=col_index).value
-                    logger.info('Post-write Overzicht C check (list): report=%s workbook=%s cell=%s after=%s',
-                                payload.get('meta', {}).get('report'), str(Path(wb_path).resolve()), f"{SheetsCell._convert_number_to_column(col_index)}{row_index}", new_val)
+                with excel._workbook_context(wb_path, read_only=True) as _wb:
+                    if sheet in _wb.sheetnames:
+                        _ws = _wb[sheet]
+                        new_val = _ws.cell(row=row_index, column=col_index).value
+                        logger.info('Post-write Overzicht C check (list): report=%s workbook=%s cell=%s after=%s',
+                                    payload.get('meta', {}).get('report'), str(Path(wb_path).resolve()), f"{SheetsCell._convert_number_to_column(col_index)}{row_index}", new_val)
             except Exception:
                 logger.exception('Failed post-write check for %s %s', wb_path, cell)
             return wb_path.resolve()
@@ -328,13 +328,13 @@ def apply_payload(excel: ExcelOutput, payload: Dict[str, Any], output_dir: Path)
                 excel.write_single_cell(wb_path, sheet, target_cell, value)
             # Post-write verification log for Overzicht C scalar writes
             try:
-                _wb = excel._load_workbook_resilient(wb_path, read_only=True)
-                if sheet in _wb.sheetnames:
-                    _ws = _wb[sheet]
-                    row_idx = target_row_index
-                    new_val = _ws.cell(row=row_idx, column=3).value
-                    logger.info('Post-write Overzicht C check (scalar): report=%s workbook=%s cell=%s after=%s',
-                                payload.get('meta', {}).get('report'), str(Path(wb_path).resolve()), f"{sc._column_str}{row_idx}", new_val)
+                with excel._workbook_context(wb_path, read_only=True) as _wb:
+                    if sheet in _wb.sheetnames:
+                        _ws = _wb[sheet]
+                        row_idx = target_row_index
+                        new_val = _ws.cell(row=row_idx, column=3).value
+                        logger.info('Post-write Overzicht C check (scalar): report=%s workbook=%s cell=%s after=%s',
+                                    payload.get('meta', {}).get('report'), str(Path(wb_path).resolve()), f"{sc._column_str}{row_idx}", new_val)
             except Exception:
                 logger.exception('Failed post-write check for %s %s', wb_path, cell)
             return wb_path.resolve()

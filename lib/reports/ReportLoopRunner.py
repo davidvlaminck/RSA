@@ -40,35 +40,53 @@ def reinitialize_database_connections(settings: dict, arango_timeout: int = 180)
         settings: Settings dictionary with database credentials.
         arango_timeout: ArangoDB request timeout in seconds (default 180).
     """
-    try:
-        neo4j_settings = settings['databases']['Neo4j']
-        SingleNeo4JConnector.init(uri=neo4j_settings['uri'], user=neo4j_settings['user'],
-                                  password=neo4j_settings['password'], database=neo4j_settings['database'])
-    except Exception as exc:
-        logger.warning(f"Could not reinitialize Neo4J: {exc}")
+    databases = settings.get('databases', {}) if isinstance(settings, dict) else {}
+    
+    neo4j_settings = databases.get('Neo4j')
+    if neo4j_settings:
+        try:
+            SingleNeo4JConnector.reset()
+        except Exception:
+            pass
+        try:
+            SingleNeo4JConnector.init(uri=neo4j_settings['uri'], user=neo4j_settings['user'],
+                                      password=neo4j_settings['password'], database=neo4j_settings['database'])
+        except Exception as exc:
+            logger.warning(f"Could not reinitialize Neo4J: {exc}")
+    else:
+        logger.debug("Neo4j settings not configured; skipping reinitialization")
 
-    try:
-        postgis_settings = settings['databases']['PostGIS']
-        SinglePostGISConnector.init(host=postgis_settings['host'], port=postgis_settings['port'],
-                                    user=postgis_settings['user'], password=postgis_settings['password'],
-                                    database=postgis_settings['database'])
-    except Exception as exc:
-        logger.warning(f"Could not reinitialize PostGIS: {exc}")
+    postgis_settings = databases.get('PostGIS')
+    if postgis_settings:
+        try:
+            SinglePostGISConnector.reset()
+        except Exception:
+            pass
+        try:
+            SinglePostGISConnector.init(host=postgis_settings['host'], port=postgis_settings['port'],
+                                        user=postgis_settings['user'], password=postgis_settings['password'],
+                                        database=postgis_settings['database'])
+        except Exception as exc:
+            logger.warning(f"Could not reinitialize PostGIS: {exc}")
+    else:
+        logger.debug("PostGIS settings not configured; skipping reinitialization")
 
-    try:
-        arango_settings = settings['databases']['ArangoDB']
-        # Reset the singleton to allow reinitialization with new timeout
-        SingleArangoConnector.reset()
-        SingleArangoConnector.init(
-            host=arango_settings['host'],
-            port=arango_settings['port'],
-            user=arango_settings['user'],
-            password=arango_settings['password'],
-            database=arango_settings['database'],
-            request_timeout=arango_timeout,
-        )
-    except Exception as exc:
-        logger.warning(f"Could not reinitialize ArangoDB: {exc}")
+    arango_settings = databases.get('ArangoDB')
+    if arango_settings:
+        try:
+            SingleArangoConnector.reset()
+            SingleArangoConnector.init(
+                host=arango_settings['host'],
+                port=arango_settings['port'],
+                user=arango_settings['user'],
+                password=arango_settings['password'],
+                database=arango_settings['database'],
+                request_timeout=arango_timeout,
+            )
+        except Exception as exc:
+            logger.warning(f"Could not reinitialize ArangoDB: {exc}")
+    else:
+        logger.debug("ArangoDB settings not configured; skipping reinitialization")
 
 
 class ReportLoopRunner:
@@ -226,7 +244,7 @@ class ReportLoopRunner:
                 last_run_date = datetime.now(tz=BRUSSELS).date()
                 continue
 
-            now = datetime.now(tz=pytz.timezone("Europe/Brussels"))
+            now = datetime.now(tz=BRUSSELS)
 
             # Allow external pre-run prerequisites (e.g. daily Drive download sync).
             if self.on_before_run is not None and last_run_date != now.date():
@@ -243,6 +261,10 @@ class ReportLoopRunner:
             # Signal-based mode: pipeline_state controls when to run, no time window.
             # Backward-compatible mode (no pipeline_state): once-per-day + time window.
             if self.pipeline_status is not None:
+                if last_run_date == now.date():
+                    logger.info(f'{datetime.now(tz=BRUSSELS)}: already ran today, sleeping until tomorrow.')
+                    time.sleep(60)
+                    continue
                 if not self._wait_for_preconditions(now):
                     last_run_date = now.date()
                     now_seconds = now.hour * 3600 + now.minute * 60 + now.second
