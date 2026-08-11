@@ -22,7 +22,7 @@ class DailyDriveSyncGate:
         local_folder: str,
         drive_folder: str,
         token_path: str,
-        poll_start_hms: str = '04:00:00',
+        poll_start_hms: str = '00:30:00',
         hard_deadline_hms: str = '06:00:00',
         pipeline_state=None,
     ):
@@ -113,6 +113,15 @@ class DailyDriveSyncGate:
                     '[DRIVE_SYNC_GATE] External orchestrator started drive_download. Waiting for completion...'
                 )
                 return False
+
+            if current and current.get('phase') != 'drive_download':
+                self._synced_date = now.date()
+                logger.info(
+                    '[DRIVE_SYNC_GATE] Pipeline state is %s (not drive_download); '
+                    'treating drive sync as already completed.',
+                    current.get('phase'),
+                )
+                return True
 
             self._enqueue_pipeline_update(
                 'drive_download', 'running',
