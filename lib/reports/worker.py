@@ -12,6 +12,7 @@ Usage:
 import argparse
 import json
 import logging
+import os
 import sys
 import time
 from pathlib import Path
@@ -72,6 +73,27 @@ def _write_status(status_file: str | None, report_name: str, success: bool) -> N
         with open(status_file, 'a', encoding='utf-8') as f:
             f.write(json.dumps(entry) + '\n')
             f.flush()
+    except Exception:
+        pass
+
+
+def _log_resource_heartbeat() -> None:
+    try:
+        with open('/proc/meminfo', 'r', encoding='utf-8') as f:
+            lines = f.read().splitlines()
+        mem = {line.split(':')[0].strip(): int(line.split(':')[1].strip().split()[0]) for line in lines if ':' in line}
+        total = mem.get('MemTotal', 0)
+        avail = mem.get('MemAvailable', 0)
+        used = total - avail
+        mem_pct = (used / total * 100) if total else 0
+
+        with open('/proc/loadavg', 'r', encoding='utf-8') as f:
+            load = f.read().split()[0]
+
+        st = os.statvfs('.')
+        disk_pct = (1 - st.f_bavail / st.f_blocks) * 100 if st.f_blocks else 0
+
+        logger.info('heartbeat: load=%s, mem=%d/%dMB (%d%%), disk=%d%%', load, used // 1024, total // 1024, int(mem_pct), int(disk_pct))
     except Exception:
         pass
 
@@ -204,6 +226,7 @@ def run_single_report(report_name: str, settings: dict, skip_db_init: bool = Fal
     current_report.set(report_name)
 
     try:
+        _log_resource_heartbeat()
         logger.info(f"Starting report")
 
         # Re-initialize database connections only if this is the first report or a single run
