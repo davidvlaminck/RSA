@@ -5,9 +5,12 @@ sequentially in a single worker subprocess.
 """
 from __future__ import annotations
 
+import json
 import logging
+import os
 import subprocess
 import sys
+import tempfile
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Iterable, TextIO
@@ -31,7 +34,40 @@ def _stream_worker_output(output: str | None, stream: TextIO) -> None:
         stream.flush()
 
 
-def _run_worker(report_names: list[str], settings_path: str, timeout_seconds: int, stream_output: bool) -> dict:
+def _read_worker_status(status_file: str | None, expected_reports: list[str]) -> list[str] | None:
+    """Read worker status file and return reports that did not complete successfully.
+
+    Returns None if the status file is missing or unreadable (caller should fall back
+    to treating all expected_reports as failed). Returns an empty list if all reports
+    completed successfully.
+    """
+    if not status_file or not os.path.exists(status_file):
+        return None
+
+    completed = set()
+    try:
+        with open(status_file, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    entry = json.loads(line)
+                    report = entry.get('report')
+                    if report == '__pipeline_done__':
+                        continue
+                    if entry.get('success'):
+                        completed.add(report)
+                except (json.JSONDecodeError, AttributeError):
+                    continue
+    except Exception:
+        return None
+
+    not_completed = [r for r in expected_reports if r not in completed]
+    return not_completed
+
+
+def _run_worker(report_names: list[str], settings_path: str, timeout_seconds: int, stream_output: bool, status_file: str | None = None) -> dict:
     cmd = [
         sys.executable,
         "-m",
@@ -41,6 +77,8 @@ def _run_worker(report_names: list[str], settings_path: str, timeout_seconds: in
         "--settings",
         settings_path,
     ]
+    if status_file:
+        cmd.extend(["--status-file", status_file])
     proc: subprocess.Popen[str] | None = None
     try:
         if stream_output:
@@ -66,7 +104,7 @@ def _run_worker(report_names: list[str], settings_path: str, timeout_seconds: in
                         proc.kill()
                     except Exception:
                         pass
-                    return {"status": "timeout"}
+                    return {"status": "timeout", "status_file": status_file}
                 line = proc.stdout.readline()
                 if line:
                     output_chunks.append(line)
@@ -75,19 +113,20 @@ def _run_worker(report_names: list[str], settings_path: str, timeout_seconds: in
                 "status": "success" if proc.returncode == 0 else "error",
                 "error": "Non-zero exit code",
                 "output": "".join(output_chunks),
+                "status_file": status_file,
             }
         result = subprocess.run(cmd, timeout=timeout_seconds, capture_output=True, text=True, errors="replace")
         if result.returncode == 0:
-            return {"status": "success", "output": result.stdout or ""}
-        return {"status": "error", "error": result.stdout or result.stderr or "Non-zero exit code", "output": result.stdout or ""}
+            return {"status": "success", "output": result.stdout or "", "status_file": status_file}
+        return {"status": "error", "error": result.stdout or result.stderr or "Non-zero exit code", "output": result.stdout or "", "status_file": status_file}
     except subprocess.TimeoutExpired as exc:
         try:
             (getattr(exc, "process", None) or proc).kill()
         except Exception:
             pass
-        return {"status": "timeout"}
+        return {"status": "timeout", "status_file": status_file}
     except Exception as exc:
-        return {"status": "error", "error": str(exc)}
+        return {"status": "error", "error": str(exc), "status_file": status_file}
 
 
 def run_pipelines_by_datasource(
@@ -127,42 +166,61 @@ def run_pipelines_by_datasource(
 
     failed: list[str] = []
     timed_out: list[str] = []
+    status_files: list[str] = []
 
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        future_to_pipeline = {}
-        for datasource, report_list in pipelines.items():
-            pipeline_timeout = timeout_seconds
-            logger.info("Starting pipeline [%s] with reports: %s", datasource, report_list)
-            future = executor.submit(
-                _run_worker,
-                report_list,
-                settings_path,
-                pipeline_timeout,
-                stream_output,
-            )
-            future_to_pipeline[future] = (datasource, report_list)
+    try:
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            future_to_pipeline = {}
+            for datasource, report_list in pipelines.items():
+                pipeline_timeout = timeout_seconds
+                status_fd, status_file = tempfile.mkstemp(suffix='.jsonl', prefix='worker_status_')
+                os.close(status_fd)
+                status_files.append(status_file)
+                logger.info("Starting pipeline [%s] with reports: %s", datasource, report_list)
+                future = executor.submit(
+                    _run_worker,
+                    report_list,
+                    settings_path,
+                    pipeline_timeout,
+                    stream_output,
+                    status_file,
+                )
+                future_to_pipeline[future] = (datasource, report_list)
 
-        for future in as_completed(future_to_pipeline):
-            datasource, report_list = future_to_pipeline[future]
-            result = future.result()
-            if result["status"] == "success":
-                logger.info("  [%s] pipeline completed: %s", datasource, report_list)
-            elif result["status"] == "timeout":
-                logger.warning("  [%s] pipeline timed out: %s", datasource, report_list)
-                timed_out.extend(report_list)
-            else:
-                output = result.get("output", "")
-                if output:
-                    logger.error(
-                        "  [%s] pipeline failed: %s - %s\nOutput:\n%s",
-                        datasource, report_list, result.get("error", "Unknown"), output,
-                    )
+            for future in as_completed(future_to_pipeline):
+                datasource, report_list = future_to_pipeline[future]
+                result = future.result()
+                status_file = result.get("status_file")
+                if result["status"] == "success":
+                    logger.info("  [%s] pipeline completed: %s", datasource, report_list)
+                elif result["status"] == "timeout":
+                    actual_failed = _read_worker_status(status_file, report_list)
+                    if actual_failed is None:
+                        actual_failed = report_list
+                    logger.warning("  [%s] pipeline timed out: %s (retrying %d reports)", datasource, report_list, len(actual_failed))
+                    timed_out.extend(actual_failed)
                 else:
-                    logger.error(
-                        "  [%s] pipeline failed: %s - %s",
-                        datasource, report_list, result.get("error", "Unknown"),
-                    )
-                failed.extend(report_list)
+                    actual_failed = _read_worker_status(status_file, report_list)
+                    if actual_failed is None:
+                        actual_failed = report_list
+                    output = result.get("output", "")
+                    if output:
+                        logger.error(
+                            "  [%s] pipeline failed: %s - %s\nOutput:\n%s",
+                            datasource, report_list, result.get("error", "Unknown"), output,
+                        )
+                    else:
+                        logger.error(
+                            "  [%s] pipeline failed: %s - %s",
+                            datasource, report_list, result.get("error", "Unknown"),
+                        )
+                    failed.extend(actual_failed)
+    finally:
+        for status_file in status_files:
+            try:
+                os.unlink(status_file)
+            except Exception:
+                pass
 
     if failed or timed_out:
         logger.warning("Summary:")

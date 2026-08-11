@@ -10,8 +10,10 @@ Usage:
     python -m lib.reports.worker --report Report0002 --settings /path/to/settings.json
 """
 import argparse
+import json
 import logging
 import sys
+import time
 from pathlib import Path
 from contextvars import ContextVar
 import warnings
@@ -60,6 +62,18 @@ def setup_logging():
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
     logger.addHandler(handler)
+
+
+def _write_status(status_file: str | None, report_name: str, success: bool) -> None:
+    if not status_file:
+        return
+    try:
+        entry = {"report": report_name, "success": success, "ts": time.time()}
+        with open(status_file, 'a', encoding='utf-8') as f:
+            f.write(json.dumps(entry) + '\n')
+            f.flush()
+    except Exception:
+        pass
 
 
 def reinitialize_database_connections(settings):
@@ -223,7 +237,7 @@ def run_single_report(report_name: str, settings: dict, skip_db_init: bool = Fal
         return 1
 
 
-def run_reports(report_names: list[str], settings: dict) -> int:
+def run_reports(report_names: list[str], settings: dict, status_file: str | None = None) -> int:
     """Run multiple reports sequentially in the same worker process.
 
     Reinitializes database connections once at the start of the pipeline,
@@ -232,15 +246,17 @@ def run_reports(report_names: list[str], settings: dict) -> int:
     Returns:
         0 if all reports succeed, 1 if any report fails
     """
-    # Reinitialize DB connections ONCE at the start of the pipeline
     logger.info(f"Pipeline starting with {len(report_names)} reports")
     reinitialize_database_connections(settings)
 
     failed = []
     for report_name in report_names:
         exit_code = run_single_report(report_name, settings, skip_db_init=True)
+        _write_status(status_file, report_name, exit_code == 0)
         if exit_code != 0:
             failed.append(report_name)
+
+    _write_status(status_file, '__pipeline_done__', True)
 
     if failed:
         logger.error("One or more reports failed in worker: %s", ", ".join(failed))
@@ -254,6 +270,7 @@ def main():
     parser.add_argument('--report', help='Single report name (e.g., Report0002)')
     parser.add_argument('--reports', nargs='+', help='Multiple report names (e.g., Report0002 Report0004)')
     parser.add_argument('--settings', required=True, help='Path to settings JSON file')
+    parser.add_argument('--status-file', help='Path to write per-report completion status (JSONL)')
 
     args = parser.parse_args()
 
@@ -273,7 +290,7 @@ def main():
         logger.error("You must provide --report or --reports")
         sys.exit(2)
 
-    exit_code = run_reports(report_list, settings)
+    exit_code = run_reports(report_list, settings, status_file=args.status_file)
 
     sys.exit(exit_code)
 
