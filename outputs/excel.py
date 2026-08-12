@@ -1019,6 +1019,10 @@ class ExcelOutput:
             # atomic save under file lock
             # _atomic_save_workbook already acquires lock around replace
             self._atomic_save_workbook(wb, workbook_path)
+            try:
+                wb.close()
+            except Exception:
+                pass
 
         else:
             # workbook does not exist yet: create a workbook with default template sheets
@@ -1044,6 +1048,10 @@ class ExcelOutput:
 
             # atomic save under file lock
             self._atomic_save_workbook(wb, workbook_path)
+            try:
+                wb.close()
+            except Exception:
+                pass
 
         elapsed = time.time() - start_time
         # log the file change: CREATED if it did not exist at start, else MODIFIED
@@ -1216,6 +1224,10 @@ class ExcelOutput:
 
                     # persist changes
                     self._atomic_save_workbook(wb, out_path)
+                    try:
+                        wb.close()
+                    except Exception:
+                        pass
             except Exception:
                 # best-effort: don't fail the whole report because auto-filter couldn't be set
                 pass

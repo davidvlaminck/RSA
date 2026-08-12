@@ -10,6 +10,7 @@ Usage:
     python -m lib.reports.worker --report Report0002 --settings /path/to/settings.json
 """
 import argparse
+import gc
 import json
 import logging
 import os
@@ -245,12 +246,8 @@ def run_single_report(report_name: str, settings: dict, skip_db_init: bool = Fal
         report_instance.init_report()
         logger.info(f"Initialized")
 
-        # Create a MailSender for this worker
-        from lib.mail.MailSender import MailSender
-        mail_sender = MailSender(mail_settings=settings['smtp_options'])
-
-        # Run the report
-        report_instance.run_report(sender=mail_sender)
+        # Run the report without mail sender (disabled for remote/server runs)
+        report_instance.run_report(sender=None)
         logger.info(f"✓ Completed successfully")
 
         return 0
@@ -278,6 +275,7 @@ def run_reports(report_names: list[str], settings: dict, status_file: str | None
         _write_status(status_file, report_name, exit_code == 0)
         if exit_code != 0:
             failed.append(report_name)
+        gc.collect()
 
     _write_status(status_file, '__pipeline_done__', True)
 
