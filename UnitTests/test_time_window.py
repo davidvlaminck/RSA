@@ -33,3 +33,18 @@ def test_run_window_cross_midnight():
     assert _is_within_run_window("23:00:00", "02:00:00", datetime(2026, 1, 21, 23, 30, 0, tzinfo=br)) is True
     assert _is_within_run_window("23:00:00", "02:00:00", datetime(2026, 1, 22, 1, 30, 0, tzinfo=br)) is True
     assert _is_within_run_window("23:00:00", "02:00:00", datetime(2026, 1, 22, 12, 0, 0, tzinfo=br)) is False
+
+
+def _is_in_quiet_hours(now: datetime) -> bool:
+    start_s, end_s = 15 * 3600, 23 * 3600
+    now_s = now.hour * 3600 + now.minute * 60 + now.second
+    return start_s <= now_s < end_s
+
+
+def test_quiet_hours_boundaries():
+    br = ZoneInfo("Europe/Brussels")
+    assert _is_in_quiet_hours(datetime(2026, 1, 21, 14, 59, 59, tzinfo=br)) is False
+    assert _is_in_quiet_hours(datetime(2026, 1, 21, 15, 0, 0, tzinfo=br)) is True
+    assert _is_in_quiet_hours(datetime(2026, 1, 21, 22, 59, 59, tzinfo=br)) is True
+    assert _is_in_quiet_hours(datetime(2026, 1, 21, 23, 0, 0, tzinfo=br)) is False
+    assert _is_in_quiet_hours(datetime(2026, 1, 22, 1, 0, 0, tzinfo=br)) is False

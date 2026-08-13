@@ -44,7 +44,7 @@ class Report0044(BaseReport):
             INNER JOIN attribuutwaarden AS a_w ON (a.uuid = a_w.assetuuid)
             INNER JOIN attributen AS ab ON (a_w.attribuutuuid = ab.uuid)
             INNER JOIN (values {}) AS d_a(uri) ON (ab.uri = d_a.uri)
-            WHERE a.actief = TRUE AND a_w.NOTNULL
+            WHERE a.actief = TRUE AND a_w.waarde IS NOT NULL
         """.format(",".join(["('{}')".format(d[0]) for d in deprecated_attributes]))
 
     def run_report(self, sender) -> None:

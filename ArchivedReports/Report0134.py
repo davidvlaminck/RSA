@@ -1,3 +1,4 @@
+# TODO: Disabled due to runtime errors (division by zero, GCP service account issues).
 from lib.reports.DQReport import DQReport
 from lib.reports.BaseReport import BaseReport
 

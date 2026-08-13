@@ -1,3 +1,4 @@
+import copy
 import json
 import logging
 import os
@@ -204,6 +205,11 @@ class ReportLoopRunner:
             return start_s <= now_s <= end_s
         return now_s >= start_s or now_s <= end_s
 
+    def _is_in_quiet_hours(self, now: datetime) -> bool:
+        start_s, end_s = 15 * 3600, 23 * 3600
+        now_s = now.hour * 3600 + now.minute * 60 + now.second
+        return start_s <= now_s < end_s
+
     @staticmethod
     def _clean_report_headers(report_rows):
         """Utility: remove duplicate header row if the first two rows are identical.
@@ -221,6 +227,16 @@ class ReportLoopRunner:
         last_run_date = None
 
         while True:
+            now = datetime.now(tz=BRUSSELS)
+
+            if self._is_in_quiet_hours(now):
+                now_seconds = now.hour * 3600 + now.minute * 60 + now.second
+                sleep_seconds = (23 * 3600) - now_seconds
+                if sleep_seconds > 0:
+                    logger.info(f"{now}: in quiet hours (15:00-23:00), sleeping until 23:00")
+                    time.sleep(sleep_seconds)
+                    continue
+
             if run_right_away:
                 # Respect the same pre-run hook for immediate execution.
                 if self.on_before_run is not None:
@@ -509,8 +525,10 @@ class ReportLoopRunner:
             self._update_pipeline_message(f"Parallel: {len(reports_to_do)} rapporten, poging {reports_run}/{RETRIES}")
             
             # Write settings to temp file for worker processes
+            worker_settings = copy.deepcopy(self.settings)
+            worker_settings['arango_request_timeout'] = current_timeout
             with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-                json.dump(self.settings, f)
+                json.dump(worker_settings, f)
                 settings_path = f.name
 
             try:

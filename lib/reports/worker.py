@@ -99,7 +99,7 @@ def _log_resource_heartbeat() -> None:
         pass
 
 
-def reinitialize_database_connections(settings):
+def reinitialize_database_connections(settings, arango_timeout: int = 180):
     """Re-initialize all database singletons in this child process.
 
     Critical: Forked processes inherit parent connections which are NOT safe to use.
@@ -157,14 +157,13 @@ def reinitialize_database_connections(settings):
         except Exception:
             pass
         try:
-            # ArangoDB connector
-            from datasources.arango import SingleArangoConnector
             SingleArangoConnector.init(
                 host=arango_settings['host'],
                 port=arango_settings['port'],
                 user=arango_settings['user'],
                 password=arango_settings['password'],
                 database=arango_settings['database'],
+                request_timeout=arango_timeout,
             )
             logger.info("✓ Reinitialized ArangoDB connection")
         except Exception as e:
@@ -232,7 +231,8 @@ def run_single_report(report_name: str, settings: dict, skip_db_init: bool = Fal
 
         # Re-initialize database connections only if this is the first report or a single run
         if not skip_db_init:
-            reinitialize_database_connections(settings)
+            arango_timeout = settings.get('arango_request_timeout', 180)
+            reinitialize_database_connections(settings, arango_timeout=arango_timeout)
 
         # Import and instantiate the report
         from lib.reports.instantiator import create_report_instance
@@ -267,7 +267,8 @@ def run_reports(report_names: list[str], settings: dict, status_file: str | None
         0 if all reports succeed, 1 if any report fails
     """
     logger.info(f"Pipeline starting with {len(report_names)} reports")
-    reinitialize_database_connections(settings)
+    arango_timeout = settings.get('arango_request_timeout', 180)
+    reinitialize_database_connections(settings, arango_timeout=arango_timeout)
 
     failed = []
     for report_name in report_names:

@@ -34,7 +34,7 @@ def test_retry_pass_reinitializes_database_connections(monkeypatch, tmp_path):
 	refresh_calls: list[dict] = []
 	monkeypatch.setattr('lib.reports.ReportLoopRunner.SingleSheetsWrapper.init', lambda *args, **kwargs: None)
 	monkeypatch.setattr('outputs.excel_wrapper.SingleExcelWriter.init', lambda *args, **kwargs: None)
-	monkeypatch.setattr('lib.reports.ReportLoopRunner.reinitialize_database_connections', lambda cfg: refresh_calls.append(cfg))
+	monkeypatch.setattr('lib.reports.ReportLoopRunner.reinitialize_database_connections', lambda cfg, **kwargs: refresh_calls.append(cfg))
 	monkeypatch.setattr('lib.reports.ReportLoopRunner.process_once', lambda *args, **kwargs: 0)
 	monkeypatch.setattr('lib.reports.ReportLoopRunner.MailSender.send_all_mails', lambda self: None)
 	monkeypatch.setattr(ReportLoopRunner, 'adjust_mailed_info_in_sheets', lambda self, sender: None)

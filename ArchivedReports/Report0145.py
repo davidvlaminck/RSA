@@ -1,15 +1,16 @@
+# TODO: Disabled due to runtime errors (invalid JSON syntax in query, GCP service account issues).
 from lib.reports.DQReport import DQReport
 from lib.reports.BaseReport import BaseReport
 
 
-class Report0148(BaseReport):
+class Report0145(BaseReport):
     def init_report(self) -> None:
-        self.report = DQReport(name='report0148',
-                               title='Dubbele bomen (Antwerpen)',
-                               spreadsheet_id='1UMM-nC9T5QyKKevPU6bRYjh70dTlFAkbJQKiJKiJ0Xg',
+        self.report = DQReport(name='report0145',
+                               title='Dubbele bomen (West-Vlaanderen)',
+                               spreadsheet_id='1rqDPhMkGU1Y0gwOoJ6HHHaH055hu0DNSaAZOXp3896w',
                                datasource='PostGIS',
                                persistent_column='T',
-                               excel_filename='[RSA] Dubbele bomen (Antwerpen).xlsx',
+                               excel_filename='[RSA] Dubbele bomen (West-Vlaanderen).xlsx',
                                )
 
         self.report.result_query = """
@@ -25,10 +26,10 @@ with cte_gemeente as (
 		, geom as geometry
 	from gemeente
 	where
-		--provincie = 'West-Vlaanderen'
+		provincie = 'West-Vlaanderen'
 		--provincie = 'Oost-Vlaanderen'
 		--provincie = 'Vlaams-Brabant'
-		provincie = 'Antwerpen'
+		--provincie = 'Antwerpen'
 		--provincie = 'Limburg'
 )
 , cte_boom AS (
@@ -98,10 +99,10 @@ with cte_gemeente as (
 	left join locatie l on a.uuid = l.assetuuid
 	left join attribuutwaarden w on a.uuid = w.assetuuid
 	where
---		l.x > 21991 and l.x < 90411 and l.y > 155928 and l.y < 229725  -- BBOX extent West-Vlaanderen
+		l.x > 21991 and l.x < 90411 and l.y > 155928 and l.y < 229725  -- BBOX extent West-Vlaanderen
 --		l.x > 77334 and l.x < 147307 and l.y > 156976 and l.y < 227141  -- BBOX extent Oost-Vlaanderen
 --		l.x > 116098 and l.x < 207630 and l.y > 153058 and l.y < 193542  -- BBOX extent Vlaams-Brabant
-		l.x > 136231 and l.x < 212520 and l.y > 186679 and l.y < 244028  -- BBOX extent Antwerpen
+--		l.x > 136231 and l.x < 212520 and l.y > 186679 and l.y < 244028  -- BBOX extent Antwerpen
 --		l.x > 192882 and l.x < 258872 and l.y > 154162 and l.y < 221731 -- BBOX extent Limburg
 		and
 		a.assettype = 'cd77f043-dc69-46ae-98a1-da8443ca26bf' -- Boom
