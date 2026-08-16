@@ -153,6 +153,7 @@ def reinitialize_database_connections(settings, arango_timeout: int = 180):
     arango_settings = databases.get('ArangoDB')
     if arango_settings:
         try:
+            from datasources.arango import SingleArangoConnector
             SingleArangoConnector.reset()
         except Exception:
             pass
