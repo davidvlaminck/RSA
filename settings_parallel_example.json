@@ -4,7 +4,7 @@
   "report_execution": {
     "mode": "parallel_by_datasource",
     "max_concurrent": 2,
-    "timeout_seconds": 1800,
+    "timeout_seconds": 60,
     "_mode_options": ["sequential", "parallel_by_datasource"],
     "_notes": {
       "mode": "Choose 'sequential' for traditional one-at-a-time execution, or 'parallel_by_datasource' to run reports from different databases concurrently",
@@ -62,7 +62,7 @@
     "report_execution": {
       "mode": "parallel_by_datasource",
       "max_concurrent": 2,
-      "timeout_seconds": 1800
+      "timeout_seconds": 60
     },
     "drive_sync": {
       "enabled": true,
