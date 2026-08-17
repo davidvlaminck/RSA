@@ -334,17 +334,15 @@ class ReportLoopRunner:
         logger.warning(f'{datetime.now(tz=BRUSSELS)}: postgis_sync preconditions not met within {active_timeout}s; rsa_queries aborted.')
         return False
 
-    def _update_pipeline_message(self, message: str) -> None:
+    def _update_pipeline_message(self, message: str, phase: str = "rsa_queries", status: str = "running") -> None:
         if self.pipeline_status is not None:
             try:
-                current = self.pipeline_status.get()
-                if current:
-                    enqueue_sqlite_job("update_pipeline_state", {
-                        "updated_at": datetime.now(timezone.utc).isoformat(),
-                        "phase": current.get('phase', ''),
-                        "status": current.get('status', ''),
-                        "message": message
-                    })
+                enqueue_sqlite_job("update_pipeline_state", {
+                    "updated_at": datetime.now(timezone.utc).isoformat(),
+                    "phase": phase,
+                    "status": status,
+                    "message": message
+                })
             except Exception:
                 pass
 
@@ -433,7 +431,7 @@ class ReportLoopRunner:
             total = len(reports_to_do)
             for idx, report_name in enumerate(sorted(reports_to_do.keys()), 1):
                 try:
-                    self._update_pipeline_message(f"Verwerken: {report_name} ({idx}/{total})")
+                    self._update_pipeline_message(f"Verwerken: {report_name} ({idx}/{total})", "rsa_queries", "running")
                     report_instance = reports_to_do[report_name]
                     report_instance.init_report()
                     # set pipeline-wide defaults (reports can override)
@@ -522,7 +520,7 @@ class ReportLoopRunner:
                 reinitialize_database_connections(self.settings, arango_timeout=current_timeout)
             
             logger.info(f"Parallel run {reports_run}/{RETRIES} with timeout {current_timeout}s for {len(reports_to_do)} reports")
-            self._update_pipeline_message(f"Parallel: {len(reports_to_do)} rapporten, poging {reports_run}/{RETRIES}")
+            self._update_pipeline_message(f"Parallel: {len(reports_to_do)} rapporten, poging {reports_run}/{RETRIES}", "rsa_queries", "running")
             
             # Write settings to temp file for worker processes
             worker_settings = copy.deepcopy(self.settings)
