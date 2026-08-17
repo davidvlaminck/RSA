@@ -112,18 +112,7 @@ class ReportLoopRunner:
             handlers=[logging.StreamHandler(sys.stdout)],
             force=True,
         )
-        # initialize Sheets wrapper if credentials present; allow missing/empty google_api for
-        # offline/Excel-only runs (no-Google mode)
-        try:
-            creds = None
-            if isinstance(self.settings.get('google_api', None), dict):
-                creds = self.settings.get('google_api', {}).get('credentials_path')
-            SingleSheetsWrapper.init(service_cred_path=creds, readonly_scope=False)
-        except Exception:
-            # best-effort: continue without Google Sheets initialization (Excel-only will be used)
-            pass
-
-        # Initialize Excel writer (best-effort)
+        # Initialize Excel writer and Excel-backed Sheets wrapper (best-effort)
         # ensure attribute exists even if excel init fails
         self.excel_output_dir = None
         try:
@@ -138,7 +127,9 @@ class ReportLoopRunner:
                     out_dir = str(Path(self.settings_path).resolve().parents[0] / 'RSA_OneDrive')
 
             from outputs.excel_wrapper import SingleExcelWriter
+            from outputs.sheets_wrapper import SingleSheetsWrapper
             SingleExcelWriter.init(output_dir=out_dir)
+            SingleSheetsWrapper.init(output_dir=out_dir)
             # remember excel output dir for aggregator usage
             self.excel_output_dir = Path(out_dir)
             # also update settings so worker processes reading settings will see the path

@@ -7,6 +7,7 @@ from googleapiclient.discovery import build
 from google.oauth2 import service_account
 
 from outputs.sheets_cell import SheetsCell
+from outputs.sheets_compat import SheetsCompatAdapter
 
 
 class SheetsWrapper:
@@ -409,14 +410,23 @@ class SheetsWrapper:
 
 
 class SingleSheetsWrapper:
-    sheets_wrapper: SheetsWrapper | bool = None
+    sheets_wrapper: SheetsWrapper | SheetsCompatAdapter | bool = None
 
     @classmethod
-    def init(cls, service_cred_path: str = '', readonly_scope: None | bool = None):
-        cls.sheets_wrapper = SheetsWrapper(service_cred_path, readonly_scope)
+    def init(cls, service_cred_path: str = '', readonly_scope: None | bool = None, output_dir: str = 'RSA_OneDrive'):
+        if service_cred_path:
+            cls.sheets_wrapper = SheetsWrapper(service_cred_path, readonly_scope)
+        else:
+            try:
+                from outputs.excel_wrapper import SingleExcelWriter
+                from outputs.sheets_compat import SheetsCompatAdapter
+                SingleExcelWriter.init(output_dir=output_dir)
+                cls.sheets_wrapper = SheetsCompatAdapter(SingleExcelWriter.get_wrapper())
+            except Exception:
+                cls.sheets_wrapper = None
 
     @classmethod
-    def get_wrapper(cls) -> SheetsWrapper:
+    def get_wrapper(cls) -> SheetsWrapper | SheetsCompatAdapter:
         if cls.sheets_wrapper is None:
             raise RuntimeError('Run the init method of this class first')
         return cls.sheets_wrapper

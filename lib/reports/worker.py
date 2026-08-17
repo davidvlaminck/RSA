@@ -172,19 +172,7 @@ def reinitialize_database_connections(settings, arango_timeout: int = 180):
     else:
         logger.debug("ArangoDB settings not configured; skipping reinitialization")
 
-    try:
-        # Sheets wrapper (required for GoogleSheetsOutput)
-        from outputs.sheets_wrapper import SingleSheetsWrapper
-        creds_path = settings.get('google_api', {}).get('credentials_path')
-        if creds_path:
-            SingleSheetsWrapper.init(service_cred_path=creds_path, readonly_scope=False)
-            logger.info("✓ Reinitialized Google Sheets wrapper")
-        else:
-            logger.warning("Google API credentials_path not set; Sheets wrapper not initialized")
-    except Exception as e:
-        logger.warning(f"Could not reinitialize Sheets wrapper: {e}")
-
-    # Ensure Excel writer singleton is initialized for workers (best-effort)
+    # Ensure Excel writer and Excel-backed Sheets wrapper are initialized for workers
     try:
         drive_cfg = settings.get('drive_sync', {}) if isinstance(settings, dict) else {}
         excel_cfg = settings.get('output', {}).get('excel', {}) if isinstance(settings, dict) else {}
@@ -192,22 +180,10 @@ def reinitialize_database_connections(settings, arango_timeout: int = 180):
         if out_dir is None:
             out_dir = str(Path(settings.get('workdir', Path.cwd())).resolve().parents[0] / 'RSA_OneDrive')
         from outputs.excel_wrapper import SingleExcelWriter
+        from outputs.sheets_wrapper import SingleSheetsWrapper
         SingleExcelWriter.init(output_dir=out_dir)
-        logger.info('✓ Reinitialized Excel writer')
-
-        # If Google Sheets wrapper is not initialized but Excel is forced/available,
-        # register the Excel writer as the sheets wrapper so DQReport and other callers
-        # that call SingleSheetsWrapper.get_wrapper() still receive a compatible object.
-        try:
-            from outputs.sheets_wrapper import SingleSheetsWrapper
-            # Only set if sheets_wrapper is not already initialized by Google
-            if getattr(SingleSheetsWrapper, 'sheets_wrapper', None) is None:
-                from outputs.sheets_compat import SheetsCompatAdapter
-                SingleSheetsWrapper.sheets_wrapper = SheetsCompatAdapter(SingleExcelWriter.get_wrapper())
-                logger.info('✓ Registered Excel-backed SheetsCompatAdapter as SingleSheetsWrapper fallback')
-        except Exception:
-            # best-effort: ignore if we can't set fallback
-            pass
+        SingleSheetsWrapper.init(output_dir=out_dir)
+        logger.info('✓ Reinitialized Excel writer and Excel-backed Sheets wrapper')
     except Exception as e:
         logger.warning(f'Could not initialize Excel writer in worker: {e}')
 
