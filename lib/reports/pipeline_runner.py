@@ -13,11 +13,52 @@ import sys
 import tempfile
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
 from typing import Iterable, TextIO
 
 from lib.reports.parallel_utils import group_reports_by_datasource
 
 logger = logging.getLogger(__name__)
+
+
+def _read_historical_durations(report_names: list[str], output_dir: Path | str) -> dict[str, float]:
+    """Read historical query times from the Overzicht workbook column H.
+
+    Returns a dict mapping report_name -> estimated_seconds.
+    Reports not found or with missing/empty query times get float('inf') so they sort last.
+    """
+    try:
+        from outputs.excel import ExcelOutput
+
+        out_path = Path(output_dir)
+        overview_path = out_path / 'Overzicht' / '[RSA] Overzicht rapporten.xlsx'
+        if not overview_path.exists():
+            return {rname: float('inf') for rname in report_names}
+
+        excel = ExcelOutput(output_dir=str(out_path))
+        rows = excel.read_data_from_sheet(str(overview_path), 'Overzicht')
+        if not rows:
+            return {rname: float('inf') for rname in report_names}
+
+        durations: dict[str, float] = {}
+        for row in rows:
+            if len(row) > 7:
+                report_name = row[5] if len(row) > 5 else None
+                query_time = row[7] if len(row) > 7 else None
+                if isinstance(report_name, str) and report_name.strip():
+                    name = report_name.strip().lower()
+                    if isinstance(query_time, (int, float)) and query_time > 0:
+                        durations[name] = float(query_time)
+
+        return {rname: durations.get(rname.lower(), float('inf')) for rname in report_names}
+    except Exception:
+        return {rname: float('inf') for rname in report_names}
+
+
+def _sort_reports_by_duration(report_names: list[str], output_dir: Path | str) -> list[str]:
+    """Sort reports by estimated query duration (ascending), unknowns last."""
+    durations = _read_historical_durations(report_names, output_dir)
+    return sorted(report_names, key=lambda rname: durations.get(rname, float('inf')))
 
 
 def _stream_worker_output(output: str | None, stream: TextIO) -> None:
@@ -160,6 +201,14 @@ def run_pipelines_by_datasource(
     if not pipelines:
         logger.info("No reports to run in parallel.")
         return 0, []
+
+    drive_cfg = settings.get("drive_sync", {})
+    excel_cfg = settings.get("output", {}).get("excel", {})
+    output_dir = Path(drive_cfg.get("local_folder") or excel_cfg.get("output_dir") or "RSA_OneDrive")
+
+    for datasource, report_list in pipelines.items():
+        pipelines[datasource] = _sort_reports_by_duration(report_list, output_dir)
+        logger.info("Sorted pipeline [%s] by estimated duration: %s", datasource, pipelines[datasource])
 
     max_workers = min(max_concurrent, len(pipelines))
     logger.info("Running %d pipelines in parallel (max_workers=%d)", len(pipelines), max_workers)
