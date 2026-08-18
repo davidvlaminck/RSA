@@ -261,7 +261,7 @@ class ExcelOutput:
                     logger.warning('Alternate workbook %s could not be opened (%s)', alternate, alternate_exc)
             raise
 
-        Waar    @contextmanager
+    @contextmanager
     def _workbook_context(self, workbook_path: Path, *, read_only: bool = False):
         wb = self._load_workbook_resilient(workbook_path, read_only=read_only)
         try:
