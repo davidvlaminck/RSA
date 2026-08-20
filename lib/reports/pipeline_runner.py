@@ -11,7 +11,6 @@ import os
 import subprocess
 import sys
 import tempfile
-import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Iterable, TextIO
@@ -108,7 +107,7 @@ def _read_worker_status(status_file: str | None, expected_reports: list[str]) ->
     return not_completed
 
 
-def _run_worker(report_names: list[str], settings_path: str, timeout_seconds: int, stream_output: bool, status_file: str | None = None) -> dict:
+def _run_worker(report_names: list[str], settings_path: str, stream_output: bool, status_file: str | None = None) -> dict:
     cmd = [
         sys.executable,
         "-m",
@@ -132,7 +131,6 @@ def _run_worker(report_names: list[str], settings_path: str, timeout_seconds: in
                 bufsize=1,
             )
             output_chunks: list[str] = []
-            start = time.time()
             while True:
                 ret = proc.poll()
                 if ret is not None:
@@ -140,12 +138,6 @@ def _run_worker(report_names: list[str], settings_path: str, timeout_seconds: in
                         output_chunks.append(line)
                         _stream_worker_output(line, sys.stdout)
                     break
-                if timeout_seconds and (time.time() - start) > timeout_seconds:
-                    try:
-                        proc.kill()
-                    except Exception:
-                        pass
-                    return {"status": "timeout", "status_file": status_file}
                 line = proc.stdout.readline()
                 if line:
                     output_chunks.append(line)
@@ -156,16 +148,10 @@ def _run_worker(report_names: list[str], settings_path: str, timeout_seconds: in
                 "output": "".join(output_chunks),
                 "status_file": status_file,
             }
-        result = subprocess.run(cmd, timeout=timeout_seconds, capture_output=True, text=True, errors="replace")
+        result = subprocess.run(cmd, capture_output=True, text=True, errors="replace")
         if result.returncode == 0:
             return {"status": "success", "output": result.stdout or "", "status_file": status_file}
         return {"status": "error", "error": result.stdout or result.stderr or "Non-zero exit code", "output": result.stdout or "", "status_file": status_file}
-    except subprocess.TimeoutExpired as exc:
-        try:
-            (getattr(exc, "process", None) or proc).kill()
-        except Exception:
-            pass
-        return {"status": "timeout", "status_file": status_file}
     except Exception as exc:
         return {"status": "error", "error": str(exc), "status_file": status_file}
 
@@ -185,7 +171,8 @@ def run_pipelines_by_datasource(
         settings: Settings dictionary.
         settings_path: Path to settings file for worker processes.
         stream_output: Whether to stream output from worker processes.
-        timeout_seconds: Optional timeout override. If not provided, uses value from settings.
+        timeout_seconds: Kept for backward compatibility; not used for subprocess
+            timeouts because per-report timeouts are now handled inside the worker.
 
     Returns:
         tuple: (return_code, failed_reports) where return_code is 0 on success, 1 if any pipeline fails or times out,
@@ -193,8 +180,6 @@ def run_pipelines_by_datasource(
     """
     exec_cfg = settings.get("report_execution", {})
     max_concurrent = exec_cfg.get("max_concurrent", 2)
-    if timeout_seconds is None:
-        timeout_seconds = exec_cfg.get("timeout_seconds", 60)
 
     groups = group_reports_by_datasource(list(report_names))
     pipelines = {ds: items for ds, items in groups.items() if items}
@@ -221,7 +206,6 @@ def run_pipelines_by_datasource(
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             future_to_pipeline = {}
             for datasource, report_list in pipelines.items():
-                pipeline_timeout = timeout_seconds
                 status_fd, status_file = tempfile.mkstemp(suffix='.jsonl', prefix='worker_status_')
                 os.close(status_fd)
                 status_files.append(status_file)
@@ -230,7 +214,6 @@ def run_pipelines_by_datasource(
                     _run_worker,
                     report_list,
                     settings_path,
-                    pipeline_timeout,
                     stream_output,
                     status_file,
                 )

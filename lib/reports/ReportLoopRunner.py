@@ -473,8 +473,8 @@ class ReportLoopRunner:
         - Groups reports by database type (ArangoDB, PostGIS, Neo4j)
         - Runs one report from each database concurrently
         - Respects memory constraints (max 2-3 concurrent processes)
-        - Provides timeout protection for stuck reports
-        - Retries failed/timed out reports with increasing timeout (60s, 120s, 180s, etc.)
+        - Provides per-report query timeout protection (configurable)
+        - Retries failed/timed out reports with increasing query timeout (+60s per attempt)
         """
         try:
             staged_dir = (self.excel_output_dir / 'staged_summaries') if self.excel_output_dir else Path('RSA_OneDrive') / 'staged_summaries'
@@ -484,7 +484,6 @@ class ReportLoopRunner:
 
         logger.info(f"{datetime.now(tz=BRUSSELS)}: starting parallel-by-datasource execution")
 
-        # Discover all report names or use provided list
         if report_names is None:
             report_instances = discover_and_instantiate_reports()
             if not report_instances:
@@ -496,26 +495,33 @@ class ReportLoopRunner:
 
         logger.info(f"Found {len(report_names)} reports to execute")
 
-        # Get base timeout from settings (default 60)
-        base_timeout = self.settings.get("report_execution", {}).get("timeout_seconds", 60)
+        exec_cfg = self.settings.get("report_execution", {}) if isinstance(self.settings, dict) else {}
+        base_query_timeout = exec_cfg.get("query_timeout_seconds", 60)
+        base_arango_request_timeout = exec_cfg.get("arango_request_timeout_seconds", 180)
 
         reports_run = 0
         reports_to_do = list(report_names)
 
         while reports_run < RETRIES and reports_to_do:
             reports_run += 1
-            current_timeout = base_timeout * reports_run
-            
+            current_query_timeout = base_query_timeout + (60 * (reports_run - 1))
+            current_arango_request_timeout = current_query_timeout
+
             if reports_run > 1:
-                # Reinitialize database connections with increased timeout for retry
-                reinitialize_database_connections(self.settings, arango_timeout=current_timeout)
-            
-            logger.info(f"Parallel run {reports_run}/{RETRIES} with timeout {current_timeout}s for {len(reports_to_do)} reports")
-            self._update_pipeline_message(f"Parallel: {len(reports_to_do)} rapporten, poging {reports_run}/{RETRIES}", "rsa_queries", "running")
-            
-            # Write settings to temp file for worker processes
+                reinitialize_database_connections(self.settings, arango_timeout=current_arango_request_timeout)
+
+            logger.info(
+                f"Parallel run {reports_run}/{RETRIES} with query_timeout={current_query_timeout}s "
+                f"for {len(reports_to_do)} reports"
+            )
+            self._update_pipeline_message(
+                f"Parallel: {len(reports_to_do)} rapporten, poging {reports_run}/{RETRIES}",
+                "rsa_queries", "running"
+            )
+
             worker_settings = copy.deepcopy(self.settings)
-            worker_settings['arango_request_timeout'] = current_timeout
+            worker_settings['query_timeout_seconds'] = current_query_timeout
+            worker_settings['arango_request_timeout'] = current_arango_request_timeout
             with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
                 json.dump(worker_settings, f)
                 settings_path = f.name
@@ -526,16 +532,14 @@ class ReportLoopRunner:
                     self.settings,
                     settings_path,
                     stream_output=True,
-                    timeout_seconds=current_timeout,
                 )
-                
+
                 if return_code == 0:
                     reports_to_do = []
                 else:
                     reports_to_do = failed_reports
                     logger.warning(f"Run {reports_run} failed for {len(reports_to_do)} reports, will retry")
             finally:
-                # Clean up temp settings file
                 try:
                     os.unlink(settings_path)
                 except Exception:
@@ -562,10 +566,7 @@ class ReportLoopRunner:
         output is forced. It then runs pipelines grouped by datasource (parallel)
         and applies staged summary updates via the aggregator.
         """
-        # Build a modified settings dict based on existing settings but disable Google
-        # and force Excel output for workers by writing a temporary settings file.
         try:
-            # load base settings from original settings file if possible
             base_settings = {}
             try:
                 with open(self.settings_path, 'r', encoding='utf-8') as fh:
@@ -573,13 +574,11 @@ class ReportLoopRunner:
             except Exception:
                 base_settings = dict(self.settings or {})
 
-            # Ensure structure
             if 'output' not in base_settings or not isinstance(base_settings['output'], dict):
                 base_settings['output'] = {}
             if 'excel' not in base_settings['output'] or not isinstance(base_settings['output']['excel'], dict):
                 base_settings['output']['excel'] = {}
 
-            # Determine output directory
             drive_cfg = base_settings.get('drive_sync', {}) if isinstance(base_settings, dict) else {}
             excel_cfg = base_settings.get('output', {}).get('excel', {}) if isinstance(base_settings, dict) else {}
             out_dir = output_dir or drive_cfg.get('local_folder') or excel_cfg.get('output_dir')
@@ -588,20 +587,17 @@ class ReportLoopRunner:
                 out_dir = str(repo_root / 'RSA_OneDrive')
             base_settings['output']['excel']['output_dir'] = out_dir
 
-            # Force Excel and disable Google API credentials
             base_settings['force_excel'] = True
             base_settings['google_api'] = {}
 
-            # Inject execution controls if provided (timeout and max concurrency)
             if timeout_seconds is not None or max_concurrent is not None:
                 if 'report_execution' not in base_settings or not isinstance(base_settings['report_execution'], dict):
                     base_settings['report_execution'] = {}
                 if timeout_seconds is not None:
-                    base_settings['report_execution']['timeout_seconds'] = int(timeout_seconds)
+                    base_settings['report_execution']['query_timeout_seconds'] = int(timeout_seconds)
                 if max_concurrent is not None:
                     base_settings['report_execution']['max_concurrent'] = int(max_concurrent)
 
-            # discover report names
             report_instances = discover_and_instantiate_reports()
             report_names = [type(inst).__name__ for inst in report_instances] if report_instances else []
 
@@ -609,7 +605,6 @@ class ReportLoopRunner:
                 logger.warning('No reports discovered to run in no-Google mode')
                 return
 
-            # initialize Excel writer for this process (best-effort)
             try:
                 from outputs.excel_wrapper import SingleExcelWriter
                 SingleExcelWriter.init(output_dir=out_dir)
@@ -617,25 +612,30 @@ class ReportLoopRunner:
             except Exception:
                 pass
 
-            # run pipelines grouped by datasource using the temp settings file so workers
-            # will not try to initialize Google and will prefer Excel output
-            # Get base timeout from settings (default 60 seconds)
-            base_timeout = base_settings.get("report_execution", {}).get("timeout_seconds", 60)
+            exec_cfg = base_settings.get("report_execution", {}) if isinstance(base_settings, dict) else {}
+            base_query_timeout = exec_cfg.get("query_timeout_seconds", 60)
+            base_arango_request_timeout = exec_cfg.get("arango_request_timeout_seconds", 180)
+
             parallel_run = 0
             reports_to_do = list(report_names)
 
             while parallel_run < RETRIES and reports_to_do:
                 parallel_run += 1
-                current_timeout = base_timeout * parallel_run
-                logger.info(
-                    f'no-Google parallel run attempt {parallel_run} '
-                    f'with timeout {current_timeout}s for {len(reports_to_do)} reports'
-                )
+                current_query_timeout = base_query_timeout + (60 * (parallel_run - 1))
+                current_arango_request_timeout = current_query_timeout
 
                 if parallel_run > 1:
-                    reinitialize_database_connections(base_settings, arango_timeout=current_timeout)
+                    reinitialize_database_connections(base_settings, arango_timeout=current_arango_request_timeout)
 
-                # write temp settings file for this attempt
+                base_settings['query_timeout_seconds'] = current_query_timeout
+                base_settings['arango_request_timeout'] = current_arango_request_timeout
+
+                logger.info(
+                    f'no-Google parallel run attempt {parallel_run} '
+                    f'with query_timeout={current_query_timeout}s '
+                    f'for {len(reports_to_do)} reports'
+                )
+
                 with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as tmpf:
                     json.dump(base_settings, tmpf, indent=2)
                     attempt_settings_path = tmpf.name
@@ -643,7 +643,6 @@ class ReportLoopRunner:
                 try:
                     return_code, failed_reports = run_pipelines_by_datasource(
                         reports_to_do, base_settings, attempt_settings_path, stream_output=True,
-                        timeout_seconds=current_timeout
                     )
                     reports_to_do = failed_reports
                 finally:
@@ -657,7 +656,6 @@ class ReportLoopRunner:
                     f'Reports left to do: {len(reports_to_do)}'
                 )
 
-            # apply staged summaries
             try:
                 staged_dir = (self.excel_output_dir / 'staged_summaries') if hasattr(self, 'excel_output_dir') else Path('RSA_OneDrive') / 'staged_summaries'
                 output_dir_path = self.excel_output_dir if hasattr(self, 'excel_output_dir') else Path('RSA_OneDrive')

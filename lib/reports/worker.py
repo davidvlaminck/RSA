@@ -14,6 +14,7 @@ import gc
 import json
 import logging
 import os
+import signal
 import sys
 import time
 from pathlib import Path
@@ -199,19 +200,16 @@ def run_single_report(report_name: str, settings: dict, skip_db_init: bool = Fal
     Returns:
         0 on success, 1 on failure
     """
-    # Set the current report in context for logging
     current_report.set(report_name)
 
     try:
         _log_resource_heartbeat()
         logger.info(f"Starting report")
 
-        # Re-initialize database connections only if this is the first report or a single run
         if not skip_db_init:
             arango_timeout = settings.get('arango_request_timeout', 180)
             reinitialize_database_connections(settings, arango_timeout=arango_timeout)
 
-        # Import and instantiate the report
         from lib.reports.instantiator import create_report_instance
         report_instance = create_report_instance(report_name)
 
@@ -219,15 +217,42 @@ def run_single_report(report_name: str, settings: dict, skip_db_init: bool = Fal
             logger.error(f"Failed to instantiate")
             return 1
 
-        # Initialize the report
         report_instance.init_report()
         logger.info(f"Initialized")
 
-        # Run the report without mail sender (disabled for remote/server runs)
-        report_instance.run_report(sender=None)
-        logger.info(f"✓ Completed successfully")
+        query_timeout = settings.get('query_timeout_seconds', 60)
+        total_timeout = query_timeout * 2
 
-        return 0
+        class _ReportTimeout(Exception):
+            pass
+
+        def _timeout_handler(signum, frame):
+            raise _ReportTimeout()
+
+        old_handler = signal.signal(signal.SIGALRM, _timeout_handler)
+        signal.alarm(total_timeout)
+        try:
+            postgis_ms = query_timeout * 1000
+            try:
+                from lib.connectors.PostGISConnector import SinglePostGISConnector
+                connector = SinglePostGISConnector.get_connector()
+                connector.set_statement_timeout(postgis_ms)
+            except Exception:
+                pass
+            report_instance.run_report(sender=None)
+            signal.alarm(0)
+            logger.info(f"✓ Completed successfully")
+            return 0
+        except _ReportTimeout:
+            signal.alarm(0)
+            logger.error(
+                f"✗ Timeout after {total_timeout}s for {report_name} "
+                f"(query={query_timeout}s)"
+            )
+            return 1
+        finally:
+            signal.alarm(0)
+            signal.signal(signal.SIGALRM, old_handler)
 
     except Exception as e:
         logger.error(f"✗ Failed: {e}", exc_info=True)

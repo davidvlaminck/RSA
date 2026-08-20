@@ -13,6 +13,18 @@ class _FakeWorkerProcess:
     def __init__(self, output: str = "worker line 1\nworker line 2\n"):
         self.output = output
         self.killed = False
+        self._lines = output.splitlines(keepends=True)
+        self._idx = 0
+
+    def poll(self):
+        return self.returncode
+
+    def readline(self):
+        if self._idx < len(self._lines):
+            line = self._lines[self._idx]
+            self._idx += 1
+            return line
+        return ""
 
     def communicate(self, timeout: int | None = None):
         return self.output, ""
@@ -41,7 +53,7 @@ def test_streamed_worker_output_is_written_to_python_stdout(monkeypatch):
     monkeypatch.setattr(pipeline_runner.subprocess, "Popen", fake_popen)
 
     captured = io.StringIO()
-    settings = {"report_execution": {"max_concurrent": 1, "timeout_seconds": 10}}
+    settings = {"report_execution": {"max_concurrent": 1, "query_timeout_seconds": 60}}
 
     with contextlib.redirect_stdout(captured):
         return_code, failed = pipeline_runner.run_pipelines_by_datasource(
@@ -56,7 +68,7 @@ def test_streamed_worker_output_is_written_to_python_stdout(monkeypatch):
     assert captured.getvalue() == "worker line 1\nworker line 2\n"
 
 
-def test_streamed_worker_timeout_is_reported_and_process_is_killed(monkeypatch):
+def test_failed_worker_process_returns_failed_reports(monkeypatch):
     monkeypatch.setattr(
         pipeline_runner,
         "group_reports_by_datasource",
@@ -64,18 +76,14 @@ def test_streamed_worker_timeout_is_reported_and_process_is_killed(monkeypatch):
     )
 
     fake_process = _FakeWorkerProcess()
-    monkeypatch.setattr(
-        pipeline_runner.subprocess,
-        "Popen",
-        lambda *args, **kwargs: fake_process,
-    )
-    monkeypatch.setattr(
-        fake_process,
-        "communicate",
-        lambda timeout=None: (_ for _ in ()).throw(subprocess.TimeoutExpired(cmd=[], timeout=timeout)),
-    )
+    fake_process.returncode = 1
 
-    settings = {"report_execution": {"max_concurrent": 1, "timeout_seconds": 10}}
+    def fake_popen(cmd, stdout=None, stderr=None, text=False, errors=None):
+        return fake_process
+
+    monkeypatch.setattr(pipeline_runner.subprocess, "Popen", fake_popen)
+
+    settings = {"report_execution": {"max_concurrent": 1, "query_timeout_seconds": 60}}
     return_code, failed = pipeline_runner.run_pipelines_by_datasource(
         ["Report0002"],
         settings,
@@ -85,4 +93,3 @@ def test_streamed_worker_timeout_is_reported_and_process_is_killed(monkeypatch):
 
     assert return_code == 1
     assert failed == ["Report0002"]
-    assert fake_process.killed is True

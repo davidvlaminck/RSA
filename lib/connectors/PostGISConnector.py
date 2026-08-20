@@ -155,6 +155,9 @@ class PostGISConnector:
 
         return self._run_with_connection(_fn, autocommit_for_read=True)
 
+    def set_statement_timeout(self, ms: int) -> None:
+        self.perform_query(f"SET statement_timeout = {ms}")
+
     def get_params(self, connection):
         cursor = connection.cursor()
         try:

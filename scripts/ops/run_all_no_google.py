@@ -34,7 +34,7 @@ from outputs.excel_wrapper import SingleExcelWriter
 DEFAULT_SETTINGS = str(repo_root / 'settings_sample.json')
 
 
-def prepare_temp_settings(orig_settings_path: str | None, excel_output_dir: str | None = None, timeout_seconds: int | None = None, max_concurrent: int | None = None) -> str:
+def prepare_temp_settings(orig_settings_path: str | None, excel_output_dir: str | None = None, query_timeout_seconds: int | None = None, arango_request_timeout_seconds: int | None = None, max_concurrent: int | None = None) -> str:
     settings = {}
     if orig_settings_path:
         try:
@@ -55,19 +55,16 @@ def prepare_temp_settings(orig_settings_path: str | None, excel_output_dir: str 
         out_dir = str(repo_root / 'RSA_OneDrive')
     settings['output']['excel']['output_dir'] = out_dir
 
-    # enforce excel output and disable Google API
     settings['force_excel'] = True
     settings['google_api'] = {}
 
-    # allow overriding per-pipeline timeout via CLI
-    if timeout_seconds is not None:
-        if 'report_execution' not in settings or not isinstance(settings['report_execution'], dict):
-            settings['report_execution'] = {}
-        settings['report_execution']['timeout_seconds'] = int(timeout_seconds)
-    # allow overriding max_concurrent via CLI
+    if 'report_execution' not in settings or not isinstance(settings['report_execution'], dict):
+        settings['report_execution'] = {}
+    if query_timeout_seconds is not None:
+        settings['report_execution']['query_timeout_seconds'] = int(query_timeout_seconds)
+    if arango_request_timeout_seconds is not None:
+        settings['report_execution']['arango_request_timeout_seconds'] = int(arango_request_timeout_seconds)
     if max_concurrent is not None:
-        if 'report_execution' not in settings or not isinstance(settings['report_execution'], dict):
-            settings['report_execution'] = {}
         settings['report_execution']['max_concurrent'] = int(max_concurrent)
 
     with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as tmp:
@@ -82,26 +79,24 @@ def main():
     p.add_argument('--settings', default=DEFAULT_SETTINGS)
     p.add_argument('--output-dir', default=None)
     p.add_argument('--folder-path', default=None)
-    # timeout and concurrency controls for pipeline execution
-    p.add_argument('--timeout-seconds', type=int, default=1800, help='Timeout for pipelines in seconds (sets report_execution.timeout_seconds)')
-    # deprecated alias kept for backward-compatibility
-    p.add_argument('--timeout', type=int, default=None, help=argparse.SUPPRESS)
+    p.add_argument('--query-timeout', type=int, default=60, help='Query timeout per report in seconds (sets report_execution.query_timeout_seconds)')
+    p.add_argument('--arango-request-timeout', type=int, default=180, help='ArangoDB request timeout in seconds (sets report_execution.arango_request_timeout_seconds)')
     p.add_argument('--max-concurrent', type=int, default=2, help='Maximum number of concurrent pipelines (sets report_execution.max_concurrent)')
     p.add_argument('--limit', type=int, default=1000)
     args = p.parse_args()
 
     chosen_output = args.folder_path or args.output_dir
 
-    # Prepare temp settings with Google disabled and Excel forced
-    # prefer explicit --timeout-seconds; fall back to deprecated --timeout if provided
-    timeout_choice = args.timeout if args.timeout is not None else args.timeout_seconds
     tmp_settings = prepare_temp_settings(
-        args.settings, excel_output_dir=chosen_output, timeout_seconds=timeout_choice, max_concurrent=args.max_concurrent
+        args.settings,
+        excel_output_dir=chosen_output,
+        query_timeout_seconds=args.query_timeout,
+        arango_request_timeout_seconds=args.arango_request_timeout,
+        max_concurrent=args.max_concurrent,
     )
     print(f'Using temporary settings: {tmp_settings}')
 
     try:
-        # Discover reports (instantiate to ensure discovery)
         instances = discover_and_instantiate_reports()
         report_names = [type(i).__name__ for i in instances] if instances else []
 
@@ -109,7 +104,6 @@ def main():
             print('No reports discovered under Reports/. Nothing to run.')
             return
 
-        # Ensure Excel writer is initialized in this process so aggregator and other helpers can use it
         if chosen_output:
             out_dir = Path(chosen_output)
         else:
@@ -124,21 +118,18 @@ def main():
         except Exception:
             print('Warning: failed to init SingleExcelWriter in driver process')
 
-        # Load the temp settings file into a dict so we can pass settings to the pipeline runner
         try:
             with open(tmp_settings, 'r', encoding='utf-8') as fh:
                 tmp_settings_dict = json.load(fh)
         except Exception:
             tmp_settings_dict = {}
 
-        # Run pipelines grouped by datasource using the temp settings file so workers don't init Google
         rc = run_pipelines_by_datasource(report_names, tmp_settings_dict, tmp_settings, stream_output=True)
         if rc is not None and rc != 0:
             print('One or more pipelines failed (rc=', rc, ')')
         else:
             print('Pipelines finished (rc=', rc, ')')
 
-        # Run aggregator to apply staged updates
         from scripts.ops.aggregate_summaries import process_once as agg_process_once
         output_dir_choice = out_dir.resolve()
         staged = output_dir_choice / 'staged_summaries'
