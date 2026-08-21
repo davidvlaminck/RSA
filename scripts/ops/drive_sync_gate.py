@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timezone
 
-from lib.sqlite_queue_client import enqueue_sqlite_job
+from lib.connectors.pipeline_state import enqueue_sqlite_job
 
 logger = logging.getLogger(__name__)
 

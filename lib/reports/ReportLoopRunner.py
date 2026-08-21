@@ -21,7 +21,7 @@ from lib.mail.MailSender import MailSender
 from lib.reports.instantiator import create_report_instance, discover_and_instantiate_reports
 from lib.connectors.pipeline_state import PipelineState
 from lib.reports.pipeline_runner import run_pipelines_by_datasource
-from lib.sqlite_queue_client import enqueue_sqlite_job
+from lib.connectors.pipeline_state import enqueue_sqlite_job
 from outputs.sheets_wrapper import SingleSheetsWrapper
 from SettingsManager import SettingsManager
 from scripts.ops.aggregate_summaries import process_once
@@ -337,8 +337,93 @@ class ReportLoopRunner:
             except Exception:
                 pass
 
+    def _should_run_rsa_queries(self) -> bool:
+        """Check SQLite pipeline_state to determine if RSA queries should run.
+
+        Returns True if the pipeline is in a state where RSA queries should execute:
+        - phase is postgis_sync_paused, postgis_sync_running, or postgis_sync_resuming
+        - rsa_queries status is not already completed/time-out
+
+        Returns False if the pipeline is idle, in an earlier phase, or rsa_queries
+        has already finished (e.g. after a midnight reset or crash recovery).
+        """
+        if self.pipeline_status is None:
+            return True
+
+        current = self.pipeline_status.get()
+        if current is None:
+            return True
+
+        phase = current.get('phase', '')
+        status = current.get('status', '')
+
+        if phase == 'idle':
+            logger.info(
+                f'{datetime.now(tz=BRUSSELS)}: pipeline is idle (midnight reset), '
+                f'not running rsa_queries.'
+            )
+            return False
+
+        if phase == 'rsa_queries' and status in ('completed', 'time-out'):
+            logger.info(
+                f'{datetime.now(tz=BRUSSELS)}: rsa_queries already {status}, '
+                f'not running again.'
+            )
+            return False
+
+        if phase in ('postgis_sync_paused', 'postgis_sync_running', 'postgis_sync_resuming'):
+            return True
+
+        logger.info(
+            f'{datetime.now(tz=BRUSSELS)}: pipeline phase is {phase} ({status}), '
+            f'rsa_queries should not run yet.'
+        )
+        return False
+
+    def _check_pipeline_still_valid(self) -> bool:
+        """Check during report execution whether the pipeline is still in a valid state.
+
+        Returns False if the pipeline has been reset (e.g. back to idle) and RSA
+        queries should stop immediately.
+        """
+        if self.pipeline_status is None:
+            return True
+
+        current = self.pipeline_status.get()
+        if current is None:
+            return True
+
+        phase = current.get('phase', '')
+        status = current.get('status', '')
+
+        if phase == 'idle':
+            logger.warning(
+                f'{datetime.now(tz=BRUSSELS)}: pipeline reset to idle during rsa_queries, '
+                f'aborting report execution.'
+            )
+            return False
+
+        if phase == 'rsa_queries' and status in ('completed', 'time-out'):
+            logger.warning(
+                f'{datetime.now(tz=BRUSSELS)}: rsa_queries already {status} (external), '
+                f'aborting report execution.'
+            )
+            return False
+
+        return True
+
     def run(self):
-        """Run all reports either sequentially or in parallel based on settings."""
+        """Run all reports either sequentially or in parallel based on settings.
+
+        Implements the 3-hour timeout from the pipeline spec: if reports are still
+        running after the configured timeout, report execution stops but the summary
+        assembly always runs. The pipeline state is then set to ``time-out`` (not
+        ``failed``) so the orchestrator can proceed to PostGIS resume + drive_upload.
+        """
+        if not self._should_run_rsa_queries():
+            logger.info(f'{datetime.now(tz=BRUSSELS)}: skipping rsa_queries, pipeline not in valid state.')
+            return
+
         if self.pipeline_status is not None:
             enqueue_sqlite_job("update_pipeline_state", {
                 "updated_at": datetime.now(timezone.utc).isoformat(),
@@ -346,21 +431,34 @@ class ReportLoopRunner:
                 "status": "running",
                 "message": "RSA queries gestart"
             })
+
+        timeout_seconds = self.settings.get('pipeline_state', {}).get('rsa_queries_timeout_seconds', 10800)
+        deadline = time.time() + timeout_seconds
+        timed_out = False
+
         try:
             execution_mode = self.settings.get('report_execution', {}).get('mode', 'sequential')
 
             if execution_mode == 'parallel_by_datasource':
-                self._run_parallel_by_datasource()
+                timed_out = self._run_parallel_by_datasource(deadline=deadline)
             else:
-                self._run_sequential()
+                timed_out = self._run_sequential(deadline=deadline)
 
             if self.pipeline_status is not None:
-                enqueue_sqlite_job("update_pipeline_state", {
-                    "updated_at": datetime.now(timezone.utc).isoformat(),
-                    "phase": "rsa_queries",
-                    "status": "completed",
-                    "message": "RSA queries voltooid"
-                })
+                if timed_out:
+                    enqueue_sqlite_job("update_pipeline_state", {
+                        "updated_at": datetime.now(timezone.utc).isoformat(),
+                        "phase": "rsa_queries",
+                        "status": "time-out",
+                        "message": f"RSA queries time-out na {timeout_seconds}s; overzicht samengesteld"
+                    })
+                else:
+                    enqueue_sqlite_job("update_pipeline_state", {
+                        "updated_at": datetime.now(timezone.utc).isoformat(),
+                        "phase": "rsa_queries",
+                        "status": "completed",
+                        "message": "RSA queries voltooid"
+                    })
         except Exception as exc:
             if self.pipeline_status is not None:
                 enqueue_sqlite_job("update_pipeline_state", {
@@ -386,8 +484,16 @@ class ReportLoopRunner:
         else:
             self._run_sequential(report_names)
 
-    def _run_sequential(self, report_names: list[str] | None = None):
-        """Run reports one at a time (original behavior)."""
+    def _run_sequential(self, report_names: list[str] | None = None, deadline: float | None = None):
+        """Run reports one at a time (original behavior).
+
+        Args:
+            report_names: Optional list of specific reports to run.
+            deadline: Optional unix timestamp. When reached, report execution stops
+                but the summary aggregation still runs.
+        Returns:
+            True if the deadline was exceeded, False otherwise.
+        """
         try:
             staged_dir = (self.excel_output_dir / 'staged_summaries') if self.excel_output_dir else Path('RSA_OneDrive') / 'staged_summaries'
             clear_staged_processed(staged_dir)
@@ -407,13 +513,21 @@ class ReportLoopRunner:
 
         if not report_instances:
             logger.warning("No reports found to execute.")
-            return
+            return False
 
         # Map instances to their class names for tracking
         reports_to_do = {type(inst).__name__: inst for inst in report_instances}
         reports_run = 0
+        timed_out = False
 
         while reports_run < RETRIES and reports_to_do:
+            if deadline is not None and time.time() >= deadline:
+                timed_out = True
+                logger.warning(
+                    f'{datetime.now(tz=BRUSSELS)}: rsa_queries deadline reached, '
+                    f'stopping report execution ({len(reports_to_do)} reports remaining)'
+                )
+                break
             reports_run += 1
             if reports_run > 1:
                 # Calculate timeout for this retry (60s, 120s, 180s, etc.)
@@ -421,6 +535,20 @@ class ReportLoopRunner:
                 reinitialize_database_connections(self.settings, arango_timeout=retry_timeout)
             total = len(reports_to_do)
             for idx, report_name in enumerate(sorted(reports_to_do.keys()), 1):
+                if deadline is not None and time.time() >= deadline:
+                    timed_out = True
+                    logger.warning(
+                        f'{datetime.now(tz=BRUSSELS)}: rsa_queries deadline reached during {report_name}, '
+                        f'stopping report execution ({len(reports_to_do)} reports remaining)'
+                    )
+                    break
+                if not self._check_pipeline_still_valid():
+                    timed_out = True
+                    logger.warning(
+                        f'{datetime.now(tz=BRUSSELS)}: pipeline state changed during {report_name}, '
+                        f'stopping report execution ({len(reports_to_do)} reports remaining)'
+                    )
+                    break
                 try:
                     self._update_pipeline_message(f"Verwerken: {report_name} ({idx}/{total})", "rsa_queries", "running")
                     report_instance = reports_to_do[report_name]
@@ -453,6 +581,7 @@ class ReportLoopRunner:
         logger.info(f'{datetime.now(tz=pytz.timezone("Europe/Brussels"))}: '
                        f'sent all mails_to_send ({len(list(self.mail_sender.mails_to_send))})')
         # After all reports are done, aggregate staged summary updates.
+        # This ALWAYS runs, even on timeout, so the overview can be assembled.
         try:
             staged_dir = (self.excel_output_dir / 'staged_summaries') if hasattr(self, 'excel_output_dir') else Path('RSA_OneDrive') / 'staged_summaries'
             output_dir = self.excel_output_dir if hasattr(self, 'excel_output_dir') else Path('RSA_OneDrive')
@@ -466,7 +595,9 @@ class ReportLoopRunner:
         except Exception as ex:
             logger.error(f'Could not run aggregator: {ex}')
 
-    def _run_parallel_by_datasource(self, report_names: list[str] | None = None):
+        return timed_out
+
+    def _run_parallel_by_datasource(self, report_names: list[str] | None = None, deadline: float | None = None):
         """Run reports in parallel, grouped by datasource to avoid DB contention.
 
         This mode:
@@ -475,6 +606,13 @@ class ReportLoopRunner:
         - Respects memory constraints (max 2-3 concurrent processes)
         - Provides per-report query timeout protection (configurable)
         - Retries failed/timed out reports with increasing query timeout (+60s per attempt)
+
+        Args:
+            report_names: Optional list of specific reports to run.
+            deadline: Optional unix timestamp. When reached, report execution stops
+                but the summary aggregation still runs.
+        Returns:
+            True if the deadline was exceeded, False otherwise.
         """
         try:
             staged_dir = (self.excel_output_dir / 'staged_summaries') if self.excel_output_dir else Path('RSA_OneDrive') / 'staged_summaries'
@@ -488,7 +626,7 @@ class ReportLoopRunner:
             report_instances = discover_and_instantiate_reports()
             if not report_instances:
                 logger.warning("No reports found to execute.")
-                return
+                return False
             report_names = [type(inst).__name__ for inst in report_instances]
         else:
             report_names = list(report_names)
@@ -501,8 +639,23 @@ class ReportLoopRunner:
 
         reports_run = 0
         reports_to_do = list(report_names)
+        timed_out = False
 
         while reports_run < RETRIES and reports_to_do:
+            if deadline is not None and time.time() >= deadline:
+                timed_out = True
+                logger.warning(
+                    f'{datetime.now(tz=BRUSSELS)}: rsa_queries deadline reached, '
+                    f'stopping parallel execution ({len(reports_to_do)} reports remaining)'
+                )
+                break
+            if not self._check_pipeline_still_valid():
+                timed_out = True
+                logger.warning(
+                    f'{datetime.now(tz=BRUSSELS)}: pipeline state changed, '
+                    f'stopping parallel execution ({len(reports_to_do)} reports remaining)'
+                )
+                break
             reports_run += 1
             current_query_timeout = base_query_timeout + (60 * (reports_run - 1))
             current_arango_request_timeout = current_query_timeout
@@ -547,6 +700,7 @@ class ReportLoopRunner:
 
         logger.info(f'{datetime.now(tz=pytz.timezone("Europe/Brussels"))}: parallel execution complete')
         # After parallel pipelines completed, run the aggregator once to apply staged summaries
+        # This ALWAYS runs, even on timeout, so the overview can be assembled.
         try:
             staged_dir = (self.excel_output_dir / 'staged_summaries') if hasattr(self, 'excel_output_dir') else Path('RSA_OneDrive') / 'staged_summaries'
             output_dir = self.excel_output_dir if hasattr(self, 'excel_output_dir') else Path('RSA_OneDrive')
@@ -558,6 +712,8 @@ class ReportLoopRunner:
                 logger.error(f'Failed running aggregate_summaries.process_once: {ex}')
         except Exception as ex:
             logger.error(f'Could not run aggregator after parallel pipelines: {ex}')
+
+        return timed_out
 
     def run_all_no_google(self, output_dir: str | None = None, limit: int = 1000, timeout_seconds: int | None = None, max_concurrent: int | None = None):
         """Run all reports (discovering from Reports/) in no-Google mode.

@@ -40,6 +40,7 @@
         "db_path": "/home/davidlinux/PycharmProjects/RSA_Health/health.db",
         "wait_timeout_seconds": 7200,
         "passive_wait_until": "04:00:00",
-        "postgis_wait_timeout_seconds": 10800
+        "postgis_wait_timeout_seconds": 10800,
+        "rsa_queries_timeout_seconds": 10800
     }
 }
