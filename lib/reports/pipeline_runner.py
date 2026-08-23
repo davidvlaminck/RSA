@@ -107,7 +107,10 @@ def _read_worker_status(status_file: str | None, expected_reports: list[str]) ->
     return not_completed
 
 
-def _run_worker(report_names: list[str], settings_path: str, stream_output: bool, status_file: str | None = None) -> dict:
+def _run_worker(report_names: list[str], settings_path: str, stream_output: bool,
+                status_file: str | None = None, batch_size: int = 0,
+                batch_timeout: float = 0, deadline: float = 0,
+                process_holder: dict | None = None) -> dict:
     cmd = [
         sys.executable,
         "-m",
@@ -119,6 +122,12 @@ def _run_worker(report_names: list[str], settings_path: str, stream_output: bool
     ]
     if status_file:
         cmd.extend(["--status-file", status_file])
+    if batch_size:
+        cmd.extend(["--batch-size", str(batch_size)])
+    if batch_timeout:
+        cmd.extend(["--batch-timeout", str(batch_timeout)])
+    if deadline:
+        cmd.extend(["--deadline", str(deadline)])
     proc: subprocess.Popen[str] | None = None
     try:
         if stream_output:
@@ -130,6 +139,8 @@ def _run_worker(report_names: list[str], settings_path: str, stream_output: bool
                 errors="replace",
                 bufsize=1,
             )
+            if process_holder is not None:
+                process_holder['proc'] = proc
             output_chunks: list[str] = []
             while True:
                 ret = proc.poll()
@@ -163,6 +174,9 @@ def run_pipelines_by_datasource(
     *,
     stream_output: bool = True,
     timeout_seconds: int | None = None,
+    batch_size: int = 10,
+    batch_timeout: float = 0,
+    deadline: float = 0,
 ) -> tuple[int, list[str]]:
     """Run pipelines per datasource concurrently.
 
@@ -173,6 +187,9 @@ def run_pipelines_by_datasource(
         stream_output: Whether to stream output from worker processes.
         timeout_seconds: Kept for backward compatibility; not used for subprocess
             timeouts because per-report timeouts are now handled inside the worker.
+        batch_size: Maximum reports per batch in each worker (default 10).
+        batch_timeout: Maximum seconds per batch (0 = no batch timeout).
+        deadline: Unix timestamp. When reached, workers stop executing.
 
     Returns:
         tuple: (return_code, failed_reports) where return_code is 0 on success, 1 if any pipeline fails or times out,
@@ -202,6 +219,17 @@ def run_pipelines_by_datasource(
     timed_out: list[str] = []
     status_files: list[str] = []
 
+    # Calculate per-datasource overall timeout based on remaining deadline
+    overall_timeout_per_datasource = None
+    if deadline and time.time() < deadline:
+        remaining = deadline - time.time()
+        # Reserve half the remaining time for retries
+        overall_timeout_per_datasource = remaining / 2
+        logger.info(
+            "Deadline in %.0fs, per-datasource overall timeout: %.0fs",
+            remaining, overall_timeout_per_datasource,
+        )
+
     try:
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             future_to_pipeline = {}
@@ -210,18 +238,54 @@ def run_pipelines_by_datasource(
                 os.close(status_fd)
                 status_files.append(status_file)
                 logger.info("Starting pipeline [%s] with reports: %s", datasource, report_list)
+                process_holder: dict = {}
                 future = executor.submit(
                     _run_worker,
                     report_list,
                     settings_path,
                     stream_output,
                     status_file,
+                    batch_size,
+                    batch_timeout,
+                    deadline,
+                    process_holder,
                 )
-                future_to_pipeline[future] = (datasource, report_list)
+                future_to_pipeline[future] = (datasource, report_list, process_holder)
 
             for future in as_completed(future_to_pipeline):
-                datasource, report_list = future_to_pipeline[future]
-                result = future.result()
+                datasource, report_list, process_holder = future_to_pipeline[future]
+                status_file = process_holder.get('status_file')
+                try:
+                    if overall_timeout_per_datasource:
+                        result = future.result(timeout=overall_timeout_per_datasource)
+                    else:
+                        result = future.result()
+                except TimeoutError:
+                    proc = process_holder.get('proc')
+                    if proc is not None and proc.poll() is None:
+                        logger.warning("  [%s] pipeline exceeded overall timeout, killing worker", datasource)
+                        try:
+                            proc.kill()
+                        except Exception:
+                            pass
+                        try:
+                            proc.wait(timeout=5)
+                        except Exception:
+                            pass
+                    actual_failed = _read_worker_status(status_file, report_list)
+                    if actual_failed is None:
+                        actual_failed = report_list
+                    logger.warning("  [%s] pipeline timed out: %s (retrying %d reports)", datasource, report_list, len(actual_failed))
+                    timed_out.extend(actual_failed)
+                    continue
+                except Exception as exc:
+                    actual_failed = _read_worker_status(status_file, report_list)
+                    if actual_failed is None:
+                        actual_failed = report_list
+                    logger.error("  [%s] pipeline error: %s - %s", datasource, report_list, exc)
+                    failed.extend(actual_failed)
+                    continue
+
                 status_file = result.get("status_file")
                 if result["status"] == "success":
                     logger.info("  [%s] pipeline completed: %s", datasource, report_list)

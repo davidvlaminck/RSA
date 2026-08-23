@@ -102,6 +102,14 @@ class DailyDriveSyncGate:
                 for u in today_updates
             )
             current = self.pipeline_state.get()
+
+            if current and current.get('phase') in ('drive_upload', 'rsa_queries') and current.get('status') in ('completed', 'time-out', 'starting', 'running'):
+                logger.info(
+                    '[DRIVE_SYNC_GATE] Pipeline already %s/%s today; not running reports again until tomorrow.',
+                    current.get('phase'), current.get('status'),
+                )
+                return False
+
             if drive_download_completed:
                 self._synced_date = now.date()
                 logger.info(

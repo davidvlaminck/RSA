@@ -17,6 +17,7 @@ import os
 import signal
 import sys
 import time
+from datetime import datetime
 from pathlib import Path
 from contextvars import ContextVar
 import warnings
@@ -24,7 +25,7 @@ import warnings
 logger = logging.getLogger(__name__)
 
 # Suppress known third-party DeprecationWarnings (narrow filter)
-warnings.filterwarnings('ignore', message='path is deprecated. Use files\(\) instead', category=DeprecationWarning)
+warnings.filterwarnings('ignore', message=r'path is deprecated. Use files\(\) instead', category=DeprecationWarning)
 
 # Add project root to path so we can import modules
 project_root = Path(__file__).parent.parent.parent
@@ -259,31 +260,67 @@ def run_single_report(report_name: str, settings: dict, skip_db_init: bool = Fal
         return 1
 
 
-def run_reports(report_names: list[str], settings: dict, status_file: str | None = None) -> int:
+def run_reports(report_names: list[str], settings: dict, status_file: str | None = None,
+                batch_size: int = 0, batch_timeout: float = 0, deadline: float = 0) -> int:
     """Run multiple reports sequentially in the same worker process.
 
     Reinitializes database connections once at the start of the pipeline,
     then reuses them for all subsequent reports in the pipeline.
 
+    Args:
+        report_names: List of report names to run.
+        settings: Settings dictionary.
+        status_file: Optional path to write per-report completion status (JSONL).
+        batch_size: Maximum number of reports per batch. 0 means no batching.
+        batch_timeout: Maximum seconds per batch. 0 means no batch timeout.
+        deadline: Unix timestamp. When reached, report execution stops.
+
     Returns:
-        0 if all reports succeed, 1 if any report fails
+        0 if all reports succeed, 1 if any report fails or times out.
     """
-    logger.info(f"Pipeline starting with {len(report_names)} reports")
+    effective_batch_size = max(1, batch_size) if batch_size else len(report_names)
+    batches = [report_names[i:i + effective_batch_size] for i in range(0, len(report_names), effective_batch_size)]
+
+    logger.info(f"Pipeline starting with {len(report_names)} reports in {len(batches)} batch(es) of {effective_batch_size}")
     arango_timeout = settings.get('arango_request_timeout', 180)
     reinitialize_database_connections(settings, arango_timeout=arango_timeout)
 
     failed = []
-    for report_name in report_names:
-        exit_code = run_single_report(report_name, settings, skip_db_init=True)
-        _write_status(status_file, report_name, exit_code == 0)
-        if exit_code != 0:
-            failed.append(report_name)
+    for batch_idx, batch in enumerate(batches):
+        batch_start = time.time()
+        logger.info(f"Starting batch {batch_idx + 1}/{len(batches)} with {len(batch)} reports")
+
+        for report_name in batch:
+            if deadline and time.time() >= deadline:
+                logger.warning(
+                    f"Deadline reached ({datetime.fromtimestamp(deadline).isoformat()}), "
+                    f"stopping after batch {batch_idx + 1}"
+                )
+                failed.extend(batch[batch.index(report_name):])
+                break
+
+            if batch_timeout and (time.time() - batch_start) >= batch_timeout:
+                logger.warning(
+                    f"Batch timeout ({batch_timeout}s) reached in batch {batch_idx + 1}, "
+                    f"stopping before {report_name}"
+                )
+                failed.extend(batch[batch.index(report_name):])
+                break
+
+            exit_code = run_single_report(report_name, settings, skip_db_init=(batch_idx > 0))
+            _write_status(status_file, report_name, exit_code == 0)
+            if exit_code != 0:
+                failed.append(report_name)
+
+        if deadline and time.time() >= deadline:
+            break
+
         gc.collect()
 
     _write_status(status_file, '__pipeline_done__', True)
 
     if failed:
-        logger.error("One or more reports failed in worker: %s", ", ".join(failed))
+        logger.error("One or more reports failed/timed out in worker: %s", ", ".join(failed))
         return 1
     return 0
 
@@ -295,6 +332,9 @@ def main():
     parser.add_argument('--reports', nargs='+', help='Multiple report names (e.g., Report0002 Report0004)')
     parser.add_argument('--settings', required=True, help='Path to settings JSON file')
     parser.add_argument('--status-file', help='Path to write per-report completion status (JSONL)')
+    parser.add_argument('--batch-size', type=int, default=0, help='Maximum reports per batch (0 = no batching)')
+    parser.add_argument('--batch-timeout', type=float, default=0, help='Maximum seconds per batch (0 = no timeout)')
+    parser.add_argument('--deadline', type=float, default=0, help='Unix timestamp deadline (0 = no deadline)')
 
     args = parser.parse_args()
 
@@ -314,7 +354,14 @@ def main():
         logger.error("You must provide --report or --reports")
         sys.exit(2)
 
-    exit_code = run_reports(report_list, settings, status_file=args.status_file)
+    exit_code = run_reports(
+        report_list,
+        settings,
+        status_file=args.status_file,
+        batch_size=args.batch_size,
+        batch_timeout=args.batch_timeout,
+        deadline=args.deadline,
+    )
 
     sys.exit(exit_code)
 

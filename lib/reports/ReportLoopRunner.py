@@ -6,6 +6,7 @@ import sys
 import tempfile
 import time
 import traceback
+import concurrent.futures
 from datetime import datetime, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -19,9 +20,14 @@ from lib.connectors.PostGISConnector import SinglePostGISConnector
 from lib.mail.MailContent import MailContent
 from lib.mail.MailSender import MailSender
 from lib.reports.instantiator import create_report_instance, discover_and_instantiate_reports
-from lib.connectors.pipeline_state import PipelineState
-from lib.reports.pipeline_runner import run_pipelines_by_datasource
-from lib.connectors.pipeline_state import enqueue_sqlite_job
+from lib.reports.parallel_utils import group_reports_by_datasource
+from lib.reports.pipeline_runner import (
+    run_pipelines_by_datasource,
+    _run_worker,
+    _read_worker_status,
+    _sort_reports_by_duration,
+)
+from lib.connectors.pipeline_state import PipelineState, enqueue_sqlite_job
 from outputs.sheets_wrapper import SingleSheetsWrapper
 from SettingsManager import SettingsManager
 from scripts.ops.aggregate_summaries import process_once
@@ -597,6 +603,47 @@ class ReportLoopRunner:
 
         return timed_out
 
+    def _run_datasource_worker(self, datasource: str, report_names: list[str], query_timeout: int,
+                               batch_size: int, batch_timeout: float, deadline: float) -> list[str]:
+        """Run reports for a single datasource in a worker subprocess.
+
+        Returns list of failed report names (empty list on success).
+        """
+        worker_settings = copy.deepcopy(self.settings)
+        worker_settings['query_timeout_seconds'] = query_timeout
+        worker_settings['arango_request_timeout'] = query_timeout
+
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            json.dump(worker_settings, f)
+            settings_path = f.name
+
+        status_fd, status_file = tempfile.mkstemp(suffix='.jsonl', prefix='worker_status_')
+        os.close(status_fd)
+
+        try:
+            result = _run_worker(
+                report_names,
+                settings_path,
+                stream_output=True,
+                status_file=status_file,
+                batch_size=batch_size,
+                batch_timeout=batch_timeout,
+                deadline=deadline,
+            )
+            actual_failed = _read_worker_status(status_file, report_names)
+            if actual_failed is None:
+                actual_failed = report_names if result.get("status") != "success" else []
+            return actual_failed
+        finally:
+            try:
+                os.unlink(settings_path)
+            except Exception:
+                pass
+            try:
+                os.unlink(status_file)
+            except Exception:
+                pass
+
     def _run_parallel_by_datasource(self, report_names: list[str] | None = None, deadline: float | None = None):
         """Run reports in parallel, grouped by datasource to avoid DB contention.
 
@@ -606,6 +653,9 @@ class ReportLoopRunner:
         - Respects memory constraints (max 2-3 concurrent processes)
         - Provides per-report query timeout protection (configurable)
         - Retries failed/timed out reports with increasing query timeout (+60s per attempt)
+        - Per-datasource retry: failed datasources are retried independently
+        - Batch execution: reports are split into batches of 10 with per-batch timeout
+        - Deadline awareness: workers stop when deadline is reached
 
         Args:
             report_names: Optional list of specific reports to run.
@@ -635,70 +685,114 @@ class ReportLoopRunner:
 
         exec_cfg = self.settings.get("report_execution", {}) if isinstance(self.settings, dict) else {}
         base_query_timeout = exec_cfg.get("query_timeout_seconds", 60)
-        base_arango_request_timeout = exec_cfg.get("arango_request_timeout_seconds", 180)
+        max_workers = min(exec_cfg.get("max_concurrent", 2), 3)
 
-        reports_run = 0
-        reports_to_do = list(report_names)
+        batch_size = 10
+        if deadline and time.time() < deadline:
+            remaining = deadline - time.time()
+            batch_timeout = max(60, remaining / 10)
+        else:
+            batch_timeout = 0
+
+        groups = group_reports_by_datasource(report_names)
+        pipelines = {ds: items for ds, items in groups.items() if items}
+        if not pipelines:
+            logger.info("No reports to run in parallel.")
+            return False
+
+        drive_cfg = self.settings.get("drive_sync", {})
+        excel_cfg = self.settings.get("output", {}).get("excel", {})
+        output_dir = Path(drive_cfg.get("local_folder") or excel_cfg.get("output_dir") or "RSA_OneDrive")
+
+        for datasource, report_list in pipelines.items():
+            pipelines[datasource] = _sort_reports_by_duration(report_list, output_dir)
+            logger.info("Sorted pipeline [%s] by estimated duration: %s", datasource, pipelines[datasource])
+
+        logger.info("Running %d pipelines in parallel (max_workers=%d)", len(pipelines), max_workers)
+
         timed_out = False
+        remaining = {ds: list(reports) for ds, reports in pipelines.items()}
+        datasource_attempts = {ds: 0 for ds in remaining}
 
-        while reports_run < RETRIES and reports_to_do:
-            if deadline is not None and time.time() >= deadline:
+        while any(remaining.values()):
+            if all(datasource_attempts[ds] >= RETRIES for ds in remaining if remaining[ds]):
+                break
+
+            if deadline and time.time() >= deadline:
                 timed_out = True
                 logger.warning(
                     f'{datetime.now(tz=BRUSSELS)}: rsa_queries deadline reached, '
-                    f'stopping parallel execution ({len(reports_to_do)} reports remaining)'
+                    f'stopping parallel execution ({sum(len(v) for v in remaining.values())} reports remaining)'
                 )
                 break
-            if not self._check_pipeline_still_valid():
-                timed_out = True
-                logger.warning(
-                    f'{datetime.now(tz=BRUSSELS)}: pipeline state changed, '
-                    f'stopping parallel execution ({len(reports_to_do)} reports remaining)'
-                )
+
+            active = {ds: reports for ds, reports in remaining.items() if reports and datasource_attempts[ds] < RETRIES}
+            if not active:
                 break
-            reports_run += 1
-            current_query_timeout = base_query_timeout + (60 * (reports_run - 1))
-            current_arango_request_timeout = current_query_timeout
 
-            if reports_run > 1:
-                reinitialize_database_connections(self.settings, arango_timeout=current_arango_request_timeout)
+            max_workers_now = min(max_workers, len(active))
 
-            logger.info(
-                f"Parallel run {reports_run}/{RETRIES} with query_timeout={current_query_timeout}s "
-                f"for {len(reports_to_do)} reports"
+            with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers_now) as executor:
+                future_to_ds = {}
+                for ds, reports in active.items():
+                    datasource_attempts[ds] += 1
+                    attempt = datasource_attempts[ds]
+                    current_query_timeout = base_query_timeout + (60 * (attempt - 1))
+
+                    if attempt > 1:
+                        reinitialize_database_connections(self.settings, arango_timeout=current_query_timeout)
+
+                    logger.info(
+                        f"Starting [%s] attempt %d/%d with query_timeout=%ds for %d reports",
+                        ds, attempt, RETRIES, current_query_timeout, len(reports)
+                    )
+                    self._update_pipeline_message(
+                        f"Parallel: {len(reports)} rapporten voor {ds}, poging {attempt}/{RETRIES}",
+                        "rsa_queries", "running"
+                    )
+
+                    future = executor.submit(
+                        self._run_datasource_worker,
+                        ds, reports, current_query_timeout, batch_size, batch_timeout, deadline
+                    )
+                    future_to_ds[future] = ds
+
+                while future_to_ds:
+                    done, _ = concurrent.futures.wait(
+                        future_to_ds,
+                        return_when=concurrent.futures.FIRST_COMPLETED
+                    )
+                    for future in done:
+                        ds = future_to_ds.pop(future)
+                        try:
+                            failed = future.result(timeout=1)
+                        except concurrent.futures.TimeoutError:
+                            failed = remaining[ds]
+                            logger.error("[%s] worker result timed out", ds)
+                        except Exception as exc:
+                            failed = remaining[ds]
+                            logger.error("[%s] worker error: %s", ds, exc)
+
+                        remaining[ds] = failed
+
+                        if failed and datasource_attempts[ds] < RETRIES:
+                            if deadline and time.time() >= deadline:
+                                logger.warning("Deadline reached, not retrying %s", ds)
+                                continue
+                            logger.warning(
+                                "[%s] attempt %d failed for %d reports, will retry",
+                                ds, datasource_attempts[ds], len(failed)
+                            )
+                        elif not failed:
+                            logger.info("[%s] completed successfully", ds)
+
+        all_failed = [r for reports in remaining.values() for r in reports]
+        if all_failed:
+            logger.error(
+                f'{datetime.now(tz=BRUSSELS)}: one or more datasource pipelines had failures: {all_failed}'
             )
-            self._update_pipeline_message(
-                f"Parallel: {len(reports_to_do)} rapporten, poging {reports_run}/{RETRIES}",
-                "rsa_queries", "running"
-            )
 
-            worker_settings = copy.deepcopy(self.settings)
-            worker_settings['query_timeout_seconds'] = current_query_timeout
-            worker_settings['arango_request_timeout'] = current_arango_request_timeout
-            with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-                json.dump(worker_settings, f)
-                settings_path = f.name
-
-            try:
-                return_code, failed_reports = run_pipelines_by_datasource(
-                    reports_to_do,
-                    self.settings,
-                    settings_path,
-                    stream_output=True,
-                )
-
-                if return_code == 0:
-                    reports_to_do = []
-                else:
-                    reports_to_do = failed_reports
-                    logger.warning(f"Run {reports_run} failed for {len(reports_to_do)} reports, will retry")
-            finally:
-                try:
-                    os.unlink(settings_path)
-                except Exception:
-                    pass
-
-        logger.info(f'{datetime.now(tz=pytz.timezone("Europe/Brussels"))}: parallel execution complete')
+        logger.info(f'{datetime.now(tz=BRUSSELS)}: parallel execution complete')
         # After parallel pipelines completed, run the aggregator once to apply staged summaries
         # This ALWAYS runs, even on timeout, so the overview can be assembled.
         try:
@@ -799,6 +893,7 @@ class ReportLoopRunner:
                 try:
                     return_code, failed_reports = run_pipelines_by_datasource(
                         reports_to_do, base_settings, attempt_settings_path, stream_output=True,
+                        batch_size=10,
                     )
                     reports_to_do = failed_reports
                 finally:
