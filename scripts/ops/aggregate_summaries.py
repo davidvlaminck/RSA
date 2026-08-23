@@ -25,15 +25,16 @@ repo_root = Path(__file__).resolve().parents[2]
 if str(repo_root) not in sys.path:
     sys.path.insert(0, str(repo_root))
 
-from outputs.excel import ExcelOutput
+from outputs.excel import ExcelOutput, OVERVIEW_WORKBOOK_NAMES
 from outputs.summary_stager import _ensure_dirs
+from openpyxl import Workbook
 
 logging.basicConfig(level=logging.INFO, format='[AGG] %(asctime)s %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 BRUSSELS = ZoneInfo('Europe/Brussels')
 
 
-def apply_payload(excel: ExcelOutput, payload: Dict[str, Any], output_dir: Path) -> Path | None:
+def apply_payload(excel: ExcelOutput, payload: Dict[str, Any], output_dir: Path, wb=None) -> Path | None:
     op = payload['operation']
     fname = payload.get('excel_filename') or payload.get('spreadsheet_id')
     sheet = payload['sheet']
@@ -71,6 +72,26 @@ def apply_payload(excel: ExcelOutput, payload: Dict[str, Any], output_dir: Path)
             logger.debug('Failed to resolve workbook path for %s', fname, exc_info=True)
 
     if op == 'append_row':
+        if wb is not None:
+            row = payload['row']
+            if sheet not in wb.sheetnames:
+                wb.create_sheet(sheet)
+            ws = wb[sheet]
+            existing = []
+            for r in ws.iter_rows(values_only=True):
+                existing.append(list(r))
+            if len(existing) > 0:
+                combined = [existing[0]] + [row] + existing[1:]
+            else:
+                combined = [row]
+            max_row = ws.max_row or 0
+            if max_row > 0:
+                ws.delete_rows(1, max_row)
+            for r_idx, row_data in enumerate(combined, 1):
+                for c_idx, val in enumerate(row_data, 1):
+                    ws.cell(row=r_idx, column=c_idx).value = val
+            return wb_path
+
         row = payload['row']
         # append by reading existing rows and writing back with new appended row via write_data_to_sheet
         existing = excel.read_data_from_sheet(str(wb_path), sheet) or []
@@ -101,6 +122,75 @@ def apply_payload(excel: ExcelOutput, payload: Dict[str, Any], output_dir: Path)
         return wb_path.resolve()
 
     elif op == 'write_cell':
+        if wb is not None:
+            cell = payload['cell']
+            value = payload['value']
+            report_name = (payload.get('meta', {}).get('report') or '').strip().lower()
+
+            def _resolve_overzicht_row(target_row: int) -> int:
+                if sheet != 'Overzicht' or not report_name:
+                    return target_row
+                try:
+                    if sheet not in wb.sheetnames:
+                        return target_row
+                    ws = wb[sheet]
+                    max_search = min(5000, ws.max_row or 1000)
+                    for r in range(4, max_search + 1):
+                        fv = ws.cell(row=r, column=6).value
+                        if fv and str(fv).strip().lower() == report_name:
+                            return r
+                    append_row = max(4, (ws.max_row or 0) + 1)
+                    for r in range(4, max(4, (ws.max_row or 0)) + 1):
+                        fv = ws.cell(row=r, column=6).value
+                        if fv is None or str(fv).strip() == '':
+                            append_row = r
+                            break
+                    ws.cell(row=append_row, column=6).value = payload.get('meta', {}).get('report')
+                    return append_row
+                except Exception:
+                    return target_row
+
+            col_letters = ''.join([c for c in cell if c.isalpha()])
+            if sheet == 'Overzicht' and col_letters.upper() == 'C':
+                if isinstance(value, list) and len(value) >= 1:
+                    try:
+                        normalized = _normalize_to_brussels_string(value[0])
+                        value[0] = normalized
+                    except Exception:
+                        pass
+                else:
+                    try:
+                        normalized = _normalize_to_brussels_string(value)
+                        value = normalized
+                    except Exception:
+                        pass
+
+            row_digits = ''.join([c for c in cell if c.isdigit()])
+            base_row_index = int(row_digits) if row_digits else 1
+            target_row_index = _resolve_overzicht_row(base_row_index)
+
+            if sheet not in wb.sheetnames:
+                wb.create_sheet(sheet)
+            ws = wb[sheet]
+
+            if isinstance(value, list):
+                from outputs.sheets_cell import SheetsCell
+                sc = SheetsCell(cell)
+                col_index = sc._column_int
+                row_index = target_row_index
+                for i, v in enumerate(value):
+                    ws.cell(row=row_index, column=col_index + i).value = v
+            else:
+                from outputs.sheets_cell import SheetsCell
+                sc = SheetsCell(cell)
+                if isinstance(value, dict) and isinstance(value.get('hyperlink'), str):
+                    ws_cell = ws.cell(row=target_row_index, column=sc._column_int)
+                    ws_cell.value = value.get('display', 'Link')
+                    ws_cell.hyperlink = value['hyperlink']
+                else:
+                    ws.cell(row=target_row_index, column=sc._column_int).value = value
+            return wb_path
+
         cell = payload['cell']
         value = payload['value']
         wb_path = Path(wb_path).resolve()
@@ -340,6 +430,22 @@ def apply_payload(excel: ExcelOutput, payload: Dict[str, Any], output_dir: Path)
             return wb_path.resolve()
 
     elif op == 'increment_cell':
+        if wb is not None:
+            cell = payload['cell']
+            delta = int(payload.get('delta', 1))
+            if sheet not in wb.sheetnames:
+                wb.create_sheet(sheet)
+            ws = wb[sheet]
+            col_letters = ''.join([c for c in cell if c.isalpha()])
+            row_digits = ''.join([c for c in cell if c.isdigit()])
+            col_idx = 0
+            for c in col_letters:
+                col_idx = col_idx * 26 + (ord(c.upper()) - ord('A') + 1)
+            row_idx = int(row_digits) if row_digits else 1
+            current = ws.cell(row=row_idx, column=col_idx).value or 0
+            ws.cell(row=row_idx, column=col_idx).value = current + delta
+            return wb_path
+
         cell = payload['cell']
         delta = int(payload.get('delta', 1))
         excel.update_row_by_adding_number(wb_path, sheet, cell, delta)
@@ -443,10 +549,10 @@ def process_once(staged_dir: Path, output_dir: Path, limit: int = 100, dry_run: 
     processed = 0
     modified_workbooks = set()
 
-    # Apply grouped consolidated writes first (one write per target cell)
+    # Prepare consolidated writes
+    consolidated = []
     for key, items in grouped.items():
         wb_path_str, sheet_name, cell = key
-        # pick latest timestamp among payloads
         latest_dt = None
         latest_payload = None
         for f, payload in items:
@@ -462,69 +568,92 @@ def process_once(staged_dir: Path, output_dir: Path, limit: int = 100, dry_run: 
             elif latest_payload is None:
                 latest_payload = payload
 
-        # If we found a latest datetime, normalize it into the payload to write
         if latest_payload is not None:
-            try:
-                # ensure normalized form using apply_payload's normalization via calling helper
-                # reuse apply_payload by calling it with a modified payload
-                if isinstance(latest_payload.get('value'), list) and len(latest_payload.get('value')) > 0:
-                    if latest_dt is not None:
-                        latest_payload['value'][0] = latest_dt.strftime('%Y-%m-%d %H:%M:%S')
-                    else:
-                        # fallback normalize string
-                        try:
-                            latest_payload['value'][0] = str(latest_payload['value'][0])
-                        except Exception:
-                            pass
-                else:
-                    if latest_dt is not None:
-                        latest_payload['value'] = latest_dt.strftime('%Y-%m-%d %H:%M:%S')
-                # apply the consolidated payload
-                if dry_run:
-                    logger.debug('Dry-run consolidated apply %s', latest_payload)
-                else:
-                    wb_path = apply_payload(excel, latest_payload, output_dir)
-                    if wb_path:
-                        modified_workbooks.add(wb_path)
-                # move all source files for this key to processed
-                for f, _ in items:
-                    try:
-                        processing = staged_dir / 'processing' / f.name
-                        f.replace(processing)
-                        processed_path = staged_dir / 'processed' / processing.name
-                        processing.replace(processed_path)
-                    except Exception:
-                        logger.exception('Failed moving grouped file %s to processed', f)
-                processed += len(items)
-            except Exception:
-                logger.exception('Failed to apply consolidated write for %s', key)
+            consolidated.append((Path(wb_path_str), latest_payload, items))
 
-    # Now process other payloads normally
+    # Group all payloads by workbook and batch apply
+    all_writes = []
+    unresolved = []
+    for wb_path, payload, items in consolidated:
+        all_writes.append((wb_path, payload, items))
     for f, payload in others:
+        try:
+            fname = payload.get('excel_filename') or payload.get('spreadsheet_id')
+            wb_path = excel._resolve_workbook_path(fname)
+            all_writes.append((wb_path, payload, [(f, payload)]))
+        except Exception:
+            unresolved.append((f, payload))
+
+    by_wb = {}
+    for wb_path, payload, items in all_writes:
+        by_wb.setdefault(wb_path, []).append((payload, items))
+
+    for wb_path, writes in by_wb.items():
+        wb = None
+        if not dry_run:
+            try:
+                wb = excel._load_workbook_resilient(wb_path)
+            except Exception as exc:
+                if wb_path.name not in OVERVIEW_WORKBOOK_NAMES:
+                    raise
+                logger.warning('Summary workbook %s could not be opened (%s); replacing it with a fresh template', wb_path, exc)
+                wb = Workbook()
+                wb.active.title = 'Overzicht'
+                wb.create_sheet('Historiek')
+
+        for payload, items in writes:
+            for f, p in items:
+                try:
+                    processing = staged_dir / 'processing' / f.name
+                    f.replace(processing)
+
+                    if dry_run:
+                        logger.debug('Dry-run apply %s', p)
+                    else:
+                        apply_payload(excel, p, output_dir, wb)
+
+                    processed_path = staged_dir / 'processed' / processing.name
+                    processing.replace(processed_path)
+                    processed += 1
+                except Exception as e:
+                    logger.exception('Failed to process %s: %s', f, e)
+                    try:
+                        failed_path = staged_dir / 'failed' / f.name
+                        if processing.exists():
+                            processing.replace(failed_path)
+                    except Exception:
+                        pass
+
+        if writes and not dry_run and wb is not None:
+            excel._atomic_save_workbook(wb, Path(wb_path))
+            modified_workbooks.add(wb_path.resolve())
+            try:
+                wb.close()
+            except Exception:
+                pass
+
+    # Process unresolved payloads individually
+    for f, payload in unresolved:
         try:
             processing = staged_dir / 'processing' / f.name
             f.replace(processing)
-            logger.debug('Processing %s', processing)
             if dry_run:
-                logger.debug('Dry-run: would apply %s', payload)
-                processed_path = staged_dir / 'processed' / processing.name
-                processing.replace(processed_path)
-                logger.debug('Dry-run: moved to processed %s', processed_path)
+                logger.debug('Dry-run apply %s', payload)
             else:
                 wb_path = apply_payload(excel, payload, output_dir)
-                processed_path = staged_dir / 'processed' / processing.name
-                processing.replace(processed_path)
-                logger.debug('Applied and moved to processed %s', processed_path)
                 if wb_path:
                     modified_workbooks.add(wb_path)
+            processed_path = staged_dir / 'processed' / processing.name
+            processing.replace(processed_path)
             processed += 1
         except Exception as e:
             logger.exception('Failed to process %s: %s', f, e)
             try:
                 failed_path = staged_dir / 'failed' / f.name
-                f.replace(failed_path)
+                if processing.exists():
+                    processing.replace(failed_path)
             except Exception:
-                logger.exception('Failed to move to failed for %s', f)
+                pass
 
     # Log modified workbooks
     if modified_workbooks:
