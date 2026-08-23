@@ -63,6 +63,50 @@ class DailyDriveSyncGate:
                 'message': message,
             })
 
+    def _check_pipeline_state(self, now: datetime) -> tuple[bool, bool]:
+        """Check SQLite pipeline_state.
+
+        Returns:
+            (should_proceed, should_retry_upload)
+            - should_proceed: True if the gate should allow the run to proceed
+              (either because drive_download is done, or because the cycle is
+              already complete and _should_run_rsa_queries() will block it).
+            - should_retry_upload: True if a pending upload should be retried.
+        """
+        if self.pipeline_state is None or not getattr(self.pipeline_state, 'db_path', ''):
+            return False, False
+
+        current = self.pipeline_state.get()
+        if not current:
+            return False, False
+
+        phase = current.get('phase', '')
+        status = current.get('status', '')
+
+        if phase == 'drive_upload':
+            if status in ('starting', 'running'):
+                return False, True
+            if status == 'failed':
+                return False, True
+            if status == 'completed':
+                return True, False
+
+        if phase == 'rsa_queries' and status in ('completed', 'time-out'):
+            return True, False
+
+        if phase == 'drive_download' and status == 'completed':
+            self._synced_date = now.date()
+            return True, False
+
+        if phase == 'drive_download' and status == 'starting':
+            self._enqueue_pipeline_update(
+                'drive_download', 'running',
+                'Waiting for external orchestrator to complete drive download',
+            )
+            return False, False
+
+        return False, False
+
     def ensure_synced(self, now: datetime) -> bool:
         if self._synced_date == now.date():
             logger.debug('[DRIVE_SYNC_GATE] Already synced today (%s).', now.date())
@@ -86,6 +130,16 @@ class DailyDriveSyncGate:
             )
             return False
 
+        should_proceed, should_retry_upload = self._check_pipeline_state(now)
+        if should_retry_upload:
+            logger.info(
+                '[DRIVE_SYNC_GATE] Detected pending %s/%s; will retry upload before reports.',
+                current.get('phase'), current.get('status'),
+            )
+            return False
+        if should_proceed:
+            return True
+
         if now_seconds >= self.hard_deadline_seconds:
             logger.warning(
                 '[DRIVE_SYNC_GATE] Hard deadline (%s) reached without external confirmation. '
@@ -96,51 +150,17 @@ class DailyDriveSyncGate:
             return True
 
         if self.pipeline_state is not None and getattr(self.pipeline_state, 'db_path', ''):
-            today_updates = self.pipeline_state.get_today_updates()
-            drive_download_completed = any(
-                u.get('phase') == 'drive_download' and u.get('status') == 'completed'
-                for u in today_updates
-            )
             current = self.pipeline_state.get()
-
-            if current and current.get('phase') in ('drive_upload', 'rsa_queries') and current.get('status') in ('completed', 'time-out', 'starting', 'running'):
-                logger.info(
-                    '[DRIVE_SYNC_GATE] Pipeline already %s/%s today; not running reports again until tomorrow.',
-                    current.get('phase'), current.get('status'),
-                )
-                return False
-
-            if drive_download_completed:
-                self._synced_date = now.date()
-                logger.info(
-                    '[DRIVE_SYNC_GATE] drive_download completed today; reports can proceed.'
-                )
-                return True
-            if current and current.get('phase') == 'drive_download' and current.get('status') == 'completed':
-                self._synced_date = now.date()
-                logger.info(
-                    '[DRIVE_SYNC_GATE] External orchestrator confirmed drive_download completed. '
-                    'Reports can proceed.'
-                )
-                return True
-            if current and current.get('phase') == 'drive_download' and current.get('status') == 'starting':
-                self._enqueue_pipeline_update(
-                    'drive_download', 'running',
-                    'Waiting for external orchestrator to complete drive download',
-                )
-                logger.info(
-                    '[DRIVE_SYNC_GATE] External orchestrator started drive_download. Waiting for completion...'
-                )
-                return False
-
             logger.info(
                 '[DRIVE_SYNC_GATE] Pipeline state is %s (not drive_download); waiting for drive_download to appear.',
                 current.get('phase') if current else 'no state yet',
             )
-            return False
+        else:
+            logger.info(
+                '[DRIVE_SYNC_GATE] No pipeline_state configured; waiting until hard deadline or drive_download signal.'
+            )
 
-        self._synced_date = now.date()
-        return True
+        return False
 
 
 def upload_after_run(local_folder: str, drive_folder: str, token_path: str, pipeline_state=None) -> None:
@@ -150,11 +170,11 @@ def upload_after_run(local_folder: str, drive_folder: str, token_path: str, pipe
         deadline = time.time() + timeout
         while time.time() < deadline:
             current = pipeline_state.get()
-            if current and current.get('phase') == 'drive_upload' and current.get('status') == 'starting':
+            if current and current.get('phase') == 'drive_upload' and current.get('status') in ('starting', 'running', 'failed'):
                 break
             time.sleep(30)
         else:
-            logger.warning('[UPLOAD] Timeout waiting for drive_upload/starting signal; proceeding with upload anyway.')
+            logger.warning('[UPLOAD] Timeout waiting for drive_upload signal; proceeding with upload anyway.')
 
         enqueue_sqlite_job('update_pipeline_state', {
             'updated_at': datetime.now(timezone.utc).isoformat(),

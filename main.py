@@ -158,6 +158,23 @@ if __name__ == '__main__':
             pipeline_state=pipeline_state,
         )
         logger.info('Drive sync gate and upload hooks attached to ReportLoopRunner.')
+
+        if pipeline_state is not None:
+            current = pipeline_state.get()
+            if current and current.get('phase') == 'drive_upload' and current.get('status') in ('starting', 'running', 'failed'):
+                logger.info(
+                    'Detected pending drive_upload/%s from previous run; retrying upload before reports.',
+                    current.get('status'),
+                )
+                try:
+                    upload_after_run(
+                        local_folder=onedrive_path,
+                        drive_folder=cfg['drive_folder'],
+                        token_path=cfg['token_path'],
+                        pipeline_state=pipeline_state,
+                    )
+                except Exception as exc:
+                    logger.error(f'Upload retry failed: {exc}')
     elif cfg['drive_sync_enabled']:
         logger.warning('Drive sync enabled in settings but token_path is empty; continuing without Drive sync hooks.')
 
