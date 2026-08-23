@@ -122,7 +122,7 @@ if __name__ == '__main__':
         onedrive_path,
         cfg['drive_sync_enabled'],
         cfg['drive_folder'],
-        cfg.get('drive_poll_after', '04:00:00'),
+        cfg.get('drive_poll_after', '00:00:00'),
         cfg.get('drive_poll_deadline', '06:00:00'),
     )
 
@@ -146,7 +146,7 @@ if __name__ == '__main__':
             local_folder=onedrive_path,
             drive_folder=cfg['drive_folder'],
             token_path=cfg['token_path'],
-            poll_start_hms=cfg.get('drive_poll_after', '04:00:00'),
+            poll_start_hms=cfg.get('drive_poll_after', '00:00:00'),
             hard_deadline_hms=cfg.get('drive_poll_deadline', '06:00:00'),
             pipeline_state=pipeline_state,
         )

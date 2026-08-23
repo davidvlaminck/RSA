@@ -22,7 +22,7 @@ class DailyDriveSyncGate:
         local_folder: str,
         drive_folder: str,
         token_path: str,
-        poll_start_hms: str = '00:30:00',
+        poll_start_hms: str = '00:00:00',
         hard_deadline_hms: str = '06:00:00',
         pipeline_state=None,
     ):
@@ -96,7 +96,18 @@ class DailyDriveSyncGate:
             return True
 
         if self.pipeline_state is not None and getattr(self.pipeline_state, 'db_path', ''):
+            today_updates = self.pipeline_state.get_today_updates()
+            drive_download_completed = any(
+                u.get('phase') == 'drive_download' and u.get('status') == 'completed'
+                for u in today_updates
+            )
             current = self.pipeline_state.get()
+            if drive_download_completed:
+                self._synced_date = now.date()
+                logger.info(
+                    '[DRIVE_SYNC_GATE] drive_download completed today; reports can proceed.'
+                )
+                return True
             if current and current.get('phase') == 'drive_download' and current.get('status') == 'completed':
                 self._synced_date = now.date()
                 logger.info(
@@ -114,23 +125,9 @@ class DailyDriveSyncGate:
                 )
                 return False
 
-            if current and current.get('phase') != 'drive_download':
-                self._synced_date = now.date()
-                logger.info(
-                    '[DRIVE_SYNC_GATE] Pipeline state is %s (not drive_download); '
-                    'treating drive sync as already completed.',
-                    current.get('phase'),
-                )
-                return True
-
-            self._enqueue_pipeline_update(
-                'drive_download', 'running',
-                'Waiting for external orchestrator to start drive download',
-            )
             logger.info(
-                '[DRIVE_SYNC_GATE] Waiting for external orchestrator to start drive_download. '
-                'Current state: %s',
-                current if current else 'no state yet',
+                '[DRIVE_SYNC_GATE] Pipeline state is %s (not drive_download); waiting for drive_download to appear.',
+                current.get('phase') if current else 'no state yet',
             )
             return False
 
