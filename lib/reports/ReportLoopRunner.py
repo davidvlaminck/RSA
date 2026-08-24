@@ -781,12 +781,25 @@ class ReportLoopRunner:
 
                         if failed and datasource_attempts[ds] < RETRIES:
                             if deadline and time.time() >= deadline:
-                                logger.warning("Deadline reached, not retrying %s", ds)
+                                timed_out = True
+                                logger.warning(
+                                    "Deadline reached, not retrying %s (%d reports)",
+                                    ds, len(failed)
+                                )
                                 continue
+                            datasource_attempts[ds] += 1
+                            attempt = datasource_attempts[ds]
+                            current_query_timeout = base_query_timeout + (60 * (attempt - 1))
+                            reinitialize_database_connections(self.settings, arango_timeout=current_query_timeout)
                             logger.warning(
-                                "❌ [%s] attempt %d failed for %d reports, re-added to retry queue: %s",
-                                ds, datasource_attempts[ds], len(failed), failed
+                                "❌ [%s] attempt %d failed for %d reports, starting immediate retry %d/%d with query_timeout=%ds",
+                                ds, attempt - 1, len(failed), attempt, RETRIES, current_query_timeout
                             )
+                            retry_future = executor.submit(
+                                self._run_datasource_worker,
+                                ds, failed, current_query_timeout, batch_size, batch_timeout, deadline
+                            )
+                            future_to_ds[retry_future] = ds
                         elif not failed:
                             logger.info("✅ [%s] completed successfully", ds)
 
