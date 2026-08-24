@@ -317,7 +317,7 @@ class ReportLoopRunner:
             current = self.pipeline_status.get()
             if current:
                 phase = current.get('phase', '')
-                if phase in ('postgis_sync_paused', 'postgis_sync_running', 'postgis_sync_resuming'):
+                if phase in ('postgis_sync_paused', 'postgis_sync_running', 'postgis_sync_resuming', 'rsa_queries'):
                     return True
             time.sleep(60)
 
@@ -348,7 +348,7 @@ class ReportLoopRunner:
 
         Returns True if the pipeline is in a state where RSA queries should execute:
         - phase is postgis_sync_paused, postgis_sync_running, or postgis_sync_resuming
-        - rsa_queries status is not already completed/time-out
+        - phase is rsa_queries (not yet completed/time-out)
 
         Returns False if the pipeline is idle, in an earlier phase, or rsa_queries
         has already finished (e.g. after a midnight reset or crash recovery).
@@ -378,6 +378,9 @@ class ReportLoopRunner:
             return False
 
         if phase in ('postgis_sync_paused', 'postgis_sync_running', 'postgis_sync_resuming'):
+            return True
+
+        if phase == 'rsa_queries':
             return True
 
         logger.info(
