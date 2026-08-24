@@ -94,6 +94,21 @@ class DailyDriveSyncGate:
         if phase == 'rsa_queries' and status in ('completed', 'time-out'):
             return True, False
 
+        # If the pipeline has already advanced past drive_download into later
+        # phases (e.g. rsa_queries running, postgis sync phases), the download
+        # has already completed. Don't block reports waiting for a
+        # drive_download signal that already came and went.
+        if phase in (
+            'arango_sync',
+            'postgis_sync_pausing',
+            'postgis_sync_paused',
+            'postgis_sync_running',
+            'postgis_sync_resuming',
+            'rsa_queries',
+        ):
+            self._synced_date = now.date()
+            return True, False
+
         if phase == 'drive_download' and status == 'completed':
             self._synced_date = now.date()
             return True, False
