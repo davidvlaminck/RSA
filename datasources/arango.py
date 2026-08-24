@@ -63,12 +63,12 @@ class ArangoDatasource:
         if hasattr(self, "factory") and self.factory is not None:
             try:
                 self.connection = self.factory.create_connection()
-                logging.info(f"✅ Connected to ArangoDB: {self.connection.name}")
+                logging.info(f"Connected to ArangoDB: {self.connection.name}")
             except Exception as e:
                 logging.error(f"❌ Failed to connect to ArangoDB: {e}")
                 raise
         elif hasattr(self, "connection") and self.connection is not None:
-            logging.info("✅ Using existing ArangoDB connection.")
+            logging.info("Using existing ArangoDB connection.")
         else:
             raise RuntimeError("No ArangoDB connection or factory available.")
 

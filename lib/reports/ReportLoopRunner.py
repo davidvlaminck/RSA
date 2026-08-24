@@ -573,10 +573,11 @@ class ReportLoopRunner:
                     if hasattr(report_instance.report, 'rows'):
                         report_instance.report.rows = self._clean_report_headers(report_instance.report.rows)
                     del reports_to_do[report_name]
+                    logger.info(f"✅ Report {report_name} completed successfully")
                 except Exception as ex:
                     logger.info(f"exception happened in report {report_name}: {ex}")
                     logger.exception(ex)
-                    logger.error(f'failed completing report {report_name}')
+                    logger.error(f'❌ Report {report_name} failed — re-added to retry queue')
             logger.info(
                 f'{datetime.now(tz=pytz.timezone("Europe/Brussels"))}: done running report loop {reports_run}. '
                 f'Reports left to do: {len(reports_to_do)}'
@@ -783,11 +784,11 @@ class ReportLoopRunner:
                                 logger.warning("Deadline reached, not retrying %s", ds)
                                 continue
                             logger.warning(
-                                "[%s] attempt %d failed for %d reports, will retry",
-                                ds, datasource_attempts[ds], len(failed)
+                                "❌ [%s] attempt %d failed for %d reports, re-added to retry queue: %s",
+                                ds, datasource_attempts[ds], len(failed), failed
                             )
                         elif not failed:
-                            logger.info("[%s] completed successfully", ds)
+                            logger.info("✅ [%s] completed successfully", ds)
 
         all_failed = [r for reports in remaining.values() for r in reports]
         if all_failed:

@@ -124,7 +124,7 @@ def reinitialize_database_connections(settings, arango_timeout: int = 180):
                 password=neo4j_settings['password'],
                 database=neo4j_settings['database']
             )
-            logger.info("✓ Reinitialized Neo4J connection")
+            logger.info("Reinitialized Neo4J connection")
         except Exception as e:
             logger.warning(f"Could not reinitialize Neo4J: {e}")
     else:
@@ -146,7 +146,7 @@ def reinitialize_database_connections(settings, arango_timeout: int = 180):
                 password=postgis_settings['password'],
                 database=postgis_settings['database']
             )
-            logger.info("✓ Reinitialized PostGIS connection")
+            logger.info("Reinitialized PostGIS connection")
         except Exception as e:
             logger.warning(f"Could not reinitialize PostGIS: {e}")
     else:
@@ -168,7 +168,7 @@ def reinitialize_database_connections(settings, arango_timeout: int = 180):
                 database=arango_settings['database'],
                 request_timeout=arango_timeout,
             )
-            logger.info("✓ Reinitialized ArangoDB connection")
+            logger.info("Reinitialized ArangoDB connection")
         except Exception as e:
             logger.warning(f"Could not reinitialize ArangoDB: {e}")
     else:
@@ -185,7 +185,7 @@ def reinitialize_database_connections(settings, arango_timeout: int = 180):
         from outputs.sheets_wrapper import SingleSheetsWrapper
         SingleExcelWriter.init(output_dir=out_dir)
         SingleSheetsWrapper.init(output_dir=out_dir)
-        logger.info('✓ Reinitialized Excel writer and Excel-backed Sheets wrapper')
+        logger.info('Reinitialized Excel writer and Excel-backed Sheets wrapper')
     except Exception as e:
         logger.warning(f'Could not initialize Excel writer in worker: {e}')
 
@@ -242,13 +242,13 @@ def run_single_report(report_name: str, settings: dict, skip_db_init: bool = Fal
                 pass
             report_instance.run_report(sender=None)
             signal.alarm(0)
-            logger.info(f"✓ Completed successfully")
+            logger.info(f"✅ Completed report successfully")
             return 0
         except _ReportTimeout:
             signal.alarm(0)
             logger.error(
-                f"✗ Timeout after {total_timeout}s for {report_name} "
-                f"(query={query_timeout}s)"
+                f"❌ Timeout after {total_timeout}s for {report_name} "
+                f"(query={query_timeout}s) — re-added to retry queue"
             )
             return 1
         finally:
@@ -256,7 +256,7 @@ def run_single_report(report_name: str, settings: dict, skip_db_init: bool = Fal
             signal.signal(signal.SIGALRM, old_handler)
 
     except Exception as e:
-        logger.error(f"✗ Failed: {e}", exc_info=True)
+        logger.error(f"❌ Failed: {e} — re-added to retry queue", exc_info=True)
         return 1
 
 
