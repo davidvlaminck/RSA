@@ -608,7 +608,8 @@ class ReportLoopRunner:
         return timed_out
 
     def _run_datasource_worker(self, datasource: str, report_names: list[str], query_timeout: int,
-                               batch_size: int, batch_timeout: float, deadline: float) -> list[str]:
+                                batch_size: int, batch_timeout: float, deadline: float,
+                                process_timeout: float = 0) -> list[str]:
         """Run reports for a single datasource in a worker subprocess.
 
         Returns list of failed report names (empty list on success).
@@ -633,6 +634,7 @@ class ReportLoopRunner:
                 batch_size=batch_size,
                 batch_timeout=batch_timeout,
                 deadline=deadline,
+                process_timeout=process_timeout,
             )
             actual_failed = _read_worker_status(status_file, report_names)
             if actual_failed is None:
@@ -688,15 +690,19 @@ class ReportLoopRunner:
         logger.info(f"Found {len(report_names)} reports to execute")
 
         exec_cfg = self.settings.get("report_execution", {}) if isinstance(self.settings, dict) else {}
-        base_query_timeout = exec_cfg.get("query_timeout_seconds", 60)
+        # Honor both keys: prefer query_timeout_seconds, fall back to the documented timeout_seconds.
+        base_query_timeout = exec_cfg.get("query_timeout_seconds") or exec_cfg.get("timeout_seconds", 60)
         max_workers = min(exec_cfg.get("max_concurrent", 2), 3)
 
         batch_size = 10
         if deadline and time.time() < deadline:
             remaining = deadline - time.time()
             batch_timeout = max(60, remaining / 10)
+            # Hard backstop per datasource worker, derived from the remaining deadline budget.
+            overall_timeout = remaining / 2
         else:
             batch_timeout = 0
+            overall_timeout = 0
 
         groups = group_reports_by_datasource(report_names)
         pipelines = {ds: items for ds, items in groups.items() if items}
@@ -757,7 +763,8 @@ class ReportLoopRunner:
 
                     future = executor.submit(
                         self._run_datasource_worker,
-                        ds, reports, current_query_timeout, batch_size, batch_timeout, deadline
+                        ds, reports, current_query_timeout, batch_size, batch_timeout, deadline,
+                        overall_timeout,
                     )
                     future_to_ds[future] = ds
 
@@ -797,7 +804,8 @@ class ReportLoopRunner:
                             )
                             retry_future = executor.submit(
                                 self._run_datasource_worker,
-                                ds, failed, current_query_timeout, batch_size, batch_timeout, deadline
+                                ds, failed, current_query_timeout, batch_size, batch_timeout, deadline,
+                                overall_timeout,
                             )
                             future_to_ds[retry_future] = ds
                         elif not failed:

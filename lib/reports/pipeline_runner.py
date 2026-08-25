@@ -110,7 +110,7 @@ def _read_worker_status(status_file: str | None, expected_reports: list[str]) ->
 def _run_worker(report_names: list[str], settings_path: str, stream_output: bool,
                 status_file: str | None = None, batch_size: int = 0,
                 batch_timeout: float = 0, deadline: float = 0,
-                process_holder: dict | None = None) -> dict:
+                process_holder: dict | None = None, process_timeout: float = 0) -> dict:
     cmd = [
         sys.executable,
         "-m",
@@ -142,7 +142,26 @@ def _run_worker(report_names: list[str], settings_path: str, stream_output: bool
             if process_holder is not None:
                 process_holder['proc'] = proc
             output_chunks: list[str] = []
+            start = time.time()
             while True:
+                if process_timeout and (time.time() - start) > process_timeout:
+                    logger.error(
+                        "Worker hard timeout (%ss) exceeded, killing subprocess", process_timeout
+                    )
+                    try:
+                        proc.kill()
+                    except Exception:
+                        pass
+                    try:
+                        proc.wait(timeout=5)
+                    except Exception:
+                        pass
+                    return {
+                        "status": "timeout",
+                        "error": f"hard timeout after {process_timeout}s",
+                        "output": "".join(output_chunks),
+                        "status_file": status_file,
+                    }
                 ret = proc.poll()
                 if ret is not None:
                     for line in proc.stdout:

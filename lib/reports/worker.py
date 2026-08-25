@@ -203,6 +203,18 @@ def run_single_report(report_name: str, settings: dict, skip_db_init: bool = Fal
     """
     current_report.set(report_name)
 
+    query_timeout = settings.get('query_timeout_seconds', 60)
+    total_timeout = query_timeout * 2
+
+    class _ReportTimeout(Exception):
+        pass
+
+    def _timeout_handler(signum, frame):
+        raise _ReportTimeout()
+
+    # Arm the watchdog BEFORE instantiation/initialization so a hang there is also bounded.
+    old_handler = signal.signal(signal.SIGALRM, _timeout_handler)
+    signal.alarm(total_timeout)
     try:
         _log_resource_heartbeat()
         logger.info(f"Starting report")
@@ -221,43 +233,31 @@ def run_single_report(report_name: str, settings: dict, skip_db_init: bool = Fal
         report_instance.init_report()
         logger.info(f"Initialized")
 
-        query_timeout = settings.get('query_timeout_seconds', 60)
-        total_timeout = query_timeout * 2
-
-        class _ReportTimeout(Exception):
-            pass
-
-        def _timeout_handler(signum, frame):
-            raise _ReportTimeout()
-
-        old_handler = signal.signal(signal.SIGALRM, _timeout_handler)
-        signal.alarm(total_timeout)
+        postgis_ms = query_timeout * 1000
         try:
-            postgis_ms = query_timeout * 1000
-            try:
-                from lib.connectors.PostGISConnector import SinglePostGISConnector
-                connector = SinglePostGISConnector.get_connector()
-                connector.set_statement_timeout(postgis_ms)
-            except Exception:
-                pass
-            report_instance.run_report(sender=None)
-            signal.alarm(0)
-            logger.info(f"✅ Completed report successfully")
-            return 0
-        except _ReportTimeout:
-            signal.alarm(0)
-            logger.error(
-                f"❌ Timeout after {total_timeout}s for {report_name} "
-                f"(query={query_timeout}s) — re-added to retry queue"
-            )
-            return 1
-        finally:
-            signal.alarm(0)
-            signal.signal(signal.SIGALRM, old_handler)
-
+            from lib.connectors.PostGISConnector import SinglePostGISConnector
+            connector = SinglePostGISConnector.get_connector()
+            connector.set_statement_timeout(postgis_ms)
+        except Exception:
+            pass
+        report_instance.run_report(sender=None)
+        signal.alarm(0)
+        logger.info(f"✅ Completed report successfully")
+        return 0
+    except _ReportTimeout:
+        signal.alarm(0)
+        logger.error(
+            f"❌ Timeout after {total_timeout}s for {report_name} "
+            f"(query={query_timeout}s) — re-added to retry queue"
+        )
+        return 1
     except Exception as e:
+        signal.alarm(0)
         logger.error(f"❌ Failed: {e} — re-added to retry queue", exc_info=True)
         return 1
+    finally:
+        signal.alarm(0)
+        signal.signal(signal.SIGALRM, old_handler)
 
 
 def run_reports(report_names: list[str], settings: dict, status_file: str | None = None,
