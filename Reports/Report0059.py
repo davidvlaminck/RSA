@@ -13,18 +13,12 @@ FOR x IN assets
   FILTER x.AIMDBStatus_isActief == true
 
   FOR v, e, p IN 1..maxDepth OUTBOUND x voedt_relaties
-    OPTIONS { order: "bfs", uniqueVertices: "global" }
+    OPTIONS { order: "bfs", uniqueVertices: "none" }
 
-    LET back = FIRST(
-      FOR be IN voedt_relaties
-        FILTER be._from == v._id
-        FILTER be._to == x._id
-        LIMIT 1
-        RETURN be
-    )
-    FILTER back != null
+    FILTER v._id == x._id
+    FILTER LENGTH(p.edges) > 1
 
-    LET loopVertices = APPEND(p.vertices, [x])
+    LET loopVertices = p.vertices
 
     FILTER LENGTH(
       FOR n IN loopVertices
