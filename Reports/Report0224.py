@@ -12,29 +12,37 @@ Elektrische Keuring
 Vertrekken vanuit het Laagspanningsbord (OTL)
   Relatie(s) naar Elektrische Keuring toevoegen
   Het aantal relaties met een Elektrische Keuring tellen en info toevoegen.
-  
+
 LEFT-JOIN toepassen, zodat alle Laagspanningsborden worden teruggegeven.
 
-Laagspanningsbord -[HeeftKeuring]- Elektrische Keuring 
+Laagspanningsbord -[HeeftKeuring]- Elektrische Keuring
+
+Optimization: Instead of per-lsbord graph traversal (10K+ traversals
+visiting ~197K vertices), scan HeeftKeuring edges once via relatietype_key
+index (~7.8K edges), then look up source/destination vertices via DOCUMENT().
 */
 LET key_elektrische_keuring = FIRST(FOR at IN assettypes FILTER at.short_uri == 'onderdeel#ElektrischeKeuring' LIMIT 1 RETURN at._key)
 LET key_laagspanningsbord = FIRST(FOR at IN assettypes FILTER at.short_uri == 'onderdeel#Laagspanningsbord' LIMIT 1 RETURN at._key)
 LET key_relatie_heeftkeuring = FIRST(FOR rel_type in relatietypes FILTER rel_type.naam == 'HeeftKeuring' LIMIT 1 RETURN rel_type._key)
 
-/* Alle Laagspanningsborden */
-FOR lsbord IN assets
-  FILTER lsbord.assettype_key == key_laagspanningsbord and lsbord.AIMDBStatus_isActief == true
-
-  /* LEFT JOIN: HeeftKeuring-relatie van Laagspanningsbord naar Elektrische Keuring (optional), cardinality > 1 */
-  LET elektrische_keuringen = (
-    FOR elek_keuring, edge2 IN 0..1 OUTBOUND lsbord assetrelaties
-      FILTER elek_keuring.assettype_key == key_elektrische_keuring OR elek_keuring.assettype_key == null
-      FILTER elek_keuring.AIMDBStatus_isActief == true OR elek_keuring.AIMDBStatus_isActief == null
-      FILTER edge2.relatietype_key == key_relatie_heeftkeuring OR edge2.relatietype_key == null
-      // Filter elektrische keuring met als toestand: in-gebruik
-      FILTER elek_keuring.toestand == 'in-gebruik'
-      
-      RETURN {
+/* Scan all HeeftKeuring edges using the relatietype_key persistent index */
+LET all_edge_data = (
+  FOR edge2 IN assetrelaties
+    FILTER edge2.relatietype_key == key_relatie_heeftkeuring
+    /* Look up source vertex (should be an active Laagspanningsbord) */
+    LET lsbord = DOCUMENT(edge2._from)
+    FILTER lsbord.assettype_key == key_laagspanningsbord AND lsbord.AIMDBStatus_isActief == true
+    /* Look up destination vertex (should be an Elektrische Keuring) */
+    LET elek_keuring = DOCUMENT(edge2._to)
+    FILTER elek_keuring.assettype_key == key_elektrische_keuring
+    FILTER elek_keuring.AIMDBStatus_isActief == true
+    FILTER elek_keuring.toestand == 'in-gebruik'
+    RETURN {
+      lsbord_key: lsbord._key,
+      lsbord_naam: lsbord.AIMNaamObject_naam,
+      lsbord_naampad: lsbord.NaampadObject_naampad,
+      lsbord_notitie: lsbord.AIMObject_notitie,
+      keuring: {
         'assetId.identificator': elek_keuring._key,
         'typeURI': elek_keuring['@type'],
         'isActief': elek_keuring.AIMDBStatus_isActief,
@@ -46,23 +54,33 @@ FOR lsbord IN assets
         'eig_bijlage_uri': elek_keuring.AbstracteAanvullendeGeometrie_bijlage != null ? elek_keuring.AbstracteAanvullendeGeometrie_bijlage['DtcDocument_uri'] : null,
         'eig_bijlage_bestandsnaam': elek_keuring.AbstracteAanvullendeGeometrie_bijlage != null ? elek_keuring.AbstracteAanvullendeGeometrie_bijlage['DtcDocument_bestandsnaam'] : null,
         'eig_bijlage_omschrijving': elek_keuring.AbstracteAanvullendeGeometrie_bijlage != null ? elek_keuring.AbstracteAanvullendeGeometrie_bijlage['DtcDocument_omschrijving'] : null
-        }
-      )
-  
-    // Lookup the cardinality for the current lsbord
-    LET elektrische_keuringen_aantal = length(elektrische_keuringen)
-    FILTER elektrische_keuringen_aantal >= 1
-    
-    SORT elektrische_keuringen_aantal desc, lsbord.AIMNaamObject_naam asc
-
-    RETURN {
-      'lsbord.assetId.identificator': lsbord._key,
-      'lsbord.naam': lsbord.AIMNaamObject_naam,
-      'lsbord.naampad': lsbord.NaampadObject_naampad,
-      'lsbord.commentaar': lsbord.AIMObject_notitie,
-      'elektrische_keuringen_aantal': elektrische_keuringen_aantal,
-      'elektrische_keuringen': elektrische_keuringen,
+      }
     }
+)
+
+/* Group keuringen per Laagspanningsbord */
+FOR r IN all_edge_data
+  COLLECT
+    lsbord_key = r.lsbord_key,
+    lsbord_naam = r.lsbord_naam,
+    lsbord_naampad = r.lsbord_naampad,
+    lsbord_notitie = r.lsbord_notitie
+    INTO grouped
+    LET elektrische_keuringen = (
+      FOR g IN grouped
+        SORT g.r.keuring['assetId.identificator']
+        RETURN g.r.keuring
+    )
+  FILTER LENGTH(grouped) >= 1
+  SORT LENGTH(grouped) DESC, lsbord_naam ASC
+  RETURN {
+    'lsbord.assetId.identificator': lsbord_key,
+    'lsbord.naam': lsbord_naam,
+    'lsbord.naampad': lsbord_naampad,
+    'lsbord.commentaar': lsbord_notitie,
+    'elektrische_keuringen_aantal': LENGTH(grouped),
+    'elektrische_keuringen': elektrische_keuringen
+  }
 """
         self.report = DQReport(name='report0224',
                                title='Laaspanningsbord heeft hoogstens 1 Elektrische Keuring met als toestand in-gebruik',
