@@ -11,7 +11,7 @@ FOR a IN assets
   LET assettype = FIRST(
     FOR at IN assettypes
       FILTER at._key == a.assettype_key
-      FILTER REGEX_TEST(at.uri, '^https://lgc.data.wegenenverkeer.be')
+       FILTER STARTS_WITH(at.uri, 'https://lgc.data.wegenenverkeer.be')
       LIMIT 1
       RETURN at
   )
