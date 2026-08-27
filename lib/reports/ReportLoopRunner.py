@@ -202,12 +202,7 @@ class ReportLoopRunner:
             return start_s <= now_s <= end_s
         return now_s >= start_s or now_s <= end_s
 
-    def _is_in_quiet_hours(self, now: datetime) -> bool:
-        start_s, end_s = 15 * 3600, 23 * 3600
-        now_s = now.hour * 3600 + now.minute * 60 + now.second
-        return start_s <= now_s < end_s
 
-    @staticmethod
     def _clean_report_headers(report_rows):
         """Utility: remove duplicate header row if the first two rows are identical.
 
@@ -225,14 +220,6 @@ class ReportLoopRunner:
 
         while True:
             now = datetime.now(tz=BRUSSELS)
-
-            if self._is_in_quiet_hours(now):
-                now_seconds = now.hour * 3600 + now.minute * 60 + now.second
-                sleep_seconds = (23 * 3600) - now_seconds
-                if sleep_seconds > 0:
-                    logger.info(f"{now}: in quiet hours (15:00-23:00), sleeping until 23:00")
-                    time.sleep(sleep_seconds)
-                    continue
 
             if run_right_away:
                 # Respect the same pre-run hook for immediate execution.
