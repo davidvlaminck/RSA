@@ -174,7 +174,9 @@ def reinitialize_database_connections(settings, arango_timeout: int = 180):
     else:
         logger.debug("ArangoDB settings not configured; skipping reinitialization")
 
-    # Ensure Excel writer and Excel-backed Sheets wrapper are initialized for workers
+    # Ensure Excel writer and Excel-backed Sheets wrapper are initialized for workers.
+    # Google Sheets access is no longer used, so this only (re)opens the Excel writer.
+    # Called between batches as well, so the Excel writer is released/recreated regularly.
     try:
         drive_cfg = settings.get('drive_sync', {}) if isinstance(settings, dict) else {}
         excel_cfg = settings.get('output', {}).get('excel', {}) if isinstance(settings, dict) else {}
@@ -315,6 +317,16 @@ def run_reports(report_names: list[str], settings: dict, status_file: str | None
         if deadline and time.time() >= deadline:
             break
 
+        # Reset connection singletons between batches. Each worker is an isolated
+        # process, so resetting its own connections is safe and does not affect the
+        # other worker process. This releases connection pools / sockets that leaked
+        # (e.g. on query timeouts) during the batch just finished, bounding memory
+        # growth of the long-lived worker process. The Excel writer (no Google Sheets)
+        # is reopened as well to release any held state.
+        try:
+            reinitialize_database_connections(settings, arango_timeout=arango_timeout)
+        except Exception as e:
+            logger.warning(f"Could not reset connections between batches: {e}")
         gc.collect()
 
     _write_status(status_file, '__pipeline_done__', True)

@@ -207,11 +207,12 @@ class ArangoDatasource:
 class SingleArangoConnector:
     _instance = None
     _db = None
+    _client = None
 
     @classmethod
     def init(cls, host, port, user, password, database, request_timeout=180):
         """Initialize the ArangoDB singleton connection.
-        
+
         Args:
             host: ArangoDB host
             port: ArangoDB port
@@ -220,6 +221,9 @@ class SingleArangoConnector:
             database: Database name
             request_timeout: Request timeout in seconds (default 180)
         """
+        # Close a previously held client (and its connection pool) before replacing it,
+        # otherwise each re-init leaks an urllib3 pool of sockets (seen as climbing RSS).
+        cls._close_client()
         if cls._instance is None:
             cls._instance = cls()
         client = ArangoClient(hosts=f'http://{host}:{port}', request_timeout=request_timeout)
@@ -231,10 +235,24 @@ class SingleArangoConnector:
             pass
         # Connect to the actual database
         cls._db = client.db(database, username=user, password=password)
+        cls._client = client
+
+    @classmethod
+    def _close_client(cls):
+        """Best-effort close of the underlying ArangoClient connection pool."""
+        client = cls._client
+        cls._client = None
+        if client is None:
+            return
+        try:
+            client.close()
+        except Exception:
+            pass
 
     @classmethod
     def reset(cls):
         """Reset the singleton to allow reinitialization with new settings."""
+        cls._close_client()
         cls._instance = None
         cls._db = None
 
