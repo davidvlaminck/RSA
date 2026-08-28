@@ -244,7 +244,7 @@ class SingleArangoConnector:
             # if system DB connect fails, continue and let later calls surface the error
             pass
         # Connect to the actual database
-        cls._db = client.db(database, username=user, password=database)
+        cls._db = client.db(database, username=user, password=password)
         cls._client = client
 
         # Read per-query server-side bounds. query_max_runtime overrides the default;
