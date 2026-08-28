@@ -160,6 +160,8 @@ def reinitialize_database_connections(settings, arango_timeout: int = 180):
         except Exception:
             pass
         try:
+            # expose settings so init() can read query_max_runtime / query_memory_limit
+            SingleArangoConnector._arango_settings = arango_settings
             SingleArangoConnector.init(
                 host=arango_settings['host'],
                 port=arango_settings['port'],
@@ -169,6 +171,15 @@ def reinitialize_database_connections(settings, arango_timeout: int = 180):
                 request_timeout=arango_timeout,
             )
             logger.info("Reinitialized ArangoDB connection")
+            # Bound server-side query runtime to this attempt's client timeout so a
+            # hanging query is aborted on the ArangoDB server itself (not just the client).
+            try:
+                SingleArangoConnector.set_query_bounds(
+                    max_runtime=arango_timeout,
+                    memory_limit=arango_settings.get('query_memory_limit'),
+                )
+            except Exception:
+                pass
         except Exception as e:
             logger.warning(f"Could not reinitialize ArangoDB: {e}")
     else:

@@ -72,13 +72,16 @@ class ArangoDatasource:
         else:
             raise RuntimeError("No ArangoDB connection or factory available.")
 
-    def execute(self, query: str) -> QueryResult:
+    def execute(self, query: str, max_runtime: int | None = None, memory_limit: int | None = None) -> QueryResult:
         if not hasattr(self, 'connection') or not self.connection:
             raise RuntimeError("No active ArangoDB connection.")
+        # Prefer an explicit override, else the per-datasource server-side bounds.
+        rt = max_runtime if max_runtime is not None else getattr(self, 'max_runtime', None)
+        ml = memory_limit if memory_limit is not None else getattr(self, 'memory_limit', None)
         try:
             import time
             start_time = time.time()
-            cursor = self.connection.aql.execute(query)
+            cursor = self.connection.aql.execute(query, max_runtime=rt, memory_limit=ml)
             result = list(cursor)
 
             # Always provide keys: try cursor metadata first, then infer from rows
@@ -197,17 +200,24 @@ class ArangoDatasource:
             raise
 
     @classmethod
-    def from_existing_connection(cls, connection):
+    def from_existing_connection(cls, connection, max_runtime=None, memory_limit=None):
         obj = cls.__new__(cls)
         # keep compatibility with test_connection checks that look for a 'factory' attribute
         obj.factory = None
         obj.connection = connection
+        obj.max_runtime = max_runtime
+        obj.memory_limit = memory_limit
         return obj
 
 class SingleArangoConnector:
     _instance = None
     _db = None
     _client = None
+    # Server-side query bounds applied to every AQL execution (see issue B: a query
+    # that hangs client-side keeps running on the ArangoDB server and pegs the box).
+    _max_runtime = None
+    _memory_limit = None
+    DEFAULT_MAX_RUNTIME = 240  # seconds; abort runaway queries server-side by default
 
     @classmethod
     def init(cls, host, port, user, password, database, request_timeout=180):
@@ -234,8 +244,33 @@ class SingleArangoConnector:
             # if system DB connect fails, continue and let later calls surface the error
             pass
         # Connect to the actual database
-        cls._db = client.db(database, username=user, password=password)
+        cls._db = client.db(database, username=user, password=database)
         cls._client = client
+
+        # Read per-query server-side bounds. query_max_runtime overrides the default;
+        # query_memory_limit is opt-in (None = no server-side memory cap).
+        arango_cfg = getattr(cls, '_arango_settings', None) or {}
+        max_runtime = arango_cfg.get('query_max_runtime')
+        if max_runtime is None:
+            max_runtime = cls.DEFAULT_MAX_RUNTIME
+        cls._max_runtime = max_runtime
+        cls._memory_limit = arango_cfg.get('query_memory_limit')
+
+    @classmethod
+    def set_query_bounds(cls, max_runtime: int | None = None, memory_limit: int | None = None) -> None:
+        """Configure server-side query bounds after init (e.g. from settings)."""
+        if max_runtime is not None:
+            cls._max_runtime = max_runtime
+        if memory_limit is not None:
+            cls._memory_limit = memory_limit
+
+    @classmethod
+    def get_max_runtime(cls):
+        return cls._max_runtime
+
+    @classmethod
+    def get_memory_limit(cls):
+        return cls._memory_limit
 
     @classmethod
     def _close_client(cls):

@@ -55,7 +55,11 @@ def make_datasource(name: str):
         from datasources.arango import ArangoDatasource, SingleArangoConnector
 
         db = SingleArangoConnector.get_db()
-        return ArangoDatasource.from_existing_connection(db)
+        return ArangoDatasource.from_existing_connection(
+            db,
+            max_runtime=SingleArangoConnector.get_max_runtime(),
+            memory_limit=SingleArangoConnector.get_memory_limit(),
+        )
     raise ValueError(f"Unsupported datasource: {name}")
 
 
