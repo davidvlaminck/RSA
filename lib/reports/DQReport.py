@@ -528,6 +528,17 @@ class DQReport(Report):
                 'meta': {'report': self.name}
             }
 
+            k_cell = f'K{rowFound}'
+            payload_summary_k = {
+                'operation': 'write_cell',
+                'excel_filename': excel_fname_for_summary,
+                'spreadsheet_id': summary_target,
+                'sheet': 'Overzicht',
+                'cell': k_cell,
+                'value': self.now,
+                'meta': {'report': self.name}
+            }
+
             try:
                 logger.info('%s: staging Overzicht B payload target=%s cell=%s payload=%s', self.name, excel_fname_for_summary, f'B{rowFound}', payload_summary_b)
             except Exception:
@@ -544,10 +555,16 @@ class DQReport(Report):
             except Exception:
                 pass
             stage_summary_update(payload_summary_h, staged_dir=staged_dir or 'RSA_OneDrive/staged_summaries')
+            try:
+                logger.info('%s: staging Overzicht K payload target=%s cell=%s payload=%s', self.name, excel_fname_for_summary, i_cell, payload_summary_k)
+            except Exception:
+                pass
+            stage_summary_update(payload_summary_k, staged_dir=staged_dir or 'RSA_OneDrive/staged_summaries')
             # Log the exact staged payloads for post-aggregation verification including the target workbook
             try:
                 logger.info('%s: staged Overzicht C payload target=%s cell=%s value=%r', self.name, excel_fname_for_summary, c_cell, payload_summary_c.get('value'))
                 logger.info('%s: staged Overzicht H payload target=%s cell=%s value=%r', self.name, excel_fname_for_summary, h_cell, payload_summary_h.get('value'))
+                logger.info('%s: staged Overzicht K payload target=%s cell=%s value=%r', self.name, excel_fname_for_summary, i_cell, payload_summary_k.get('value'))
             except Exception:
                 pass
 
@@ -580,6 +597,11 @@ class DQReport(Report):
                 try:
                     sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.summary_sheet_id, sheet_name='Overzicht', start_cell='H' + str(rowFound),
                                                        data=[[query_time]])
+                except Exception:
+                    pass
+                try:
+                    sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.summary_sheet_id, sheet_name='Overzicht', start_cell='K' + str(rowFound),
+                                                       data=[[self.now]])
                 except Exception:
                     pass
             except Exception:
