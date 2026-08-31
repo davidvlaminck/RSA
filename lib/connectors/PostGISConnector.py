@@ -6,15 +6,56 @@ from psycopg2.pool import ThreadedConnectionPool
 import time
 
 
+class PostGISCircuitBreaker:
+    """Stop trying after consecutive failures."""
+
+    def __init__(self, failure_threshold: int = 5, recovery_timeout: int = 300):
+        self.failure_count = 0
+        self.failure_threshold = failure_threshold
+        self.recovery_timeout = recovery_timeout
+        self.last_failure_time = None
+        self.state = 'closed'
+
+    def record_failure(self):
+        self.failure_count += 1
+        self.last_failure_time = time.time()
+        if self.failure_count >= self.failure_threshold:
+            self.state = 'open'
+            logging.warning(f"[PostGISConnector] Circuit breaker OPEN after {self.failure_count} failures")
+
+    def record_success(self):
+        if self.failure_count > 0:
+            logging.info(f"[PostGISConnector] Circuit breaker reset after {self.failure_count} previous failures")
+        self.failure_count = 0
+        self.state = 'closed'
+
+    def can_execute(self):
+        if self.state == 'closed':
+            return True
+        if self.state == 'open':
+            if self.last_failure_time and (time.time() - self.last_failure_time) > self.recovery_timeout:
+                self.state = 'half-open'
+                logging.info("[PostGISConnector] Circuit breaker HALF-OPEN, allowing trial request")
+                return True
+            return False
+        return True
+
+
 class PostGISConnector:
     def __init__(self, host, port, user, password, database: str = 'awvinfra'):
         # keep a modest pool; adjust min/max based on expected concurrent queries
-        self.pool = ThreadedConnectionPool(minconn=5, maxconn=20, user=user, password=password, host=host, port=port,
-                                           database=database)
+        self.pool = ThreadedConnectionPool(minconn=5, maxconn=30, user=user, password=password, host=host, port=port,
+                                           database=database,
+                                           keepalive=1,
+                                           keepalive_idle=30,
+                                           keepalive_interval=10,
+                                           keepalive_count=3)
         # main_connection kept for legacy usage; prefer using pooled connections for operations
         self.main_connection = self.pool.getconn()
         self.main_connection.autocommit = False
         self.db = database
+        self._default_statement_timeout_ms = 60000
+        self.circuit_breaker = PostGISCircuitBreaker(failure_threshold=5, recovery_timeout=300)
         self.param_type_map = {
             'fresh_start': 'bool',
             'pagesize': 'int',
@@ -63,15 +104,50 @@ class PostGISConnector:
             'last_update_utc_controlefiches': 'timestamp',
         }
 
+    def _validate_connection(self, conn):
+        """Check if connection is still alive, close if stale."""
+        try:
+            if conn.closed:
+                return False
+            cur = conn.cursor()
+            cur.execute("SELECT 1")
+            cur.fetchone()
+            cur.close()
+            return True
+        except Exception:
+            try:
+                conn.close()
+            except Exception:
+                pass
+            return False
+
     def _run_with_connection(self, func, *, autocommit_for_read: bool = False, retries: int = 2, retry_backoff: float = 0.5):
         """Helper: get connection from pool, run func(cursor, connection) safely and return value.
         Auto-rollbacks on exceptions and puts connection back to pool.
         Optionally set autocommit_for_read True for read-only queries to avoid long-lived transactions.
         Includes a simple retry loop for transient errors like 'current transaction is aborted'."""
+        if not self.circuit_breaker.can_execute():
+            raise Error("PostGIS circuit breaker is OPEN - too many consecutive failures, waiting for recovery")
+
         attempt = 0
         last_exc = None
         while attempt <= retries:
             conn = self.pool.getconn()
+
+            if not self._validate_connection(conn):
+                try:
+                    self.pool.putconn(conn, close=True)
+                except Exception:
+                    pass
+                conn = self.pool.getconn()
+
+            try:
+                cur = conn.cursor()
+                cur.execute(f"SET statement_timeout = {self._default_statement_timeout_ms}")
+                cur.close()
+            except Exception:
+                pass
+
             orig_autocommit = getattr(conn, 'autocommit', False)
             backend_pid = None
             try:
@@ -98,6 +174,7 @@ class PostGISConnector:
                                 conn.rollback()
                             except Exception as rb_exc:
                                 logging.debug(f"[PostGISConnector] rollback after failed commit also failed: {rb_exc}")
+                    self.circuit_breaker.record_success()
                     return result
                 finally:
                     try:
@@ -130,6 +207,7 @@ class PostGISConnector:
                     self.pool.putconn(conn, close=False)
                 except Exception as put_exc:
                     logging.debug(f"[PostGISConnector] putconn failed (close=False) on backend_pid={backend_pid}: {put_exc}")
+                self.circuit_breaker.record_failure()
                 raise
             finally:
                 # restore autocommit flag and return connection to pool if not already returned
@@ -143,6 +221,7 @@ class PostGISConnector:
                 except Exception as put_exc:
                     logging.debug(f"[PostGISConnector] putconn final failed on backend_pid={backend_pid}: {put_exc}")
         # exhausted retries
+        self.circuit_breaker.record_failure()
         raise last_exc
 
     def perform_query(self, query: str):
@@ -156,7 +235,12 @@ class PostGISConnector:
         return self._run_with_connection(_fn, autocommit_for_read=True)
 
     def set_statement_timeout(self, ms: int) -> None:
+        self._default_statement_timeout_ms = ms
         self.perform_query(f"SET statement_timeout = {ms}")
+
+    def set_default_statement_timeout(self, ms: int):
+        """Set default statement_timeout for new connections."""
+        self._default_statement_timeout_ms = ms
 
     def get_params(self, connection):
         cursor = connection.cursor()

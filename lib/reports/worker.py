@@ -222,7 +222,23 @@ def run_single_report(report_name: str, settings: dict, skip_db_init: bool = Fal
     class _ReportTimeout(Exception):
         pass
 
+    def _cancel_current_query():
+        """Cancel the running query on PostgreSQL backend."""
+        try:
+            from lib.connectors.PostGISConnector import SinglePostGISConnector
+            connector = SinglePostGISConnector.get_connector()
+            conn = connector.pool.getconn()
+            conn.autocommit = True
+            cur = conn.cursor()
+            cur.execute("SELECT pg_cancel_backend(pid) FROM pg_stat_activity WHERE state = 'active' AND query_start < now() - interval '5 seconds' AND pid != pg_backend_pid()")
+            cur.fetchall()
+            cur.close()
+            connector.pool.putconn(conn)
+        except Exception:
+            pass
+
     def _timeout_handler(signum, frame):
+        _cancel_current_query()
         raise _ReportTimeout()
 
     # Arm the watchdog BEFORE instantiation/initialization so a hang there is also bounded.
@@ -320,7 +336,7 @@ def run_reports(report_names: list[str], settings: dict, status_file: str | None
                 failed.extend(batch[batch.index(report_name):])
                 break
 
-            exit_code = run_single_report(report_name, settings, skip_db_init=(batch_idx > 0))
+            exit_code = run_single_report(report_name, settings, skip_db_init=True)
             _write_status(status_file, report_name, exit_code == 0)
             if exit_code != 0:
                 failed.append(report_name)
