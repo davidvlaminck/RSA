@@ -406,6 +406,15 @@ class LegacyHistoryReport(Report):
         except Exception:
             pass
 
+        # write datasource into column G for this report's summary row
+        try:
+            sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.summary_sheet_id,
+                                               sheet_name='Overzicht',
+                                               start_cell='G' + str(rowFound + 1),
+                                               data=[[self.datasource]])
+        except Exception:
+            pass
+
         logging.info(f'finished report {self.name}')
 
     @staticmethod

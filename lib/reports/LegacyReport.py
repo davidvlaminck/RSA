@@ -154,6 +154,15 @@ class LegacyReport(Report):
             # if query_time is not available for some reason, skip silently to avoid breaking the report
             pass
 
+        # write datasource into column G for this report's summary row
+        try:
+            sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.summary_sheet_id,
+                                               sheet_name='Overzicht',
+                                               start_cell='G' + str(rowFound + 1),
+                                               data=[[self.datasource]])
+        except Exception:
+            pass
+
         logger.info(f'finished report {self.name}')
 
     @staticmethod
