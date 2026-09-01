@@ -46,10 +46,10 @@ class PostGISConnector:
         # keep a modest pool; adjust min/max based on expected concurrent queries
         self.pool = ThreadedConnectionPool(minconn=5, maxconn=30, user=user, password=password, host=host, port=port,
                                            database=database,
-                                           keepalive=1,
-                                           keepalive_idle=30,
-                                           keepalive_interval=10,
-                                           keepalive_count=3)
+                                           keepalives=1,
+                                           keepalives_idle=30,
+                                           keepalives_interval=10,
+                                           keepalives_count=3)
         # main_connection kept for legacy usage; prefer using pooled connections for operations
         self.main_connection = self.pool.getconn()
         self.main_connection.autocommit = False
