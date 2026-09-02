@@ -422,6 +422,32 @@ class ReportLoopRunner:
 
         return True
 
+    def _preflight_checks(self) -> None:
+        """Verify database connectivity before starting a report run.
+
+        Fails fast if PostGIS is unreachable, preventing hours of wasted runtime
+        on a dead datasource.
+        """
+        try:
+            from lib.connectors.PostGISConnector import SinglePostGISConnector
+            connector = SinglePostGISConnector.get_connector()
+            conn = connector.pool.getconn()
+            try:
+                conn.cursor().execute("SELECT 1")
+            finally:
+                connector.pool.putconn(conn)
+            logger.info("Preflight check: PostGIS connection OK")
+        except Exception as exc:
+            logger.error(f"Preflight check: PostGIS connection failed: {exc}")
+            if self.pipeline_status is not None:
+                enqueue_sqlite_job("update_pipeline_state", {
+                    "updated_at": datetime.now(timezone.utc).isoformat(),
+                    "phase": "rsa_queries",
+                    "status": "failed",
+                    "message": f"Preflight check failed: PostGIS unreachable: {exc}",
+                })
+            raise RuntimeError(f"PostGIS preflight check failed: {exc}") from exc
+
     def run(self):
         """Run all reports either sequentially or in parallel based on settings.
 
@@ -433,6 +459,8 @@ class ReportLoopRunner:
         if not self._should_run_rsa_queries():
             logger.info(f'{datetime.now(tz=BRUSSELS)}: skipping rsa_queries, pipeline not in valid state.')
             return
+
+        self._preflight_checks()
 
         if self.pipeline_status is not None:
             enqueue_sqlite_job("update_pipeline_state", {
