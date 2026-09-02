@@ -790,9 +790,10 @@ class ReportLoopRunner:
                         "rsa_queries", "running"
                     )
 
+                    ds_batch_size = 1 if ds == 'PostGIS' else batch_size
                     future = executor.submit(
                         self._run_datasource_worker,
-                        ds, reports, current_query_timeout, batch_size, batch_timeout, deadline,
+                        ds, reports, current_query_timeout, ds_batch_size, batch_timeout, deadline,
                         overall_timeout,
                     )
                     future_to_ds[future] = ds
@@ -831,9 +832,10 @@ class ReportLoopRunner:
                                 "❌ [%s] attempt %d failed for %d reports, starting immediate retry %d/%d with query_timeout=%ds",
                                 ds, attempt - 1, len(failed), attempt, RETRIES, current_query_timeout
                             )
+                            ds_batch_size = 1 if ds == 'PostGIS' else batch_size
                             retry_future = executor.submit(
                                 self._run_datasource_worker,
-                                ds, failed, current_query_timeout, batch_size, batch_timeout, deadline,
+                                ds, failed, current_query_timeout, ds_batch_size, batch_timeout, deadline,
                                 overall_timeout,
                             )
                             future_to_ds[retry_future] = ds
@@ -947,7 +949,7 @@ class ReportLoopRunner:
                 try:
                     return_code, failed_reports = run_pipelines_by_datasource(
                         reports_to_do, base_settings, attempt_settings_path, stream_output=True,
-                        batch_size=10,
+                        batch_size=1,
                     )
                     reports_to_do = failed_reports
                 finally:
