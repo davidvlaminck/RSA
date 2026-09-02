@@ -190,7 +190,7 @@ class PostGISConnector:
                 except Exception as rb_exc:
                     logging.debug(f"[PostGISConnector] rollback failed on backend_pid={backend_pid}: {rb_exc}")
                 # simple heuristic: retry on transaction-aborted or connection-related transient errors
-                msg = getattr(exc, 'pgerror', str(exc))
+                msg = getattr(exc, 'pgerror', None) or str(exc)
                 logging.debug(f"[PostGISConnector] caught Error on backend_pid={backend_pid}: attempt={attempt} exc={exc} pgerror={msg}")
                 if 'current transaction is aborted' in msg.lower() or 'terminating connection' in msg.lower() or 'could not receive data from server' in msg.lower():
                     attempt += 1
