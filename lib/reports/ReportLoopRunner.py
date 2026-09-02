@@ -315,7 +315,10 @@ class ReportLoopRunner:
             current = self.pipeline_status.get()
             if current:
                 phase = current.get('phase', '')
-                if phase in ('postgis_sync_paused', 'postgis_sync_running', 'postgis_sync_resuming', 'rsa_queries'):
+                status = current.get('status', '')
+                if phase in ('postgis_sync_paused', 'postgis_sync_running', 'postgis_sync_resuming'):
+                    return True
+                if phase == 'rsa_queries' and status not in ('completed', 'time-out', 'aborted', 'failed'):
                     return True
             time.sleep(60)
 
@@ -368,7 +371,7 @@ class ReportLoopRunner:
             )
             return False
 
-        if phase == 'rsa_queries' and status in ('completed', 'time-out'):
+        if phase == 'rsa_queries' and status in ('completed', 'time-out', 'aborted', 'failed'):
             logger.info(
                 f'{datetime.now(tz=BRUSSELS)}: rsa_queries already {status}, '
                 f'not running again.'
@@ -410,7 +413,7 @@ class ReportLoopRunner:
             )
             return False
 
-        if phase == 'rsa_queries' and status in ('completed', 'time-out'):
+        if phase == 'rsa_queries' and status in ('completed', 'time-out', 'aborted', 'failed'):
             logger.warning(
                 f'{datetime.now(tz=BRUSSELS)}: rsa_queries already {status} (external), '
                 f'aborting report execution.'
