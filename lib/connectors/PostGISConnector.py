@@ -141,13 +141,6 @@ class PostGISConnector:
                     pass
                 conn = self.pool.getconn()
 
-            try:
-                cur = conn.cursor()
-                cur.execute(f"SET statement_timeout = {self._default_statement_timeout_ms}")
-                cur.close()
-            except Exception:
-                pass
-
             orig_autocommit = getattr(conn, 'autocommit', False)
             backend_pid = None
             try:
@@ -157,9 +150,26 @@ class PostGISConnector:
                     backend_pid = None
                 logging.debug(f"[PostGISConnector] _run_with_connection attempt={attempt} backend_pid={backend_pid} autocommit_for_read={autocommit_for_read}")
 
+                # If connection is inside an open transaction and we need to switch
+                # autocommit, rollback first because psycopg2 forbids changing
+                # autocommit while a transaction is active.
+                if autocommit_for_read and not orig_autocommit:
+                    try:
+                        conn.rollback()
+                    except Exception:
+                        pass
+
                 # for read-only queries allow autocommit to avoid implicit transaction
                 if autocommit_for_read:
                     conn.autocommit = True
+
+                try:
+                    cur = conn.cursor()
+                    cur.execute(f"SET statement_timeout = {self._default_statement_timeout_ms}")
+                    cur.close()
+                except Exception:
+                    pass
+
                 cur = conn.cursor()
                 try:
                     result = func(cur, conn)
