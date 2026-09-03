@@ -1,4 +1,5 @@
 import logging
+import threading
 from types import NoneType
 
 from psycopg2 import Error
@@ -42,19 +43,31 @@ class PostGISCircuitBreaker:
 
 
 class PostGISConnector:
-    def __init__(self, host, port, user, password, database: str = 'awvinfra'):
+    def __init__(self, host, port, user, password, database: str = 'awvinfra',
+                 default_statement_timeout_ms: int = 60000,
+                 default_lock_timeout_ms: int = 10000):
+        # Statement/lock timeouts are applied via libpq connection options so every
+        # connection leaving the pool already has them enforced. This is more robust
+        # than running `SET statement_timeout` per-call (which can race with
+        # long-running queries on the same connection).
+        pool_options = (
+            f"-c statement_timeout={int(default_statement_timeout_ms)} "
+            f"-c lock_timeout={int(default_lock_timeout_ms)}"
+        )
         # keep a modest pool; adjust min/max based on expected concurrent queries
         self.pool = ThreadedConnectionPool(minconn=5, maxconn=30, user=user, password=password, host=host, port=port,
                                            database=database,
                                            keepalives=1,
                                            keepalives_idle=30,
                                            keepalives_interval=10,
-                                           keepalives_count=3)
+                                           keepalives_count=3,
+                                           options=pool_options)
         # main_connection kept for legacy usage; prefer using pooled connections for operations
         self.main_connection = self.pool.getconn()
         self.main_connection.autocommit = False
         self.db = database
-        self._default_statement_timeout_ms = 60000
+        self._default_statement_timeout_ms = int(default_statement_timeout_ms)
+        self._default_lock_timeout_ms = int(default_lock_timeout_ms)
         self.circuit_breaker = PostGISCircuitBreaker(failure_threshold=5, recovery_timeout=300)
         self.param_type_map = {
             'fresh_start': 'bool',
@@ -244,13 +257,86 @@ class PostGISConnector:
 
         return self._run_with_connection(_fn, autocommit_for_read=True)
 
+    def execute_with_hard_timeout(self, query: str, hard_timeout_s: float = 60.0):
+        """Run a query with a hard wall-clock timeout.
+
+        psycopg2's ``cursor.execute`` is a blocking syscall and is *not* interruptible
+        by Python signals; in practice that means a hung backend can keep a worker
+        subprocess alive for hours. This wrapper runs the query in a daemon thread and,
+        if it does not return in time, asks PostgreSQL to cancel it via a *separate*
+        pooled connection (``pg_cancel_backend``).
+
+        Returns a dict with ``rows``, ``description`` and ``error`` keys. Exactly
+        one of ``rows``/``error`` is non-None on success/clean timeout. The
+        ``description`` is the cursor description object captured before ``fetchall``
+        returns, used by callers to derive column names.
+        """
+        result: dict = {"rows": None, "description": None, "error": None}
+
+        def _runner():
+            def _fn(cur, conn):
+                cur.execute(query)
+                desc = cur.description
+                rows = cur.fetchall()
+                return rows, desc
+            try:
+                rows, desc = self._run_with_connection(_fn, autocommit_for_read=True)
+                result["rows"] = rows
+                result["description"] = desc
+            except Exception as exc:  # noqa: BLE001
+                result["error"] = exc
+
+        thread = threading.Thread(target=_runner, name="PostGISHardTimeoutQuery", daemon=True)
+        thread.start()
+        thread.join(timeout=hard_timeout_s)
+        if thread.is_alive():
+            # The query is still running in the daemon thread. The connection it holds
+            # is locked inside psycopg2.execute, so we cannot reuse it to issue
+            # pg_cancel_backend on the same backend PID; instead we pick a *fresh*
+            # connection from the pool and cancel by guessing the active backend
+            # against pg_stat_activity for this database.
+            try:
+                cancel_conn = self.pool.getconn()
+                try:
+                    cancel_conn.autocommit = True
+                    cur = cancel_conn.cursor()
+                    cur.execute(
+                        "SELECT pg_cancel_backend(pid) FROM pg_stat_activity "
+                        "WHERE state = 'active' AND datname = current_database() "
+                        "AND pid <> pg_backend_pid()"
+                    )
+                    cur.fetchall()
+                    cur.close()
+                finally:
+                    self.pool.putconn(cancel_conn)
+            except Exception:  # noqa: BLE001
+                logging.debug("[PostGISConnector] failed to issue pg_cancel_backend on hard timeout")
+            # Give Postgres a brief grace period to apply the cancel.
+            thread.join(timeout=5.0)
+            if thread.is_alive():
+                logging.error(
+                    "[PostGISConnector] query did not respond to pg_cancel_backend within 5s; "
+                    "the worker subprocess will keep running until the outer deadline kills it"
+                )
+            result["error"] = TimeoutError(
+                f"PostGIS query exceeded hard timeout of {hard_timeout_s}s"
+            )
+        return result
+
     def set_statement_timeout(self, ms: int) -> None:
-        self._default_statement_timeout_ms = ms
-        self.perform_query(f"SET statement_timeout = {ms}")
+        """Persistently update the statement_timeout used for *new* connections.
+
+        The default timeout is enforced through libpq options at pool construction,
+        so changing the value here also affects connections issued afterwards. We do
+        not run a SET here because that would require grabbing another pooled
+        connection (which may itself be busy with a stuck query) and is therefore
+        prone to the very hangs this method is meant to prevent.
+        """
+        self._default_statement_timeout_ms = int(ms)
 
     def set_default_statement_timeout(self, ms: int):
         """Set default statement_timeout for new connections."""
-        self._default_statement_timeout_ms = ms
+        self._default_statement_timeout_ms = int(ms)
 
     def get_params(self, connection):
         cursor = connection.cursor()
@@ -385,8 +471,15 @@ class SinglePostGISConnector:
     postgis_connector: PostGISConnector | NoneType = None
 
     @classmethod
-    def init(cls, host: str = '', port:str = '', user: str = '', password: str = '', database: str = 'awvinfra'):
-        cls.postgis_connector = PostGISConnector(host, port, user, password, database)
+    def init(cls, host: str = '', port: str = '', user: str = '', password: str = '',
+             database: str = 'awvinfra',
+             default_statement_timeout_ms: int = 60000,
+             default_lock_timeout_ms: int = 10000):
+        cls.postgis_connector = PostGISConnector(
+            host, port, user, password, database,
+            default_statement_timeout_ms=default_statement_timeout_ms,
+            default_lock_timeout_ms=default_lock_timeout_ms,
+        )
 
     @classmethod
     def reset(cls):

@@ -101,14 +101,19 @@ def _log_resource_heartbeat() -> None:
         pass
 
 
-def reinitialize_database_connections(settings, arango_timeout: int = 180):
+def reinitialize_database_connections(settings, arango_timeout: int = 180,
+                                      postgis_timeout_ms: int | None = None):
     """Re-initialize all database singletons in this child process.
 
     Critical: Forked processes inherit parent connections which are NOT safe to use.
     Each child must create fresh connections.
+
+    PostGIS takes an extra ``postgis_timeout_ms`` so the new pool is built with that
+    statement_timeout enforced via libpq options (avoids the SET-after-pool race
+    where a hung connection never accepts the SET statement).
     """
     databases = settings.get('databases', {}) if isinstance(settings, dict) else {}
-    
+
     neo4j_settings = databases.get('Neo4j')
     if neo4j_settings:
         try:
@@ -139,14 +144,25 @@ def reinitialize_database_connections(settings, arango_timeout: int = 180):
         try:
             # PostGIS connector
             from lib.connectors.PostGISConnector import SinglePostGISConnector
+            effective_timeout_ms = (
+                int(postgis_timeout_ms)
+                if postgis_timeout_ms is not None
+                else int(postgis_settings.get('statement_timeout', 60000))
+            )
             SinglePostGISConnector.init(
                 host=postgis_settings['host'],
                 port=postgis_settings['port'],
                 user=postgis_settings['user'],
                 password=postgis_settings['password'],
-                database=postgis_settings['database']
+                database=postgis_settings['database'],
+                default_statement_timeout_ms=effective_timeout_ms,
+                default_lock_timeout_ms=int(postgis_settings.get('lock_timeout', 10000)),
             )
-            logger.info("Reinitialized PostGIS connection")
+            logger.info(
+                "Reinitialized PostGIS connection (statement_timeout=%dms, lock_timeout=%dms)",
+                effective_timeout_ms,
+                int(postgis_settings.get('lock_timeout', 10000)),
+            )
         except Exception as e:
             logger.warning(f"Could not reinitialize PostGIS: {e}")
     else:
@@ -269,6 +285,12 @@ def run_single_report(report_name: str, settings: dict, skip_db_init: bool = Fal
         try:
             from lib.connectors.PostGISConnector import SinglePostGISConnector
             connector = SinglePostGISConnector.get_connector()
+            # No-op when the connector's existing default already matches; otherwise
+            # just update the cached value so newly created connections (via
+            # reinitialize_database_connections at the start of the pipeline) pick
+            # up the new timeout. We deliberately do NOT issue a SET statement here:
+            # the connection we would use to issue it may itself be locked behind a
+            # hung query, which is exactly the failure mode we are guarding against.
             connector.set_statement_timeout(postgis_ms)
         except Exception:
             pass

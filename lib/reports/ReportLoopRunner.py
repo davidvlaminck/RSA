@@ -40,15 +40,21 @@ RETRIES = 5
 logger = logging.getLogger(__name__)
 
 
-def reinitialize_database_connections(settings: dict, arango_timeout: int = 180) -> None:
+def reinitialize_database_connections(settings: dict, arango_timeout: int = 180,
+                                      postgis_timeout_ms: int | None = None) -> None:
     """Re-initialize all database singletons from the current settings.
-    
+
     Args:
         settings: Settings dictionary with database credentials.
         arango_timeout: ArangoDB request timeout in seconds (default 180).
+        postgis_timeout_ms: PostGIS statement_timeout in milliseconds. When provided
+            (or set in settings under ``databases.PostGIS.statement_timeout``), the
+            freshly initialised connection pool is created with that timeout applied
+            via libpq connection options. When omitted, the existing value on the
+            connector is reused (default 60000ms).
     """
     databases = settings.get('databases', {}) if isinstance(settings, dict) else {}
-    
+
     neo4j_settings = databases.get('Neo4j')
     if neo4j_settings:
         try:
@@ -70,9 +76,22 @@ def reinitialize_database_connections(settings: dict, arango_timeout: int = 180)
         except Exception:
             pass
         try:
-            SinglePostGISConnector.init(host=postgis_settings['host'], port=postgis_settings['port'],
-                                        user=postgis_settings['user'], password=postgis_settings['password'],
-                                        database=postgis_settings['database'])
+            # Resolve per-attempt statement_timeout, falling back to whatever is
+            # configured under databases.PostGIS.statement_timeout.
+            effective_timeout_ms = (
+                postgis_timeout_ms
+                if postgis_timeout_ms is not None
+                else postgis_settings.get('statement_timeout', 60000)
+            )
+            SinglePostGISConnector.init(
+                host=postgis_settings['host'],
+                port=postgis_settings['port'],
+                user=postgis_settings['user'],
+                password=postgis_settings['password'],
+                database=postgis_settings['database'],
+                default_statement_timeout_ms=int(effective_timeout_ms),
+                default_lock_timeout_ms=int(postgis_settings.get('lock_timeout', 10000)),
+            )
         except Exception as exc:
             logger.warning(f"Could not reinitialize PostGIS: {exc}")
     else:
@@ -721,7 +740,18 @@ class ReportLoopRunner:
         exec_cfg = self.settings.get("report_execution", {}) if isinstance(self.settings, dict) else {}
         # Honor both keys: prefer query_timeout_seconds, fall back to the documented timeout_seconds.
         base_query_timeout = exec_cfg.get("query_timeout_seconds") or exec_cfg.get("timeout_seconds", 60)
-        max_workers = min(exec_cfg.get("max_concurrent", 2), 3)
+
+        # Per-datasource concurrency: a hangende PostGIS-query mag de Arango-pipeline
+        # niet blokkeren, dus we verdelen de workers over de aanwezige datasources.
+        # Standaard: 1 worker per datasource; gebruikers kunnen dit overriden via
+        # settings.report_execution.max_concurrent_per_datasource = {PostGIS: 1, ArangoDB: 2}.
+        max_concurrent_global = exec_cfg.get("max_concurrent", 2)
+        per_ds_cfg = exec_cfg.get("max_concurrent_per_datasource", {}) or {}
+        max_workers = max(
+            max_concurrent_global,
+            *(int(v) for v in per_ds_cfg.values()),
+        )
+        max_workers = min(max_workers, 3)
 
         batch_size = 10
         if deadline and time.time() < deadline:
@@ -779,7 +809,14 @@ class ReportLoopRunner:
                     current_query_timeout = base_query_timeout + (60 * (attempt - 1))
 
                     if attempt > 1:
-                        reinitialize_database_connections(self.settings, arango_timeout=current_query_timeout)
+                        # Reinitialize Arango AND PostGIS with the oplopende timeout,
+                        # zodat een vastgelopen query niet door alle retries getrokken
+                        # wordt. Voor PostGIS wordt statement_timeout doorgegeven in ms.
+                        reinitialize_database_connections(
+                            self.settings,
+                            arango_timeout=current_query_timeout,
+                            postgis_timeout_ms=int(current_query_timeout) * 1000,
+                        )
 
                     logger.info(
                         f"Starting [%s] attempt %d/%d with query_timeout=%ds for %d reports",

@@ -29,33 +29,33 @@ class PostGISDatasource:
 
         self._connector._run_with_connection(_fn, autocommit_for_read=True)
 
-    def execute(self, query: str) -> QueryResult:
+    def execute(self, query: str, max_runtime_seconds: int | None = None) -> QueryResult:
+        """Execute a PostGIS query with fail-forward semantics.
+
+        ``max_runtime_seconds`` is the wall-clock cap. If the query does not return in
+        time we issue ``pg_cancel_backend`` against the active backend from a fresh
+        connection so the worker subprocess does not hang on a single bad query.
+        """
         start = time.time()
+        # Default hard cap: the connector's statement_timeout + 10s grace; the
+        # libpq ``statement_timeout`` will kill the query server-side first, and the
+        # wrapper here guarantees the worker subprocess returns within that budget
+        # even if the cancel fails for some reason.
+        if max_runtime_seconds is None:
+            max_runtime_seconds = max(60, int(self._connector._default_statement_timeout_ms / 1000) + 10)
 
-        def _fn(cur, conn):
-            cur.execute(query)
-            rows = cur.fetchall()
-            desc = cur.description
-            return rows, desc
+        result = self._connector.execute_with_hard_timeout(query, hard_timeout_s=float(max_runtime_seconds))
+        if result.get("error") is not None:
+            raise result["error"]
+        rows = result["rows"]
+        desc = result["description"]
 
-        rows, desc = self._connector._run_with_connection(_fn, autocommit_for_read=True)
-
-        # Desc can be None for some adapters; derive keys from description or from first row
         keys = [col.name for col in (desc or [])]
         if not keys and rows:
             first_row = rows[0]
             if isinstance(first_row, dict):
                 keys = list(first_row.keys())
-            elif isinstance(first_row, (list, tuple)) and desc:
-                keys = [col.name for col in desc]
-
-        # final fallback: empty list
-        if not keys:
-            keys = []
 
         query_time = round(time.time() - start, 2)
-
-        # Set last_data_update to current Brussels time as fallback
         last_data_update = datetime.now(BRUSSELS).strftime("%Y-%m-%d %H:%M:%S")
-
         return QueryResult(keys=keys, rows=rows, last_data_update=last_data_update, query_time_seconds=query_time)
