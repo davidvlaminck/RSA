@@ -8,6 +8,10 @@ the next run of main.py will proceed.
 Safe to run repeatedly: each call queues a fresh job that just resets the
 state to the desired phase. Existing jobs already in the queue are not
 disturbed.
+
+The script injects its own repo root onto ``sys.path`` so it runs equally well
+under plain ``python`` (PyCharm Play), ``uv run`` (no PYTHONPATH needed) or as
+a one-off ``/usr/bin/python3 scripts/ops/force_run_reports.py``.
 """
 import argparse
 import os
@@ -15,10 +19,13 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-_REPO = Path(__file__).resolve().parent
-sys.path.insert(0, str(_REPO))
+# Ensure repo root is importable no matter how the script is launched.
+_HERE = Path(__file__).resolve()
+_REPO = _HERE.parents[2]  # scripts/ops/force_run_reports.py -> RSA/
+if str(_REPO) not in sys.path:
+    sys.path.insert(0, str(_REPO))
 
-from lib.connectors.pipeline_state import enqueue_sqlite_job
+from lib.connectors.pipeline_state import enqueue_sqlite_job  # noqa: E402
 
 
 def main():
