@@ -744,13 +744,31 @@ class ReportLoopRunner:
         # Per-datasource concurrency: a hangende PostGIS-query mag de Arango-pipeline
         # niet blokkeren, dus we verdelen de workers over de aanwezige datasources.
         # Standaard: 1 worker per datasource; gebruikers kunnen dit overriden via
-        # settings.report_execution.max_concurrent_per_datasource = {PostGIS: 1, ArangoDB: 2}.
+        # settings.report_execution.max_concurrent_per_datasource = {"PostGIS": 1, "ArangoDB": 2}.
         max_concurrent_global = exec_cfg.get("max_concurrent", 2)
         per_ds_cfg = exec_cfg.get("max_concurrent_per_datasource", {}) or {}
-        max_workers = max(
-            max_concurrent_global,
-            *(int(v) for v in per_ds_cfg.values()),
-        )
+        # Defensive validation: settings on disk can be malformed (e.g. a user
+        # accidentally puts an int here, or a string). Coerce to a dict of ints
+        # so ``max(..., *per_ds_cfg.values())`` cannot raise TypeError.
+        if not isinstance(per_ds_cfg, dict):
+            logger.warning(
+                "report_execution.max_concurrent_per_datasource is %s, expected dict; "
+                "ignoring it and falling back to max_concurrent=%s",
+                type(per_ds_cfg).__name__, max_concurrent_global,
+            )
+            per_ds_cfg = {}
+        per_ds_values: list[int] = []
+        for k, v in per_ds_cfg.items():
+            try:
+                per_ds_values.append(int(v))
+            except (TypeError, ValueError):
+                logger.warning(
+                    "max_concurrent_per_datasource[%r]=%r is not an int; ignoring",
+                    k, v,
+                )
+        max_workers = max_concurrent_global
+        if per_ds_values:
+            max_workers = max(max_concurrent_global, *per_ds_values)
         max_workers = min(max_workers, 3)
 
         batch_size = 10
