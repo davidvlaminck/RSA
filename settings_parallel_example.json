@@ -4,12 +4,17 @@
   "report_execution": {
     "mode": "parallel_by_datasource",
     "max_concurrent": 2,
-    "timeout_seconds": 60,
+    "query_timeout_seconds": 60,
+    "max_concurrent_per_datasource": {
+      "PostGIS": 1,
+      "ArangoDB": 2
+    },
     "_mode_options": ["sequential", "parallel_by_datasource"],
     "_notes": {
       "mode": "Choose 'sequential' for traditional one-at-a-time execution, or 'parallel_by_datasource' to run reports from different databases concurrently",
       "max_concurrent": "Maximum reports running at once. Recommended: 2 for 8GB RAM, 3 for 16GB RAM",
-      "timeout_seconds": "Kill reports that run longer than this (1800 = 30 minutes)"
+      "query_timeout_seconds": "Per-report query timeout in seconds. Each retry attempt adds 60s on top of this baseline (e.g. attempt 2 = query_timeout_seconds + 60). 60s is sufficient for almost all PostGIS/Arango queries in this project.",
+      "max_concurrent_per_datasource": "Optional. Override the per-datasource worker cap so a hung PostGIS query cannot block the Arango pipeline. Must be a dict like {\"PostGIS\": 1, \"ArangoDB\": 2}. A bare integer or string here is ignored (a warning is logged) and the global max_concurrent is used instead. Capped at 3 in total."
     }
   },
 
@@ -62,7 +67,11 @@
     "report_execution": {
       "mode": "parallel_by_datasource",
       "max_concurrent": 2,
-      "timeout_seconds": 60
+      "query_timeout_seconds": 60,
+      "max_concurrent_per_datasource": {
+        "PostGIS": 1,
+        "ArangoDB": 2
+      }
     },
     "drive_sync": {
       "enabled": true,
