@@ -451,7 +451,19 @@ class PostGISConnector:
             raise NotImplementedError
 
     def get_connection(self, *, autocommit: bool = False):
+        """Get a validated connection from the pool.
+
+        If the connection is stale or closed, it is discarded and a fresh one
+        is returned. This prevents "connection already closed" errors when
+        callers bypass ``_run_with_connection``.
+        """
         connection = self.pool.getconn()
+        if not self._validate_connection(connection):
+            try:
+                self.pool.putconn(connection, close=True)
+            except Exception:
+                pass
+            connection = self.pool.getconn()
         connection.autocommit = autocommit
         return connection
 

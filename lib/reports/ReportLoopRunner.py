@@ -452,6 +452,8 @@ class ReportLoopRunner:
             connector = SinglePostGISConnector.get_connector()
             conn = connector.pool.getconn()
             try:
+                if not connector._validate_connection(conn):
+                    raise RuntimeError("PostGIS connection failed validation")
                 conn.cursor().execute("SELECT 1")
             finally:
                 connector.pool.putconn(conn)

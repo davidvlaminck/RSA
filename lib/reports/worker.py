@@ -244,8 +244,10 @@ def run_single_report(report_name: str, settings: dict, skip_db_init: bool = Fal
             from lib.connectors.PostGISConnector import SinglePostGISConnector
             connector = SinglePostGISConnector.get_connector()
             conn = connector.pool.getconn()
-            conn.autocommit = True
             try:
+                if not connector._validate_connection(conn):
+                    return
+                conn.autocommit = True
                 pid = conn.get_backend_pid()
                 cur = conn.cursor()
                 cur.execute(f"SELECT pg_cancel_backend({pid})")
