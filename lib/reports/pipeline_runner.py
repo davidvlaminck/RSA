@@ -55,10 +55,18 @@ def _read_historical_durations(report_names: list[str], output_dir: Path | str) 
         return {rname: float('inf') for rname in report_names}
 
 
-def _sort_reports_by_duration(report_names: list[str], output_dir: Path | str) -> list[str]:
-    """Sort reports by estimated query duration (ascending), unknowns last."""
+def _sort_reports_by_duration(report_names: list[str], output_dir: Path | str, deprioritized: list[str] | None = None) -> list[str]:
+    """Sort reports by estimated query duration (ascending), unknowns last.
+
+    Reports listed in ``deprioritized`` are moved to the end of the queue,
+    after all other reports (including unknowns). This is useful for reports
+    that are known to be slow and should not block faster reports.
+    """
     durations = _read_historical_durations(report_names, output_dir)
-    return sorted(report_names, key=lambda rname: durations.get(rname, float('inf')))
+    deprioritized_set = set(deprioritized or [])
+    normal = [r for r in report_names if r not in deprioritized_set]
+    delayed = [r for r in report_names if r in deprioritized_set]
+    return sorted(normal, key=lambda rname: durations.get(rname, float('inf'))) + delayed
 
 
 def _stream_worker_output(output: str | None, stream: TextIO) -> None:
@@ -228,8 +236,10 @@ def run_pipelines_by_datasource(
     excel_cfg = settings.get("output", {}).get("excel", {})
     output_dir = Path(drive_cfg.get("local_folder") or excel_cfg.get("output_dir") or "RSA_OneDrive")
 
+    deprioritized = settings.get("report_execution", {}).get("deprioritized_reports", []) if isinstance(settings, dict) else []
+
     for datasource, report_list in pipelines.items():
-        pipelines[datasource] = _sort_reports_by_duration(report_list, output_dir)
+        pipelines[datasource] = _sort_reports_by_duration(report_list, output_dir, deprioritized)
         logger.info("Sorted pipeline [%s] by estimated duration: %s", datasource, pipelines[datasource])
 
     max_workers = min(max_concurrent, len(pipelines))

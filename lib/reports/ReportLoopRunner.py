@@ -791,8 +791,11 @@ class ReportLoopRunner:
         excel_cfg = self.settings.get("output", {}).get("excel", {})
         output_dir = Path(drive_cfg.get("local_folder") or excel_cfg.get("output_dir") or "RSA_OneDrive")
 
+        exec_cfg = self.settings.get("report_execution", {}) if isinstance(self.settings, dict) else {}
+        deprioritized = exec_cfg.get("deprioritized_reports", [])
+
         for datasource, report_list in pipelines.items():
-            pipelines[datasource] = _sort_reports_by_duration(report_list, output_dir)
+            pipelines[datasource] = _sort_reports_by_duration(report_list, output_dir, deprioritized)
             logger.info("Sorted pipeline [%s] by estimated duration: %s", datasource, pipelines[datasource])
 
         logger.info("Running %d pipelines in parallel (max_workers=%d)", len(pipelines), max_workers)
