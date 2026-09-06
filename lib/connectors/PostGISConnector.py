@@ -46,22 +46,13 @@ class PostGISConnector:
     def __init__(self, host, port, user, password, database: str = 'awvinfra',
                  default_statement_timeout_ms: int = 60000,
                  default_lock_timeout_ms: int = 10000):
-        # Statement/lock timeouts are applied via libpq connection options so every
-        # connection leaving the pool already has them enforced. This is more robust
-        # than running `SET statement_timeout` per-call (which can race with
-        # long-running queries on the same connection).
-        pool_options = (
-            f"-c statement_timeout={int(default_statement_timeout_ms)} "
-            f"-c lock_timeout={int(default_lock_timeout_ms)}"
-        )
         # keep a modest pool; adjust min/max based on expected concurrent queries
         self.pool = ThreadedConnectionPool(minconn=5, maxconn=30, user=user, password=password, host=host, port=port,
                                            database=database,
                                            keepalives=1,
                                            keepalives_idle=30,
                                            keepalives_interval=10,
-                                           keepalives_count=3,
-                                           options=pool_options)
+                                           keepalives_count=3)
         # main_connection kept for legacy usage; prefer using pooled connections for operations
         self.main_connection = self.pool.getconn()
         self.main_connection.autocommit = False
@@ -175,13 +166,6 @@ class PostGISConnector:
                 # for read-only queries allow autocommit to avoid implicit transaction
                 if autocommit_for_read:
                     conn.autocommit = True
-
-                try:
-                    cur = conn.cursor()
-                    cur.execute(f"SET statement_timeout = {self._default_statement_timeout_ms}")
-                    cur.close()
-                except Exception:
-                    pass
 
                 cur = conn.cursor()
                 try:
