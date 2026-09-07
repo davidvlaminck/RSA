@@ -169,6 +169,9 @@ class PostGISConnector:
 
                 cur = conn.cursor()
                 try:
+                    cur.execute("SELECT current_setting('statement_timeout')")
+                    timeout_val = cur.fetchone()[0]
+                    logging.info(f"[PostGISConnector] statement_timeout={timeout_val} backend_pid={backend_pid}")
                     result = func(cur, conn)
                     # commit if we changed autocommit back to False and func didn't raise
                     if not conn.autocommit:

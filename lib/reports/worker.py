@@ -262,9 +262,22 @@ def run_single_report(report_name: str, settings: dict, skip_db_init: bool = Fal
         _cancel_current_query()
         raise _ReportTimeout()
 
+    def _hard_kill(timeout: float):
+        """SIGKILL watchdog: cannot be caught/ignored."""
+        def _kill():
+            try:
+                os.kill(os.getpid(), signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+        t = threading.Timer(timeout, _kill)
+        t.daemon = True
+        t.start()
+        return t
+
     # Arm the watchdog BEFORE instantiation/initialization so a hang there is also bounded.
     old_handler = signal.signal(signal.SIGALRM, _timeout_handler)
     signal.alarm(total_timeout)
+    hard_kill_timer = _hard_kill(total_timeout + 10)
     try:
         _log_resource_heartbeat()
         logger.info(f"Starting report")
@@ -298,10 +311,12 @@ def run_single_report(report_name: str, settings: dict, skip_db_init: bool = Fal
             pass
         report_instance.run_report(sender=None)
         signal.alarm(0)
+        hard_kill_timer.cancel()
         logger.info(f"✅ Completed report successfully")
         return 0
     except _ReportTimeout:
         signal.alarm(0)
+        hard_kill_timer.cancel()
         logger.error(
             f"❌ Timeout after {total_timeout}s for {report_name} "
             f"(query={query_timeout}s) — re-added to retry queue"
@@ -309,10 +324,12 @@ def run_single_report(report_name: str, settings: dict, skip_db_init: bool = Fal
         return 1
     except Exception as e:
         signal.alarm(0)
+        hard_kill_timer.cancel()
         logger.error(f"❌ Failed: {e} — re-added to retry queue", exc_info=True)
         return 1
     finally:
         signal.alarm(0)
+        hard_kill_timer.cancel()
         signal.signal(signal.SIGALRM, old_handler)
 
 
