@@ -127,6 +127,8 @@ def reinitialize_database_connections(settings: dict, arango_timeout: int = 180,
 
 
 class ReportLoopRunner:
+    DAILY_RUN_LOCK_FILE = "/tmp/rsa_pipeline.lock"
+
     def __init__(self, settings_path, excel_output_dir: str | None = None):
         """Initialize runner.
 
@@ -232,6 +234,25 @@ class ReportLoopRunner:
             return start_s <= now_s <= end_s
         return now_s >= start_s or now_s <= end_s
 
+    def _check_daily_lock(self) -> bool:
+        """Return True if the pipeline already ran today."""
+        try:
+            if os.path.exists(self.DAILY_RUN_LOCK_FILE):
+                with open(self.DAILY_RUN_LOCK_FILE, "r") as f:
+                    last_date = f.read().strip()
+                if last_date == datetime.now(tz=BRUSSELS).date().isoformat():
+                    return True
+        except Exception:
+            pass
+        return False
+
+    def _write_daily_lock(self) -> None:
+        """Write today's date to the lock file."""
+        try:
+            with open(self.DAILY_RUN_LOCK_FILE, "w") as f:
+                f.write(datetime.now(tz=BRUSSELS).date().isoformat())
+        except Exception:
+            pass
 
     def _clean_report_headers(report_rows):
         """Utility: remove duplicate header row if the first two rows are identical.
@@ -250,6 +271,11 @@ class ReportLoopRunner:
 
         while True:
             now = datetime.now(tz=BRUSSELS)
+
+            if self._check_daily_lock():
+                logger.info(f'{datetime.now(tz=BRUSSELS)}: already ran today (lock file), sleeping until tomorrow.')
+                time.sleep(60)
+                continue
 
             if run_right_away:
                 # Respect the same pre-run hook for immediate execution.
@@ -270,6 +296,7 @@ class ReportLoopRunner:
                         last_run_date = now.date()
                         continue
                 self.run()
+                self._write_daily_lock()
                 run_right_away = False
                 last_run_date = datetime.now(tz=BRUSSELS).date()
                 continue
@@ -309,6 +336,7 @@ class ReportLoopRunner:
 
             # start running reports now
             self.run()
+            self._write_daily_lock()
             last_run_date = datetime.now(tz=BRUSSELS).date()
 
     def _wait_for_preconditions(self, now: datetime) -> bool:
