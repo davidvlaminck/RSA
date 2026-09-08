@@ -131,8 +131,8 @@ def main():
 
     log_section("RESULTATEN")
     logger.info("Scenario 1 (alleen Report0108): rc=%s", results["single"])
-    logger.info("Scenario 2 (kleine batch): rc=%s, failed=%s", results["small_batch_rc"], results["small_batch_failed"])
-    logger.info("Scenario 3 (volledig PostGIS): rc=%s, failed_count=%s", results["full_rc"], results["full_failed_count"])
+    logger.info("Scenario 2 (kleine batch): rc=%s, failed=%s, failed_names=%s", results["small_batch_rc"], results["small_batch_failed"], failed2)
+    logger.info("Scenario 3 (volledig PostGIS): rc=%s, failed_count=%s, failed=%s", results["full_rc"], results["full_failed_count"], failed3)
 
     if results["single"] == 0 and results["small_batch_rc"] == 0 and results["full_rc"] == 0:
         logger.info("Alle scenario's geslaagd. De bulk-failure is waarschijnlijk time-afhankelijk.")
