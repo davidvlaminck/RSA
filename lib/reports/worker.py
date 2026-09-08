@@ -25,6 +25,11 @@ import warnings
 
 logger = logging.getLogger(__name__)
 
+try:
+    from psycopg2.errors import QueryCanceled as PostGISQueryCanceled
+except ImportError:
+    PostGISQueryCanceled = None
+
 # Suppress known third-party DeprecationWarnings (narrow filter)
 warnings.filterwarnings('ignore', message=r'path is deprecated. Use files\(\) instead', category=DeprecationWarning)
 
@@ -278,7 +283,7 @@ def run_single_report(report_name: str, settings: dict, skip_db_init: bool = Fal
     # Arm the watchdog BEFORE instantiation/initialization so a hang there is also bounded.
     old_handler = signal.signal(signal.SIGALRM, _timeout_handler)
     signal.alarm(total_timeout)
-    hard_kill_timer = _hard_kill(total_timeout + 10)
+    hard_kill_timer = _hard_kill(total_timeout + 60)
     try:
         _log_resource_heartbeat()
         logger.info(f"Starting report")
@@ -316,22 +321,49 @@ def run_single_report(report_name: str, settings: dict, skip_db_init: bool = Fal
         logger.info(f"✅ Completed report successfully")
         return 0
     except _ReportTimeout:
-        signal.alarm(0)
-        hard_kill_timer.cancel()
+        try:
+            signal.alarm(0)
+        except Exception:
+            pass
+        try:
+            hard_kill_timer.cancel()
+        except Exception:
+            pass
         logger.error(
             f"❌ Timeout after {total_timeout}s for {report_name} "
             f"(query={query_timeout}s) — re-added to retry queue"
         )
         return 1
     except Exception as e:
-        signal.alarm(0)
-        hard_kill_timer.cancel()
-        logger.error(f"❌ Failed: {e} — re-added to retry queue", exc_info=True)
+        try:
+            signal.alarm(0)
+        except Exception:
+            pass
+        try:
+            hard_kill_timer.cancel()
+        except Exception:
+            pass
+        if PostGISQueryCanceled is not None and isinstance(e, PostGISQueryCanceled):
+            logger.error(
+                f"❌ Database statement_timeout exceeded for {report_name} "
+                f"(query={query_timeout}s) — re-added to retry queue"
+            )
+        else:
+            logger.error(f"❌ Failed: {e} — re-added to retry queue", exc_info=True)
         return 1
     finally:
-        signal.alarm(0)
-        hard_kill_timer.cancel()
-        signal.signal(signal.SIGALRM, old_handler)
+        try:
+            signal.alarm(0)
+        except Exception:
+            pass
+        try:
+            hard_kill_timer.cancel()
+        except Exception:
+            pass
+        try:
+            signal.signal(signal.SIGALRM, old_handler)
+        except Exception:
+            pass
 
 
 def run_reports(report_names: list[str], settings: dict, status_file: str | None = None,
@@ -424,28 +456,32 @@ def main():
 
     setup_logging()
 
-    # Load settings
-    import json
-    with open(args.settings, 'r') as f:
-        settings = json.load(f)
+    try:
+        # Load settings
+        import json
+        with open(args.settings, 'r') as f:
+            settings = json.load(f)
 
-    # Run the report(s)
-    if args.report:
-        report_list = [args.report]
-    elif args.reports:
-        report_list = args.reports
-    else:
-        logger.error("You must provide --report or --reports")
-        sys.exit(2)
+        # Run the report(s)
+        if args.report:
+            report_list = [args.report]
+        elif args.reports:
+            report_list = args.reports
+        else:
+            logger.error("You must provide --report or --reports")
+            sys.exit(2)
 
-    exit_code = run_reports(
-        report_list,
-        settings,
-        status_file=args.status_file,
-        batch_size=args.batch_size,
-        batch_timeout=args.batch_timeout,
-        deadline=args.deadline,
-    )
+        exit_code = run_reports(
+            report_list,
+            settings,
+            status_file=args.status_file,
+            batch_size=args.batch_size,
+            batch_timeout=args.batch_timeout,
+            deadline=args.deadline,
+        )
+    except BaseException as e:
+        logger.error(f"Fatal error in worker: {e}", exc_info=True)
+        exit_code = 1
 
     sys.exit(exit_code)
 
