@@ -11,14 +11,19 @@ from lib.reports.selection_runner import run_selection
 from lib.reports.pipeline_runner import run_pipelines_by_datasource
 
 BRUSSELS = timezone(timedelta(hours=2))
+log_path = Path("/tmp/postgis_isolation_test.log")
 logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s %(levelname)s %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S',
-    handlers=[logging.StreamHandler(sys.stdout)],
+    handlers=[
+        logging.StreamHandler(sys.stdout),
+        logging.FileHandler(str(log_path), encoding="utf-8"),
+    ],
     force=True,
 )
 logger = logging.getLogger(__name__)
+logger.info("Logbestand: %s", log_path)
 
 SETTINGS_PATH = "/opt/data-platform/config/settings_RSA.json"
 
