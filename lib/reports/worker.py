@@ -256,11 +256,15 @@ def run_single_report(report_name: str, settings: dict, skip_db_init: bool = Fal
         try:
             from lib.connectors.PostGISConnector import SinglePostGISConnector
             connector = SinglePostGISConnector.get_connector()
-            cancel_conn = connector.pool.getconn()
-            try:
-                if not connector._validate_connection(cancel_conn):
+            cancel_conn = getattr(connector, 'main_connection', None)
+            if cancel_conn is None or getattr(cancel_conn, 'closed', False):
+                try:
+                    cancel_conn = connector.pool.getconn()
+                except Exception:
                     return
-                cancel_conn.autocommit = True
+            try:
+                if not getattr(cancel_conn, 'autocommit', False):
+                    cancel_conn.autocommit = True
                 cur = cancel_conn.cursor()
                 cur.execute(
                     "SELECT pg_cancel_backend(pid) FROM pg_stat_activity "
@@ -270,7 +274,11 @@ def run_single_report(report_name: str, settings: dict, skip_db_init: bool = Fal
                 cur.fetchall()
                 cur.close()
             finally:
-                connector.pool.putconn(cancel_conn)
+                if cancel_conn is not getattr(connector, 'main_connection', None):
+                    try:
+                        connector.pool.putconn(cancel_conn)
+                    except Exception:
+                        pass
         except Exception:
             pass
 
