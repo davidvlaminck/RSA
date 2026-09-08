@@ -324,16 +324,12 @@ def run_single_report(report_name: str, settings: dict, skip_db_init: bool = Fal
         try:
             from lib.connectors.PostGISConnector import SinglePostGISConnector
             connector = SinglePostGISConnector.get_connector()
-            # No-op when the connector's existing default already matches; otherwise
-            # just update the cached value so newly created connections (via
-            # reinitialize_database_connections at the start of the pipeline) pick
-            # up the new timeout. We deliberately do NOT issue a SET statement here:
-            # the connection we would use to issue it may itself be locked behind a
-            # hung query, which is exactly the failure mode we are guarding against.
             connector.set_statement_timeout(postgis_ms)
         except Exception:
             pass
+        logger.info(f"Running report {report_name}")
         report_instance.run_report(sender=None)
+        logger.info(f"Finished report {report_name}")
         signal.alarm(0)
         hard_kill_timer.cancel()
         logger.info(f"✅ Completed report successfully")
