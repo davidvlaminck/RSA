@@ -239,7 +239,14 @@ def run_single_report(report_name: str, settings: dict, skip_db_init: bool = Fal
     current_report.set(report_name)
 
     query_timeout = settings.get('query_timeout_seconds', 60)
-    total_timeout = query_timeout * 2
+    postgis_hard_timeout = query_timeout + 10
+    try:
+        from lib.connectors.PostGISConnector import SinglePostGISConnector
+        connector = SinglePostGISConnector.get_connector()
+        postgis_hard_timeout = max(60, connector._default_statement_timeout_ms / 1000 + 10)
+    except Exception:
+        pass
+    total_timeout = max(query_timeout * 2, postgis_hard_timeout + 60)
 
     class _ReportTimeout(Exception):
         pass
@@ -249,18 +256,21 @@ def run_single_report(report_name: str, settings: dict, skip_db_init: bool = Fal
         try:
             from lib.connectors.PostGISConnector import SinglePostGISConnector
             connector = SinglePostGISConnector.get_connector()
-            conn = connector.pool.getconn()
+            cancel_conn = connector.pool.getconn()
             try:
-                if not connector._validate_connection(conn):
+                if not connector._validate_connection(cancel_conn):
                     return
-                conn.autocommit = True
-                pid = conn.get_backend_pid()
-                cur = conn.cursor()
-                cur.execute(f"SELECT pg_cancel_backend({pid})")
+                cancel_conn.autocommit = True
+                cur = cancel_conn.cursor()
+                cur.execute(
+                    "SELECT pg_cancel_backend(pid) FROM pg_stat_activity "
+                    "WHERE state = 'active' AND datname = current_database() "
+                    "AND pid <> pg_backend_pid()"
+                )
                 cur.fetchall()
                 cur.close()
             finally:
-                connector.pool.putconn(conn)
+                connector.pool.putconn(cancel_conn)
         except Exception:
             pass
 
