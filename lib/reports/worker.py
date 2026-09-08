@@ -246,7 +246,7 @@ def run_single_report(report_name: str, settings: dict, skip_db_init: bool = Fal
         postgis_hard_timeout = max(60, connector._default_statement_timeout_ms / 1000 + 10)
     except Exception:
         pass
-    total_timeout = max(query_timeout * 2, postgis_hard_timeout + 60)
+    total_timeout = int(max(query_timeout * 2, postgis_hard_timeout + 60))
 
     class _ReportTimeout(Exception):
         pass
