@@ -282,7 +282,17 @@ def run_single_report(report_name: str, settings: dict, skip_db_init: bool = Fal
             pass
 
     def _timeout_handler(signum, frame):
-        # Only raise from the signal handler; do NOT call DB code here.
+        # Best-effort cancel from a separate connection; must not block the signal handler.
+        def _do_cancel():
+            try:
+                _cancel_current_query()
+            except Exception:
+                pass
+        try:
+            t = threading.Thread(target=_do_cancel, daemon=True)
+            t.start()
+        except Exception:
+            pass
         raise _ReportTimeout()
 
     def _hard_kill(timeout: float):
@@ -337,6 +347,10 @@ def run_single_report(report_name: str, settings: dict, skip_db_init: bool = Fal
         logger.info(f"✅ Completed report successfully")
         return 0
     except _ReportTimeout:
+        try:
+            _cancel_current_query()
+        except Exception:
+            pass
         logger.error(
             f"❌ Timeout after {total_timeout}s for {report_name} "
             f"(query={query_timeout}s) — re-added to retry queue"
