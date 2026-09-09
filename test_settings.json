@@ -1,0 +1,52 @@
+{
+    "smtp_options": {
+        "host": "172.23.0.12",
+        "username": "test@test.com",
+        "password": ""
+    },
+    "google_api": {
+        "credentials_path": "/tmp/credentials.json"
+    },
+    "databases": {
+        "PostGIS": {
+            "host": "localhost",
+            "port": "5432",
+            "user": "test",
+            "password": "test",
+            "database": "test",
+            "statement_timeout": 120000,
+            "lock_timeout": 10000
+        },
+        "Neo4j": {
+            "uri": "bolt://localhost:7687",
+            "user": "neo4j",
+            "password": "test",
+            "database": "neo4j"
+        },
+        "ArangoDB": {
+            "host": "localhost",
+            "port": "8529",
+            "user": "test",
+            "password": "test",
+            "database": "test"
+        }
+    },
+    "time": {
+        "start": "06:00:00",
+        "end": "23:59:59"
+    },
+    "output": {
+        "type": "excel",
+        "excel": {
+            "output_dir": "./RSA_OneDrive"
+        }
+    },
+    "drive_sync": {
+        "enabled": false
+    },
+    "report_execution": {
+        "mode": "parallel_by_datasource",
+        "query_timeout_seconds": 60,
+        "max_concurrent": 1
+    }
+}

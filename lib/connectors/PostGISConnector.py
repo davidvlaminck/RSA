@@ -283,19 +283,30 @@ class PostGISConnector:
             # connection from the pool and cancel by guessing the active backend
             # against pg_stat_activity for this database.
             try:
-                cancel_conn = self.pool.getconn()
-                try:
-                    cancel_conn.autocommit = True
-                    cur = cancel_conn.cursor()
-                    cur.execute(
-                        "SELECT pg_cancel_backend(pid) FROM pg_stat_activity "
-                        "WHERE state = 'active' AND datname = current_database() "
-                        "AND pid <> pg_backend_pid()"
-                    )
-                    cur.fetchall()
-                    cur.close()
-                finally:
-                    self.pool.putconn(cancel_conn)
+                cancel_conn = getattr(self, 'main_connection', None)
+                if cancel_conn is None or getattr(cancel_conn, 'closed', False):
+                    try:
+                        cancel_conn = self.pool.getconn()
+                    except Exception:
+                        cancel_conn = None
+                if cancel_conn is not None:
+                    try:
+                        if not getattr(cancel_conn, 'autocommit', False):
+                            cancel_conn.autocommit = True
+                        cur = cancel_conn.cursor()
+                        cur.execute(
+                            "SELECT pg_cancel_backend(pid) FROM pg_stat_activity "
+                            "WHERE state = 'active' AND datname = current_database() "
+                            "AND pid <> pg_backend_pid()"
+                        )
+                        cur.fetchall()
+                        cur.close()
+                    finally:
+                        if cancel_conn is not getattr(self, 'main_connection', None):
+                            try:
+                                self.pool.putconn(cancel_conn)
+                            except Exception:
+                                pass
             except Exception:  # noqa: BLE001
                 logging.debug("[PostGISConnector] failed to issue pg_cancel_backend on hard timeout")
             # Give Postgres a brief grace period to apply the cancel.
