@@ -10,6 +10,7 @@ import time
 import importlib
 import warnings
 import logging
+import threading
 from contextlib import contextmanager
 from zoneinfo import ZoneInfo
 
@@ -60,25 +61,32 @@ def _ensure_openpyxl_loaded():
 
 
 @contextmanager
-def _file_lock(path: Path):
+def _file_lock(path: Path, timeout: float = 30.0):
     """Context manager that acquires an advisory POSIX exclusive lock on a lockfile
 
     The lock file is created alongside the workbook (same directory) with suffix '.lock'.
-    This uses fcntl.flock and blocks until the lock is acquired. Intended for POSIX only.
+    Uses non-blocking fcntl.flock with retries so it does not hang indefinitely if
+    another process holds the lock (e.g. OneDrive sync or a stale lock).
     """
     lock_path = Path(path).with_suffix(path.suffix + '.lock')
     lock_path.parent.mkdir(parents=True, exist_ok=True)
     fh = None
-    try:
-        # open lock file for update/creation
-        fh = open(lock_path, 'a+')
+    deadline = time.time() + timeout
+    while True:
         try:
+            fh = open(lock_path, 'a+')
             import fcntl
-            fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
+            fcntl.flock(fh.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            break
+        except BlockingIOError:
+            if time.time() >= deadline:
+                raise TimeoutError(f"Could not acquire lock on {lock_path} within {timeout}s")
+            time.sleep(0.1)
         except Exception:
-            # if locking fails, close and raise
-            fh.close()
+            if fh:
+                fh.close()
             raise
+    try:
         yield
     finally:
         try:
@@ -244,22 +252,67 @@ class ExcelOutput:
             return None
         return None
 
-    def _load_workbook_resilient(self, workbook_path: Path, *, read_only: bool = False):
+    def _load_workbook_resilient(self, workbook_path: Path, *, read_only: bool = False, timeout: float = 30.0):
         _ensure_openpyxl_loaded()
         workbook_path = Path(workbook_path)
-        try:
+
+        def _load():
             return load_workbook(workbook_path, read_only=read_only)
-        except Exception as exc:
+
+        result = {}
+        exc_info = {}
+
+        def _runner():
+            try:
+                result['value'] = _load()
+            except Exception as exc:
+                exc_info['exc'] = exc
+
+        thread = threading.Thread(target=_runner, daemon=True)
+        thread.start()
+        thread.join(timeout=timeout)
+
+        if thread.is_alive():
+            raise TimeoutError(f"load_workbook timed out after {timeout}s for {workbook_path}")
+
+        if exc_info.get('exc'):
+            exc = exc_info['exc']
             if workbook_path.suffix.lower() != '.xlsx':
-                raise
+                raise exc
             alternate = self._find_existing_workbook_by_name(workbook_path.name)
             if alternate is not None and alternate.resolve() != workbook_path.resolve():
                 logger.warning('Workbook %s could not be opened (%s); retrying with %s', workbook_path, exc, alternate)
-                try:
+
+                def _load_alt():
                     return load_workbook(alternate, read_only=read_only)
-                except Exception as alternate_exc:
-                    logger.warning('Alternate workbook %s could not be opened (%s)', alternate, alternate_exc)
-            raise
+
+                result2 = {}
+                exc_info2 = {}
+
+                def _runner2():
+                    try:
+                        result2['value'] = _load_alt()
+                    except Exception as exc2:
+                        exc_info2['exc'] = exc2
+
+                thread2 = threading.Thread(target=_runner2, daemon=True)
+                thread2.start()
+                thread2.join(timeout=timeout)
+
+                if thread2.is_alive():
+                    raise TimeoutError(f"load_workbook (alternate) timed out after {timeout}s for {alternate}")
+
+                if exc_info2.get('exc'):
+                    logger.warning('Alternate workbook %s could not be opened (%s)', alternate, exc_info2['exc'])
+                else:
+                    return result2['value']
+            raise exc
+
+        wb = result.get('value')
+        if wb is not None:
+            return wb
+
+        raise ExcelWriterError(f"Workbook {workbook_path} could not be loaded")
 
     @contextmanager
     def _workbook_context(self, workbook_path: Path, *, read_only: bool = False):
