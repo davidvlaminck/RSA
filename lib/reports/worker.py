@@ -240,7 +240,7 @@ def run_single_report(report_name: str, settings: dict, skip_db_init: bool = Fal
     query_timeout = settings.get('query_timeout_seconds', 60)
     postgis_hard_timeout = query_timeout + 10
     try:
-        from lib.connectors.PostGISConnector import SinglePostGISConnector
+        from lib.connectors.PostGISConnector import SinglePostGISConnector, PostGISQueryCanceled
         connector = SinglePostGISConnector.get_connector()
         postgis_hard_timeout = max(60, connector._default_statement_timeout_ms / 1000 + 10)
     except Exception:

@@ -4,7 +4,8 @@ import time
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from lib.connectors.PostGISConnector import SinglePostGISConnector
+from lib.connectors.PostGISConnector import SinglePostGISConnector, PostGISQueryCanceled
+from psycopg2.errors import QueryCanceled
 
 from .base import QueryResult
 
@@ -46,7 +47,10 @@ class PostGISDatasource:
 
         result = self._connector.execute_with_hard_timeout(query, hard_timeout_s=float(max_runtime_seconds))
         if result.get("error") is not None:
-            raise result["error"]
+            err = result["error"]
+            if isinstance(err, QueryCanceled):
+                raise PostGISQueryCanceled(str(err))
+            raise err
         rows = result["rows"]
         desc = result["description"]
 

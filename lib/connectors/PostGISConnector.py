@@ -7,6 +7,11 @@ from psycopg2.pool import ThreadedConnectionPool
 import time
 
 
+class PostGISQueryCanceled(Exception):
+    """Raised when a PostGIS query is canceled by statement_timeout or pg_cancel_backend."""
+    pass
+
+
 class PostGISCircuitBreaker:
     """Stop trying after consecutive failures."""
 
