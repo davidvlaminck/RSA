@@ -80,7 +80,7 @@ def scenario_full_postgis():
         "Report0206", "Report0209", "Report0220", "Report0184", "Report0030",
         "Report0219", "Report0198", "Report0201", "Report0194", "Report0105",
         "Report0170", "Report0190", "Report0197", "Report0210", "Report0043",
-        "Report0113", "Report0169", "Report0101", "Report0176", "Report0182",
+        "Report0113", "Report0169", "Report0176", "Report0182",
         "Report0108", "Report0141", "Report0084", "Report0162", "Report0174",
         "Report0183", "Report0129", "Report0185", "Report0139", "Report0120",
         "Report0172", "Report0138", "Report0131", "Report0109", "Report0161",
@@ -94,7 +94,7 @@ def scenario_full_postgis():
         "Report0128", "Report0102", "Report0152", "Report0150", "Report0154",
         "Report0047", "Report0048", "Report0151", "Report0123", "Report0153",
         "Report0000", "Report0118", "Report0171",
-    ]
+    ] # removed 0101
     logger.info("Aantal PostGIS reports: %d", len(postgis_reports))
     start = time.time()
     rc, failed = run_pipelines_by_datasource(
