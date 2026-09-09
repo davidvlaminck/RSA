@@ -11,7 +11,7 @@ from lib.reports.selection_runner import run_selection
 from lib.reports.pipeline_runner import run_pipelines_by_datasource
 
 BRUSSELS = timezone(timedelta(hours=2))
-log_path = Path("/opt/data-platform/RSA/tmp/postgis_isolation_test.log")
+log_path = Path("/opt/data-platform/RSA/RSA_OneDrive/postgis_isolation_test.log")
 logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s %(levelname)s %(message)s',
