@@ -3,7 +3,7 @@
 This worker is invoked by ReportLoopRunner to execute reports in separate processes.
 Each process:
 - Re-initializes database connections (critical for thread-safety)
-- Runs the report with timeout protection
+- Runs the report with query-level timeout protection via PostGISConnector
 - Returns exit code 0 on success, non-zero on failure
 
 Usage:
@@ -14,9 +14,7 @@ import gc
 import json
 import logging
 import os
-import signal
 import sys
-import threading
 import time
 from datetime import datetime
 from pathlib import Path
@@ -24,11 +22,6 @@ from contextvars import ContextVar
 import warnings
 
 logger = logging.getLogger(__name__)
-
-try:
-    from psycopg2.errors import QueryCanceled as PostGISQueryCanceled
-except ImportError:
-    PostGISQueryCanceled = None
 
 # Suppress known third-party DeprecationWarnings (narrow filter)
 warnings.filterwarnings('ignore', message=r'path is deprecated. Use files\(\) instead', category=DeprecationWarning)
@@ -228,6 +221,10 @@ def reinitialize_database_connections(settings, arango_timeout: int = 180,
 def run_single_report(report_name: str, settings: dict, skip_db_init: bool = False) -> int:
     """Run a single report and return exit code.
 
+    Query timeouts are enforced by the datasource layer
+    (PostGISConnector.execute_with_hard_timeout, ArangoDB query bounds).
+    The parent process can also hard-kill this worker via process_timeout.
+
     Args:
         report_name: Name of report class (e.g., "Report0002")
         settings: Full settings dictionary
@@ -239,69 +236,7 @@ def run_single_report(report_name: str, settings: dict, skip_db_init: bool = Fal
     current_report.set(report_name)
 
     query_timeout = settings.get('query_timeout_seconds', 60)
-    postgis_hard_timeout = query_timeout + 10
-    try:
-        from lib.connectors.PostGISConnector import SinglePostGISConnector
-        connector = SinglePostGISConnector.get_connector()
-        postgis_hard_timeout = max(60, connector._default_statement_timeout_ms / 1000 + 10)
-    except Exception:
-        pass
-    total_timeout = int(max(query_timeout * 2, postgis_hard_timeout + 60))
 
-    class _ReportTimeout(Exception):
-        pass
-
-    def _cancel_current_query():
-        """Cancel the running query on PostgreSQL backend."""
-        try:
-            from lib.connectors.PostGISConnector import SinglePostGISConnector
-            connector = SinglePostGISConnector.get_connector()
-            cancel_conn = getattr(connector, 'main_connection', None)
-            if cancel_conn is None or getattr(cancel_conn, 'closed', False):
-                try:
-                    cancel_conn = connector.pool.getconn()
-                except Exception:
-                    return
-            try:
-                if not getattr(cancel_conn, 'autocommit', False):
-                    cancel_conn.autocommit = True
-                cur = cancel_conn.cursor()
-                cur.execute(
-                    "SELECT pg_cancel_backend(pid) FROM pg_stat_activity "
-                    "WHERE state = 'active' AND datname = current_database() "
-                    "AND pid <> pg_backend_pid()"
-                )
-                cur.fetchall()
-                cur.close()
-            finally:
-                if cancel_conn is not getattr(connector, 'main_connection', None):
-                    try:
-                        connector.pool.putconn(cancel_conn)
-                    except Exception:
-                        pass
-        except Exception:
-            pass
-
-    def _timeout_handler(signum, frame):
-        _cancel_current_query()
-        raise _ReportTimeout()
-
-    def _hard_kill(timeout: float):
-        """SIGKILL watchdog: cannot be caught/ignored."""
-        def _kill():
-            try:
-                os.kill(os.getpid(), signal.SIGKILL)
-            except ProcessLookupError:
-                pass
-        t = threading.Timer(timeout, _kill)
-        t.daemon = True
-        t.start()
-        return t
-
-    # Arm the watchdog BEFORE instantiation/initialization so a hang there is also bounded.
-    old_handler = signal.signal(signal.SIGALRM, _timeout_handler)
-    signal.alarm(total_timeout)
-    hard_kill_timer = _hard_kill(total_timeout + 60)
     try:
         _log_resource_heartbeat()
         logger.info(f"Starting report")
@@ -330,52 +265,14 @@ def run_single_report(report_name: str, settings: dict, skip_db_init: bool = Fal
         logger.info(f"Running report {report_name}")
         report_instance.run_report(sender=None)
         logger.info(f"Finished report {report_name}")
-        signal.alarm(0)
-        hard_kill_timer.cancel()
         logger.info(f"✅ Completed report successfully")
         return 0
-    except _ReportTimeout:
-        try:
-            signal.alarm(0)
-        except Exception:
-            pass
-        try:
-            hard_kill_timer.cancel()
-        except Exception:
-            pass
-        logger.error(
-            f"❌ Timeout after {total_timeout}s for {report_name} "
-            f"(query={query_timeout}s) — re-added to retry queue"
-        )
-        return 1
     except Exception as e:
-        try:
-            signal.alarm(0)
-        except Exception:
-            pass
-        try:
-            hard_kill_timer.cancel()
-        except Exception:
-            pass
-        if PostGISQueryCanceled is not None and isinstance(e, PostGISQueryCanceled):
-            logger.error(
-                f"❌ Database statement_timeout exceeded for {report_name} "
-                f"(query={query_timeout}s) — re-added to retry queue"
-            )
-        else:
-            logger.error(f"❌ Failed: {e} — re-added to retry queue", exc_info=True)
+        logger.error(f"❌ Failed: {e} — re-added to retry queue", exc_info=True)
         return 1
     finally:
         try:
-            signal.alarm(0)
-        except Exception:
-            pass
-        try:
-            hard_kill_timer.cancel()
-        except Exception:
-            pass
-        try:
-            signal.signal(signal.SIGALRM, old_handler)
+            current_report.set(None)
         except Exception:
             pass
 
