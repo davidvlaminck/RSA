@@ -150,6 +150,7 @@ def _run_worker(report_names: list[str], settings_path: str, stream_output: bool
             )
             if process_holder is not None:
                 process_holder['proc'] = proc
+                process_holder['status_file'] = status_file
             output_chunks: list[str] = []
             start = time.time()
             while True:
