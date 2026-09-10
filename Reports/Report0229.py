@@ -12,26 +12,24 @@ class Report0229(BaseReport):
         FOR lsbord IN assets
           FILTER lsbord.assettype_key == key_laagspanningsbord and lsbord.AIMDBStatus_isActief == true
           
-          LET agent_toezichters_array = (
-            FOR agent_toezichter, edge_toezichter in 1..1 outbound lsbord betrokkenerelaties
-              filter edge_toezichter.rol == 'toezichter'
-              return agent_toezichter.purl.Agent_naam
-            )
-          LET agent_toezichters = CONCAT_SEPARATOR("; ", agent_toezichters_array)
-            
-          LET agent_toezichtsgroepen_array = (
-            FOR agent_toezichtsgroep, edge_toezichtsgroep in 1..1 outbound lsbord betrokkenerelaties
-              filter edge_toezichtsgroep.rol == 'toezichtsgroep'
-              return agent_toezichtsgroep.purl.Agent_naam
-            )
-          LET agent_toezichtsgroepen = CONCAT_SEPARATOR("; ", agent_toezichtsgroepen_array)
-          
-          LET agent_schadebeheerders_array = (
-            FOR agent_schadebeheerder, edge_schadebeheerder in 1..1 outbound lsbord betrokkenerelaties
-              filter edge_schadebeheerder.rol == 'schadebeheerder'
-              return agent_schadebeheerder.purl.Agent_naam
-            )
-          LET agent_schadebeheerders = CONCAT_SEPARATOR("; ", agent_schadebeheerders_array)
+           LET betrokkenen = (
+             FOR agent, edge IN 1..1 outbound lsbord betrokkenerelaties
+               RETURN { rol: edge.rol, agent: agent }
+           )
+           LET agent_toezichters_array = (
+             FOR b IN betrokkenen FILTER b.rol == 'toezichter' RETURN b.agent.purl.Agent_naam
+           )
+           LET agent_toezichters = CONCAT_SEPARATOR("; ", agent_toezichters_array)
+           
+           LET agent_toezichtsgroepen_array = (
+             FOR b IN betrokkenen FILTER b.rol == 'toezichtsgroep' RETURN b.agent.purl.Agent_naam
+           )
+           LET agent_toezichtsgroepen = CONCAT_SEPARATOR("; ", agent_toezichtsgroepen_array)
+           
+           LET agent_schadebeheerders_array = (
+             FOR b IN betrokkenen FILTER b.rol == 'schadebeheerder' RETURN b.agent.purl.Agent_naam
+           )
+           LET agent_schadebeheerders = CONCAT_SEPARATOR("; ", agent_schadebeheerders_array)
           
           LET locatie = lsbord.loc.Locatie_puntlocatie != null ? lsbord.loc.Locatie_puntlocatie : null
           LET locatie_adres = locatie.DtcPuntlocatie_adres != null ? locatie.DtcPuntlocatie_adres : null
