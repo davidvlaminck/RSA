@@ -370,12 +370,15 @@ class ReportLoopRunner:
             time.sleep(60)
 
         if self.pipeline_status is not None:
-            enqueue_sqlite_job("update_pipeline_state", {
-                "updated_at": datetime.now(timezone.utc).isoformat(),
-                "phase": "rsa_queries",
-                "status": "aborted",
-                "message": f"Timeout waiting for postgis_sync after {active_timeout}s"
-            })
+            current = self.pipeline_status.get()
+            status = current.get('status', '') if current else ''
+            if status not in ('completed', 'time-out', 'aborted', 'failed'):
+                enqueue_sqlite_job("update_pipeline_state", {
+                    "updated_at": datetime.now(timezone.utc).isoformat(),
+                    "phase": "rsa_queries",
+                    "status": "aborted",
+                    "message": f"Timeout waiting for postgis_sync after {active_timeout}s"
+                })
         logger.warning(f'{datetime.now(tz=BRUSSELS)}: postgis_sync preconditions not met within {active_timeout}s; rsa_queries aborted.')
         return False
 
