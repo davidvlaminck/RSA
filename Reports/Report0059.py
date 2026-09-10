@@ -6,7 +6,7 @@ class Report0059(BaseReport):
     def init_report(self) -> None:
         aql_query = """
 LET ups_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#UPS" LIMIT 1 RETURN at._key)
-LET maxDepth = 10
+LET maxDepth = 6
 
 FOR x IN assets
   FILTER x != null
