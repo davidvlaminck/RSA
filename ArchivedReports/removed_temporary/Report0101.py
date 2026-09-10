@@ -16,14 +16,26 @@ class Report0101(BaseReport):
         self.report.result_query = """
             WITH vrs AS (
                 SELECT
-                    a.*,
-                    l.geometry AS geom
+                    a.uuid,
+                    a.naampad,
+                    a.actief,
+                    a.toestand,
+                    l.geometry AS geom,
+                    l.adres_gemeente,
+                    l.adres_provincie
                 FROM assets a
                 LEFT JOIN locatie l ON a.uuid = l.assetuuid
                 WHERE a.assettype IN (
                     '13fa9473-f919-432a-bd00-bc19645bd30a',  -- Verkeersregelaar (Legacy)
                     '40f86745-ecaa-456b-8262-0a1f014602df'  -- ITSApp-RIS (Legacy)
                 )
+            ),
+            active_bestekkoppelingen AS (
+                SELECT
+                    assetuuid,
+                    bestekuuid
+                FROM bestekkoppelingen
+                WHERE lower(koppelingstatus) = 'actief'
             )
             SELECT
                 v.uuid,
@@ -31,8 +43,8 @@ class Report0101(BaseReport):
                 v.naampad,
                 v.actief,
                 v.toestand,
-                l.adres_gemeente,
-                l.adres_provincie,
+                v.adres_gemeente,
+                v.adres_provincie,
                 to_char(date(vplan.indienstdatum), 'yyyy-mm-dd') AS indienstdatum,
                 CASE
                     WHEN vplan.uitdienstdatum IS NULL AND vplan.indienstdatum IS NOT NULL AND vplan.indienstdatum <= CURRENT_DATE THEN 'in dienst'
@@ -48,14 +60,13 @@ class Report0101(BaseReport):
                 CASE
                     WHEN vplan.uuid IS NULL AND v.actief = TRUE AND v.toestand = 'in-gebruik' THEN TRUE
                     WHEN vplan.uitdienstdatum IS NULL AND vplan.uuid IS NOT NULL AND v.actief = TRUE AND v.toestand NOT IN ('in-gebruik', 'overgedragen') THEN TRUE
-                    WHEN (l.adres_provincie IS NULL OR l.geometry IS NULL) AND v.actief = TRUE THEN TRUE
+                    WHEN (v.adres_provincie IS NULL OR v.geom IS NULL) AND v.actief = TRUE THEN TRUE
                     ELSE FALSE
                 END AS dataconflicten
             FROM vrs v
-            LEFT JOIN locatie l ON v.uuid = l.assetuuid
             LEFT JOIN vplan_koppelingen vplan ON v.uuid = vplan.assetuuid
-            LEFT JOIN bestekkoppelingen bk ON v.uuid = bk.assetuuid AND lower(bk.koppelingstatus) = 'actief'
-            LEFT JOIN bestekken b ON bk.bestekuuid = b.uuid
+            LEFT JOIN active_bestekkoppelingen abk ON v.uuid = abk.assetuuid
+            LEFT JOIN bestekken b ON abk.bestekuuid = b.uuid
             WHERE (vplan.uuid IS NOT NULL AND v.actief = FALSE) OR v.actief = TRUE
             ORDER BY v.actief DESC, dataconflicten, v.naampad, uitdienstdatum DESC;
             """
