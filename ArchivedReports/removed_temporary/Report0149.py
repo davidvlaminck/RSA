@@ -33,6 +33,8 @@ with cte_gemeente as (
 		, l.geometry as geometry
 		, l.ident2
 		, l.ident8
+		, l.x
+		, l.y
 	from assets a
 	join locatie l on a.uuid = l.assetuuid
 	join attribuutwaarden w on a.uuid = w.assetuuid
@@ -47,14 +49,14 @@ with cte_gemeente as (
 		and
 		w.attribuutuuid = '27803bbe-ddf0-46c8-8107-130df29de615'
 )
-, cte_boom_incl_gemeente as (
+, cte_boom_incl_gemeente as NOT MATERIALIZED (
 	select
 		boo.*
 		, gem.naam_gemeente
 		, gem.nis
 		, gem.naam_provincie
 	from cte_boom boo
-	join cte_gemeente gem on st_DWithin(boo.geometry, gem.geometry, 0)
+	join cte_gemeente gem on ST_Within(boo.geometry, gem.geometry)
 )
 -- Main query
 select
@@ -80,10 +82,12 @@ select
 from cte_boom_incl_gemeente b1
 inner join cte_boom_incl_gemeente b2 on
 	b1.nis = b2.nis
-	and ST_DWithin(b1.geometry, b2.geometry, 1)
 	and b1.uuid <> b2.uuid
+	and b1.x between b2.x - 1 and b2.x + 1
+	and b1.y between b2.y - 1 and b2.y + 1
+	and ST_DWithin(b1.geometry, b2.geometry, 1)
 order by b1.uuid, b2.uuid;
-        """
+"""
 
     def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)
