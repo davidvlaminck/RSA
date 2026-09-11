@@ -499,16 +499,29 @@ class DQReport(Report):
             )
             summary_link_value = {'display': 'Link', 'hyperlink': report_link} if report_link else 'Link'
 
+            a_cell = f'A{rowFound}'
+            payload_summary_a = {
+                'operation': 'write_cell',
+                'excel_filename': excel_fname_for_summary,
+                'spreadsheet_id': summary_target,
+                'sheet': 'Overzicht',
+                'cell': a_cell,
+                'value': self.title,
+                'meta': {'report': self.name}
+            }
+
+            b_cell = f'B{rowFound}'
             payload_summary_b = {
                 'operation': 'write_cell',
                 'excel_filename': excel_fname_for_summary,
                 'spreadsheet_id': summary_target,
                 'sheet': 'Overzicht',
-                'cell': f'B{rowFound}',
+                'cell': b_cell,
                 'value': summary_link_value,
                 'meta': {'report': self.name}
             }
 
+            c_cell = f'C{rowFound}'
             payload_summary_c = {
                 'operation': 'write_cell',
                 'excel_filename': excel_fname_for_summary,
@@ -519,6 +532,7 @@ class DQReport(Report):
                 'meta': {'report': self.name}
             }
 
+            h_cell = f'H{rowFound}'
             payload_summary_h = {
                 'operation': 'write_cell',
                 'excel_filename': excel_fname_for_summary,
@@ -529,6 +543,7 @@ class DQReport(Report):
                 'meta': {'report': self.name}
             }
 
+            g_cell = f'G{rowFound}'
             payload_summary_g = {
                 'operation': 'write_cell',
                 'excel_filename': excel_fname_for_summary,
@@ -551,7 +566,13 @@ class DQReport(Report):
             }
 
             try:
-                logger.info('%s: staging Overzicht B payload target=%s cell=%s payload=%s', self.name, excel_fname_for_summary, f'B{rowFound}', payload_summary_b)
+                logger.info('%s: staging Overzicht A payload target=%s cell=%s payload=%s', self.name, excel_fname_for_summary, a_cell, payload_summary_a)
+            except Exception:
+                pass
+            stage_summary_update(payload_summary_a, staged_dir=staged_dir or 'RSA_OneDrive/staged_summaries')
+
+            try:
+                logger.info('%s: staging Overzicht B payload target=%s cell=%s payload=%s', self.name, excel_fname_for_summary, b_cell, payload_summary_b)
             except Exception:
                 pass
             stage_summary_update(payload_summary_b, staged_dir=staged_dir or 'RSA_OneDrive/staged_summaries')
@@ -607,6 +628,11 @@ class DQReport(Report):
                         start_cell='B' + str(rowFound),
                         data=[['Link']],
                     )
+                # Use the same rowFound that was computed above for staged payloads
+                sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.summary_sheet_id, sheet_name='Overzicht', start_cell='A' + str(rowFound),
+                                                   data=[[self.title]])
+                sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.summary_sheet_id, sheet_name='Overzicht', start_cell='B' + str(rowFound),
+                                                   data=[['Link']])
                 # Use the same rowFound that was computed above for staged payloads
                 sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.summary_sheet_id, sheet_name='Overzicht', start_cell='C' + str(rowFound),
                                                    data=[[self.last_data_update, len(qr.rows)]])
