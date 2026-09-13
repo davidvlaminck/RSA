@@ -252,7 +252,7 @@ class ExcelOutput:
             return None
         return None
 
-    def _load_workbook_resilient(self, workbook_path: Path, *, read_only: bool = False, timeout: float = 30.0):
+    def _load_workbook_resilient(self, workbook_path: Path, *, read_only: bool = False, timeout: float = 60.0):
         _ensure_openpyxl_loaded()
         workbook_path = Path(workbook_path)
 
