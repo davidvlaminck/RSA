@@ -8,7 +8,7 @@ class Report0101(BaseReport):
         LET vr1_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "lgc:installatie#ITSApp-RIS" LIMIT 1 RETURN at._key)
         LET vr2_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "lgc:installatie#VRLegacy" LIMIT 1 RETURN at._key)
 
-        /* Pre-filter assets: only ITSApp-RIS or VRLegacy, actief OR with vplan */
+        /* Pre-filter assets: only ITSApp-RIS or VRLegacy */
         FOR a IN assets
           FILTER a.assettype_key == vr1_key OR a.assettype_key == vr2_key
 
