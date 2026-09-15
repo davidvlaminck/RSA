@@ -6,26 +6,25 @@ class Report0059(BaseReport):
     def init_report(self) -> None:
         aql_query = """
 LET ups_key = FIRST(FOR at IN assettypes FILTER at.short_uri == "onderdeel#UPS" LIMIT 1 RETURN at._key)
-LET maxDepth = 6
+LET maxDepth = 4
 
-FOR x IN assets
-  FILTER x != null
-  FILTER x.AIMDBStatus_isActief == true
-
+FOR x IN (
+  FOR e IN voedt_relaties
+    COLLECT from_id = e._from
+    FOR a IN assets
+      FILTER a._id == from_id
+      FILTER a.AIMDBStatus_isActief == true
+      FILTER a.assettype_key != ups_key
+      RETURN a
+)
   FOR v, e, p IN 1..maxDepth OUTBOUND x voedt_relaties
     OPTIONS { order: "bfs", uniqueVertices: "none" }
 
+    FILTER v.assettype_key != ups_key
     FILTER v._id == x._id
     FILTER LENGTH(p.edges) > 1
 
     LET loopVertices = p.vertices
-
-    FILTER LENGTH(
-      FOR n IN loopVertices
-        FILTER n.assettype_key == ups_key
-        LIMIT 1
-        RETURN 1
-    ) == 0
 
     LET path_loop = (FOR n IN loopVertices RETURN [n._key, n["@type"]])
 
@@ -36,7 +35,7 @@ FOR x IN assets
       toestand: x.toestand,
       path_loop: path_loop
     }
-"""
+        """
         self.report = DQReport(name='report0059',
                                title='Er zijn geen assets die zichzelf direct of indirect voeden (geen lussen in voeding).',
                                spreadsheet_id='15z-3mTVmjg63EepO1uaN5R5dgFARcfiyrRBbXa3TzUQ',
