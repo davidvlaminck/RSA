@@ -6,7 +6,7 @@
     "max_concurrent": 2,
     "query_timeout_seconds": 60,
     "deprioritized_reports": ["Report0171"],
-    "deferred_threshold_seconds": 0,
+    "deferred_threshold_seconds": 120,
     "max_concurrent_per_datasource": {
       "PostGIS": 1,
       "ArangoDB": 2
