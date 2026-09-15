@@ -826,10 +826,21 @@ class ReportLoopRunner:
 
         exec_cfg = self.settings.get("report_execution", {}) if isinstance(self.settings, dict) else {}
         deprioritized = exec_cfg.get("deprioritized_reports", [])
+        deferred_threshold = exec_cfg.get("deferred_threshold_seconds", 0)
 
+        deferred_by_ds: dict[str, list[str]] = {ds: [] for ds in pipelines}
         for datasource, report_list in pipelines.items():
-            pipelines[datasource] = _sort_reports_by_duration(report_list, output_dir, deprioritized)
-            logger.info("Sorted pipeline [%s] by estimated duration: %s", datasource, pipelines[datasource])
+            normal, deferred = _sort_reports_by_duration(
+                report_list, output_dir, deprioritized, deferred_threshold
+            )
+            pipelines[datasource] = normal
+            deferred_by_ds[datasource] = deferred
+            logger.info("Sorted pipeline [%s] by estimated duration: %s", datasource, normal)
+            if deferred:
+                logger.info(
+                    "Deferred %d slow report(s) in [%s] (threshold=%ss): %s",
+                    len(deferred), datasource, deferred_threshold, deferred,
+                )
 
         logger.info("Running %d pipelines in parallel (max_workers=%d)", len(pipelines), max_workers)
 
@@ -860,6 +871,34 @@ class ReportLoopRunner:
                 for ds, reports in active.items():
                     datasource_attempts[ds] += 1
                     attempt = datasource_attempts[ds]
+
+                    # Deferred (slow) reports are skipped on the very first attempt
+                    # and only picked up from attempt 2 onwards. This keeps the
+                    # deadline budget available for the fast majority.
+                    if attempt == 1 and deferred_by_ds.get(ds):
+                        deferred_reports = deferred_by_ds[ds]
+                        logger.info(
+                            "Skipping %d deferred slow report(s) in [%s] on attempt 1: %s",
+                            len(deferred_reports), ds, deferred_reports,
+                        )
+                        # Keep only the non-deferred reports for this attempt;
+                        # the deferred ones are queued for attempt 2.
+                        remaining[ds] = [r for r in reports if r not in deferred_reports]
+                        deferred_by_ds[ds] = deferred_reports
+                        continue
+
+                    # On attempt 2, fold the deferred reports back into the queue
+                    # so they get retried together with any reports that failed
+                    # during attempt 1.
+                    if attempt == 2 and deferred_by_ds.get(ds):
+                        deferred_reports = deferred_by_ds[ds]
+                        reports = list(reports) + deferred_reports
+                        deferred_by_ds[ds] = []
+                        logger.info(
+                            "Including %d deferred slow report(s) in [%s] on attempt 2: %s",
+                            len(deferred_reports), ds, deferred_reports,
+                        )
+
                     current_query_timeout = base_query_timeout + (60 * (attempt - 1))
 
                     if attempt > 1:

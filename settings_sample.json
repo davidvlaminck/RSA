@@ -42,5 +42,12 @@
         "passive_wait_until": "04:00:00",
         "postgis_wait_timeout_seconds": 10800,
         "rsa_queries_timeout_seconds": 10800
+    },
+    "report_execution": {
+        "mode": "parallel_by_datasource",
+        "max_concurrent": 2,
+        "query_timeout_seconds": 60,
+        "deprioritized_reports": [],
+        "deferred_threshold_seconds": 0
     }
 }

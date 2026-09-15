@@ -6,6 +6,7 @@
     "max_concurrent": 2,
     "query_timeout_seconds": 60,
     "deprioritized_reports": ["Report0171"],
+    "deferred_threshold_seconds": 0,
     "max_concurrent_per_datasource": {
       "PostGIS": 1,
       "ArangoDB": 2
@@ -16,6 +17,7 @@
       "max_concurrent": "Maximum reports running at once. Recommended: 2 for 8GB RAM, 3 for 16GB RAM",
       "query_timeout_seconds": "Per-report query timeout in seconds. Each retry attempt adds 60s on top of this baseline (e.g. attempt 2 = query_timeout_seconds + 60). 60s is sufficient for almost all PostGIS/Arango queries in this project.",
       "deprioritized_reports": "List of report names to push to the back of their datasource queue. Useful for known slow reports (e.g. ['Report0171']) so they don't block faster reports. These reports are still executed, just after all others.",
+      "deferred_threshold_seconds": "When > 0, reports whose historical query time (from the Overzicht workbook column H) exceeds this threshold are SKIPPED on attempt 1 and only run from attempt 2 onwards. This keeps the deadline budget available for the fast majority. Set to 0 to disable. Example: 120 would defer any report that took > 2 minutes last run.",
       "max_concurrent_per_datasource": "Optional. Override the per-datasource worker cap so a hung PostGIS query cannot block the Arango pipeline. Must be a dict like {\"PostGIS\": 1, \"ArangoDB\": 2}. A bare integer or string here is ignored (a warning is logged) and the global max_concurrent is used instead. Capped at 3 in total."
     }
   },

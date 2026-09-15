@@ -55,18 +55,43 @@ def _read_historical_durations(report_names: list[str], output_dir: Path | str) 
         return {rname: float('inf') for rname in report_names}
 
 
-def _sort_reports_by_duration(report_names: list[str], output_dir: Path | str, deprioritized: list[str] | None = None) -> list[str]:
+def _sort_reports_by_duration(report_names: list[str], output_dir: Path | str,
+                              deprioritized: list[str] | None = None,
+                              deferred_threshold_seconds: float = 0) -> tuple[list[str], list[str]]:
     """Sort reports by estimated query duration (ascending), unknowns last.
 
     Reports listed in ``deprioritized`` are moved to the end of the queue,
     after all other reports (including unknowns). This is useful for reports
     that are known to be slow and should not block faster reports.
+
+    When ``deferred_threshold_seconds`` > 0, reports whose historical query
+    time exceeds the threshold are split off into a separate "deferred" list
+    that the caller can skip on the first attempt and only run from attempt 2
+    onwards. This prevents very slow queries from consuming the deadline
+    budget before faster reports have finished.
+
+    Returns:
+        tuple: (sorted_normal_reports, sorted_deferred_reports)
+        When deferred_threshold_seconds <= 0, the second list is always empty.
     """
     durations = _read_historical_durations(report_names, output_dir)
     deprioritized_set = set(deprioritized or [])
-    normal = [r for r in report_names if r not in deprioritized_set]
-    delayed = [r for r in report_names if r in deprioritized_set]
-    return sorted(normal, key=lambda rname: durations.get(rname, float('inf'))) + delayed
+    deferred_set: set[str] = set()
+    if deferred_threshold_seconds and deferred_threshold_seconds > 0:
+        for rname in report_names:
+            d = durations.get(rname, float('inf'))
+            if d != float('inf') and d > deferred_threshold_seconds:
+                deferred_set.add(rname)
+
+    normal = [r for r in report_names if r not in deprioritized_set and r not in deferred_set]
+    delayed = [r for r in report_names if r in deprioritized_set and r not in deferred_set]
+    deferred = [r for r in report_names if r in deferred_set]
+
+    normal_sorted = sorted(normal, key=lambda rname: durations.get(rname, float('inf')))
+    delayed_sorted = sorted(delayed, key=lambda rname: durations.get(rname, float('inf')))
+    deferred_sorted = sorted(deferred, key=lambda rname: durations.get(rname, float('inf')))
+
+    return normal_sorted + delayed_sorted, deferred_sorted
 
 
 def _stream_worker_output(output: str | None, stream: TextIO) -> None:
@@ -229,6 +254,7 @@ def run_pipelines_by_datasource(
 
     groups = group_reports_by_datasource(list(report_names))
     pipelines = {ds: items for ds, items in groups.items() if items}
+    deferred_pipelines: dict[str, list[str]] = {ds: [] for ds in pipelines}
     if not pipelines:
         logger.info("No reports to run in parallel.")
         return 0, []
@@ -238,10 +264,20 @@ def run_pipelines_by_datasource(
     output_dir = Path(drive_cfg.get("local_folder") or excel_cfg.get("output_dir") or "RSA_OneDrive")
 
     deprioritized = settings.get("report_execution", {}).get("deprioritized_reports", []) if isinstance(settings, dict) else []
+    deferred_threshold = settings.get("report_execution", {}).get("deferred_threshold_seconds", 0) if isinstance(settings, dict) else 0
 
     for datasource, report_list in pipelines.items():
-        pipelines[datasource] = _sort_reports_by_duration(report_list, output_dir, deprioritized)
-        logger.info("Sorted pipeline [%s] by estimated duration: %s", datasource, pipelines[datasource])
+        normal, deferred = _sort_reports_by_duration(
+            report_list, output_dir, deprioritized, deferred_threshold
+        )
+        pipelines[datasource] = normal
+        deferred_pipelines[datasource] = deferred
+        logger.info("Sorted pipeline [%s] by estimated duration: %s", datasource, normal)
+        if deferred:
+            logger.info(
+                "Deferred %d slow report(s) in [%s] (threshold=%ss): %s",
+                len(deferred), datasource, deferred_threshold, deferred,
+            )
 
     max_workers = min(max_concurrent, len(pipelines))
     logger.info("Running %d pipelines in parallel (max_workers=%d)", len(pipelines), max_workers)
