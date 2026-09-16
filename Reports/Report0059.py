@@ -18,7 +18,7 @@ FOR x IN (
       RETURN a
 )
   FOR v, e, p IN 1..maxDepth OUTBOUND x voedt_relaties
-    OPTIONS { order: "bfs", uniqueVertices: "none" }
+    OPTIONS { order: "bfs", uniqueVertices: "none", uniqueEdges: "path" }
 
     FILTER v.assettype_key != ups_key
     FILTER v._id == x._id
@@ -44,12 +44,12 @@ FOR x IN (
                                excel_filename='[RSA] Assets met lussen in voeding.xlsx',)
 
         self.report.result_query = aql_query
+
         self.report.cypher_query = """
             MATCH p=(x:Asset {isActief: True})-[:Voedt*]->(x)
             WHERE all(n in nodes(p) WHERE NOT (n:UPSLegacy))
             WITH x, reduce(path_loop = [], n IN nodes(p) | path_loop + [[n.uuid, n.typeURI]]) as path_loop
             RETURN DISTINCT x.uuid AS uuid, x.naampad AS naampad, x.typeURI AS typeURI, x.toestand as toestand, path_loop
         """
-
     def run_report(self, sender) -> None:
         self.report.run_report(sender=sender)
