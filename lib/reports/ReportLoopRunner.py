@@ -109,7 +109,7 @@ def reinitialize_database_connections(settings: dict, arango_timeout: int = 180,
                 user=arango_settings['user'],
                 password=arango_settings['password'],
                 database=arango_settings['database'],
-                request_timeout=arango_timeout,
+                request_timeout=arango_timeout + 60,
             )
             # Bound server-side query runtime to this attempt's client timeout so a
             # hanging query is aborted on the ArangoDB server itself (not just the client).
