@@ -252,7 +252,7 @@ class ExcelOutput:
             return None
         return None
 
-    def _load_workbook_resilient(self, workbook_path: Path, *, read_only: bool = False, timeout: float = 60.0):
+    def _load_workbook_resilient(self, workbook_path: Path, *, read_only: bool = False, timeout: float = 120.0, max_retries: int = 3):
         _ensure_openpyxl_loaded()
         workbook_path = Path(workbook_path)
 
@@ -268,49 +268,69 @@ class ExcelOutput:
             except Exception as exc:
                 exc_info['exc'] = exc
 
-        thread = threading.Thread(target=_runner, daemon=True)
-        thread.start()
-        thread.join(timeout=timeout)
+        for attempt in range(max_retries):
+            thread = threading.Thread(target=_runner, daemon=True)
+            thread.start()
+            thread.join(timeout=timeout)
 
-        if thread.is_alive():
-            raise TimeoutError(f"load_workbook timed out after {timeout}s for {workbook_path}")
+            if thread.is_alive():
+                if attempt < max_retries - 1:
+                    logger.warning('Workbook %s load timed out after %ss (attempt %d/%d), retrying...',
+                                   workbook_path, timeout, attempt + 1, max_retries)
+                    result.clear()
+                    exc_info.clear()
+                    time.sleep(2 ** attempt)
+                    continue
+                raise TimeoutError(f"load_workbook timed out after {timeout}s for {workbook_path}")
 
-        if exc_info.get('exc'):
-            exc = exc_info['exc']
-            if workbook_path.suffix.lower() != '.xlsx':
+            if exc_info.get('exc'):
+                exc = exc_info['exc']
+                if workbook_path.suffix.lower() != '.xlsx':
+                    if attempt < max_retries - 1:
+                        logger.warning('Workbook %s load failed (%s), retrying...', workbook_path, exc)
+                        result.clear()
+                        exc_info.clear()
+                        time.sleep(2 ** attempt)
+                        continue
+                    raise exc
+                alternate = self._find_existing_workbook_by_name(workbook_path.name)
+                if alternate is not None and alternate.resolve() != workbook_path.resolve():
+                    logger.warning('Workbook %s could not be opened (%s); retrying with %s', workbook_path, exc, alternate)
+
+                    def _load_alt():
+                        return load_workbook(alternate, read_only=read_only)
+
+                    result2 = {}
+                    exc_info2 = {}
+
+                    def _runner2():
+                        try:
+                            result2['value'] = _load_alt()
+                        except Exception as exc2:
+                            exc_info2['exc'] = exc2
+
+                    thread2 = threading.Thread(target=_runner2, daemon=True)
+                    thread2.start()
+                    thread2.join(timeout=timeout)
+
+                    if thread2.is_alive():
+                        raise TimeoutError(f"load_workbook (alternate) timed out after {timeout}s for {alternate}")
+
+                    if exc_info2.get('exc'):
+                        logger.warning('Alternate workbook %s could not be opened (%s)', alternate, exc_info2['exc'])
+                    else:
+                        return result2['value']
+                if attempt < max_retries - 1:
+                    logger.warning('Workbook %s load failed (%s), retrying...', workbook_path, exc)
+                    result.clear()
+                    exc_info.clear()
+                    time.sleep(2 ** attempt)
+                    continue
                 raise exc
-            alternate = self._find_existing_workbook_by_name(workbook_path.name)
-            if alternate is not None and alternate.resolve() != workbook_path.resolve():
-                logger.warning('Workbook %s could not be opened (%s); retrying with %s', workbook_path, exc, alternate)
 
-                def _load_alt():
-                    return load_workbook(alternate, read_only=read_only)
-
-                result2 = {}
-                exc_info2 = {}
-
-                def _runner2():
-                    try:
-                        result2['value'] = _load_alt()
-                    except Exception as exc2:
-                        exc_info2['exc'] = exc2
-
-                thread2 = threading.Thread(target=_runner2, daemon=True)
-                thread2.start()
-                thread2.join(timeout=timeout)
-
-                if thread2.is_alive():
-                    raise TimeoutError(f"load_workbook (alternate) timed out after {timeout}s for {alternate}")
-
-                if exc_info2.get('exc'):
-                    logger.warning('Alternate workbook %s could not be opened (%s)', alternate, exc_info2['exc'])
-                else:
-                    return result2['value']
-            raise exc
-
-        wb = result.get('value')
-        if wb is not None:
-            return wb
+            wb = result.get('value')
+            if wb is not None:
+                return wb
 
         raise ExcelWriterError(f"Workbook {workbook_path} could not be loaded")
 
