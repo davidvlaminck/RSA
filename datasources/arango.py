@@ -220,7 +220,7 @@ class SingleArangoConnector:
     DEFAULT_MAX_RUNTIME = 240  # seconds; abort runaway queries server-side by default
 
     @classmethod
-    def init(cls, host, port, user, password, database, request_timeout=180):
+    def init(cls, host, port, user, password, database, request_timeout=360):
         """Initialize the ArangoDB singleton connection.
 
         Args:
