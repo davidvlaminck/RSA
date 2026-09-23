@@ -30,11 +30,13 @@ import pickle
 import re
 import shutil
 import sys
+import time
 from datetime import datetime
+from functools import wraps
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-from google.auth.transport.requests import Request
+from google.auth.transport.requests import Request, AuthorizedSession
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
@@ -51,6 +53,43 @@ BRUSSELS = ZoneInfo('Europe/Brussels')
 SKIP_NAMES = {'archief', 'archivedreports', 'staged_summaries', 'logs'}
 ROOT_BUCKET_RE = re.compile(r'^\d{4}-\d{4}$')
 REQUIRED_ROOT_FOLDERS = {'overzicht'}
+
+# HTTP timeout for Google Drive API calls (connect, read) in seconds
+DRIVE_HTTP_TIMEOUT = (30, 300)
+
+# Retry configuration for Drive operations
+DRIVE_MAX_RETRIES = 5
+DRIVE_RETRY_BASE_DELAY = 2  # seconds
+DRIVE_RETRY_MAX_DELAY = 120  # seconds
+
+
+def _retry_on_drive_error(func):
+    """Decorator to retry Drive API calls on transient errors."""
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        last_exc = None
+        for attempt in range(DRIVE_MAX_RETRIES):
+            try:
+                return func(*args, **kwargs)
+            except Exception as exc:
+                last_exc = exc
+                error_str = str(exc).lower()
+                # Retry on timeout, connection errors, rate limits, and 5xx errors
+                if any(keyword in error_str for keyword in [
+                    'timeout', 'timed out', 'connection', 'reset', 'broken pipe',
+                    'rate limit', 'too many requests', '429', '500', '502', '503', '504'
+                ]):
+                    delay = min(DRIVE_RETRY_BASE_DELAY * (2 ** attempt), DRIVE_RETRY_MAX_DELAY)
+                    logging.warning(
+                        'Drive API call %s failed (attempt %d/%d): %s. Retrying in %.1fs...',
+                        func.__name__, attempt + 1, DRIVE_MAX_RETRIES, exc, delay
+                    )
+                    time.sleep(delay)
+                    continue
+                # Non-retryable error
+                raise
+        raise last_exc
+    return wrapper
 
 
 def _should_skip(name: str) -> bool:
@@ -101,7 +140,10 @@ def _load_credentials(token_path: str) -> Credentials:
 
 def _build_service(token_path: str):
     creds = _load_credentials(token_path)
-    return build('drive', 'v3', credentials=creds, cache_discovery=False)
+    # Use AuthorizedSession with explicit timeout for reliable large uploads
+    authed_session = AuthorizedSession(creds)
+    authed_session.timeout = DRIVE_HTTP_TIMEOUT
+    return build('drive', 'v3', credentials=creds, cache_discovery=False, http=authed_session)
 
 
 def _safe_name(name: str) -> str:
@@ -124,6 +166,7 @@ def _is_expected_root_folder_name(name: str) -> bool:
     return lowered in REQUIRED_ROOT_FOLDERS or bool(ROOT_BUCKET_RE.match(name.strip()))
 
 
+@_retry_on_drive_error
 def _list_children(service, folder_id: str) -> list[dict]:
     rows: list[dict] = []
     page_token = None
@@ -141,6 +184,7 @@ def _list_children(service, folder_id: str) -> list[dict]:
     return rows
 
 
+@_retry_on_drive_error
 def _find_child_by_name(service, parent_id: str, name: str) -> dict | None:
     query = (
         f"name='{_safe_name(name)}' "
@@ -156,6 +200,7 @@ def _find_child_by_name(service, parent_id: str, name: str) -> dict | None:
     return rows[0] if rows else None
 
 
+@_retry_on_drive_error
 def _get_or_create_folder(service, folder_name: str, parent_id: str | None = None) -> str:
     query_parts = [
         f"name='{_safe_name(folder_name)}'",
@@ -185,6 +230,7 @@ def _get_or_create_folder(service, folder_name: str, parent_id: str | None = Non
     return folder['id']
 
 
+@_retry_on_drive_error
 def _get_or_create_folder_path(service, folder_path: str) -> str:
     """Resolve a Drive folder path like 'RSA/RSA_OneDrive' and create missing segments."""
     parts = [part.strip() for part in folder_path.replace('\\', '/').split('/') if part.strip()]
@@ -197,6 +243,7 @@ def _get_or_create_folder_path(service, folder_path: str) -> str:
     return parent_id
 
 
+@_retry_on_drive_error
 def _download_file(service, file_id: str, target_path: Path) -> None:
     target_path.parent.mkdir(parents=True, exist_ok=True)
     request = service.files().get_media(fileId=file_id)
@@ -207,6 +254,7 @@ def _download_file(service, file_id: str, target_path: Path) -> None:
             _, done = downloader.next_chunk()
 
 
+@_retry_on_drive_error
 def _download_tree(service, folder_id: str, local_path: Path, is_root: bool = False) -> None:
     local_path.mkdir(parents=True, exist_ok=True)
     for child in _list_children(service, folder_id):
@@ -231,6 +279,7 @@ def _download_tree(service, folder_id: str, local_path: Path, is_root: bool = Fa
             _download_file(service, child['id'], child_path)
 
 
+@_retry_on_drive_error
 def _delete_drive_item_recursive(service, item_id: str, mime_type: str) -> None:
     if mime_type == FOLDER_MIME:
         for child in _list_children(service, item_id):
@@ -238,24 +287,36 @@ def _delete_drive_item_recursive(service, item_id: str, mime_type: str) -> None:
     service.files().delete(fileId=item_id).execute()
 
 
-def _upload_or_update_file(service, parent_id: str, local_file: Path, existing: dict | None) -> None:
-    media = MediaFileUpload(str(local_file), resumable=True)
-    if existing and existing.get('mimeType') != FOLDER_MIME:
-        service.files().update(fileId=existing['id'], media_body=media).execute()
-        logging.info('Drive updated: %s', local_file)
-        return
+@_retry_on_drive_error
+def _upload_or_update_file(service, parent_id: str, local_file: Path, existing: dict | None) -> bool:
+    """Upload or update a single file. Returns True on success, False on failure."""
+    try:
+        media = MediaFileUpload(str(local_file), resumable=True)
+        if existing and existing.get('mimeType') != FOLDER_MIME:
+            service.files().update(fileId=existing['id'], media_body=media).execute()
+            logging.info('Drive updated: %s', local_file)
+            return True
 
-    if existing and existing.get('mimeType') == FOLDER_MIME:
-        _delete_drive_item_recursive(service, existing['id'], existing['mimeType'])
+        if existing and existing.get('mimeType') == FOLDER_MIME:
+            _delete_drive_item_recursive(service, existing['id'], existing['mimeType'])
 
-    service.files().create(
-        body={'name': local_file.name, 'parents': [parent_id]},
-        media_body=media,
-    ).execute()
-    logging.info('Drive uploaded: %s', local_file)
+        service.files().create(
+            body={'name': local_file.name, 'parents': [parent_id]},
+            media_body=media,
+        ).execute()
+        logging.info('Drive uploaded: %s', local_file)
+        return True
+    except Exception as exc:
+        logging.error('Drive upload failed for %s: %s', local_file, exc)
+        return False
 
 
-def _sync_local_dir_to_drive(service, local_dir: Path, remote_folder_id: str, is_root: bool = False) -> None:
+@_retry_on_drive_error
+def _sync_local_dir_to_drive(service, local_dir: Path, remote_folder_id: str, is_root: bool = False) -> tuple[int, int, int]:
+    """Sync a local directory to Drive.
+    Returns: (uploaded_count, updated_count, error_count)
+    """
+    uploaded = updated = errors = 0
     remote_children = {child['name']: child for child in _list_children(service, remote_folder_id)}
     local_entries = sorted(local_dir.iterdir(), key=lambda p: p.name)
     for entry in local_entries:
@@ -278,16 +339,31 @@ def _sync_local_dir_to_drive(service, local_dir: Path, remote_folder_id: str, is
                 ).execute()
                 remote = {'id': created['id'], 'mimeType': FOLDER_MIME}
                 logging.info('Drive created folder: %s', entry)
-            _sync_local_dir_to_drive(service, entry, remote['id'], is_root=False)
+            sub_uploaded, sub_updated, sub_errors = _sync_local_dir_to_drive(service, entry, remote['id'], is_root=False)
+            uploaded += sub_uploaded
+            updated += sub_updated
+            errors += sub_errors
             continue
 
         if entry.is_file():
-            _upload_or_update_file(service, remote_folder_id, entry, remote)
+            if _upload_or_update_file(service, remote_folder_id, entry, remote):
+                if remote:
+                    updated += 1
+                else:
+                    uploaded += 1
+            else:
+                errors += 1
 
     # Delete remote leftovers that do not exist locally anymore.
     for remote_name, remote in remote_children.items():
-        _delete_drive_item_recursive(service, remote['id'], remote['mimeType'])
-        logging.info('Drive deleted: %s', remote_name)
+        try:
+            _delete_drive_item_recursive(service, remote['id'], remote['mimeType'])
+            logging.info('Drive deleted: %s', remote_name)
+        except Exception as exc:
+            logging.error('Drive delete failed for %s: %s', remote_name, exc)
+            errors += 1
+
+    return uploaded, updated, errors
 
 
 def sync_drive_to_local(local_folder: str, drive_folder_name: str, token_path: str) -> bool:
@@ -317,7 +393,9 @@ def sync_drive_to_local(local_folder: str, drive_folder_name: str, token_path: s
 
 
 def sync_local_to_drive(local_folder: str, drive_folder_name: str, token_path: str) -> bool:
-    """Mirror local folder into Drive folder (Drive is updated/deleted to match local)."""
+    """Mirror local folder into Drive folder (Drive is updated/deleted to match local).
+    Returns True if at least some files were processed successfully, False on total failure.
+    """
     token_file = Path(token_path)
     if not token_file.exists():
         logging.warning('Drive token niet gevonden: %s', token_path)
@@ -331,9 +409,13 @@ def sync_local_to_drive(local_folder: str, drive_folder_name: str, token_path: s
     try:
         service = _build_service(token_path)
         folder_id = _get_or_create_folder_path(service, drive_folder_name)
-        _sync_local_dir_to_drive(service, local_path, folder_id, is_root=True)
-        logging.info("Drive upload mirror klaar -> '%s'", drive_folder_name)
-        return True
+        uploaded, updated, errors = _sync_local_dir_to_drive(service, local_path, folder_id, is_root=True)
+        logging.info(
+            "Drive upload mirror klaar -> '%s': %s nieuw, %s bijgewerkt, %s fouten",
+            drive_folder_name, uploaded, updated, errors
+        )
+        # Return True if any files were processed successfully, False if all failed
+        return (uploaded + updated) > 0
     except Exception as exc:
         logging.error('Drive upload mirror mislukt: %s', exc)
         return False
