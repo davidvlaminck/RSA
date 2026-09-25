@@ -143,7 +143,7 @@ def _build_service(token_path: str):
     # Use AuthorizedSession with explicit timeout for reliable large uploads
     authed_session = AuthorizedSession(creds)
     authed_session.timeout = DRIVE_HTTP_TIMEOUT
-    return build('drive', 'v3', credentials=creds, cache_discovery=False, http=authed_session)
+    return build('drive', 'v3', cache_discovery=False, http=authed_session)
 
 
 def _safe_name(name: str) -> str:
