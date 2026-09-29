@@ -29,6 +29,7 @@ import logging
 import pickle
 import re
 import shutil
+import socket
 import sys
 import time
 from datetime import datetime
@@ -36,7 +37,12 @@ from functools import wraps
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-from google.auth.transport.requests import Request, AuthorizedSession
+try:
+    import httplib2
+except ImportError:  # pragma: no cover - httplib2 ships with google-api-python-client
+    httplib2 = None
+import googleapiclient.errors
+from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
@@ -54,40 +60,75 @@ SKIP_NAMES = {'archief', 'archivedreports', 'staged_summaries', 'logs'}
 ROOT_BUCKET_RE = re.compile(r'^\d{4}-\d{4}$')
 REQUIRED_ROOT_FOLDERS = {'overzicht'}
 
-# HTTP timeout for Google Drive API calls (connect, read) in seconds
-DRIVE_HTTP_TIMEOUT = (30, 300)
+# HTTP socket timeout for Drive API calls (connect, read) in seconds
+DRIVE_HTTP_TIMEOUT = 300
 
-# Retry configuration for Drive operations
+# Resumable upload chunk size; 8 MB keeps individual chunk writes well inside
+# the socket timeout and lets a resumable session be retried at chunk level.
+DRIVE_UPLOAD_CHUNK_SIZE = 8 * 1024 * 1024
+
+# Retries performed by googleapiclient itself (resumes the upload session).
+DRIVE_API_NUM_RETRIES = 5
+
+# Retry configuration for Drive operations (outer loop around API calls)
 DRIVE_MAX_RETRIES = 5
 DRIVE_RETRY_BASE_DELAY = 2  # seconds
 DRIVE_RETRY_MAX_DELAY = 120  # seconds
 
 
+_RETRYABLE_ERROR_KEYWORDS = (
+    'timeout', 'timed out', 'timedout', 'connection', 'reset by peer',
+    'broken pipe', 'rate limit', 'rate-limit', 'too many requests', 'quota',
+    'backenderror', 'internal error', 'service unavailable',
+    '429', '500', '502', '503', '504',
+)
+
+
+def _is_retryable_drive_error(exc: BaseException) -> bool:
+    """Transient Drive/network failures worth retrying."""
+    if isinstance(exc, (TimeoutError, ConnectionError, socket.timeout)):
+        return True
+    transport_errors = tuple(
+        err for err in (
+            getattr(httplib2, 'HttpLib2Error', None) if httplib2 else None,
+            getattr(googleapiclient.errors, 'HttpError', None),
+        ) if isinstance(err, type)
+    )
+    if transport_errors and isinstance(exc, transport_errors):
+        message = f'{getattr(exc, "reason", "")} {exc}'.lower()
+        if isinstance(exc, googleapiclient.errors.HttpError):
+            status = getattr(getattr(exc, 'resp', None), 'status', None)
+            if status in (408, 429) or (status is not None and 500 <= status < 600):
+                return True
+        return any(keyword in message for keyword in _RETRYABLE_ERROR_KEYWORDS)
+    return any(keyword in str(exc).lower() for keyword in _RETRYABLE_ERROR_KEYWORDS)
+
+
 def _retry_on_drive_error(func):
-    """Decorator to retry Drive API calls on transient errors."""
+    """Decorator to retry Drive API calls on transient errors.
+
+    For upload steps this resumes naturally because the sync is idempotent:
+    files already mirrored are re-listed and re-verified against the remote folder.
+    """
     @wraps(func)
     def wrapper(*args, **kwargs):
-        last_exc = None
+        last_exc: Exception | None = None
         for attempt in range(DRIVE_MAX_RETRIES):
             try:
                 return func(*args, **kwargs)
             except Exception as exc:
                 last_exc = exc
-                error_str = str(exc).lower()
-                # Retry on timeout, connection errors, rate limits, and 5xx errors
-                if any(keyword in error_str for keyword in [
-                    'timeout', 'timed out', 'connection', 'reset', 'broken pipe',
-                    'rate limit', 'too many requests', '429', '500', '502', '503', '504'
-                ]):
-                    delay = min(DRIVE_RETRY_BASE_DELAY * (2 ** attempt), DRIVE_RETRY_MAX_DELAY)
-                    logging.warning(
-                        'Drive API call %s failed (attempt %d/%d): %s. Retrying in %.1fs...',
-                        func.__name__, attempt + 1, DRIVE_MAX_RETRIES, exc, delay
-                    )
-                    time.sleep(delay)
-                    continue
-                # Non-retryable error
-                raise
+                if not _is_retryable_drive_error(exc):
+                    raise
+                if attempt == DRIVE_MAX_RETRIES - 1:
+                    break
+                delay = min(DRIVE_RETRY_BASE_DELAY * (2 ** attempt), DRIVE_RETRY_MAX_DELAY)
+                logging.warning(
+                    'Drive API call %s failed (attempt %d/%d): %s: %s. Retrying in %.1fs...',
+                    func.__name__, attempt + 1, DRIVE_MAX_RETRIES,
+                    type(exc).__name__, exc, delay,
+                )
+                time.sleep(delay)
         raise last_exc
     return wrapper
 
@@ -140,10 +181,17 @@ def _load_credentials(token_path: str) -> Credentials:
 
 def _build_service(token_path: str):
     creds = _load_credentials(token_path)
-    # Use AuthorizedSession with explicit timeout for reliable large uploads
-    authed_session = AuthorizedSession(creds)
-    authed_session.timeout = DRIVE_HTTP_TIMEOUT
-    return build('drive', 'v3', cache_discovery=False, http=authed_session)
+    service = build('drive', 'v3', credentials=creds, cache_discovery=False)
+    # googleapiclient drives httplib2 through google_auth_httplib2.AuthorizedHttp,
+    # which proxies .timeout to the underlying httplib2.Http instance. Raise it so
+    # long-running resumable uploads are not aborted by a short read timeout.
+    http = getattr(service, '_http', None)
+    if http is not None:
+        try:
+            http.timeout = DRIVE_HTTP_TIMEOUT
+        except (AttributeError, TypeError) as exc:
+            logging.warning('Could not set Drive HTTP timeout (%s); using library default.', exc)
+    return service
 
 
 def _safe_name(name: str) -> str:
@@ -287,28 +335,47 @@ def _delete_drive_item_recursive(service, item_id: str, mime_type: str) -> None:
     service.files().delete(fileId=item_id).execute()
 
 
-@_retry_on_drive_error
+def _upload_or_update_file_once(service, parent_id: str, local_file: Path, existing: dict | None) -> None:
+    media = MediaFileUpload(str(local_file), resumable=True, chunksize=DRIVE_UPLOAD_CHUNK_SIZE)
+    if existing and existing.get('mimeType') != FOLDER_MIME:
+        service.files().update(fileId=existing['id'], media_body=media).execute(
+            num_retries=DRIVE_API_NUM_RETRIES)
+        logging.info('Drive updated: %s', local_file)
+        return
+
+    if existing and existing.get('mimeType') == FOLDER_MIME:
+        _delete_drive_item_recursive(service, existing['id'], existing['mimeType'])
+
+    service.files().create(
+        body={'name': local_file.name, 'parents': [parent_id]},
+        media_body=media,
+    ).execute(num_retries=DRIVE_API_NUM_RETRIES)
+    logging.info('Drive uploaded: %s', local_file)
+
+
 def _upload_or_update_file(service, parent_id: str, local_file: Path, existing: dict | None) -> bool:
-    """Upload or update a single file. Returns True on success, False on failure."""
-    try:
-        media = MediaFileUpload(str(local_file), resumable=True)
-        if existing and existing.get('mimeType') != FOLDER_MIME:
-            service.files().update(fileId=existing['id'], media_body=media).execute()
-            logging.info('Drive updated: %s', local_file)
+    """Upload or update a single file with retries.
+
+    Returns True on success, False when the file could not be mirrored even
+    after retries. A fresh MediaFileUpload is built per attempt so a failed
+    resumable session is never reused.
+    """
+    for attempt in range(1, DRIVE_MAX_RETRIES + 1):
+        try:
+            _upload_or_update_file_once(service, parent_id, local_file, existing)
             return True
-
-        if existing and existing.get('mimeType') == FOLDER_MIME:
-            _delete_drive_item_recursive(service, existing['id'], existing['mimeType'])
-
-        service.files().create(
-            body={'name': local_file.name, 'parents': [parent_id]},
-            media_body=media,
-        ).execute()
-        logging.info('Drive uploaded: %s', local_file)
-        return True
-    except Exception as exc:
-        logging.error('Drive upload failed for %s: %s', local_file, exc)
-        return False
+        except Exception as exc:
+            if not _is_retryable_drive_error(exc) or attempt == DRIVE_MAX_RETRIES:
+                logging.error('Drive upload failed for %s (attempt %d/%d): %s: %s',
+                              local_file, attempt, DRIVE_MAX_RETRIES, type(exc).__name__, exc)
+                return False
+            delay = min(DRIVE_RETRY_BASE_DELAY * (2 ** (attempt - 1)), DRIVE_RETRY_MAX_DELAY)
+            logging.warning(
+                'Drive upload failed for %s (attempt %d/%d): %s: %s. Retrying in %.1fs...',
+                local_file, attempt, DRIVE_MAX_RETRIES, type(exc).__name__, exc, delay,
+            )
+            time.sleep(delay)
+    return False
 
 
 @_retry_on_drive_error
@@ -406,19 +473,36 @@ def sync_local_to_drive(local_folder: str, drive_folder_name: str, token_path: s
         logging.warning('Lokale map niet gevonden: %s', local_folder)
         return False
 
-    try:
-        service = _build_service(token_path)
-        folder_id = _get_or_create_folder_path(service, drive_folder_name)
-        uploaded, updated, errors = _sync_local_dir_to_drive(service, local_path, folder_id, is_root=True)
-        logging.info(
-            "Drive upload mirror klaar -> '%s': %s nieuw, %s bijgewerkt, %s fouten",
-            drive_folder_name, uploaded, updated, errors
-        )
-        # Return True if any files were processed successfully, False if all failed
-        return (uploaded + updated) > 0
-    except Exception as exc:
-        logging.error('Drive upload mirror mislukt: %s', exc)
-        return False
+    last_exc: Exception | None = None
+    for attempt in range(1, DRIVE_MAX_RETRIES + 1):
+        try:
+            service = _build_service(token_path)
+            folder_id = _get_or_create_folder_path(service, drive_folder_name)
+            uploaded, updated, errors = _sync_local_dir_to_drive(service, local_path, folder_id, is_root=True)
+            logging.info(
+                "Drive upload mirror klaar -> '%s': %s nieuw, %s bijgewerkt, %s fouten",
+                drive_folder_name, uploaded, updated, errors
+            )
+            if errors:
+                logging.warning(
+                    "Drive upload mirror voltooid met %s fouten -> '%s' (overige bestanden zijn wel gespiegeld)",
+                    errors, drive_folder_name,
+                )
+            return True
+        except Exception as exc:
+            last_exc = exc
+            if not _is_retryable_drive_error(exc) or attempt == DRIVE_MAX_RETRIES:
+                break
+            delay = min(DRIVE_RETRY_BASE_DELAY * (2 ** (attempt - 1)), DRIVE_RETRY_MAX_DELAY)
+            logging.warning(
+                'Drive upload mirror mislukt (poging %d/%d): %s: %s. Opnieuw proberen over %.1fs...',
+                attempt, DRIVE_MAX_RETRIES, type(exc).__name__, exc, delay,
+            )
+            time.sleep(delay)
+
+    logging.error('Drive upload mirror mislukt: %s: %s',
+                  type(last_exc).__name__ if last_exc else '?', last_exc)
+    return False
 
 
 def _discover_expected_buckets() -> set[str]:
