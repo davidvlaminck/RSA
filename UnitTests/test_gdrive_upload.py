@@ -1,11 +1,27 @@
 from scripts.ops import gdrive_upload
-from scripts.ops.gdrive_upload import _should_skip
+from scripts.ops.gdrive_upload import _is_temporary_workbook, _should_skip
 
 
 def test_should_skip_legacy_archive_folder_names():
     assert _should_skip('Archief')
     assert _should_skip('archivedreports')
     assert not _should_skip('Overzicht')
+
+
+def test_is_temporary_workbook_detects_half_written_workbooks():
+    assert _is_temporary_workbook('Lichtmast LED_tmp_19_uthty.xlsx')
+    assert _is_temporary_workbook('Dubbele bomen (Limburg)_tmp_0s6disq0.xlsx')
+    assert _is_temporary_workbook('[RSA] Overzicht rapporten.xlsx.lock')
+    assert _is_temporary_workbook('~$report copy.xlsx')
+
+
+def test_is_temporary_workbook_keeps_real_workbooks():
+    assert not _is_temporary_workbook('[RSA] Overzicht rapporten.xlsx')
+    assert not _is_temporary_workbook('[RSA] Dubbele Straatkolken (West-Vlaanderen).xlsx')
+    assert not _is_temporary_workbook('spreadsheet_mapping.json')
+
+
+_SHEET_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
 
 class _FakeRequest:
@@ -103,6 +119,80 @@ def test_sync_local_dir_skips_root_files_for_custom_root_name(monkeypatch, tmp_p
     created_names = [entry.get('name') for entry in service.files().created]
     assert 'should_not_upload.xlsx' not in created_names
     assert 'report.xlsx' in created_names
+
+
+def test_sync_local_dir_skips_tmp_staging_workbooks(monkeypatch, tmp_path):
+    root = tmp_path / 'RSA_OneDrive'
+    bucket = root / '0000-0099'
+    bucket.mkdir(parents=True)
+    (bucket / 'report.xlsx').write_text('bucket', encoding='utf-8')
+    (bucket / 'Lichtmast LED_tmp_19_uthty.xlsx').write_text('partial', encoding='utf-8')
+    (bucket / '[RSA] Dubbele bomen (Limburg)_tmp_0s6disq0.xlsx').write_text('partial', encoding='utf-8')
+    (bucket / '[RSA] Dubbele bomen (Limburg).xlsx.lock').write_text('lock', encoding='utf-8')
+
+    service = _FakeService()
+
+    def fake_list_children(_service, folder_id):
+        return [
+            {'name': '0000-0099', 'id': 'bucket-folder', 'mimeType': gdrive_upload.FOLDER_MIME},
+        ]
+
+    monkeypatch.setattr(gdrive_upload, '_list_children', fake_list_children)
+
+    gdrive_upload._sync_local_dir_to_drive(service, root, 'root-folder', is_root=True)
+
+    created_names = [entry.get('name') for entry in service.files().created]
+    assert 'report.xlsx' in created_names
+    assert not any('_tmp_' in name for name in created_names)
+    assert '[RSA] Dubbele bomen (Limburg).xlsx.lock' not in created_names
+
+
+def test_sync_local_dir_deletes_stale_remote_tmp_workbooks(monkeypatch, tmp_path):
+    root = tmp_path / 'RSA_OneDrive'
+    bucket = root / '0000-0099'
+    bucket.mkdir(parents=True)
+    (bucket / 'report.xlsx').write_text('bucket', encoding='utf-8')
+
+    service = _FakeService()
+
+    def fake_list_children(_service, folder_id):
+        if folder_id == 'bucket-remote':
+            return [
+                {'name': 'Lichtmast LED_tmp_19_uthty.xlsx', 'id': 'stale-tmp', 'mimeType': _SHEET_MIME},
+            ]
+        return [
+            {'name': '0000-0099', 'id': 'bucket-remote', 'mimeType': gdrive_upload.FOLDER_MIME},
+        ]
+
+    monkeypatch.setattr(gdrive_upload, '_list_children', fake_list_children)
+
+    gdrive_upload._sync_local_dir_to_drive(service, root, 'root-folder', is_root=True)
+
+    assert 'stale-tmp' in service.files().deleted
+
+
+def test_download_tree_skips_remote_tmp_workbooks(monkeypatch, tmp_path):
+    target = tmp_path / 'RSA_OneDrive' / '0000-0099'
+
+    def fake_list_children(_service, folder_id):
+        return [
+            {'name': 'report.xlsx', 'id': 'file-1', 'mimeType': _SHEET_MIME},
+            {'name': 'Lichtmast LED_tmp_19_uthty.xlsx', 'id': 'file-2', 'mimeType': _SHEET_MIME},
+        ]
+
+    downloaded = []
+
+    def fake_download_file(_service, file_id, target_path):
+        downloaded.append(target_path.name)
+        target_path.write_text('data', encoding='utf-8')
+
+    monkeypatch.setattr(gdrive_upload, '_list_children', fake_list_children)
+    monkeypatch.setattr(gdrive_upload, '_download_file', fake_download_file)
+
+    gdrive_upload._download_tree(object(), 'bucket-remote', target)
+
+    assert downloaded == ['report.xlsx']
+    assert not (target / 'Lichtmast LED_tmp_19_uthty.xlsx').exists()
 
 
 def test_get_or_create_folder_path_uses_root_and_parent_scoped_queries(monkeypatch):

@@ -60,6 +60,25 @@ SKIP_NAMES = {'archief', 'archivedreports', 'staged_summaries', 'logs'}
 ROOT_BUCKET_RE = re.compile(r'^\d{4}-\d{4}$')
 REQUIRED_ROOT_FOLDERS = {'overzicht'}
 
+# Temporary workbook files that must never reach Drive. outputs/excel.py writes
+# atomically via NamedTemporaryFile with the prefix '<stem>_tmp_<random>', so an
+# interrupted run leaves a half-written '[RSA] Lichtmast LED_tmp_ab12cd.xlsx'
+# behind next to the real workbook. Excel itself leaves '~$<name>.xlsx' lock
+# files and the writer leaves '<name>.xlsx.lock'. None of them are output.
+TEMP_WORKBOOK_MARKER = '_tmp_'
+TEMP_WORKBOOK_PREFIXES = ('~$',)
+TEMP_WORKBOOK_SUFFIXES = ('.lock',)
+
+
+def _is_temporary_workbook(name: str) -> bool:
+    """True for temporary/lock workbook files that must not be mirrored to Drive."""
+    lowered = name.strip().lower()
+    if TEMP_WORKBOOK_MARKER in lowered:
+        return True
+    if lowered.startswith(TEMP_WORKBOOK_PREFIXES):
+        return True
+    return lowered.endswith(TEMP_WORKBOOK_SUFFIXES)
+
 # HTTP socket timeout for Drive API calls (connect, read) in seconds
 DRIVE_HTTP_TIMEOUT = 300
 
@@ -312,6 +331,9 @@ def _download_tree(service, folder_id: str, local_path: Path, is_root: bool = Fa
         if _should_skip(child['name']):
             logging.info('Skipping Drive item during download mirror: %s', child['name'])
             continue
+        if _is_temporary_workbook(child['name']):
+            logging.info('Skipping temporary workbook during download mirror: %s', child['name'])
+            continue
         if is_root and child['mimeType'] == FOLDER_MIME and not _is_expected_root_folder_name(child['name']):
             logging.warning('Skipping unexpected root Drive folder during download mirror: %r', child['name'])
             continue
@@ -389,6 +411,9 @@ def _sync_local_dir_to_drive(service, local_dir: Path, remote_folder_id: str, is
     for entry in local_entries:
         if _should_skip(entry.name):
             logging.info('Skipping local item during upload mirror: %s', entry)
+            continue
+        if _is_temporary_workbook(entry.name):
+            logging.info('Skipping temporary workbook during upload mirror: %s', entry)
             continue
         if is_root and entry.is_file():
             logging.warning('Skipping root-level file during upload mirror: %s', entry)
@@ -591,6 +616,9 @@ def upload_folder_to_drive(
             continue
         if local_path.name == 'RSA_OneDrive':
             logging.warning('Skipping legacy root-level file upload helper item: %s', filepath)
+            continue
+        if _is_temporary_workbook(filepath.name):
+            logging.info('Skipping temporary workbook during legacy upload: %s', filepath)
             continue
         if file_extensions and filepath.suffix.lower() not in file_extensions:
             continue
