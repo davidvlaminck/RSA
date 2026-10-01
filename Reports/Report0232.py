@@ -31,7 +31,7 @@ FOR asset IN assets
   LET toezichtsgroep = FIRST(FOR b IN betrokkenen FILTER b.rol == 'toezichtsgroep' RETURN b.agent)
 
   RETURN {
-    'assetId.identificator': asset._key,
+    'assetId_identificator': asset._key,
     'typeURI': asset["@type"],
   	'naam': asset.AIMNaamObject_naam,
   	'naampad': asset.NaampadObject_naampad,
