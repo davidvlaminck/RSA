@@ -568,6 +568,13 @@ class ExcelOutput:
         """
         sp = str(spreadsheet_id_or_path)
         p = Path(sp)
+
+        # Guard against empty/whitespace-only identifiers (e.g. reports that
+        # have no spreadsheet_id configured). Returning a non-existent path lets
+        # callers gracefully return empty data instead of trying to load the
+        # current directory as a workbook.
+        if not sp.strip():
+            return Path(self.output_dir) / '_empty_spreadsheet.xlsx'
         if p.is_absolute():
             return p
 

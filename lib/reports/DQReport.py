@@ -44,6 +44,18 @@ class DQReport(Report):
         self.output = output
         self.output_settings = output_settings or {}
 
+    @property
+    def _local_spreadsheet_id(self) -> str:
+        """Return the identifier used to resolve the local workbook.
+
+        When spreadsheet_id is set (Google Sheets mode), use it directly.
+        When spreadsheet_id is empty (Excel-only/SharePoint mode), fall back
+        to excel_filename so the Excel backend can resolve the local .xlsx file.
+        """
+        if self.spreadsheet_id:
+            return self.spreadsheet_id
+        return self.excel_filename or ''
+
     def run_report(self, startcell: str = 'A1', sender: MailSender = None):
         logger.info(f'start running report {self.name}: {self.title}')
 
@@ -63,7 +75,7 @@ class DQReport(Report):
         # read mail receivers (unchanged behavior)
         mail_receivers = None
         try:
-            mail_receivers_raw = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='Overzicht',
+            mail_receivers_raw = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self._local_spreadsheet_id, sheet_name='Overzicht',
                                                                  sheetrange='emails', return_raw_results=True)
             # Normalize fallback return shapes:
             # - if a list was returned, wrap into dict
@@ -111,7 +123,7 @@ class DQReport(Report):
                         SingleSheetsWrapper.sheets_wrapper = SheetsCompatAdapter(SingleExcelWriter.get_wrapper())
                         sheets_wrapper = SingleSheetsWrapper.get_wrapper()
                         try:
-                            mail_receivers_raw = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self.spreadsheet_id,
+                            mail_receivers_raw = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self._local_spreadsheet_id,
                                                                                      sheet_name='Overzicht',
                                                                                      sheetrange='emails', return_raw_results=True)
                         except Exception:
@@ -142,20 +154,20 @@ class DQReport(Report):
         if self.persistent_column != '':
             self.persistent_dict = {}
             try:
-                sheets = sheets_wrapper.get_sheets_in_spreadsheet(spreadsheet_id=self.spreadsheet_id)
+                sheets = sheets_wrapper.get_sheets_in_spreadsheet(spreadsheet_id=self._local_spreadsheet_id)
                 if 'Resultaat' in sheets:
                     first_cell = SheetsCell(self.persistent_column + '1')
-                    first_nonempty_row = sheets_wrapper.find_first_nonempty_row_from_starting_cell(spreadsheet_id=self.spreadsheet_id,
+                    first_nonempty_row = sheets_wrapper.find_first_nonempty_row_from_starting_cell(spreadsheet_id=self._local_spreadsheet_id,
                                                                                                    sheet_name='Resultaat',
                                                                                                    start_cell=first_cell.cell)
 
                     grid_props = sheets['Resultaat']['gridProperties']
                     max_row = grid_props['rowCount']
 
-                    ids = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self.spreadsheet_id,
-                                                              sheet_name='Resultaat',
-                                                              sheetrange='A' + str(first_nonempty_row) + ':A' + str(max_row))
-                    persisent_column_data = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self.spreadsheet_id,
+                    ids = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self._local_spreadsheet_id,
+                                                               sheet_name='Resultaat',
+                                                               sheetrange='A' + str(first_nonempty_row) + ':A' + str(max_row))
+                    persisent_column_data = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self._local_spreadsheet_id,
                                                                                 sheet_name='Resultaat',
                                                                                 sheetrange=self.persistent_column + str(
                                                                                     first_nonempty_row) + ':' + self.persistent_column + str(
@@ -267,8 +279,8 @@ class DQReport(Report):
 
         # write output via output adapter
         ctx = OutputWriteContext(
-            spreadsheet_id=self.spreadsheet_id,
-            report_title=self.title,
+            spreadsheet_id=self._local_spreadsheet_id,
+             report_title=self.title,
             datasource_name=self.datasource,
             now_utc=self.now,
             report_name=self.name,
@@ -321,7 +333,7 @@ class DQReport(Report):
             target_workbook = (
                 (meta.get('file') if isinstance(meta, dict) else None)
                 or getattr(ctx, 'excel_filename', None)
-                or self.spreadsheet_id
+                or self._local_spreadsheet_id
             )
 
             # compute rowFound using column F 'rapportnummer' which should contain the report class name.
@@ -340,7 +352,7 @@ class DQReport(Report):
 
                 rowFound = 4
                 target_name = (self.name or '').strip().lower()
-                target_sheet_id = (self.spreadsheet_id or '')
+                target_sheet_id = (self._local_spreadsheet_id or '')
 
                 # iterate rows and try multiple matching strategies
                 max_rows = max(len(ovF or []), len(ovB_values or []))
@@ -392,7 +404,7 @@ class DQReport(Report):
 
             historiek_data = None
             try:
-                historiek_data = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self.spreadsheet_id,
+                historiek_data = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self._local_spreadsheet_id,
                                                                      sheet_name='Historiek',
                                                                      sheetrange='B2:B2')
                 if len(historiek_data) > 0:
@@ -470,8 +482,8 @@ class DQReport(Report):
             }
             if target_workbook:
                 payload_hist['excel_filename'] = str(target_workbook)
-            elif self.spreadsheet_id:
-                payload_hist['spreadsheet_id'] = self.spreadsheet_id
+            elif self._local_spreadsheet_id:
+                payload_hist['excel_filename'] = self._local_spreadsheet_id
 
             try:
                 logger.info('%s: staging historiek payload target=%s payload=%s', self.name, excel_fname_for_summary, payload_hist)
@@ -610,9 +622,9 @@ class DQReport(Report):
             try:
                 logger.warning(f'Summary staging failed: {ex}; falling back to direct writes')
                 if last_data_update != self.last_data_update:
-                    sheets_wrapper.insert_empty_rows(spreadsheet_id=self.spreadsheet_id, sheet_name='Historiek', start_cell='A2',
+                    sheets_wrapper.insert_empty_rows(spreadsheet_id=self._local_spreadsheet_id, sheet_name='Historiek', start_cell='A2',
                                                      number_of_rows=1)
-                sheets_wrapper.write_data_to_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='Historiek', start_cell='A2',
+                sheets_wrapper.write_data_to_sheet(spreadsheet_id=self._local_spreadsheet_id, sheet_name='Historiek', start_cell='A2',
                                                    data=[[self.now, self.last_data_update, len(qr.rows)]])
                 if report_link:
                     sheets_wrapper.write_data_to_sheet(
@@ -756,7 +768,7 @@ class DQReport(Report):
                                             excel_filename=self.excel_filename or '', report_code=self.name)
 
     def get_historiek_record_info(self, sheets_wrapper: SheetsWrapper) -> tuple[int | None, str]:
-        results = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self.spreadsheet_id, sheet_name='Historiek',
+        results = sheets_wrapper.read_data_from_sheet(spreadsheet_id=self._local_spreadsheet_id, sheet_name='Historiek',
                                                       sheetrange='B2:C2')
 
         if len(results) == 0:
