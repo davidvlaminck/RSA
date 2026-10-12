@@ -551,7 +551,10 @@ def validate_local_mirror(local_folder: str) -> tuple[bool, str]:
     """Validate the minimal folder layout required before report execution."""
     root = Path(local_folder)
     if not root.exists():
-        return False, f'local mirror does not exist: {root}'
+        try:
+            root.mkdir(parents=True, exist_ok=True)
+        except Exception:
+            return False, f'local mirror does not exist: {root}'
 
     overview_dir = root / 'Overzicht'
     overview_wb_name = '[RSA] Overzicht rapporten.xlsx'

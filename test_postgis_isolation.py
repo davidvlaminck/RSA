@@ -91,11 +91,11 @@ def scenario_full_postgis():
         "Report0142", "Report0156", "Report0175", "Report0157", "Report0110",
         "Report0211", "Report0147", "Report0122", "Report0106", "Report0202",
         "Report0062",
-        "Report0136", "Report0149", "Report0146",
-        "Report0128", "Report0102", "Report0152", "Report0150", "Report0154",
+        "Report0136", "Report0146",
+        "Report0128", "Report0150",
         "Report0047", "Report0048", "Report0151", "Report0123", "Report0153",
-        "Report0000", "Report0118",
-    ] # removed 0101  Report0039 Report0171
+        "Report0000",
+    ] # removed archived: 0101 0039 0171 0149 0102 0152 0154 0118
     logger.info("Aantal PostGIS reports: %d", len(postgis_reports))
     start = time.time()
     rc, failed = run_pipelines_by_datasource(

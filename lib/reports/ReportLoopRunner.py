@@ -481,14 +481,47 @@ class ReportLoopRunner:
         try:
             from lib.connectors.PostGISConnector import SinglePostGISConnector
             connector = SinglePostGISConnector.get_connector()
-            conn = connector.pool.getconn()
-            try:
-                if not connector._validate_connection(conn):
-                    raise RuntimeError("PostGIS connection failed validation")
-                conn.cursor().execute("SELECT 1")
-            finally:
-                connector.pool.putconn(conn)
-            logger.info("Preflight check: PostGIS connection OK")
+            last_exc = None
+            for attempt in range(3):
+                conn = connector.pool.getconn()
+                try:
+                    if not connector._validate_connection(conn):
+                        try:
+                            connector.pool.putconn(conn, close=True)
+                        except Exception:
+                            pass
+                        last_exc = RuntimeError("PostGIS connection failed validation")
+                        continue
+                    try:
+                        cur = conn.cursor()
+                        cur.execute("SELECT 1")
+                        cur.fetchone()
+                        cur.close()
+                    except Exception as exc:
+                        try:
+                            connector.pool.putconn(conn, close=True)
+                        except Exception:
+                            pass
+                        last_exc = exc
+                        continue
+                    connector.pool.putconn(conn)
+                    logger.info("Preflight check: PostGIS connection OK")
+                    return
+                except Exception:
+                    try:
+                        connector.pool.putconn(conn, close=True)
+                    except Exception:
+                        pass
+                    raise
+            logger.error(f"Preflight check: PostGIS connection failed: {last_exc}")
+            if self.pipeline_status is not None:
+                enqueue_sqlite_job("update_pipeline_state", {
+                    "updated_at": datetime.now(timezone.utc).isoformat(),
+                    "phase": "rsa_queries",
+                    "status": "failed",
+                    "message": f"Preflight check failed: PostGIS unreachable: {last_exc}",
+                })
+            raise RuntimeError(f"PostGIS preflight check failed: {last_exc}") from last_exc
         except Exception as exc:
             logger.error(f"Preflight check: PostGIS connection failed: {exc}")
             if self.pipeline_status is not None:
@@ -496,7 +529,7 @@ class ReportLoopRunner:
                     "updated_at": datetime.now(timezone.utc).isoformat(),
                     "phase": "rsa_queries",
                     "status": "failed",
-                    "message": f"Preflight check failed: PostGIS unreachable: {exc}",
+                    "message": f"PostGIS preflight check failed: PostGIS unreachable: {exc}",
                 })
             raise RuntimeError(f"PostGIS preflight check failed: {exc}") from exc
 
