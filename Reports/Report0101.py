@@ -41,19 +41,21 @@ class Report0101(BaseReport):
               }
           )
 
+          /* per-asset invariants (hoisted out of the row loops) */
+          LET adres_json = (a.loc && a.loc.Locatie_puntlocatie && a.loc.Locatie_puntlocatie.DtcPuntlocatie_adres) ? a.loc.Locatie_puntlocatie.DtcPuntlocatie_adres : null
+          LET provincie = adres_json && adres_json.DtcAdres_provincie ? adres_json.DtcAdres_provincie : null
+          LET gemeente = adres_json && adres_json.DtcAdres_gemeente ? adres_json.DtcAdres_gemeente : null
+
           /* For each relation (or 1 null if no relations) */
           FOR rel IN (LENGTH(hv_rels) > 0 ? hv_rels : [null])
             FILTER rel != null OR a.AIMDBStatus_isActief == true
 
+            /* per-relation invariant (hoisted out of the ds/bk loops) */
+            LET vplan = rel != null ? DOCUMENT(rel._to) : null
+
             /* For each dienstdatum entry (or 1 null if no entries) */
             FOR ds IN (rel != null && rel['HeeftVPlan_dienstdatum'] != null && LENGTH(rel['HeeftVPlan_dienstdatum']) > 0 ? rel['HeeftVPlan_dienstdatum'] : [null])
-              LET vplan = rel != null ? DOCUMENT(rel._to) : null
-
               FOR bk IN (LENGTH(active_bestekken) > 0 ? active_bestekken : [null])
-                LET adres_json = (a.loc && a.loc.Locatie_puntlocatie && a.loc.Locatie_puntlocatie.DtcPuntlocatie_adres) ? a.loc.Locatie_puntlocatie.DtcPuntlocatie_adres : null
-                LET provincie = adres_json && adres_json.DtcAdres_provincie ? adres_json.DtcAdres_provincie : null
-                LET gemeente = adres_json && adres_json.DtcAdres_gemeente ? adres_json.DtcAdres_gemeente : null
-
                 LET indienst = ds != null ? ds.DtcDienstdatum_indienstname : null
                 LET uitdienst = ds != null ? ds.DtcDienstdatum_uitdienstname : null
 
