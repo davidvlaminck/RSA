@@ -220,6 +220,94 @@ def reinitialize_database_connections(settings, arango_timeout: int = 180,
         logger.warning(f'Could not initialize Excel writer in worker: {e}')
 
 
+def _run_report_in_child(report_instance, report_name: str,
+                          total_timeout: int) -> tuple[int, bool]:
+    """Run a report in a forked child process supervised by the parent.
+
+    ArangoDB queries can hang inside a blocking HTTP call that
+    ``signal.SIGALRM`` cannot interrupt (python-arango/``requests``
+    block in C). Running the report in a child and supervising it
+    from the parent means such a hang only SIGKILLs that one
+    report's child — never the whole worker process and never the
+    reports queued behind it.
+
+    Returns:
+        tuple[int, bool]: (exit_code, timed_out). ``timed_out`` is
+        True when the child exceeded the deadline and was killed.
+    """
+    sys.stdout.flush()
+    sys.stderr.flush()
+    # The parent's SIGALRM / hard-kill must not fire while we
+    # supervise the child: they would kill the parent and orphan
+    # the child. The child gets a clean signal state instead.
+    try:
+        signal.alarm(0)
+    except Exception:
+        pass
+
+    try:
+        child_pid = os.fork()
+    except OSError:
+        # fork unavailable (e.g. non-POSIX): fall back to running
+        # the report in-process with the regular timeout machinery.
+        report_instance.run_report(sender=None)
+        return 0, False
+
+    if child_pid == 0:
+        # Child: run the report and exit. Never return into parent
+        # code paths (os._exit skips atexit/cleanup that could
+        # touch locks held by threads that did not survive fork).
+        code = 0
+        try:
+            signal.signal(signal.SIGALRM, signal.SIG_DFL)
+            signal.alarm(0)
+            report_instance.run_report(sender=None)
+        except SystemExit as exc:
+            code = exc.code if isinstance(exc.code, int) else 0
+        except BaseException:
+            # Catch everything (incl. KeyboardInterrupt) so a
+            # signal in the child is never misreported as success.
+            code = 1
+        finally:
+            try:
+                sys.stdout.flush()
+                sys.stderr.flush()
+            except Exception:
+                pass
+            os._exit(code)
+
+    # Parent: supervise the child with a hard deadline that is
+    # strictly shorter than the parent's own hard-kill watchdog
+    # (total_timeout + 60s), so the child is killed and the parent
+    # recovers before the parent's self-kill could ever fire.
+    deadline_ts = time.time() + total_timeout + 30
+    while True:
+        remaining = deadline_ts - time.time()
+        if remaining <= 0:
+            try:
+                os.kill(child_pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+            try:
+                os.waitpid(child_pid, 0)
+            except ChildProcessError:
+                pass
+            logger.error(
+                f"❌ Report {report_name} exceeded hard deadline "
+                f"({total_timeout + 30}s) — child killed, re-added to retry queue"
+            )
+            return 1, True
+        try:
+            waited_pid, status = os.waitpid(child_pid, os.WNOHANG)
+        except ChildProcessError:
+            return 1, False
+        if waited_pid == child_pid:
+            if os.WIFEXITED(status):
+                return os.WEXITSTATUS(status), False
+            return 1, False
+        time.sleep(0.25)
+
+
 def run_single_report(report_name: str, settings: dict, skip_db_init: bool = False) -> int:
     """Run a single report and return exit code.
 
@@ -342,7 +430,43 @@ def run_single_report(report_name: str, settings: dict, skip_db_init: bool = Fal
         except Exception:
             pass
         logger.info(f"Running report {report_name}")
-        report_instance.run_report(sender=None)
+        if settings.get('_datasource') == 'ArangoDB':
+            # ArangoDB queries can hang in a blocking HTTP call that
+            # SIGALRM cannot interrupt. Run the report in a supervised
+            # child so a hang only kills that one report, not the whole
+            # worker (which would take every queued report down with it).
+            exit_code, timed_out = _run_report_in_child(
+                report_instance, report_name, total_timeout
+            )
+            if timed_out:
+                # Disarm the parent's own self-kill watchdog now
+                # that the child is dead, so cleanup (connection
+                # reset below) can never be interrupted by it.
+                try:
+                    signal.alarm(0)
+                except Exception:
+                    pass
+                if hard_kill_timer is not None:
+                    try:
+                        hard_kill_timer.cancel()
+                    except Exception:
+                        pass
+                # The child was SIGKILLed mid-query: its HTTP session is
+                # poisoned and the server-side query may still be running.
+                # Reset connections so the next report gets a clean session
+                # and the stuck query is abandoned.
+                try:
+                    arango_timeout = settings.get('arango_request_timeout', 180)
+                    reinitialize_database_connections(settings, arango_timeout=arango_timeout)
+                except Exception:
+                    pass
+                raise _ReportTimeout()
+            if exit_code != 0:
+                raise RuntimeError(
+                    f"report {report_name} failed in subprocess (exit {exit_code})"
+                )
+        else:
+            report_instance.run_report(sender=None)
         logger.info(f"Finished report {report_name}")
         logger.info(f"✅ Completed report successfully")
         return 0

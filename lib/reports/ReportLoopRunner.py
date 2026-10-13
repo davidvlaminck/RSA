@@ -728,9 +728,25 @@ class ReportLoopRunner:
 
         Returns list of failed report names (empty list on success).
         """
+        # Push deprioritized reports to the end on every attempt (initial
+        # run AND retries). A report that hangs would otherwise block all
+        # reports queued behind it inside the sequential worker; running it
+        # last keeps the blast radius to that single report.
+        deprioritized = set()
+        exec_cfg = self.settings.get("report_execution", {}) if isinstance(self.settings, dict) else {}
+        if isinstance(exec_cfg, dict):
+            deprioritized = set(exec_cfg.get("deprioritized_reports", []) or [])
+        if deprioritized:
+            report_names = [r for r in report_names if r not in deprioritized] + \
+                           [r for r in report_names if r in deprioritized]
+
         worker_settings = copy.deepcopy(self.settings)
         worker_settings['query_timeout_seconds'] = query_timeout
         worker_settings['arango_request_timeout'] = query_timeout
+        # Tag the settings with the datasource so the worker can isolate
+        # ArangoDB reports (which can hang in a blocking HTTP call that
+        # SIGALRM cannot interrupt) in a supervised child process.
+        worker_settings['_datasource'] = datasource
 
         with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
             json.dump(worker_settings, f)
