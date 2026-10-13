@@ -1,4 +1,5 @@
 import logging
+import os
 from pathlib import Path
 from .base import QueryResult
 
@@ -234,6 +235,10 @@ class SingleArangoConnector:
         # Close a previously held client (and its connection pool) before replacing it,
         # otherwise each re-init leaks an urllib3 pool of sockets (seen as climbing RSS).
         cls._close_client()
+        # Remember the connection parameters so a forked child can lazily
+        # recreate its own independent connection (see _reset_after_fork).
+        cls._conn_params = dict(host=host, port=port, user=user, password=password,
+                                database=database, request_timeout=request_timeout)
         if cls._instance is None:
             cls._instance = cls()
         client = ArangoClient(hosts=f'http://{host}:{port}', request_timeout=request_timeout)
@@ -290,9 +295,69 @@ class SingleArangoConnector:
         cls._close_client()
         cls._instance = None
         cls._db = None
+        cls._conn_params = None
 
     @classmethod
     def get_db(cls):
         if cls._db is None:
-            raise Exception("SingleArangoConnector not initialized. Call init() first.")
+            # Lazily (re)create an independent connection. This is what makes
+            # the singleton fork-safe: after os.fork() the child drops the
+            # inherited connection (see _reset_after_fork) and rebuilds a
+            # fresh one here on first use, so it never shares the parent's
+            # sockets/requests.Session. A report that hangs or is killed
+            # therefore cannot poison the connection used by the next report.
+            params = getattr(cls, '_conn_params', None)
+            if params:
+                try:
+                    cls.init(**params)
+                except Exception:
+                    pass
+            if cls._db is None:
+                raise Exception(
+                    "SingleArangoConnector not initialized. Call init() first.")
         return cls._db
+
+
+# --- fork-safety ---------------------------------------------------------
+# ArangoDB reports run inside os.fork()ed children (see lib/reports/worker.py).
+# A fork duplicates the file-descriptor table, so the child inherits the
+# parent's ArangoClient / requests.Session and, crucially, the *same* kernel
+# TCP sockets. Reusing those inherited sockets from the child is unsafe:
+#  * a request sent by a child that is SIGKILLed mid-flight leaves a pending
+#    response on the shared socket, so the next user of that socket blocks in
+#    a C call that signal.SIGALRM cannot interrupt (only a hard SIGKILL
+#    escapes) -- this is the "hanging report" cascade seen in RSA.log;
+#  * closing/shutting-down the inherited socket in the child would break the
+#    connection for the parent as well.
+# We therefore drop the inherited connection in every forked child (without
+# closing it) and let get_db() lazily build a fresh, independent connection.
+_abandoned_after_fork = []
+
+
+def _reset_after_fork():
+    """Runs in a forked child: abandon the inherited connection.
+
+    The inherited client/db are kept referenced (never GC'd, never closed)
+    because their sockets are shared with the parent. They simply disappear
+    when the child exits. The next get_db() in this child creates a fresh
+    connection with its own sockets.
+    """
+    try:
+        if SingleArangoConnector._client is not None:
+            _abandoned_after_fork.append(SingleArangoConnector._client)
+        if SingleArangoConnector._db is not None:
+            _abandoned_after_fork.append(SingleArangoConnector._db)
+    except Exception:
+        pass
+    SingleArangoConnector._instance = None
+    SingleArangoConnector._db = None
+    SingleArangoConnector._client = None
+    # _conn_params is intentionally kept so get_db() can lazily rebuild.
+
+
+try:
+    os.register_at_fork(after_in_child=_reset_after_fork)
+except (AttributeError, ValueError):
+    # Platform without os.register_at_fork (non-Unix): the lazy get_db()
+    # path above still applies whenever the connection is reset manually.
+    pass
