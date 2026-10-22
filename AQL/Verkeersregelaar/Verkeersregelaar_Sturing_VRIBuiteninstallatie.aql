@@ -1,0 +1,111 @@
+// AQL query:
+/*
+Stap 3. Lijst alle Verkeersregelaars op met hun VRIBuiteninstallatie.
+
+Per Verkeersregelaar:
+  - hasSturingRelatie = true : er bestaat al een Sturing-relatie met een VRIBuiteninstallatie
+                                 -> de doel-properties worden gevuld met die bestaande VRIBuiteninstallatie
+  - hasSturingRelatie = false : er is geen Sturing-relatie
+                                 -> de doel-properties worden gevuld met een SUGGESTIE: een actieve
+                                    VRIBuiteninstallatie met hetzelfde 'eerste deel' van het naampad
+                                    (het naampad zonder de tekens die volgen op het laatste forward slash)
+
+Bind parameters:
+  @asset_short_uri_VR : short_uri van de assettype Verkeersregelaar (bv. "onderdeel#Verkeersregelaar")
+*/
+LET at_vr_key     = FIRST(FOR at IN assettypes FILTER at.short_uri == @asset_short_uri_VR LIMIT 1 RETURN at._key)
+LET at_vrib_key     = FIRST(FOR at IN assettypes FILTER at.short_uri == @asset_short_uri_VRIB LIMIT 1 RETURN at._key)
+
+FOR a1 IN assets
+  FILTER a1.AIMDBStatus_isActief == true
+  FILTER a1.assettype_key == at_vr_key
+
+  // DEVELOPMENT HAPPY FLOW (bestaande Sturing-relatie)
+  //FILTER a1._key == '00252be2-f771-46ec-9015-022be3a680e0'
+
+  // DEVELOPMENT UNHAPPY FLOW (nieuwe sturing-relatie)
+  //FILTER a1._key == '2e77b85f-636c-488b-b7f1-76c633980e50'
+
+  /* 1) bestaande Sturing-relatie naar een VRIBuiteninstallatie.
+ 'sturing_relaties' is de afgeleide edge-collectie (ExtraFillStep): enkel actieve edges met actieve eindpunten, met index op _from/_to -> snelle lookup per Verkeersregelaar.
+        LET rel_sturing_key = FIRST(FOR rel_type IN relatietypes FILTER rel_type.naam == 'Sturing' LIMIT 1 RETURN rel_type._key)
+        LET sturing_vrib = FIRST(
+          FOR v, e IN 1..1 ANY a1 assetrelaties
+            FILTER e.relatietype_key == rel_sturing_key
+            FILTER (NOT HAS(e, "AIMDBStatus_isActief") OR e.AIMDBStatus_isActief == true)
+            FILTER v["@type"] == vrib_type_uri
+            FILTER v.AIMDBStatus_isActief == true
+            LIMIT 1
+            RETURN v
+        ) */
+  LET sturing_vrib = FIRST(
+    FOR v, e IN 1..1 ANY a1 sturing_relaties
+      FILTER v.assettype_key == at_vrib_key
+      LIMIT 1
+      RETURN v
+  )
+  LET hasSturingRelatie = sturing_vrib != null
+
+  /* 2) enkel als er geen Sturing-relatie is: zoek een kandidaat op basis van het naampad.
+        'naampad_parent' = het naampad zonder de tekens na het laatste '/' (berekend door de sync,
+        sparse persistent index) -> de kandidaat-lookup gaat via de index i.p.v. een scan.
+        Zonder dat veld kan ook met de helper (SPLIT + POP + CONCAT_SEPARATOR):
+        LET vr_eerste_deel = first_part(a1.NaampadObject_naampad)
+        LET kandidaten = hasSturingRelatie ? [] : (
+          FOR a2 IN assets
+            FILTER a2.AIMDBStatus_isActief == true
+            FILTER a2["@type"] == vrib_type_uri
+            FILTER first_part(a2.NaampadObject_naampad) == vr_eerste_deel
+            RETURN { ... }
+        ) */
+  LET kandidaten = hasSturingRelatie ? [] : (
+    FOR a2 IN assets
+      FILTER a2.AIMDBStatus_isActief == true
+      FILTER a2.assettype_key == at_vrib_key
+      FILTER a1.naampad_parent != null
+      FILTER a2.naampad_parent == a1.naampad_parent
+      RETURN {
+        "assetId.identificator": a2._key,
+        "typeURI": a2["@type"],
+        "naam": a2.AIMNaamObject_naam,
+        "naampad": a2.NaampadObject_naampad
+      }
+  )
+
+  // de doel-asset: bestaande Sturing-relatie, of anders de suggestie (eerste kandidaat)
+  LET doel_asset = hasSturingRelatie
+    ? {
+        "assetId.identificator": sturing_vrib._key,
+        "typeURI": sturing_vrib["@type"],
+        "naam": sturing_vrib.AIMNaamObject_naam,
+        "naampad": sturing_vrib.NaampadObject_naampad
+      }
+    : (LENGTH(kandidaten) > 0
+        ? {
+            "assetId.identificator": kandidaten[0]["assetId.identificator"],
+            "typeURI": kandidaten[0]["typeURI"],
+            "naam": kandidaten[0]["naam"],
+            "naampad": kandidaten[0]["naampad"]
+          }
+        : { "assetId.identificator": null, "typeURI": null, "naam": null, "naampad": null })
+
+  // optioneel: enkel de rijen tonen waar er effectief een VRIBuiteninstallatie is (bestaand of gesuggereerd)
+  // FILTER hasSturingRelatie OR LENGTH(kandidaten) > 0
+
+  RETURN {
+    "assetId.identificator": "",
+    "typeURI": 'https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Sturing',
+    "hasSturingRelatie": hasSturingRelatie,
+    "bronAssetId.identificator": a1._key,
+    "bron.typeURI": a1["@type"],
+    "bron.naam": a1.AIMNaamObject_naam,
+    "bron.naampad": a1.NaampadObject_naampad,
+    "bron.naampad_eerste_deel": a1.naampad_parent,
+    "aantal_kandidaten": LENGTH(kandidaten),
+    "kandidaten": kandidaten,
+    "doelAssetId.identificator": doel_asset["assetId.identificator"],
+    "doel.typeURI": doel_asset["typeURI"],
+    "doel.naam": doel_asset["naam"],
+    "doel.naampad": doel_asset["naampad"],
+    "isActief": true
+  }
