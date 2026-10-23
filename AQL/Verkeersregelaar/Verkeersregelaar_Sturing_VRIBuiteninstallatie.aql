@@ -102,7 +102,7 @@ FOR a1 IN assets
     "bron.naampad": a1.NaampadObject_naampad,
     "bron.naampad_eerste_deel": a1.naampad_parent,
     "aantal_kandidaten": LENGTH(kandidaten),
-    "kandidaten": kandidaten,
+    //"kandidaten": kandidaten,
     "doelAssetId.identificator": doel_asset["assetId.identificator"],
     "doel.typeURI": doel_asset["typeURI"],
     "doel.naam": doel_asset["naam"],
