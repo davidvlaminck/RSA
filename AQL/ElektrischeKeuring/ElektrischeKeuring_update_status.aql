@@ -1,9 +1,6 @@
 /*
 Laagspanningsbord + toezichter, toezichtsgroep, locatie
 Elektrische Keuringen + eig. resultaat, keuringsdatum
-
-// DEVELOPMENT: Laagspanningsborden met een Elektrische Keuring zonder de eigenschap keuringsdatum
-FILTER a._key in ['832fecc6-a262-4034-a66e-8ba6a15188c2', '191683e6-59fc-4182-891d-3007690ef372']
 */
 LET at_key = FIRST(FOR at IN assettypes FILTER at.short_uri == @asset_short_uri LIMIT 1 RETURN at._key)
 LET relatie_heeftkeuring_key = FIRST(FOR rel_type IN relatietypes FILTER rel_type.naam == 'HeeftKeuring' LIMIT 1 RETURN rel_type._key)
@@ -40,7 +37,6 @@ FOR a IN assets
 
   /* ---- Explode: one row per Elektrische Keuring ---- */
   FOR ek IN elektrische_keuringen
-    LIMIT 100
     RETURN {
       "lsbord.assetId.identificator": a._key,
       "lsbord.type": a["@type"],
