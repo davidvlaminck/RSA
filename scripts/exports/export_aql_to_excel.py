@@ -153,9 +153,8 @@ def _format_asset_uuid_cell(cell: Any, header_name: str, base_url: str | None = 
     """Set a hyperlink and formatting on a cell whose column is an asset UUID.
 
     When the column header is `assetId.identificator` (or ends with it), the cell
-    value is treated as a UUID. A hyperlink is attached pointing at an ArangoDB
-    document URL (`<base_url>/#document/assets/<uuid>` by default) and the cell is
-    styled as a clickable link (bold, blue, underlined).
+    value is treated as a UUID. A hyperlink is attached pointing at EM-Infra (productie) and the cell is
+    styled as a clickable link (blue, underlined).
     """
     if not _is_asset_uuid_header(header_name):
         return
@@ -167,7 +166,7 @@ def _format_asset_uuid_cell(cell: Any, header_name: str, base_url: str | None = 
     uuid_value = str(value)
     if not base_url:
         base_url = "https://apps.mow.vlaanderen.be/eminfra/assets"
-    url = f"{base_url}/{value}"
+    url = f"{base_url}/{uuid_value}"
 
     cell.hyperlink = url
     cell.font = Font(bold=False, color="0563C1", underline="single")
@@ -264,7 +263,7 @@ class OpenpyxlExcelWriter(ExcelWriter):
             row_count += 1
 
         # Post-write formatting: autofit columns + hyperlink/format asset-UUID cells.
-        if keys:
+        if resolved_keys:
             for col_idx, header_name in enumerate(resolved_keys, start=1):
                 if _is_asset_uuid_header(header_name):
                     for r in range(2, row_count + 2):
