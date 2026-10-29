@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """
 Single worker: run a standalone AQL file against ArangoDB and stream results to Excel.
 
@@ -11,16 +11,17 @@ Usage examples:
   python scripts/exports/export_aql_to_excel.py --aql-file AQL/queries/adres.aql --out ./out/adres.xlsx --settings settings_sample.json
 
   # Override connection parameters directly on the command line:
-  python scripts/exports/export_aql_to_excel.py --aql-file AQL/Verkeersregelaar/Verkeersregelaar_Sturing_VRIBuiteninstallatie.aql --out ./out/sturing.xlsx --host 127.0.0.1 --port 8529 --user myuser --password 'pw' --database awvinfra
+  python scripts/exports/export_aql_to_excel.py --aql-file AQL/Verkeersregelaar/Verkeersregelaar_Sturing_VRIBuiteninstallatie.aql --out ./out/sturing.xlsx --host 127.0.0.1 --port 8529 --user myuser --password pw --database awvinfra
 
   # Pass AQL bind parameters (JSON):
-  python scripts/exports/export_aql_to_excel.py --aql-file AQL/Verkeersregelaar/Verkeersregelaar_Sturing_VRIBuiteninstallatie.aql --out ./out/sturing.xlsx --bind '{"asset_short_uri_VR": "onderdeel#Verkeersregelaar", "asset_short_uri_VRIB": "onderdeel#VRIBuiteninstallatie"}'
+  python scripts/exports/export_aql_to_excel.py --aql-file AQL/Verkeersregelaar/Verkeersregelaar_Sturing_VRIBuiteninstallatie.aql --out ./out/sturing.xlsx --bind {"asset_short_uri_VR": "onderdeel#Verkeersregelaar", "asset_short_uri_VRIB": "onderdeel#VRIBuiteninstallatie"}
 
 Notes:
   - The script performs read-only AQL execution; it does not modify the database.
   - Rows are streamed from the cursor and written to Excel row per row (no bulk DataFrame).
   - Requires openpyxl (pip install openpyxl). pandas is no longer required.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -29,6 +30,9 @@ import sys
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any, Iterator
+
+from openpyxl.styles import Font
+from openpyxl.utils import get_column_letter
 
 # Make the repository root importable so the lib/datasources packages resolve.
 repo_root = Path(__file__).resolve().parents[1]
@@ -111,6 +115,65 @@ def read_aql_file(aql_path: Path) -> str:
 
 
 # ============================================================================
+# Helpers: column autofit + asset-UUID cell formatting
+# ============================================================================
+
+def _autofit_sheet_columns(ws: Any, *, min_width: int = 10, max_width: int = 80, padding: int = 2) -> None:
+    """Auto-fit column widths based on cell content length.
+
+    Adapted from InfraDbToArangoDb/Analysis/aql_to_excel.py.
+    Freezes the header row (A2) and sizes each column to fit its longest value,
+    clamped between min_width and max_width (plus padding).
+    """
+    ws.freeze_panes = "A2"
+    for col_cells in ws.columns:
+        first = next(iter(col_cells), None)
+        if first is None or getattr(first, "column", None) is None:
+            continue
+
+        max_len = 0
+        for cell in col_cells:
+            if cell.value is None:
+                continue
+            max_len = max(max_len, len(str(cell.value)))
+
+        width = min(max(min_width, max_len + padding), max_width)
+        ws.column_dimensions[get_column_letter(first.column)].width = width
+
+
+def _is_asset_uuid_header(header_name: str) -> bool:
+    """Return True when a column header names an asset UUID (assetId.identificator)."""
+    if header_name is None:
+        return False
+    name = str(header_name).strip()
+    return name == "assetId.identificator" or name.endswith(".assetId.identificator") or "uuid" in name
+
+
+def _format_asset_uuid_cell(cell: Any, header_name: str, base_url: str | None = None) -> None:
+    """Set a hyperlink and formatting on a cell whose column is an asset UUID.
+
+    When the column header is `assetId.identificator` (or ends with it), the cell
+    value is treated as a UUID. A hyperlink is attached pointing at an ArangoDB
+    document URL (`<base_url>/#document/assets/<uuid>` by default) and the cell is
+    styled as a clickable link (bold, blue, underlined).
+    """
+    if not _is_asset_uuid_header(header_name):
+        return
+
+    value = cell.value
+    if value is None:
+        return
+
+    uuid_value = str(value)
+    if not base_url:
+        base_url = "https://apps.mow.vlaanderen.be/eminfra/assets"
+    url = f"{base_url}/{value}"
+
+    cell.hyperlink = url
+    cell.font = Font(bold=False, color="0563C1", underline="single")
+
+
+# ============================================================================
 # Factory Method Pattern — Products
 # ============================================================================
 
@@ -136,6 +199,7 @@ class ExcelWriter(ABC):
 # Concrete Products
 # ============================================================================
 
+
 class ArangoAqlDataSource(AqlDataSource):
     """Concrete product: ArangoDB-backed AQL execution via SingleArangoConnector."""
 
@@ -155,8 +219,13 @@ class ArangoAqlDataSource(AqlDataSource):
         return self._db.aql.execute(query, bind_vars=bind_vars)
 
 
+
 class OpenpyxlExcelWriter(ExcelWriter):
     """Concrete product: writes rows to .xlsx using openpyxl (row-by-row streaming)."""
+
+    def __init__(self, base_url: str | None = None):
+        self.base_url = base_url
+
 
     def write(self, out_path: Path, keys: list[str], rows: Iterator[Any]) -> int:
         import openpyxl
@@ -194,6 +263,16 @@ class OpenpyxlExcelWriter(ExcelWriter):
                     ws.append(list(row))
             row_count += 1
 
+        # Post-write formatting: autofit columns + hyperlink/format asset-UUID cells.
+        if keys:
+            for col_idx, header_name in enumerate(resolved_keys, start=1):
+                if _is_asset_uuid_header(header_name):
+                    for r in range(2, row_count + 2):
+                        cell = ws.cell(row=r, column=col_idx)
+                        _format_asset_uuid_cell(cell, header_name, base_url=self.base_url)
+
+        _autofit_sheet_columns(ws)
+
         wb.save(out_path)
         return row_count
 
@@ -201,6 +280,7 @@ class OpenpyxlExcelWriter(ExcelWriter):
 # ============================================================================
 # Factory Method Pattern — Creators
 # ============================================================================
+
 
 class AqlDataSourceFactory(ABC):
     """Abstract creator: factory method for AQL data sources."""
@@ -230,13 +310,17 @@ class ArangoAqlDataSourceFactory(AqlDataSourceFactory):
 class OpenpyxlExcelWriterFactory(ExcelWriterFactory):
     """Concrete creator: produces openpyxl Excel writers."""
 
+    def __init__(self, base_url: str | None = None):
+        self.base_url = base_url
+
     def create(self) -> ExcelWriter:
-        return OpenpyxlExcelWriter()
+        return OpenpyxlExcelWriter(base_url=self.base_url)
 
 
 # ============================================================================
 # Exporter (uses factories)
 # ============================================================================
+
 
 class AqlToExcelExporter:
     """Orchestrates AQL execution and Excel writing using injected factories."""
@@ -279,6 +363,7 @@ class AqlToExcelExporter:
 # ============================================================================
 # CLI entry point (the single worker)
 # ============================================================================
+
 
 def main() -> int:
     args = parse_args()
