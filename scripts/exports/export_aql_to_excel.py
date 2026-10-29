@@ -1,11 +1,10 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
-Run a standalone AQL file against ArangoDB and stream the results to an Excel file,
-writing rows one at a time from the AQL cursor.
+Single worker: run a standalone AQL file against ArangoDB and stream results to Excel.
 
-Libraries used (consistent with this repository):
-  - arango     -> AQL execution via cursor (datasources.arango / datasources.datasource_factory)
-  - openpyxl   -> Excel (.xlsx) writer, row-by-row (used by outputs/excel.py)
+Refactored using the Factory Method pattern so the AQL data source and Excel writer
+can be swapped independently. All CLI arguments are generic -- this worker is
+parameter-driven, not hard-coded to any specific AQL file.
 
 Usage examples:
   # Resolve ArangoDB connection from a settings JSON file:
@@ -26,12 +25,10 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
+from abc import ABC, abstractmethod
 from pathlib import Path
-from datetime import datetime
-from lib.reports.worker import project_root
-import tzdata
+from typing import Any, Iterator
 
 # Make the repository root importable so the lib/datasources packages resolve.
 repo_root = Path(__file__).resolve().parents[1]
@@ -39,6 +36,7 @@ if str(repo_root) not in sys.path:
     sys.path.insert(0, str(repo_root))
 
 DEFAULT_SETTINGS_PATH = Path("C://resources//settings_RSA.json")
+
 
 def load_settings(path: Path) -> dict:
     with path.open("r", encoding="utf-8") as fh:
@@ -112,70 +110,175 @@ def read_aql_file(aql_path: Path) -> str:
     return aql_path.read_text(encoding="utf-8")
 
 
-def stream_aql_to_excel(query: str, bind_vars: dict, conf: dict, out_path: Path) -> int:
-    """Launch the AQL query via a cursor and write rows to Excel one at a time."""
-    from datasources.arango import SingleArangoConnector
+# ============================================================================
+# Factory Method Pattern — Products
+# ============================================================================
 
-    # Initialize the ArangoDB singleton connection (same pattern as other scripts/reports).
-    SingleArangoConnector.init(
-        host=conf.get("host"),
-        port=str(conf.get("port")),
-        user=conf.get("user"),
-        password=conf.get("password"),
-        database=conf.get("database"),
-    )
-    db = SingleArangoConnector.get_db()
+class AqlDataSource(ABC):
+    """Abstract product: executes an AQL query and returns a cursor-like iterable of rows."""
 
-    # Launch the AQL query and obtain a cursor.
-    cursor = db.aql.execute(query, bind_vars=bind_vars)
+    @abstractmethod
+    def execute(self, query: str, bind_vars: dict) -> Any:
+        """Execute the AQL query and return a cursor-like iterable of rows."""
+        ...
 
-    # Determine column keys from the cursor metadata.
-    keys: list[str] = []
-    try:
-        if hasattr(cursor, "keys"):
-            cursor_keys = cursor.keys()
-            if cursor_keys:
-                keys = list(cursor_keys)
-    except Exception:
-        keys = []
 
-    out_path.parent.mkdir(parents=True, exist_ok=True)
+class ExcelWriter(ABC):
+    """Abstract product: writes rows to an Excel file."""
 
-    import openpyxl
+    @abstractmethod
+    def write(self, out_path: Path, keys: list[str], rows: Iterator[Any]) -> int:
+        """Write rows to Excel, returning the number of data rows written."""
+        ...
 
-    wb = openpyxl.Workbook()
-    ws = wb.active
-    ws.title = "AQL_Result"
 
-    # Header row (when keys are known up front).
-    if keys:
-        ws.append(keys)
+# ============================================================================
+# Concrete Products
+# ============================================================================
 
-    row_count = 0
-    # If no keys from the cursor, infer them from the first row preserving order.
-    infer_keys = not bool(keys)
-    for row in cursor:
-        if infer_keys:
-            if isinstance(row, dict):
-                keys = list(row.keys())
-                ws.append(keys)
-                infer_keys = False
-                ws.append([row.get(k) for k in keys])
+class ArangoAqlDataSource(AqlDataSource):
+    """Concrete product: ArangoDB-backed AQL execution via SingleArangoConnector."""
+
+    def __init__(self, conf: dict):
+        from datasources.arango import SingleArangoConnector
+
+        SingleArangoConnector.init(
+            host=conf.get("host"),
+            port=str(conf.get("port")),
+            user=conf.get("user"),
+            password=conf.get("password"),
+            database=conf.get("database"),
+        )
+        self._db = SingleArangoConnector.get_db()
+
+    def execute(self, query: str, bind_vars: dict) -> Any:
+        return self._db.aql.execute(query, bind_vars=bind_vars)
+
+
+class OpenpyxlExcelWriter(ExcelWriter):
+    """Concrete product: writes rows to .xlsx using openpyxl (row-by-row streaming)."""
+
+    def write(self, out_path: Path, keys: list[str], rows: Iterator[Any]) -> int:
+        import openpyxl
+
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "AQL_Result"
+
+        # Header row (when keys are known up front).
+        if keys:
+            ws.append(keys)
+
+        row_count = 0
+        # If no keys from the cursor, infer them from the first row preserving order.
+        infer_keys = not bool(keys)
+        resolved_keys = list(keys)
+        for row in rows:
+            if infer_keys:
+                if isinstance(row, dict):
+                    resolved_keys = list(row.keys())
+                    ws.append(resolved_keys)
+                    ws.append([row.get(k) for k in resolved_keys])
+                    infer_keys = False
+                else:
+                    resolved_keys = [f"col_{i}" for i in range(len(row))]
+                    ws.append(resolved_keys)
+                    ws.append(list(row))
+                    infer_keys = False
             else:
-                keys = [f"col_{i}" for i in range(len(row))]
-                ws.append(keys)
-                infer_keys = False
-                ws.append(list(row))
-        else:
-            if isinstance(row, dict):
-                ws.append([row.get(k) for k in keys])
-            else:
-                ws.append(list(row))
-        row_count += 1
+                if isinstance(row, dict):
+                    ws.append([row.get(k) for k in resolved_keys])
+                else:
+                    ws.append(list(row))
+            row_count += 1
 
-    wb.save(out_path)
-    return row_count
+        wb.save(out_path)
+        return row_count
 
+
+# ============================================================================
+# Factory Method Pattern — Creators
+# ============================================================================
+
+class AqlDataSourceFactory(ABC):
+    """Abstract creator: factory method for AQL data sources."""
+
+    @abstractmethod
+    def create(self, conf: dict) -> AqlDataSource:
+        """Factory method: create an AQL data source from connection configuration."""
+        ...
+
+
+class ExcelWriterFactory(ABC):
+    """Abstract creator: factory method for Excel writers."""
+
+    @abstractmethod
+    def create(self) -> ExcelWriter:
+        """Factory method: create an Excel writer."""
+        ...
+
+
+class ArangoAqlDataSourceFactory(AqlDataSourceFactory):
+    """Concrete creator: produces ArangoDB AQL data sources."""
+
+    def create(self, conf: dict) -> AqlDataSource:
+        return ArangoAqlDataSource(conf)
+
+
+class OpenpyxlExcelWriterFactory(ExcelWriterFactory):
+    """Concrete creator: produces openpyxl Excel writers."""
+
+    def create(self) -> ExcelWriter:
+        return OpenpyxlExcelWriter()
+
+
+# ============================================================================
+# Exporter (uses factories)
+# ============================================================================
+
+class AqlToExcelExporter:
+    """Orchestrates AQL execution and Excel writing using injected factories."""
+
+    def __init__(
+        self,
+        ds_factory: AqlDataSourceFactory,
+        writer_factory: ExcelWriterFactory,
+    ):
+        self._ds_factory = ds_factory
+        self._writer_factory = writer_factory
+
+    def export(self, query: str, bind_vars: dict, conf: dict, out_path: Path) -> int:
+        # Create the data source via the factory method.
+        ds = self._ds_factory.create(conf)
+
+        # Launch the AQL query and obtain a cursor.
+        cursor = ds.execute(query, bind_vars)
+
+        # Determine column keys from the cursor metadata.
+        keys: list[str] = []
+        try:
+            if hasattr(cursor, "keys"):
+                cursor_keys = cursor.keys()
+                if cursor_keys:
+                    keys = list(cursor_keys)
+        except Exception:
+            keys = []
+
+        # Row stream: yield raw cursor rows (dicts or sequences).
+        def row_stream() -> Iterator[Any]:
+            for row in cursor:
+                yield row
+
+        # Write via the factory-created Excel writer.
+        writer = self._writer_factory.create()
+        return writer.write(out_path, keys, row_stream())
+
+
+# ============================================================================
+# CLI entry point (the single worker)
+# ============================================================================
 
 def main() -> int:
     args = parse_args()
@@ -204,10 +307,14 @@ def main() -> int:
         print(f"Failed to read AQL file: {exc}", file=sys.stderr)
         return 3
 
-    # Launch the AQL query and stream rows to Excel row per row.
+    # Build factories and exporter, then run.
+    ds_factory = ArangoAqlDataSourceFactory()
+    writer_factory = OpenpyxlExcelWriterFactory()
+    exporter = AqlToExcelExporter(ds_factory, writer_factory)
+
     out_path = Path(args.out)
     try:
-        row_count = stream_aql_to_excel(query, bind_vars, conf, out_path)
+        row_count = exporter.export(query, bind_vars, conf, out_path)
     except Exception as exc:
         print(f"AQL execution or Excel write failed: {exc}", file=sys.stderr)
         return 4
@@ -217,13 +324,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    project_root = repo_root.resolve().parents[0]
-    aql_file = str(project_root / r"AQL\Verkeersregelaar\Verkeersregelaar_Sturing_VRIBuiteninstallatie.aql")
-
-    sys.argv = [
-        "export_aql_to_excel.py",
-        "--aql-file", aql_file,
-        "--out", r".\out\sturing.xlsx",
-        "--bind", '{"asset_short_uri_VR": "onderdeel#Verkeersregelaar", "asset_short_uri_VRIB": "installatie#VRIBuiteninstallatie"}'
-    ]
     sys.exit(main())
