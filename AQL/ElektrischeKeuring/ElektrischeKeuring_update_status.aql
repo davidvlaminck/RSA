@@ -1,0 +1,68 @@
+/*
+Laagspanningsbord + toezichter, toezichtsgroep, locatie
+Elektrische Keuringen + eig. resultaat, keuringsdatum
+*/
+LET at_key = FIRST(FOR at IN assettypes FILTER at.short_uri == @asset_short_uri LIMIT 1 RETURN at._key)
+LET relatie_heeftkeuring_key = FIRST(FOR rel_type IN relatietypes FILTER rel_type.naam == 'HeeftKeuring' LIMIT 1 RETURN rel_type._key)
+
+FOR a IN assets
+  FILTER a.assettype_key == at_key
+  FILTER a.AIMDBStatus_isActief == true
+  FILTER a.toestand in ['in-ontwerp', 'in-gebruik', 'in-opbouw', 'overgedragen', 'gepland']
+
+  /* ---- Agents: ONE traversal, only the 3 roles, name resolved inline ---- */
+  LET agenten = MERGE(
+    FOR v, e IN 1..1 OUTBOUND a betrokkenerelaties
+      FILTER e.rol IN ['toezichter', 'toezichtsgroep', 'schadebeheerder']
+      RETURN { [e.rol]: (v.purl.Agent_naam != null ? v.purl.Agent_naam : v.naam) }
+  )
+
+  /* ---- Locatie: null-safe attribute access, no ternary guards needed ---- */
+  LET loc_adres = a.loc.Locatie_puntlocatie.DtcPuntlocatie_adres
+
+  /* ---- Elektrische Keuringen: single traversal, sorted ---- */
+  LET elektrische_keuringen = (
+    FOR v, e IN 1..1 OUTBOUND a assetrelaties
+      FILTER e.relatietype_key == relatie_heeftkeuring_key
+      FILTER v.AIMDBStatus_isActief == true
+      FILTER v.toestand IN ['in-ontwerp', 'in-gebruik', 'in-opbouw', 'overgedragen', 'gepland']
+      SORT v.KeuringObject_keuringsdatum DESC
+      RETURN v
+  )
+  LET elektrische_keuringen_aantal = LENGTH(elektrische_keuringen)
+  FILTER elektrische_keuringen_aantal > 1
+
+  /* ---- NIEUW: meest recente keuringsdatum van dit Laagspanningsbord ---- */
+  LET meest_recente_keuringsdatum = FIRST(elektrische_keuringen).KeuringObject_keuringsdatum
+
+  /* ---- Explode: one row per Elektrische Keuring ---- */
+  FOR ek IN elektrische_keuringen
+    RETURN {
+      "lsbord.assetId.identificator": a._key,
+      "lsbord.type": a["@type"],
+      "lsbord.naam": a.AIMNaamObject_naam,
+      "lsbord.naampad": a.NaampadObject_naampad,
+      "lsbord.isActief": a.AIMDBStatus_isActief,
+      "lsbord.toestand": a.toestand,
+
+      "lsbord.agent.toezichtgroep": agenten.toezichtsgroep,
+      "lsbord.agent.toezichter": agenten.toezichter,
+      "lsbord.agent.schadebeheerder": agenten.schadebeheerder,
+
+      "lsbord.loc.longitude": a.geometry.coordinates[0],
+      "lsbord.loc.latitude": a.geometry.coordinates[1],
+      "lsbord.loc.gemeente": loc_adres.DtcAdres_gemeente,
+      "lsbord.loc.provincie": loc_adres.DtcAdres_provincie,
+
+      "ek.aantal": elektrische_keuringen_aantal,
+      // "ek.array": elektrische_keuringen,   // ⚠️ only for debugging – see note 1
+      "ek.naam": ek.AbstracteAanvullendeGeometrie_naam,
+      "ek.bijlage": ek.AbstracteAanvullendeGeometrie_bijlage.DtcDocument_bestandsnaam,
+      "ek.toestand": ek.toestand,
+      "ek.eig_resultaat": ek.ElektrischeKeuring_resultaat != null ? LAST(SPLIT(ek.ElektrischeKeuring_resultaat, '/')) : null,
+      "ek.eig_keuringsdatum": ek.KeuringObject_keuringsdatum,
+      "assetId.identificator": ek._key,
+      "typeURI": ek["@type"],
+      // true = datum gelijk aan de meest recente keuringsdatum or null, false = ouder
+      "isActief": ek.KeuringObject_keuringsdatum == meest_recente_keuringsdatum || ek.KeuringObject_keuringsdatum == null,
+    }
