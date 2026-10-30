@@ -145,8 +145,8 @@ def _is_asset_uuid_header(header_name: str) -> bool:
     """Return True when a column header names an asset UUID (assetId.identificator)."""
     if header_name is None:
         return False
-    name = str(header_name).strip()
-    return name == "assetId.identificator" or name.endswith(".assetId.identificator") or "uuid" in name
+    name = str(header_name).strip().lower()
+    return "assetid.identificator" in name or "uuid" in name
 
 
 def _format_asset_uuid_cell(cell: Any, header_name: str, base_url: str | None = None) -> None:
