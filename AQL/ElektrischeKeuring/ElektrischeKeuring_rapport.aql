@@ -44,8 +44,8 @@ FOR a IN assets
       (eig_bijlage == null && eig_resultaat != null && eig_keuringsdatum != null) ? "ok_bijlage_ontbreekt" :
       (eig_bijlage != null && (eig_resultaat == null || eig_keuringsdatum == null)) ? "nok_eigenschappen_ontbreken" :
       (eig_bijlage == null && eig_resultaat == null && eig_keuringsdatum == null) ? "nok_geen_info" : null
-    FILTER rapport_info == "nok_geen_info"
-    LIMIT 10
+//    FILTER rapport_info == "nok_geen_info"
+
     RETURN {
       "assetId.identificator": a._key,
       "type": a["@type"],
