@@ -1,0 +1,12 @@
+// AQL query:
+  LET agenten = MERGE(
+    FOR v, e IN 1..1 OUTBOUND a betrokkenerelaties
+      FILTER e.rol IN ['toezichter', 'toezichtsgroep', 'schadebeheerder']
+      LET naam = (v.purl.Agent_naam != null ? v.purl.Agent_naam : v.naam)
+      LET key = v._key
+      RETURN MERGE(
+        (e.rol == 'toezichter' ? {'toezichter': {'naam': naam, '_key': key}}: {}),
+        (e.rol == 'toezichtsgroep' ? {'toezichtsgroep': {'naam': naam, '_key': key}}: {}),
+        (e.rol == 'schadebeheerder' ? {'schadebeheerder': {'naam': naam, '_key': key}}: {})
+      )
+  )
