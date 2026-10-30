@@ -22,7 +22,7 @@ if __name__ == "__main__":
     sys.argv = [
         "export_aql_to_excel_Verkeersregelaar_Sturing_VRIBuiteninstallatie.py",
         "--aql-file", aql_file,
-        "--out", r".\out\sturing.xlsx",
+        "--out", r".\out\Verkeersregelaar_zonder_sturing_relatie.xlsx",
         "--bind", '{"asset_short_uri_VR": "onderdeel#Verkeersregelaar", "asset_short_uri_VRIB": "installatie#VRIBuiteninstallatie"}',
     ]
     sys.exit(worker_main())
