@@ -1,0 +1,71 @@
+/*
+Elektrische Keuringen + eig. resultaat, keuringsdatum
+
+De meest recente Elektrische Keuring die gelinkt is aan een van de 4 OTL-assettypes:
+  - Laagspanningsbord
+  - HSCabine
+  - Forfaitaire aansluiting
+  - Algemeen Laagspanningsbord (ALSB)
+*/
+LET at_hscabine_key = FIRST(FOR at IN assettypes FILTER at.short_uri == 'onderdeel#HSCabine' LIMIT 1 RETURN at._key)
+LET at_laagspanningsbord_key = FIRST(FOR at IN assettypes FILTER at.short_uri == 'onderdeel#Laagspanningsbord' LIMIT 1 RETURN at._key)
+LET at_forfaitaireaansluiting_key = FIRST(FOR at IN assettypes FILTER at.short_uri == 'onderdeel#ForfaitaireAansluiting' LIMIT 1 RETURN at._key)
+LET at_alsb_key = FIRST(FOR at IN assettypes FILTER at.short_uri == 'onderdeel#ALSB' LIMIT 1 RETURN at._key)
+LET relatie_heeftkeuring_key = FIRST(FOR rel_type IN relatietypes FILTER rel_type.naam == 'HeeftKeuring' LIMIT 1 RETURN rel_type._key)
+
+FOR a IN assets
+  FILTER a.assettype_key in [at_hscabine_key, at_laagspanningsbord_key, at_forfaitaireaansluiting_key, at_alsb_key]
+  FILTER a.AIMDBStatus_isActief == true
+  FILTER a.toestand in ['in-ontwerp', 'in-gebruik', 'in-opbouw', 'gepland'] // 'overgedragen'
+
+  /* ---- Locatie: null-safe attribute access, no ternary guards needed ---- */
+  LET loc_adres = a.loc.Locatie_puntlocatie.DtcPuntlocatie_adres
+
+  /* ---- Elektrische Keuringen: single traversal, sorted ---- */
+  LET elektrische_keuringen = (
+    FOR v, e IN 1..1 OUTBOUND a assetrelaties
+      FILTER e.relatietype_key == relatie_heeftkeuring_key
+      FILTER v.AIMDBStatus_isActief == true
+      FILTER v.toestand IN ['in-ontwerp', 'in-gebruik', 'in-opbouw', 'overgedragen', 'gepland']
+      SORT v.KeuringObject_keuringsdatum DESC
+      RETURN v
+  )
+  LET elektrische_keuringen_aantal = LENGTH(elektrische_keuringen)
+
+  /* ---- Explode: one row per Elektrische Keuring ---- */
+  FOR ek IN elektrische_keuringen
+    FILTER ek.AIMDBStatus_isActief == true
+    /* ---- eigenschappen van de Elektrische Keuring ---- */
+    LET eig_resultaat = ek.ElektrischeKeuring_resultaat != null ? LAST(SPLIT(ek.ElektrischeKeuring_resultaat, '/')) : null
+    LET eig_keuringsdatum = ek.KeuringObject_keuringsdatum
+    LET eig_bijlage = ek.AbstracteAanvullendeGeometrie_bijlage.DtcDocument_bestandsnaam
+    LET rapport_info =
+      (eig_bijlage != null && eig_resultaat != null && eig_keuringsdatum != null) ? "ok_correct" :
+      (eig_bijlage == null && eig_resultaat != null && eig_keuringsdatum != null) ? "ok_bijlage_ontbreekt" :
+      (eig_bijlage != null && (eig_resultaat == null || eig_keuringsdatum == null)) ? "nok_eigenschappen_ontbreken" :
+      (eig_bijlage == null && eig_resultaat == null && eig_keuringsdatum == null) ? "nok_geen_info" : null
+    FILTER rapport_info == "nok_geen_info"
+    LIMIT 10
+    RETURN {
+      "assetId.identificator": a._key,
+      "type": a["@type"],
+      "naam": a.AIMNaamObject_naam,
+      "naampad": a.NaampadObject_naampad,
+      "isActief": a.AIMDBStatus_isActief,
+      "toestand": a.toestand,
+
+      "lsbord.loc.gemeente": loc_adres.DtcAdres_gemeente,
+      "lsbord.loc.provincie": loc_adres.DtcAdres_provincie,
+
+      "ek.aantal": elektrische_keuringen_aantal,
+      // "ek.array": elektrische_keuringen,   // ⚠️ only for debugging – see note 1
+      "ek.assetId.identificator": ek._key,
+      "ek.typeURI": ek["@type"],
+      "ek.isActief": ek.AIMDBStatus_isActief,
+      "ek.naam": ek.AbstracteAanvullendeGeometrie_naam,
+      "ek.toestand": ek.toestand,
+      "ek.bijlage": eig_bijlage,
+      "ek.eig_resultaat": eig_resultaat,
+      "ek.eig_keuringsdatum": eig_keuringsdatum,
+      "rapport_info": rapport_info,
+    }
