@@ -7,6 +7,7 @@ only supplies the query-specific parameters (AQL file, output path, bind vars).
 """
 import sys
 from pathlib import Path
+from datetime import datetime
 
 # Make the repository root importable so the worker module resolves.
 repo_root = Path(__file__).resolve().parents[1]
@@ -15,6 +16,8 @@ if str(repo_root) not in sys.path:
 
 from export_aql_to_excel import main as worker_main
 
+TODAY = datetime.today().strftime('%Y%m%d_%H%M')
+
 if __name__ == "__main__":
     project_root = repo_root.resolve().parents[0]
     aql_file = str(project_root / r"AQL\ElektrischeKeuring\ElektrischeKeuring_rapport.aql")
@@ -22,6 +25,6 @@ if __name__ == "__main__":
     sys.argv = [
         "export_aql_to_excel_ElektrischeKeuring_rapport.py",
         "--aql-file", aql_file,
-        "--out", r".\out\ElektrischeKeuring_rapport.xlsx",
+        "--out", fr".\out\{TODAY}_ElektrischeKeuring_rapport.xlsx",
     ]
     sys.exit(worker_main())
