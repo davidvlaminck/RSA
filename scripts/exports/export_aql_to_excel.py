@@ -233,7 +233,7 @@ class OpenpyxlExcelWriter(ExcelWriter):
 
         wb = openpyxl.Workbook()
         ws = wb.active
-        ws.title = "AQL_Result"
+        ws.title = "assets"
 
         # Header row (when keys are known up front).
         if keys:
