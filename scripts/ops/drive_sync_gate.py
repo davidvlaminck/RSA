@@ -8,7 +8,7 @@ from lib.connectors.pipeline_state import enqueue_sqlite_job
 logger = logging.getLogger(__name__)
 
 
-class DailyDriveSyncGate:
+class DailySharePointSyncGate:
     """Polls SQLite for an external orchestrator's drive-download signal.
 
     The gate no longer performs the Drive download itself. It only observes
@@ -35,7 +35,7 @@ class DailyDriveSyncGate:
         self.pipeline_state = pipeline_state
 
         logger.info(
-            '[DRIVE_SYNC_GATE] Initialized: poll_start=%s, hard_deadline=%s, local_folder=%s, drive_folder=%s',
+            '[SHAREPOINT_SYNC_GATE] Initialized: poll_start=%s, hard_deadline=%s, local_folder=%s, drive_folder=%s',
             poll_start_hms,
             hard_deadline_hms,
             local_folder,
@@ -83,7 +83,7 @@ class DailyDriveSyncGate:
         phase = current.get('phase', '')
         status = current.get('status', '')
 
-        if phase == 'drive_upload':
+        if phase == 'sharepoint_upload':
             if status in ('starting', 'running'):
                 return False, True
             if status == 'failed':
@@ -109,13 +109,13 @@ class DailyDriveSyncGate:
             self._synced_date = now.date()
             return True, False
 
-        if phase == 'drive_download' and status == 'completed':
+        if phase == 'sharepoint_download' and status == 'completed':
             self._synced_date = now.date()
             return True, False
 
-        if phase == 'drive_download' and status == 'starting':
+        if phase == 'sharepoint_download' and status == 'starting':
             self._enqueue_pipeline_update(
-                'drive_download', 'running',
+                'sharepoint_download', 'running',
                 'Waiting for external orchestrator to complete drive download',
             )
             return False, False
@@ -124,12 +124,12 @@ class DailyDriveSyncGate:
 
     def ensure_synced(self, now: datetime) -> bool:
         if self._synced_date == now.date():
-            logger.debug('[DRIVE_SYNC_GATE] Already synced today (%s).', now.date())
+            logger.debug('[SHAREPOINT_SYNC_GATE] Already synced today (%s).', now.date())
             return True
 
         now_seconds = now.hour * 3600 + now.minute * 60 + now.second
         logger.debug(
-            '[DRIVE_SYNC_GATE] Checking sync for %s at %02d:%02d:%02d (poll_start=%s, hard_deadline=%s)',
+            '[SHAREPOINT_SYNC_GATE] Checking sync for %s at %02d:%02d:%02d (poll_start=%s, hard_deadline=%s)',
             now.date(), now.hour, now.minute, now.second,
             self._format_hms(self.poll_start_seconds),
             self._format_hms(self.hard_deadline_seconds),
@@ -138,7 +138,7 @@ class DailyDriveSyncGate:
         if now_seconds < self.poll_start_seconds:
             wait_seconds = self.poll_start_seconds - now_seconds
             logger.info(
-                '[DRIVE_SYNC_GATE] Too early (%02d:%02d:%02d). Waiting %d seconds until poll window opens at %s.',
+                '[SHAREPOINT_SYNC_GATE] Too early (%02d:%02d:%02d). Waiting %d seconds until poll window opens at %s.',
                 now.hour, now.minute, now.second,
                 wait_seconds,
                 self._format_hms(self.poll_start_seconds),
@@ -148,7 +148,7 @@ class DailyDriveSyncGate:
         should_proceed, should_retry_upload = self._check_pipeline_state(now)
         if should_retry_upload:
             logger.info(
-                '[DRIVE_SYNC_GATE] Detected pending %s/%s; will retry upload before reports.',
+                '[SHAREPOINT_SYNC_GATE] Detected pending %s/%s; will retry upload before reports.',
                 current.get('phase'), current.get('status'),
             )
             return False
@@ -157,7 +157,7 @@ class DailyDriveSyncGate:
 
         if now_seconds >= self.hard_deadline_seconds:
             logger.warning(
-                '[DRIVE_SYNC_GATE] Hard deadline (%s) reached without external confirmation. '
+                '[SHAREPOINT_SYNC_GATE] Hard deadline (%s) reached without external confirmation. '
                 'Proceeding with reports.',
                 self._format_hms(self.hard_deadline_seconds),
             )
@@ -167,12 +167,12 @@ class DailyDriveSyncGate:
         if self.pipeline_state is not None and getattr(self.pipeline_state, 'db_path', ''):
             current = self.pipeline_state.get()
             logger.info(
-                '[DRIVE_SYNC_GATE] Pipeline state is %s (not drive_download); waiting for drive_download to appear.',
+                '[SHAREPOINT_SYNC_GATE] Pipeline state is %s (not drive_download); waiting for drive_download to appear.',
                 current.get('phase') if current else 'no state yet',
             )
         else:
             logger.info(
-                '[DRIVE_SYNC_GATE] No pipeline_state configured; waiting until hard deadline or drive_download signal.'
+                '[SHAREPOINT_SYNC_GATE] No pipeline_state configured; waiting until hard deadline or drive_download signal.'
             )
 
         return False
@@ -185,7 +185,7 @@ def upload_after_run(local_folder: str, drive_folder: str, token_path: str, pipe
         deadline = time.time() + timeout
         while time.time() < deadline:
             current = pipeline_state.get()
-            if current and current.get('phase') == 'drive_upload' and current.get('status') in ('starting', 'running', 'failed'):
+            if current and current.get('phase') == 'sharepoint_upload' and current.get('status') in ('starting', 'running', 'failed'):
                 break
             time.sleep(30)
         else:
@@ -193,34 +193,30 @@ def upload_after_run(local_folder: str, drive_folder: str, token_path: str, pipe
 
         enqueue_sqlite_job('update_pipeline_state', {
             'updated_at': datetime.now(timezone.utc).isoformat(),
-            'phase': 'drive_upload',
+            'phase': 'sharepoint_upload',
             'status': 'running',
             'message': f'drive_folder={drive_folder}',
         })
 
-    from scripts.ops.gdrive_upload import sync_local_to_drive, write_daily_run_log
+    from scripts.ops.sharepoint_sync import sync_local_to_sharepoint, write_daily_run_log
 
-    write_daily_run_log(local_folder, 'POST_RUN_UPLOAD_START', f'drive_folder={drive_folder}')
-    ok = sync_local_to_drive(
-        local_folder=local_folder,
-        drive_folder_name=drive_folder,
-        token_path=token_path,
-    )
+    write_daily_run_log(local_folder, 'POST_RUN_UPLOAD_START', f'sharepoint_folder=RSA')
+    ok = sync_local_to_sharepoint(local_folder=local_folder)
     if ok:
-        write_daily_run_log(local_folder, 'POST_RUN_UPLOAD_DONE', f'drive_folder={drive_folder}')
+        write_daily_run_log(local_folder, 'POST_RUN_UPLOAD_DONE', f'sharepoint_folder=RSA')
         if pipeline_state is not None:
             enqueue_sqlite_job('update_pipeline_state', {
                 'updated_at': datetime.now(timezone.utc).isoformat(),
-                'phase': 'drive_upload',
+                'phase': 'sharepoint_upload',
                 'status': 'completed',
                 'message': f'drive_folder={drive_folder}',
             })
     else:
-        write_daily_run_log(local_folder, 'POST_RUN_UPLOAD_FAILED', f'drive_folder={drive_folder}')
+        write_daily_run_log(local_folder, 'POST_RUN_UPLOAD_FAILED', f'sharepoint_folder=RSA')
         if pipeline_state is not None:
             enqueue_sqlite_job('update_pipeline_state', {
                 'updated_at': datetime.now(timezone.utc).isoformat(),
-                'phase': 'drive_upload',
+                'phase': 'sharepoint_upload',
                 'status': 'failed',
                 'message': f'drive_folder={drive_folder}',
             })
