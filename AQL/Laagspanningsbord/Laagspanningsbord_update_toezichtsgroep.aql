@@ -1,0 +1,72 @@
+/*
+Laagspanningsbord + toezichter, toezichtsgroep, locatie
+Elektrische Keuringen + eig. resultaat, keuringsdatum
+
+@typeURI_HeeftBetrokkene: https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#HeeftBetrokkene
+*/
+LET at_key = FIRST(FOR at IN assettypes FILTER at.short_uri == @asset_short_uri LIMIT 1 RETURN at._key)
+LET lsbord_aimid_suffix = '-b25kZXJkZWVsI0xhYWdzcGFubmluZ3Nib3Jk'
+
+LET map_agenten = {
+    "Antwerpen": "5efe6764-007f-4099-83d9-29d0b2759211-cHVybDpBZ2VudA",
+    "Limburg": "4761b281-fe11-4645-93a6-0e1955330e1c-cHVybDpBZ2VudA",
+    "Oost-Vlaanderen": "206ba12e-dcc6-4ed1-887c-978e98aaad41-cHVybDpBZ2VudA",
+    "Vlaams-Brabant": "e3fe5c8e-037b-40cd-bff7-4617eb8bb86a-cHVybDpBZ2VudA",
+    "West-Vlaanderen": "61f977f9-f8c6-4faf-859a-2cc180b61511-cHVybDpBZ2VudA",
+}
+
+FOR a IN assets
+  FILTER a.assettype_key == at_key
+  FILTER a.AIMDBStatus_isActief == true
+  FILTER a.toestand in ['in-ontwerp', 'in-gebruik', 'in-opbouw', 'gepland'] // 'overgedragen' niet
+
+  /* ---- Agents: ONE traversal, only the 3 roles, name resolved inline ---- */
+  LET agenten = MERGE(
+    FOR v, e IN 1..1 OUTBOUND a betrokkenerelaties
+      FILTER e.rol IN ['toezichter', 'toezichtsgroep', 'schadebeheerder']
+      LET naam = (v.purl.Agent_naam != null ? v.purl.Agent_naam : v.naam)
+      LET key = v._key
+      RETURN MERGE(
+        (e.rol == 'toezichter' ? {'toezichter': {'naam': naam, '_key': key}}: {}),
+        (e.rol == 'toezichtsgroep' ? {'toezichtsgroep': {'naam': naam, '_key': key}}: {}),
+        (e.rol == 'schadebeheerder' ? {'schadebeheerder': {'naam': naam, '_key': key}}: {})
+      )
+  )
+  // Filter waar er een toezichter is en geen toezichtsgroep
+  FILTER agenten.toezichter != null && agenten.toezichtsgroep.naam == null
+
+  /* ---- Locatie: null-safe attribute access, no ternary guards needed ---- */
+  LET loc_adres = a.loc.Locatie_puntlocatie.DtcPuntlocatie_adres
+  LET loc_gemeente = loc_adres.DtcAdres_gemeente
+  LET loc_provincie = loc_adres.DtcAdres_provincie
+
+  /* ---- Voorstel HeeftBetrokkene.doelAssetId.identificator op basis van de provincie ---- */
+  LET toezichtsgroep_doel_voorstel = map_agenten[loc_provincie] ? map_agenten[loc_provincie] : null
+
+  /* ---- return: Laagspanningsbord en HeeftBetrokkene-relatie ---- */
+  RETURN {
+    "lsbord.assetId.identificator": concat(a._key, lsbord_aimid_suffix) ,
+    "lsbord.type": a["@type"],
+    "lsbord.naam": a.AIMNaamObject_naam,
+    "lsbord.naampad": a.NaampadObject_naampad,
+    "lsbord.isActief": a.AIMDBStatus_isActief,
+    "lsbord.toestand": a.toestand,
+
+    "lsbord.agent.toezichtgroep": agenten.toezichtsgroep.naam,
+    "lsbord.agent.toezichter": agenten.toezichter.naam,
+    "lsbord.agent.schadebeheerder": agenten.schadebeheerder.naam,
+
+    "lsbord.loc.longitude": a.geometry.coordinates[0],
+    "lsbord.loc.latitude": a.geometry.coordinates[1],
+    "lsbord.loc.gemeente": loc_gemeente,
+    "lsbord.loc.provincie": loc_provincie,
+
+    "HeeftBetrokkene.typeURI": "https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#HeeftBetrokkene",
+    "HeeftBetrokkene.assetId.identificator": "", // counter
+    "HeeftBetrokkene.bron.typeURI": a["@type"],
+    "HeeftBetrokkene.bronAssetId.identificator": concat(a._key, lsbord_aimid_suffix),
+    "HeeftBetrokkene.doel.typeURI": "http://purl.org/dc/terms/Agent",
+    "HeeftBetrokkene.doelAssetId.identificator": toezichtsgroep_doel_voorstel,
+    "HeeftBetrokkene.isActief": 'true',
+    "HeeftBetrokkene.rol": 'toezichtsgroep',
+  }

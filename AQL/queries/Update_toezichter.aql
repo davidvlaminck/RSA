@@ -1,0 +1,60 @@
+/*
+Vervang toezichter Femke Janssens door Sofie Cools
+
+@typeURI_HeeftBetrokkene: https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#HeeftBetrokkene
+*/
+LET agent = FIRST(
+  FOR ag IN agents
+    FILTER ag.purl.Agent_naam == @agent_naam
+    LIMIT 1
+    RETURN ag
+)
+
+/* ---- OUTER LOOP: iterate over HeeftBetrokkene-relaties (edges) ---- */
+FOR rel IN betrokkenerelaties
+
+  /* Filter: toezichter-relatie naar de specifieke agent */
+  FILTER rel._to == agent._id
+  FILTER rel.rol == 'toezichter'
+
+  /* ---- NESTED: retrieve the associated asset (bron van de relatie) ---- */
+  LET a = DOCUMENT(rel._from)
+  FILTER a != null
+  FILTER a.AIMDBStatus_isActief == true
+
+  /* ---- Overige rollen van dit asset (één traversal) ---- */
+  LET overige_agenten = MERGE(
+    FOR v, e IN 1..1 OUTBOUND a betrokkenerelaties
+      FILTER e.rol IN ['toezichtsgroep', 'schadebeheerder']
+      RETURN { [e.rol]: (v.purl.Agent_naam != null ? v.purl.Agent_naam : v.naam) }
+  )
+
+  /* ---- Locatie: null-safe attribute access ---- */
+  LET loc_adres = a.loc.Locatie_puntlocatie.DtcPuntlocatie_adres
+
+  /* ---- return: asset + HeeftBetrokkene-relatie ---- */
+  RETURN {
+    "assetId.identificator": SPLIT(a["@id"], '/')[-1],
+    "type": a["@type"],
+    "naam": a.AIMNaamObject_naam,
+    "naampad": a.NaampadObject_naampad,
+    "notitie": a.AIMObject_notitie,
+    "isActief": a.AIMDBStatus_isActief,
+    "toestand": a.toestand,
+
+    "agent.toezichtgroep": overige_agenten.toezichtsgroep,
+    "agent.toezichter": (agent.purl.Agent_naam != null ? agent.purl.Agent_naam : agent.naam),
+    "agent.schadebeheerder": overige_agenten.schadebeheerder,
+
+    "loc.gemeente": loc_adres.DtcAdres_gemeente,
+    "loc.provincie": loc_adres.DtcAdres_provincie,
+
+    "HeeftBetrokkene.typeURI": "https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#HeeftBetrokkene",
+    "HeeftBetrokkene.assetId.identificator": rel._key,
+    "HeeftBetrokkene.bron.typeURI": a["@type"],
+    "HeeftBetrokkene.bronAssetId.identificator": SPLIT(a["@id"], '/')[-1],
+    "HeeftBetrokkene.doel.typeURI": "http://purl.org/dc/terms/Agent",
+    "HeeftBetrokkene.doelAssetId.identificator": agent._key,
+    "HeeftBetrokkene.isActief": 'true',
+    "HeeftBetrokkene.rol": 'toezichter',
+  }
