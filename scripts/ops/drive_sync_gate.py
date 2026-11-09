@@ -9,10 +9,10 @@ logger = logging.getLogger(__name__)
 
 
 class DailySharePointSyncGate:
-    """Polls SQLite for an external orchestrator's drive-download signal.
+    """Polls SQLite for an external orchestrator's sharepoint-download signal.
 
-    The gate no longer performs the Drive download itself. It only observes
-    ``pipeline_state`` for ``drive_download`` / ``completed``. Polling starts
+    The gate no longer performs the SharePoint download itself. It only observes
+    ``pipeline_state`` for ``sharepoint_download`` / ``completed``. Polling starts
     at ``poll_start_hms`` and is abandoned at ``hard_deadline_hms``, after
     which reports are allowed to proceed anyway.
     """
@@ -69,7 +69,7 @@ class DailySharePointSyncGate:
         Returns:
             (should_proceed, should_retry_upload)
             - should_proceed: True if the gate should allow the run to proceed
-              (either because drive_download is done, or because the cycle is
+              (either because sharepoint_download is done, or because the cycle is
               already complete and _should_run_rsa_queries() will block it).
             - should_retry_upload: True if a pending upload should be retried.
         """
@@ -94,10 +94,10 @@ class DailySharePointSyncGate:
         if phase == 'rsa_queries' and status in ('completed', 'time-out'):
             return True, False
 
-        # If the pipeline has already advanced past drive_download into later
+        # If the pipeline has already advanced past sharepoint_download into later
         # phases (e.g. rsa_queries running, postgis sync phases), the download
         # has already completed. Don't block reports waiting for a
-        # drive_download signal that already came and went.
+        # sharepoint_download signal that already came and went.
         if phase in (
             'arango_sync',
             'postgis_sync_pausing',
@@ -116,7 +116,7 @@ class DailySharePointSyncGate:
         if phase == 'sharepoint_download' and status == 'starting':
             self._enqueue_pipeline_update(
                 'sharepoint_download', 'running',
-                'Waiting for external orchestrator to complete drive download',
+                'Waiting for external orchestrator to complete sharepoint download',
             )
             return False, False
 
@@ -167,12 +167,12 @@ class DailySharePointSyncGate:
         if self.pipeline_state is not None and getattr(self.pipeline_state, 'db_path', ''):
             current = self.pipeline_state.get()
             logger.info(
-                '[SHAREPOINT_SYNC_GATE] Pipeline state is %s (not drive_download); waiting for drive_download to appear.',
+                '[SHAREPOINT_SYNC_GATE] Pipeline state is %s (not sharepoint_download); waiting for sharepoint_download to appear.',
                 current.get('phase') if current else 'no state yet',
             )
         else:
             logger.info(
-                '[SHAREPOINT_SYNC_GATE] No pipeline_state configured; waiting until hard deadline or drive_download signal.'
+                '[SHAREPOINT_SYNC_GATE] No pipeline_state configured; waiting until hard deadline or sharepoint_download signal.'
             )
 
         return False
@@ -189,7 +189,7 @@ def upload_after_run(local_folder: str, drive_folder: str, token_path: str, pipe
                 break
             time.sleep(30)
         else:
-            logger.warning('[UPLOAD] Timeout waiting for drive_upload signal; proceeding with upload anyway.')
+            logger.warning('[UPLOAD] Timeout waiting for sharepoint_upload signal; proceeding with upload anyway.')
 
         enqueue_sqlite_job('update_pipeline_state', {
             'updated_at': datetime.now(timezone.utc).isoformat(),

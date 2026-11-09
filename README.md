@@ -29,111 +29,36 @@ uv run python -m scripts.ops.bootstrap_bucket_layout --output-dir RSA_OneDrive
 ```
 
 `bootstrap_bucket_layout` is the one-shot repair script for a reset `RSA_OneDrive`: it creates the bucket folders, moves existing report workbooks into the right bucket, and refreshes the summary hyperlinks.
+## Daily SharePoint Flow
 
-## Daily Google Drive Flow
-
-`main.py` now runs with a daily sync gate:
-- after `01:00:00`: mirror download from Drive folder to local `RSA_OneDrive`
+`main.py` now runs with a daily sync gate mirroring to/from the SharePoint `AIMData` library:
+- after `01:00:00`: mirror download from the SharePoint `RSA` folder to local `RSA_OneDrive`
 - report window starts based on `settings.time` (for example around `06:00`)
-- after reports: mirror upload local `RSA_OneDrive` back to Drive
+- after reports: mirror upload local `RSA_OneDrive` back to SharePoint
 - run log is appended to `RSA_OneDrive/logs/run_YYYYMMDD.log` and uploaded too
 - report files are written into 100-report buckets under `RSA_OneDrive/<bucket>/`
 - summary links in `Overzicht` and mail links use the same canonical SharePoint URL as the file on disk
 
-Token bootstrap + mapcheck (`RSA`):
-
-```bash
-uv run python -m scripts.setup_gdrive_token \
-  --credentials /path/to/oauth_client.json \
-  --token /path/to/gdrive_token.pkl \
-  --drive-folder RSA
-```
-
-PyCharm one-click setup (zonder args):
-- Run `scripts/setup_gdrive_token.py` met Play.
-- Script leest standaard `settings_sample.json`.
-- Voeg `--write-settings` toe om gebruikte paden terug in settings op te slaan.
-
-```bash
-uv run python -m scripts.setup_gdrive_token --write-settings
-```
-
-OAuth bootstrap (one-time):
-
-```bash
-uv run python -m scripts.ops.gdrive_upload login \
-  --credentials /path/to/oauth_client.json \
-  --token /path/to/gdrive_token.pkl
-```
-
-Manual sync commands:
-
-```bash
-uv run python -m scripts.ops.gdrive_upload sync-down --folder RSA_OneDrive --drive-folder RSA --token /path/to/gdrive_token.pkl
-uv run python -m scripts.ops.gdrive_upload sync-up --folder RSA_OneDrive --drive-folder RSA --token /path/to/gdrive_token.pkl
-```
-
-One-shot pre-sync test (without running reports):
-
-```bash
-uv run python -m scripts.ops.dry_sync_test --settings settings_sample.json --dry-run
-uv run python -m scripts.ops.dry_sync_test --settings settings_sample.json --token /real/path/gdrive_token.pkl
-```
-
-### Persoonlijke Google Drive setup
-
-Gebruik voor een persoonlijke Google Drive exact dezelfde OAuth-flow als voor een werkaccount. De OAuth client JSON en token staan **buiten de repo**; alleen het settingsbestand verwijst ernaar via `google_api.credentials_path` en `drive_sync.token_path`.
-
-1. Open Google Cloud Console en doe het volgende:
-   - maak een nieuw project
-   - activeer **Google Drive API**
-   - ga naar **APIs & Services** → **OAuth consent screen**
-   - ga naar **Audience** en controleer **Publishing status**
-   - zet de app op **In production/Published** als je met niet-testgebruikers wil inloggen
-   - als tijdelijke fallback: voeg je Google-account toe onder **Test users** zolang status op **Testing** staat
-   - kies **External**
-   - vul minimaal app name + jouw e-mailadres in
-   - ga naar **Credentials** → **Create Credentials** → **OAuth client ID**
-   - kies **Desktop app**
-   - download het JSON-bestand
-
-2. Sla dat JSON-bestand lokaal op in je eigen resources-map buiten de repo.
-
-3. Run daarna `scripts/setup_gdrive_token.py` met Play, of via terminal:
-
-```bash
-uv run python -m scripts.setup_gdrive_token \
-  --settings /path/to/your/settings_RSA.json \
-  --drive-folder RSA \
-  --write-settings
-```
-
-4. Er opent een browser. Log in met je persoonlijke Google account en geef toestemming.
-
-5. Na succesvolle login:
-   - wordt `gdrive_token.pkl` aangemaakt
-   - test het script of map `RSA` bereikbaar is
-   - schrijft `--write-settings` de gebruikte paden terug naar je settingsbestand
-
-6. Controleer daarna deze velden in je settings:
+Credentials are sourced at runtime from environment variables (set by the operator before running; do not commit secrets):
+- `SHAREPOINT_CLIENT_ID`
+- `SHAREPOINT_TENANT_ID`
+- `SHAREPOINT_SITE_URL`
+- `SHAREPOINT_CLIENT_SECRET`
 
 ```json
 {
-  "google_api": {
-    "credentials_path": "/path/to/external/resources/gdrive_oauth_credentials.json"
-  },
-  "drive_sync": {
-    "credentials_path": "/path/to/external/resources/gdrive_oauth_credentials.json",
-    "token_path": "/path/to/external/resources/gdrive_token.pkl",
-    "drive_folder": "RSA",
+  "sharepoint_sync": {
+    "enabled": true,
+    "sync_after": "02:00:00",
+    "poll_after": "01:00:00",
+    "poll_deadline": "06:00:00",
+    "sharepoint_folder": "RSA",
     "local_folder": "./RSA_OneDrive"
   }
 }
 ```
 
-Verschil tussen beide paden:
-- `credentials_path`: het OAuth client JSON-bestand dat je downloadt uit Google Cloud Console
-- `token_path`: het login-token dat het Python-script lokaal aanmaakt na browser-login
+The remote folder is the `RSA` folder inside the `AIMData` document library. No token file is required.
 
 ## Documentation
 

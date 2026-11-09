@@ -47,7 +47,8 @@ def download_before_run(local_folder: str | Path) -> bool:
 
 def write_daily_run_log(local_folder: str | Path, status: str, details: str = "") -> None:
     client = _client()
-    client.write_daily_run_log(local_folder, status)
+    message = f"{status} ({details})" if details else status
+    client.write_daily_run_log(local_folder, message)
 
 
 def prune_daily_run_logs(local_folder: str | Path, keep: int = 14) -> None:
