@@ -13,19 +13,20 @@ from datetime import datetime
 repo_root = Path(__file__).resolve().parents[1]
 if str(repo_root) not in sys.path:
     sys.path.insert(0, str(repo_root))
-
+PROJECT_ROOT = repo_root.resolve().parents[0]
+AQL_FILE = PROJECT_ROOT / r"AQL\Afstandsbewaking\Afstandsbewaking_techniek.aql"
+AQL_FILE_NAME = AQL_FILE.stem
 from aql_to_excel_worker import main as worker_main
 
 TODAY = datetime.today().strftime('%Y%m%d_%H%M')
 
+# BIND_VARS = '{"agent_naam": "Femke Janssens"}'
+#
 if __name__ == "__main__":
-    project_root = repo_root.resolve().parents[0]
-    aql_file = str(project_root / r"AQL\queries\Update_toezichter.aql")
-
     sys.argv = [
         "aql_to_excel_wrapper.py",
-        "--aql-file", aql_file,
-        "--out", fr".\out\{TODAY}_Update_toezichter.xlsx",
-        "--bind", '{"agent_naam": "Femke Janssens"}',
+        "--aql-file", str(AQL_FILE),
+        "--out", fr".\out\{TODAY}_{AQL_FILE_NAME}.xlsx",
+        # "--bind", BIND_VARS,
     ]
     sys.exit(worker_main())
