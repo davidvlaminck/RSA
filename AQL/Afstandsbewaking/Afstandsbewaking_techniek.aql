@@ -19,7 +19,7 @@ LET relatie_voedt_key = (FOR rel_type IN relatietypes FILTER rel_type.naam == 'V
 
 FOR a IN assets
   // DEVELOPMENT - beperk tot één AB A1589.AB
-  FILTER a._key == '06eec78f-f8db-42ab-be34-38f6c8e65529'
+//  FILTER a._key == '06eec78f-f8db-42ab-be34-38f6c8e65529'
   FILTER a.assettype_key == at_bron_key
   FILTER a.AIMDBStatus_isActief == true
 
@@ -34,7 +34,7 @@ FOR a IN assets
      cabinecontroller: onderdeel#Cabinecontroller ----
   */
   LET techniek_pompstation = (
-    FOR v, e, p IN 1..2 ANY a assetrelaties
+    FOR v, e, p IN 1..3 ANY a assetrelaties
       FILTER v.AIMDBStatus_isActief == true
       FILTER v.assettype_key in [at_pompstation_key, at_pomp_key]
       LIMIT 1
@@ -42,7 +42,7 @@ FOR a IN assets
   )[0]
 
   LET techniek_tunnel = (
-    FOR v, e, p IN 1..2 ANY a assetrelaties
+    FOR v, e, p IN 1..3 ANY a assetrelaties
       FILTER v.AIMDBStatus_isActief == true
       FILTER v.assettype_key in [at_tunneluitrusting_key, at_tunnelverlichting_key]
       LIMIT 1
@@ -50,7 +50,7 @@ FOR a IN assets
   )[0]
 
   LET techniek_wegverlichting = (
-    FOR v, e, p IN 1..2 ANY a assetrelaties
+    FOR v, e, p IN 1..3 ANY a assetrelaties
       FILTER v.AIMDBStatus_isActief == true
       FILTER v.assettype_key == at_wegverlichting_key
       LIMIT 1
@@ -58,7 +58,7 @@ FOR a IN assets
   )[0]
 
   LET techniek_cabinecontroller = (
-    FOR v, e, p IN 1..2 ANY a assetrelaties
+    FOR v, e, p IN 1..3 ANY a assetrelaties
       FILTER v.AIMDBStatus_isActief == true
       FILTER v.assettype_key == at_cabinecontroller_key
       LIMIT 1
@@ -99,14 +99,18 @@ FOR a IN assets
 
     // toezichter (lgc)
     "toezichter": a.tz.Toezicht_toezichter.DtcToezichter_email,
-    "toezichtsgroep": a.tz.Toezicht_toezichter.DtcToezichtGroep_naam,
+//    "toezichtsgroep": a.tz.Toezicht_toezichter.DtcToezichtGroep_naam,
 
-    // Concatenate techniek + naam + uuid per techniek (één string per techniek, null bij geen match)
-    "pompstation": concat_pompstation,
-    "tunnel": concat_tunnel,
-    "wegverlichting": concat_wegverlichting,
-    "cabinecontroller": concat_cabinecontroller,
+    // Info per techniek
+    "pompstation.naam": techniek_pompstation.naam,
+    "pompstation.uuid": techniek_pompstation._key,
+    "tunnel.naam": techniek_tunnel.naam,
+    "tunnel.uuid": techniek_tunnel._key,
+    "wegverlichting.naam": techniek_wegverlichting.naam,
+    "wegverlichting.uuid": techniek_wegverlichting._key,
+    "cabinecontroller.naam": techniek_cabinecontroller.naam,
+    "cabinecontroller.uuid": techniek_cabinecontroller._key,
 
     // Lijst van alle gevonden technieken met bijbehorende doel-asset naam en _key
-    "technieken": technieken,
+    "technieken": CONCAT_SEPARATOR("; ", technieken),
   }
