@@ -1,0 +1,116 @@
+/*
+Oplijsting van actieve Afstandsbewaking en diens techniek waartoe ze behoren.
+
+Oplijsten van actieve Afstandsbewaking (Legacy) https://lgc.data.wegenenverkeer.be/ns/installatie#AB
+Graaf-relaties doorlopen via een aantal stappen naar bepaalde doel assettypes
+Toevoegen van info van betrokkenerelatie en locatie
+
+*/
+LET at_bron_key = (FOR at IN assettypes FILTER at.short_uri == 'lgc:installatie#AB' LIMIT 1 RETURN at._key)[0]
+LET at_tunneluitrusting_key = (FOR at IN assettypes FILTER at.short_uri == 'installatie#Tunneluitrusting' LIMIT 1 RETURN at._key)[0]
+LET at_tunnelverlichting_key = (FOR at IN assettypes FILTER at.short_uri == 'installatie#Tunnelverlichting' LIMIT 1 RETURN at._key)[0]
+LET at_pompstation_key = (FOR at IN assettypes FILTER at.short_uri == 'installatie#Pompstation' LIMIT 1 RETURN at._key)[0]
+LET at_pomp_key = (FOR at IN assettypes FILTER at.short_uri == 'onderdeel#Pomp' LIMIT 1 RETURN at._key)[0]
+LET at_wegverlichting_key = (FOR at IN assettypes FILTER at.short_uri == 'installatie#WegverlichtingGroep' LIMIT 1 RETURN at._key)[0]
+LET at_cabinecontroller_key = (FOR at IN assettypes FILTER at.short_uri == 'onderdeel#Cabinecontroller' LIMIT 1 RETURN at._key)[0]
+
+LET relatie_heeftkeuring_key = (FOR rel_type IN relatietypes FILTER rel_type.naam == 'HeeftKeuring' LIMIT 1 RETURN rel_type._key)[0]
+LET relatie_voedt_key = (FOR rel_type IN relatietypes FILTER rel_type.naam == 'Voedt' LIMIT 1 RETURN rel_type._key)[0]
+
+FOR a IN assets
+  // DEVELOPMENT - beperk tot één AB A1589.AB
+//  FILTER a._key == '06eec78f-f8db-42ab-be34-38f6c8e65529'
+  FILTER a.assettype_key == at_bron_key
+  FILTER a.AIMDBStatus_isActief == true
+
+  /* ---- Doel-asset technieken: controle per techniek vanaf bron-asset ----
+     pad: bron-asset -(ANY)- doel-asset (max 2 stappen)
+     Per techniek wordt precies één doel-asset (naam + _key) teruggegeven,
+     of null als geen passende actieve doel-asset bereikbaar is.
+
+     pompstation:     installatie#Pompstation of onderdeel#Pomp
+     tunnel:          installatie#Tunneluitrusting of installatie#Tunnelverlichting
+     wegverlichting:  installatie#WegverlichtingGroep
+     cabinecontroller: onderdeel#Cabinecontroller ----
+  */
+  LET techniek_pompstation = (
+    FOR v, e, p IN 1..3 ANY a assetrelaties
+      FILTER v.AIMDBStatus_isActief == true
+      FILTER v.assettype_key in [at_pompstation_key, at_pomp_key]
+      LIMIT 1
+      RETURN { "techniek": "pompstation", "naam": v.AIMNaamObject_naam, "_key": v._key }
+  )[0]
+
+  LET techniek_tunnel = (
+    FOR v, e, p IN 1..3 ANY a assetrelaties
+      FILTER v.AIMDBStatus_isActief == true
+      FILTER v.assettype_key in [at_tunneluitrusting_key, at_tunnelverlichting_key]
+      LIMIT 1
+      RETURN { "techniek": "tunnel", "naam": v.AIMNaamObject_naam, "_key": v._key }
+  )[0]
+
+  LET techniek_wegverlichting = (
+    FOR v, e, p IN 1..3 ANY a assetrelaties
+      FILTER v.AIMDBStatus_isActief == true
+      FILTER v.assettype_key == at_wegverlichting_key
+      LIMIT 1
+      RETURN { "techniek": "wegverlichting", "naam": v.AIMNaamObject_naam, "_key": v._key }
+  )[0]
+
+  LET techniek_cabinecontroller = (
+    FOR v, e, p IN 1..3 ANY a assetrelaties
+      FILTER v.AIMDBStatus_isActief == true
+      FILTER v.assettype_key == at_cabinecontroller_key
+      LIMIT 1
+      RETURN { "techniek": "cabinecontroller", "naam": v.AIMNaamObject_naam, "_key": v._key }
+  )[0]
+
+  /* ---- Concatenate techniek, naam en uuid per techniek in één string ---- */
+  LET concat_pompstation = (techniek_pompstation != null ? CONCAT(techniek_pompstation.naam, " | ", techniek_pompstation._key) : null)
+  LET concat_tunnel = (techniek_tunnel != null ? CONCAT(techniek_tunnel.naam, " | ", techniek_tunnel._key) : null)
+  LET concat_wegverlichting = (techniek_wegverlichting != null ? CONCAT(techniek_wegverlichting.naam, " | ", techniek_wegverlichting._key) : null)
+  LET concat_cabinecontroller = (techniek_cabinecontroller != null ? CONCAT(techniek_cabinecontroller.naam, " | ", techniek_cabinecontroller._key) : null)
+
+  /* ---- Locatie: null-safe geneste attributen ---- */
+  LET loc = a.loc != null ? a.loc : null
+  LET loc_puntlocatie = loc != null && loc.Locatie_puntlocatie != null ? loc.Locatie_puntlocatie : null
+  LET loc_adres = loc_puntlocatie != null ? loc_puntlocatie.DtcPuntlocatie_adres : null
+
+  /* ---- Verzamel gevonden technieken met naam en _key in een array ---- */
+  LET technieken = (
+    FOR t IN [techniek_pompstation, techniek_tunnel, techniek_wegverlichting, techniek_cabinecontroller]
+      FILTER t != null
+      RETURN t.techniek
+  )
+
+  /* ---- Return ---- */
+  RETURN {
+    // Bron-asset (vb. Afstandsbewaking)
+    "assetId.identificator": a._key,
+    "typeURI": a["@type"],
+    "naam": a.AIMNaamObject_naam,
+    "naampad": a.NaampadObject_naampad,
+    "isActief": a.AIMDBStatus_isActief,
+    "toestand": a.toestand,
+
+    // locatie-info
+    "loc.gemeente": loc_adres != null ? loc_adres.DtcAdres_gemeente : null,
+    "loc.provincie": loc_adres != null ? loc_adres.DtcAdres_provincie : null,
+
+    // toezichter (lgc)
+    "toezichter": a.tz.Toezicht_toezichter.DtcToezichter_email,
+//    "toezichtsgroep": a.tz.Toezicht_toezichter.DtcToezichtGroep_naam,
+
+    // Info per techniek
+    "pompstation.naam": techniek_pompstation.naam,
+    "pompstation.uuid": techniek_pompstation._key,
+    "tunnel.naam": techniek_tunnel.naam,
+    "tunnel.uuid": techniek_tunnel._key,
+    "wegverlichting.naam": techniek_wegverlichting.naam,
+    "wegverlichting.uuid": techniek_wegverlichting._key,
+    "cabinecontroller.naam": techniek_cabinecontroller.naam,
+    "cabinecontroller.uuid": techniek_cabinecontroller._key,
+
+    // Lijst van alle gevonden technieken met bijbehorende doel-asset naam en _key
+    "technieken": CONCAT_SEPARATOR("; ", technieken),
+  }
