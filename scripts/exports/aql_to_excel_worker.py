@@ -270,6 +270,12 @@ class OpenpyxlExcelWriter(ExcelWriter):
                         cell = ws.cell(row=r, column=col_idx)
                         _format_asset_uuid_cell(cell, header_name, base_url=self.base_url)
 
+            # Enable AutoFilter on the header row (row 1) across all written columns.
+            # row_count data rows follow the header, so the last used row is row_count + 1.
+            last_col = get_column_letter(len(resolved_keys))
+            last_row = row_count + 1
+            ws.auto_filter.ref = f"A1:{last_col}{last_row}"
+
         _autofit_sheet_columns(ws)
 
         wb.save(out_path)
