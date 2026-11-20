@@ -1,0 +1,24 @@
+/*
+   AQL Query: Get all bestekken
+
+   Parameters:
+   None
+
+   Returns: Unique list of bestekken
+*/
+FOR b IN bestekken
+  // DEVELOPMENT - beperk tot één bestek
+  // FILTER b.eDeltaDossiernummer == @eDeltaDossiernummer
+  FILTER b.actief == true
+
+  RETURN {
+    // info bestek
+    "uuid": b.uuid,
+    "type": b.type,
+    "awvId": b.awvId,
+    "dossiernummer": b.eDeltaDossiernummer,
+    "besteknummer": b.eDeltaBesteknummer,
+    "naamAannemer": b.aannemerNaam,
+    "referentieAannemer": b.aannemerReferentie,
+    "actief": b.actief,
+  }

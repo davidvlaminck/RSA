@@ -1,0 +1,31 @@
+/*
+   AQL Query: Get unique assettypes associated with a specific bestek ID
+
+   Parameters:
+   - @eDeltaDossiernummer: The bestek identifier (eDeltaDossiernummer, e.g., "HVV.089")
+
+   Returns: Unique list of assettype short_uris
+*/
+FOR bk IN bestekkoppelingen
+  FILTER bk._to != null
+  LET bestek_doc = DOCUMENT(bk._to)
+  FILTER bestek_doc != null
+  FILTER bestek_doc.eDeltaDossiernummer != null
+  // FILTER bestek_doc.eDeltaDossiernummer == @eDeltaDossiernummer
+  LET asset_doc = DOCUMENT(bk._from)
+  FILTER asset_doc != null
+  FILTER asset_doc.AIMDBStatus_isActief == true
+  FILTER asset_doc.assettype_key != null
+  LET at = DOCUMENT(CONCAT("assettypes/", asset_doc.assettype_key))
+  FILTER at != null
+  COLLECT
+    eDeltaDossiernummer = bestek_doc.eDeltaDossiernummer,
+    eDeltaBesteknummer = bestek_doc.eDeltaBesteknummer,
+    assettype_short_uri = at.short_uri WITH COUNT INTO count
+  SORT eDeltaDossiernummer, count DESC
+  RETURN {
+    "dossiernummer": eDeltaDossiernummer,
+    "besteknummer": eDeltaBesteknummer,
+    "assettype_short_uri": assettype_short_uri,
+    "count": count
+  }
