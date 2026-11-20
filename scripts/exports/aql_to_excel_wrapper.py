@@ -14,7 +14,7 @@ repo_root = Path(__file__).resolve().parents[1]
 if str(repo_root) not in sys.path:
     sys.path.insert(0, str(repo_root))
 PROJECT_ROOT = repo_root.resolve().parents[0]
-AQL_FILE = PROJECT_ROOT / r"AQL\Afstandsbewaking\Afstandsbewaking_techniek.aql"
+AQL_FILE = PROJECT_ROOT / r"AQL\Bestekkoppelingen\2_bestekken_assettypes.aql"
 AQL_FILE_NAME = AQL_FILE.stem
 from aql_to_excel_worker import main as worker_main
 
