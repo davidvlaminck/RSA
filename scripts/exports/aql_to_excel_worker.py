@@ -8,13 +8,13 @@ parameter-driven, not hard-coded to any specific AQL file.
 
 Usage examples:
   # Resolve ArangoDB connection from a settings JSON file:
-  python scripts/exports/export_aql_to_excel.py --aql-file AQL/queries/adres.aql --out ./out/adres.xlsx --settings settings_sample.json
+  python scripts/exports/aql_to_excel_worker.py --aql-file AQL/queries/adres.aql --out ./out/adres.xlsx --settings settings_sample.json
 
   # Override connection parameters directly on the command line:
-  python scripts/exports/export_aql_to_excel.py --aql-file AQL/Verkeersregelaar/Verkeersregelaar_Sturing_VRIBuiteninstallatie.aql --out ./out/sturing.xlsx --host 127.0.0.1 --port 8529 --user myuser --password pw --database awvinfra
+  python scripts/exports/aql_to_excel_worker.py --aql-file AQL/Verkeersregelaar/Verkeersregelaar_Sturing_VRIBuiteninstallatie.aql --out ./out/sturing.xlsx --host 127.0.0.1 --port 8529 --user myuser --password pw --database awvinfra
 
   # Pass AQL bind parameters (JSON):
-  python scripts/exports/export_aql_to_excel.py --aql-file AQL/Verkeersregelaar/Verkeersregelaar_Sturing_VRIBuiteninstallatie.aql --out ./out/sturing.xlsx --bind {"asset_short_uri_VR": "onderdeel#Verkeersregelaar", "asset_short_uri_VRIB": "onderdeel#VRIBuiteninstallatie"}
+  python scripts/exports/aql_to_excel_worker.py --aql-file AQL/Verkeersregelaar/Verkeersregelaar_Sturing_VRIBuiteninstallatie.aql --out ./out/sturing.xlsx --bind {"asset_short_uri_VR": "onderdeel#Verkeersregelaar", "asset_short_uri_VRIB": "onderdeel#VRIBuiteninstallatie"}
 
 Notes:
   - The script performs read-only AQL execution; it does not modify the database.

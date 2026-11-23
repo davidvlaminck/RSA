@@ -1,0 +1,94 @@
+/*
+Oplijsting van alle Elektrische Keuringen die horen bij VRI's
+
++ info van betrokkenerelatie en locatie
+
+*/
+LET at_vrib_key = (FOR at IN assettypes FILTER at.short_uri == 'installatie#VRIBuiteninstallatie' LIMIT 1 RETURN at._key)[0]
+LET relatie_heeftkeuring_key = (FOR rel_type IN relatietypes FILTER rel_type.naam == 'HeeftKeuring' LIMIT 1 RETURN rel_type._key)[0]
+LET relatie_voedt_key = (FOR rel_type IN relatietypes FILTER rel_type.naam == 'Voedt' LIMIT 1 RETURN rel_type._key)[0]
+
+FOR a IN assets
+  // DEVELOPMENT - beperk tot één VRI
+  //FILTER a._key == '0017bbb5-0ac8-4608-8e62-c077413ddc86'
+  FILTER a.assettype_key == at_vrib_key
+  FILTER a.AIMDBStatus_isActief == true
+
+  /* ---- Locatie: null-safe attribute access, no ternary guards needed ---- */
+  LET loc_adres = a.loc.Locatie_puntlocatie.DtcPuntlocatie_adres
+
+  /* ---- Laagspanningsbord ---- */
+  LET lsbord = (
+    FOR v, e in 1..1 INBOUND a assetrelaties
+        FILTER e.relatietype_key == relatie_voedt_key
+        FILTER v.AIMDBStatus_isActief == true
+        RETURN v
+  )
+  LET lsbord_doc = lsbord[0]
+
+  /* ---- Elektrische Keuringen: single traversal, sorted ---- */
+  LET elektrische_keuringen = lsbord_doc == null ? [] : (
+    FOR v, e IN 1..1 OUTBOUND lsbord_doc assetrelaties
+      FILTER e.relatietype_key == relatie_heeftkeuring_key
+      FILTER v.AIMDBStatus_isActief == true
+      FILTER v.toestand IN ['in-ontwerp', 'in-gebruik', 'in-opbouw', 'overgedragen', 'gepland']
+      SORT v.KeuringObject_keuringsdatum DESC
+      RETURN v
+  )
+  LET elektrische_keuringen_aantal = LENGTH(elektrische_keuringen)
+
+  /* ---- Agents: ONE traversal, only the 3 roles, name resolved inline ---- */
+  LET agenten = MERGE(
+    FOR v, e IN 1..1 OUTBOUND a betrokkenerelaties
+      FILTER e.rol IN ['toezichter', 'toezichtsgroep', 'schadebeheerder']
+      LET naam = (v.purl.Agent_naam != null ? v.purl.Agent_naam : v.naam)
+      LET key = v._key
+      RETURN MERGE(
+        (e.rol == 'toezichter' ? {'toezichter': {'naam': naam, '_key': key}}: {}),
+        (e.rol == 'toezichtsgroep' ? {'toezichtsgroep': {'naam': naam, '_key': key}}: {}),
+        (e.rol == 'schadebeheerder' ? {'schadebeheerder': {'naam': naam, '_key': key}}: {})
+      )
+  )
+
+  /* ---- Explode: one row per Elektrische Keuring ---- */
+  FOR ek IN elektrische_keuringen
+    /* ---- eigenschappen van de Elektrische Keuring ---- */
+    LET eig_resultaat = ek.ElektrischeKeuring_resultaat != null ? LAST(SPLIT(ek.ElektrischeKeuring_resultaat, '/')) : null
+    LET eig_keuringsdatum = ek.KeuringObject_keuringsdatum
+    LET eig_bijlage = ek.AbstracteAanvullendeGeometrie_bijlage.DtcDocument_bestandsnaam
+
+    RETURN {
+      // VRIBuiteninstallatie (Verkeersregelaar)
+      "vri.assetId.identificator": a._key,
+      "vri.typeURI": a["@type"],
+      "vri.naam": a.AIMNaamObject_naam,
+      "vri.naampad": a.NaampadObject_naampad,
+      "vri.isActief": a.AIMDBStatus_isActief,
+      "vri.toestand": a.toestand,
+
+      // locatie-info
+      "vri.loc.gemeente": loc_adres.DtcAdres_gemeente,
+      "vri.loc.provincie": loc_adres.DtcAdres_provincie,
+
+      // Betrokkenerelaties
+      "vri.toezichter": agenten.toezichter.naam,
+      "vri.toezichtsgroep": agenten.toezichtsgroep.naam,
+      "vri.schadebeheerder": agenten.schadebeheerder.naam,
+
+      // Laagspanningsbord
+      "lsbord.assetId.identificator": lsbord_doc != null ? lsbord_doc._key : null,
+      "lsbord.typeURI": lsbord_doc != null ? lsbord_doc["@type"] : null,
+      "lsbord.naam": lsbord_doc != null ? lsbord_doc.AIMNaamObject_naam : null,
+
+      // Elektrische Keuring
+      "ek.aantal": elektrische_keuringen_aantal,
+      // "ek.array": elektrische_keuringen,   // ⚠️ only for debugging – see note 1
+      "ek.assetId.identificator": ek._key,
+      "ek.typeURI": ek["@type"],
+      "ek.isActief": ek.AIMDBStatus_isActief,
+      "ek.naam": ek.AbstracteAanvullendeGeometrie_naam,
+      "ek.toestand": ek.toestand,
+      "ek.bijlage": eig_bijlage,
+      "ek.eig_resultaat": eig_resultaat,
+      "ek.eig_keuringsdatum": eig_keuringsdatum
+    }
