@@ -1,0 +1,26 @@
+/*
+inactieve assets met een naampad
+*/
+FOR asset IN assets
+  FILTER asset.AIMDBStatus_isActief == false
+  // Naampad heeft een waarde (geen lege string) en ook geen null-value
+  FILTER asset.NaampadObject_naampad //
+  //FILTER asset.NaampadObject_naampad != ''
+  //FILTER asset.NaampadObject_naampad > null
+  
+  LET is_otl = STARTS_WITH(asset["@type"], 'https://wegenenverkeer.data.vlaanderen.be', true)
+  // FILTER is_otl
+  
+  LET assettype = asset["@type"]
+  
+  //SORT assettype asc
+  //LIMIT 10
+  
+  RETURN {
+  'assetId.identificator': asset._key,
+  'typeURI': assettype,
+  'is_otl': is_otl,
+  'isActief': asset.AIMDBStatus_isActief,
+  'naam': asset.AIMNaamObject_naam,
+  'naampad': asset.NaampadObject_naampad,
+ }
