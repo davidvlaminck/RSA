@@ -22,7 +22,7 @@ TODAY = datetime.today().strftime('%Y%m%d_%H%M')
 
 BIND_VARS = (
     '{'
-    '"typeURI": "https://wegenenverkeer.data.vlaanderen.be/ns/onderdeel#Camera"'
+    '"typeURI": "https://wegenenverkeer.data.vlaanderen.be/ns/installatie#VLAN"'
     ##'"eDeltaDossiernummer": "HVV.089"'
     '}')
 
