@@ -2,23 +2,13 @@
    AQL Query: Get assets, associated with a specific bestek and assettype
 
    Parameters:
-   - @eDeltaDossiernummer: The bestek identifier (eDeltaDossiernummer, e.g., "HVV.089")
    - @typeURI: assettype URI
 
    Returns: Unique list of assets, assettypes and bestekken
 */
-LET target_bestek = FIRST(
-  FOR b IN bestekken
-    FILTER b.eDeltaDossiernummer == @eDeltaDossiernummer
-    FILTER b.actief == true
-    LIMIT 1
-    RETURN b
-)
-FILTER target_bestek != null
-
 LET at_key = FIRST(
   FOR at IN assettypes
-    FILTER at.uri == @typeURI
+    FILTER at.short_uri == @short_uri
     LIMIT 1
     RETURN at._key
 )
@@ -38,8 +28,6 @@ FOR asset_doc IN assets
       // filter status is actief
       LET bk_status = SPLIT(bk.DtcBestekkoppeling_status, '/')[-1]
       FILTER bk_status == 'actief'
-      // filter bestek is target bestek
-      FILTER bk._to == target_bestek._id
       RETURN bk
   )
   LET bs_aantal_totaal = LENGTH(bs_bestekkoppeling)
@@ -49,16 +37,34 @@ FOR asset_doc IN assets
 
   LET bestek_details = (
     FOR bk IN bs_bestekkoppeling_filtered
-    LET bestek_doc = DOCUMENT(bk._to)
-    FILTER bestek_doc != null
-    RETURN {
-      categorie: SPLIT(bk.DtcBestekkoppeling_categorie, '/')[-1],
-      dossierNummer: bestek_doc.eDeltaDossiernummer,
-      bestekNummer: bestek_doc.eDeltaBesteknummer,
-      startKoppeling: bk.DtcBestekkoppeling_actiefVan,
-      eindKoppeling: bk.DtcBestekkoppeling_actiefTot,
-    }
+      LET bestek_doc = DOCUMENT(bk._to)
+      FILTER bestek_doc != null
+      RETURN {
+        categorie: SPLIT(bk.DtcBestekkoppeling_categorie, '/')[-1],
+        dossierNummer: bestek_doc.eDeltaDossiernummer,
+        bestekNummer: bestek_doc.eDeltaBesteknummer,
+        startKoppeling: bk.DtcBestekkoppeling_actiefVan,
+        eindKoppeling: bk.DtcBestekkoppeling_actiefTot,
+      }
   )
+
+  /* Aantal items per categorie */
+  LET bs_aantal_werkbestek = LENGTH(
+    FOR bk IN bestek_details
+      FILTER bk.categorie == 'werkbestek'
+      RETURN bk
+  )
+  LET bs_aantal_aanleverbestek = LENGTH(
+    FOR bk IN bestek_details
+      FILTER bk.categorie == 'aanleverbestek'
+      RETURN bk
+  )
+
+  /* Categorie van het eerste element (indien aanwezig) */
+  LET bs_eerste_categorie = bestek_details == null || LENGTH(bestek_details) == 0
+    ? null
+    : bestek_details[0].categorie
+
 
   SORT at.short_uri asc, bs_aantal_actief desc
 
@@ -67,8 +73,11 @@ FOR asset_doc IN assets
     "naam": asset_doc.AIMNaamObject_naam,
     "toestand": asset_doc.toestand,
     "filter_assettype": at.short_uri,
-    "filter_bestek_eDeltaDossiernummer": target_bestek.eDeltaDossiernummer,
-    "bestek_aantal_totaal": bs_aantal_totaal,
-    "bestek_aantal_actief": bs_aantal_actief,
-    "bestek_details": concat_separator(",", bestek_details),
+    //"filter_bestek_eDeltaDossiernummer": target_bestek.eDeltaDossiernummer,
+    "bs_aantal_totaal": bs_aantal_totaal,
+    "bs_aantal_actief": bs_aantal_actief,
+    "bs_aantal_werkbestek": bs_aantal_werkbestek,
+    "bs_aantal_aanleverbestek": bs_aantal_aanleverbestek,
+    "bs_eerste_type": bs_eerste_categorie,
+    "bs_details": concat_separator(",", bestek_details),
   }

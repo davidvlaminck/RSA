@@ -51,6 +51,23 @@ FOR asset_doc IN assets
     }
   )
 
+  /* Aantal items per categorie */
+  LET bs_aantal_werkbestek = LENGTH(
+    FOR bk IN bestek_details
+      FILTER bk.categorie == 'werkbestek'
+      RETURN bk
+  )
+  LET bs_aantal_aanleverbestek = LENGTH(
+    FOR bk IN bestek_details
+      FILTER bk.categorie == 'aanleverbestek'
+      RETURN bk
+  )
+
+  /* Categorie van het eerste element (indien aanwezig) */
+  LET bs_eerste_categorie = bestek_details == null || LENGTH(bestek_details) == 0
+    ? null
+    : bestek_details[0].categorie
+
   SORT at.short_uri asc, bs_aantal_actief desc
 
   RETURN {
@@ -59,7 +76,10 @@ FOR asset_doc IN assets
     "toestand": asset_doc.toestand,
     "assettype": at.short_uri,
     "filter_bestek_eDeltaDossiernummer": target_bestek.eDeltaDossiernummer,
-    "bestek_aantal_totaal": bs_aantal_totaal,
-    "bestek_aantal_actief": bs_aantal_actief,
-    "bestek_details": concat_separator(",", bestek_details),
+    "bs_aantal_totaal": bs_aantal_totaal,
+    "bs_aantal_actief": bs_aantal_actief,
+    "bs_aantal_werkbestek": bs_aantal_werkbestek,
+    "bs_aantal_aanleverbestek": bs_aantal_aanleverbestek,
+    "bs_eerste_type": bs_eerste_categorie,
+    "bs_details": concat_separator(",", bestek_details),
   }
