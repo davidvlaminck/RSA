@@ -11,6 +11,14 @@ FOR b IN bestekken
   // FILTER b.eDeltaDossiernummer == @eDeltaDossiernummer
   FILTER b.actief == true
 
+  /* Tel het aantal bestekkoppelingen dat aan ieder bestek hangt */
+  LET koppelingen = (
+    FOR bk IN 1..1 INBOUND b._id bestekkoppelingen
+      RETURN bk
+  )
+  LET koppelingen_aantal = LENGTH(koppelingen)
+  SORT koppelingen_aantal desc
+
   RETURN {
     // info bestek
     "uuid": b.uuid,
@@ -21,4 +29,5 @@ FOR b IN bestekken
     "naamAannemer": b.aannemerNaam,
     "referentieAannemer": b.aannemerReferentie,
     "actief": b.actief,
+    "aantal_koppelingen": koppelingen_aantal
   }
