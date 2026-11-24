@@ -33,9 +33,9 @@ FOR asset_doc IN assets
   LET bs_aantal_totaal = LENGTH(bs_bestekkoppeling)
   LET bs_aantal_actief = LENGTH(bs_bestekkoppeling_filtered)
 
-  FILTER bs_aantal_actief >= 1
+  // FILTER bs_aantal_actief >= 1
 
-  LET bestek_details = (
+  LET bestek_details = bs_aantal_actief >= 1 ? (
     FOR bk IN bs_bestekkoppeling_filtered
       LET bestek_doc = DOCUMENT(bk._to)
       FILTER bestek_doc != null
@@ -46,19 +46,19 @@ FOR asset_doc IN assets
         startKoppeling: bk.DtcBestekkoppeling_actiefVan,
         eindKoppeling: bk.DtcBestekkoppeling_actiefTot,
       }
-  )
+  ) : null
 
   /* Aantal items per categorie */
-  LET bs_aantal_werkbestek = LENGTH(
+  LET bs_aantal_werkbestek = bs_aantal_actief >= 1 ? LENGTH(
     FOR bk IN bestek_details
       FILTER bk.categorie == 'werkbestek'
       RETURN bk
-  )
-  LET bs_aantal_aanleverbestek = LENGTH(
+  ) : null
+  LET bs_aantal_aanleverbestek = bs_aantal_actief >= 1 ? LENGTH(
     FOR bk IN bestek_details
       FILTER bk.categorie == 'aanleverbestek'
       RETURN bk
-  )
+  ) : null
 
   /* Categorie van het eerste element (indien aanwezig) */
   LET bs_eerste_categorie = bestek_details == null || LENGTH(bestek_details) == 0
