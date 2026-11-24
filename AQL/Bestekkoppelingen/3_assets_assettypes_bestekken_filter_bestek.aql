@@ -1,0 +1,65 @@
+/*
+   AQL Query: Get assets, associated with a specific bestek and assettype
+
+   Parameters:
+   - @eDeltaDossiernummer: The bestek identifier (eDeltaDossiernummer, e.g., "HVV.089")
+
+   Returns: Unique list of assets, assettypes and bestekken
+*/
+LET target_bestek = FIRST(
+  FOR b IN bestekken
+    FILTER b.eDeltaDossiernummer == @eDeltaDossiernummer
+    FILTER b.actief == true
+    LIMIT 1
+    RETURN b
+)
+FILTER target_bestek != null
+
+FOR asset_doc IN assets
+  FILTER asset_doc.AIMDBStatus_isActief == true
+  FILTER asset_doc.assettype_key != null
+
+  /* Filter assets op basis van assettypes */
+  LET at = DOCUMENT(CONCAT("assettypes/", asset_doc.assettype_key))
+
+  /* Filter assets op basis van bestekkoppelingen */
+  LET bs_bestekkoppeling = asset_doc.bs.Bestek_bestekkoppeling
+  LET bs_bestekkoppeling_filtered = bs_bestekkoppeling == null ? null : (
+    for bk in bs_bestekkoppeling
+      // filter status is actief
+      LET bk_status = SPLIT(bk.DtcBestekkoppeling_status, '/')[-1]
+      FILTER bk_status == 'actief'
+      // filter bestek is target bestek
+      FILTER bk._to == target_bestek._id
+      RETURN bk
+  )
+  LET bs_aantal_totaal = LENGTH(bs_bestekkoppeling)
+  LET bs_aantal_actief = LENGTH(bs_bestekkoppeling_filtered)
+
+  FILTER bs_aantal_actief >= 1
+
+  LET bestek_details = (
+    FOR bk IN bs_bestekkoppeling_filtered
+    LET bestek_doc = DOCUMENT(bk._to)
+    FILTER bestek_doc != null
+    RETURN {
+      categorie: SPLIT(bk.DtcBestekkoppeling_categorie, '/')[-1],
+      dossierNummer: bestek_doc.eDeltaDossiernummer,
+      bestekNummer: bestek_doc.eDeltaBesteknummer,
+      startKoppeling: bk.DtcBestekkoppeling_actiefVan,
+      eindKoppeling: bk.DtcBestekkoppeling_actiefTot,
+    }
+  )
+
+  SORT at.short_uri asc, bs_aantal_actief desc
+
+  RETURN {
+    "uuid": asset_doc._key,
+    "naam": asset_doc.AIMNaamObject_naam,
+    "toestand": asset_doc.toestand,
+    "assettype": at.short_uri,
+    "filter_bestek_eDeltaDossiernummer": target_bestek.eDeltaDossiernummer,
+    "bestek_aantal_totaal": bs_aantal_totaal,
+    "bestek_aantal_actief": bs_aantal_actief,
+    "bestek_details": concat_separator(",", bestek_details),
+  }
