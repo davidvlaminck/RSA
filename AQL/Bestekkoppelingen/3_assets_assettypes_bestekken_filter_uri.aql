@@ -29,12 +29,11 @@ FOR asset_doc IN assets
       FILTER bk.status IN ['actief', 'toekomstig']
       RETURN bk
   )
-  LET bs_aantal_totaal = LENGTH(bs_bestekkoppeling)
-  LET bs_aantal_actief = LENGTH(bs_bestekkoppeling_filtered)
+  LET bk_aantal = LENGTH(bs_bestekkoppeling_filtered)
 
-  // FILTER bs_aantal_actief >= 1
+  // FILTER bk_aantal >= 1
 
-  LET bestek_details = bs_aantal_actief >= 1 ? (
+  LET bestek_details = bk_aantal >= 1 ? (
     FOR bk IN bs_bestekkoppeling_filtered
       LET bestek_doc = DOCUMENT(bk._to)
       FILTER bestek_doc != null
@@ -48,24 +47,24 @@ FOR asset_doc IN assets
   ) : null
 
   /* Aantal items per categorie */
-  LET bs_aantal_werkbestek = bs_aantal_actief >= 1 ? LENGTH(
+  LET bk_aantal_werkbestek = bk_aantal >= 1 ? LENGTH(
     FOR bk IN bestek_details
       FILTER bk.categorie == 'werkbestek'
       RETURN bk
   ) : null
-  LET bs_aantal_aanleverbestek = bs_aantal_actief >= 1 ? LENGTH(
+  LET bk_aantal_aanleverbestek = bk_aantal >= 1 ? LENGTH(
     FOR bk IN bestek_details
       FILTER bk.categorie == 'aanleverbestek'
       RETURN bk
   ) : null
 
   /* Categorie van het eerste element (indien aanwezig) */
-  LET bs_eerste_categorie = bestek_details == null || LENGTH(bestek_details) == 0
+  LET bk_eerste_categorie = bestek_details == null || LENGTH(bestek_details) == 0
     ? null
     : bestek_details[0].categorie
 
 
-  SORT at.short_uri asc, bs_aantal_actief desc
+  SORT at.short_uri asc, bk_aantal desc
 
   RETURN {
     "uuid": asset_doc._key,
@@ -73,10 +72,9 @@ FOR asset_doc IN assets
     "toestand": asset_doc.toestand,
     "filter_assettype": at.short_uri,
     //"filter_bestek_eDeltaDossiernummer": target_bestek.eDeltaDossiernummer,
-    "bs_aantal_totaal": bs_aantal_totaal,
-    "bs_aantal_actief": bs_aantal_actief,
-    "bs_aantal_werkbestek": bs_aantal_werkbestek,
-    "bs_aantal_aanleverbestek": bs_aantal_aanleverbestek,
-    "bs_eerste_type": bs_eerste_categorie,
+    "bk_aantal": bk_aantal,
+    "bk_aantal_werkbestek": bk_aantal_werkbestek,
+    "bk_aantal_aanleverbestek": bk_aantal_aanleverbestek,
+    "bk_eerste_categorie": bk_eerste_categorie,
     "bs_details": concat_separator(",", bestek_details),
   }
