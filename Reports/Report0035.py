@@ -29,38 +29,56 @@ ORDER BY s.eindDatum, naampad, bestekkoppelingen.eindDatum;"""
         self.report.run_report(sender=sender)
 
 aql_query = """
-LET now = DATE_NOW()
-LET upper = now + 30 * 24 * 60 * 60 * 1000 /* 30 days in milliseconds */
+LET now   = DATE_NOW()
+LET upper = now + 30 * 24 * 60 * 60 * 1000 /* 30 days in ms */
 
 FOR bk IN bestekkoppelingen
-  LET status = SUBSTRING(bk.DtcBestekkoppeling_status, 69)
+  // Test unhappy flow
+  // FILTER bk._from == 'assets/6bb91264-d171-4304-9154-6c1b97a8c7fe'
+  // Test happy flow
+  FILTER bk._from == 'assets/6bba9ecc-2c56-4225-aaec-e0241d0e7f75'
+  
+  // most performant = substring(), most stable = split()
+   LET status = SPLIT(bk.DtcBestekkoppeling_status, '/')[-1]
+  // LET status = SUBSTRING(bk.DtcBestekkoppeling_status, 69)
   FILTER status IN ["actief", "toekomstig"]
 
-  LET start_ts = bk.DtcBestekkoppeling_actiefVan ? DATE_TIMESTAMP(bk.DtcBestekkoppeling_actiefVan) : null  
-  LET eind_ts = bk.DtcBestekkoppeling_actiefTot ? DATE_TIMESTAMP(bk.DtcBestekkoppeling_actiefTot) : null
-  
-  FILTER eind_ts != null and (eind_ts > now AND eind_ts < upper)
+  // uncomment after bugfix bk.status
+  // FILTER bk.status In ["actief", "toekomstig"]
 
-  LET start_ts_formatted = start_ts ? DATE_FORMAT(start_ts, "%d-%m-%y") : null
-  LET eind_ts_formatted = eind_ts ? DATE_FORMAT(eind_ts, "%d-%m-%y"): null
-
-  LET asset = bk._from ? DOCUMENT(bk._from) : null
+  LET asset = DOCUMENT(bk._from)
   FILTER asset != null AND asset.AIMDBStatus_isActief == true
-  
-  LET bestek = bk._to ? DOCUMENT(bk._to) : null
 
-SORT eind_ts asc, asset.NaampadObject_naampad
+  LET start_ts = bk.DtcBestekkoppeling_actiefVan ? DATE_TIMESTAMP(bk.DtcBestekkoppeling_actiefVan) : null
+  LET eind_ts  = bk.DtcBestekkoppeling_actiefTot  ? DATE_TIMESTAMP(bk.DtcBestekkoppeling_actiefTot)  : null
 
-RETURN {
-  uuid: asset._key,
-  naampad: asset.NaampadObject_naampad,
-  actief: asset.AIMDBStatus_isActief,
-  toestand: asset.toestand,
-  bestekkoppeling_start_datum: start_ts_formatted,
-  bestekkoppeling_eind_datum: eind_ts_formatted,
-  bestekkoppeling_status: status,
-  bestek_uuid: bestek.uuid,
-  bestek_eDeltaBesteknummer: bestek ? bestek.eDeltaBesteknummer : null,
-  bestek_eDeltaDossiernummer: bestek ? bestek.eDeltaDossiernummer : null
-}
-"""
+  // Group per asset (only the fields we actually need are carried)
+  COLLECT bk_from = bk._from INTO group
+
+  // Null-first, then ascending; keep only the first element
+  LET chosen = FIRST(FOR g IN group SORT g.eind_ts ASC RETURN g)
+
+  // Post-aggregation filter
+  FILTER chosen.eind_ts != null AND chosen.eind_ts > now AND chosen.eind_ts < upper
+
+  // Reuse already-loaded asset; fetch bestek only for the chosen record
+  LET asset  = chosen.asset
+  LET bestek = chosen.bk._to ? DOCUMENT(chosen.bk._to) : null
+
+  LET start_ts_formatted = chosen.start_ts ? DATE_FORMAT(chosen.start_ts, "%d-%m-%y") : null
+  LET eind_ts_formatted  = chosen.eind_ts  ? DATE_FORMAT(chosen.eind_ts,  "%d-%m-%y") : null
+
+  SORT asset.NaampadObject_naampad
+
+  RETURN {
+    uuid: asset._key,
+    naampad: asset.NaampadObject_naampad,
+    actief: asset.AIMDBStatus_isActief,
+    toestand: asset.toestand,
+    bestekkoppeling_start_datum: start_ts_formatted,
+    bestekkoppeling_eind_datum: eind_ts_formatted,
+    bestekkoppeling_status: chosen.status,
+    bestek_eDeltaBesteknummer: bestek ? bestek.eDeltaBesteknummer : null,
+    bestek_eDeltaDossiernummer: bestek ? bestek.eDeltaDossiernummer : null
+  }
+  """
