@@ -22,9 +22,9 @@ TODAY = datetime.today().strftime('%Y%m%d_%H%M')
 
 BIND_VARS = (
     '{'
-    # '"short_uri": "onderdeel#Netwerkpoort"'
+    # '"short_uri": "onderdeel#Netwerkelement"'
     # ','
-    '"eDeltaDossiernummer": "VWT/NET/2020/017"'
+    '"eDeltaDossiernummer": "TDV.062"'
     '}')
 
 if __name__ == "__main__":
