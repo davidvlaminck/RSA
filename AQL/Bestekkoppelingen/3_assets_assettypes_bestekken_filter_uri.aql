@@ -26,8 +26,7 @@ FOR asset_doc IN assets
   LET bs_bestekkoppeling_filtered = bs_bestekkoppeling == null ? null : (
     for bk in bs_bestekkoppeling
       // filter status is actief
-      LET bk_status = SPLIT(bk.DtcBestekkoppeling_status, '/')[-1]
-      FILTER bk_status == 'actief'
+      FILTER bk.status IN ['actief', 'toekomstig']
       RETURN bk
   )
   LET bs_aantal_totaal = LENGTH(bs_bestekkoppeling)

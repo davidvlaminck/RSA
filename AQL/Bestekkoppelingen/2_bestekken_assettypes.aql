@@ -8,6 +8,7 @@
 */
 FOR bk IN bestekkoppelingen
   FILTER bk._to != null
+  FILTER bk.status in ['actief', 'toekomstig']
   LET bestek_doc = DOCUMENT(bk._to)
   FILTER bestek_doc != null
   FILTER bestek_doc.eDeltaDossiernummer != null

@@ -8,6 +8,7 @@
    Returns: Unique list of assets, assettypes and bestekken
 */
 FOR bk IN bestekkoppelingen
+  FILTER bk.status IN ['actief', 'toekomstig']
   FILTER bk._to != null
   LET bestek_doc = DOCUMENT(bk._to)
   FILTER bestek_doc != null
