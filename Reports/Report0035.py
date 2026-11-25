@@ -20,7 +20,7 @@ class Report0035(BaseReport):
           // FILTER status IN ["actief", "toekomstig"]
 
           // uncomment after bugfix bk.status
-          // FILTER bk.status IN ["actief", "toekomstig"]
+          FILTER bk.status IN ["actief", "toekomstig"]
 
           LET asset = DOCUMENT(bk._from)
           FILTER asset != null AND asset.AIMDBStatus_isActief == true
