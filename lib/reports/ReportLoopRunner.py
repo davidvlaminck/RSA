@@ -621,7 +621,7 @@ class ReportLoopRunner:
             staged_dir = (self.excel_output_dir / 'staged_summaries') if self.excel_output_dir else Path('RSA_OneDrive') / 'staged_summaries'
             clear_staged_processed(staged_dir)
         except Exception:
-            logger.exception('Failed to clear staged_summaries/processed before sequential run')
+            logger.exception('Failed to clear staged_summaries before sequential run')
 
         # start running reports now and at midnight
         logger.info(f"{datetime.now(tz=BRUSSELS)}: let's run the reports now")
@@ -804,7 +804,7 @@ class ReportLoopRunner:
             staged_dir = (self.excel_output_dir / 'staged_summaries') if self.excel_output_dir else Path('RSA_OneDrive') / 'staged_summaries'
             clear_staged_processed(staged_dir)
         except Exception:
-            logger.exception('Failed to clear staged_summaries/processed before parallel run')
+            logger.exception('Failed to clear staged_summaries before parallel run')
 
         logger.info(f"{datetime.now(tz=BRUSSELS)}: starting parallel-by-datasource execution")
 

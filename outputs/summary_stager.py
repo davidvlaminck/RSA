@@ -77,29 +77,37 @@ def stage_summary_update(payload: Dict[str, Any], staged_dir: str | Path = 'RSA_
 
 
 def clear_staged_processed(staged_dir: str | Path = 'RSA_OneDrive/staged_summaries') -> Path:
-    """Remove all contents from `staged_dir/processed` and recreate the folder.
+    """Remove all staged summary payloads and recreate the folder structure.
 
-    This is intended to be called at the start of a report loop so stale processed
-    payloads from previous runs cannot be re-used or uploaded later.
+    Clears the entire staged_summaries directory: loose .json payloads in the
+    root plus the processing/, processed/ and failed/ subdirectories. This
+    prevents a backlog of unprocessed payloads from previous runs from blocking
+    the aggregator (which only consumes a limited number of files per run and
+    processes them oldest-first).
+
+    Returns the (recreated) processed/ directory path.
     """
     staged_dir = Path(staged_dir)
     if not staged_dir.is_absolute():
         repo_root = Path(__file__).resolve().parents[1]
         staged_dir = (repo_root / staged_dir).resolve()
 
-    processed_dir = staged_dir / 'processed'
-    processed_dir.mkdir(parents=True, exist_ok=True)
+    removed = 0
+    if staged_dir.exists():
+        for child in list(staged_dir.iterdir()):
+            try:
+                if child.is_dir():
+                    shutil.rmtree(child)
+                else:
+                    child.unlink()
+                removed += 1
+            except Exception:
+                logger.exception('Failed clearing staged entry %s', child)
 
-    for child in list(processed_dir.iterdir()):
-        try:
-            if child.is_dir():
-                shutil.rmtree(child)
-            else:
-                child.unlink()
-        except Exception:
-            logger.exception('Failed clearing staged processed entry %s', child)
-
-    return processed_dir
+    _ensure_dirs(staged_dir)
+    if removed:
+        logger.info('Cleared %d staged entries from %s', removed, staged_dir)
+    return staged_dir / 'processed'
 
 
 # small CLI for quick manual staging (not required, but convenient)
