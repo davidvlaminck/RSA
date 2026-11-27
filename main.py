@@ -107,6 +107,121 @@ def _default_settings_path() -> str:
     return str(DEFAULT_SETTINGS_PATH)
 
 
+def _run_preflight_tests(reportlooprunner, cfg: dict) -> None:
+    """Test SharePoint and database connectivity at startup; write results to the logs."""
+    logger.info('=== Pre-flight connectivity tests ===')
+
+    # --- SharePoint ---
+    if cfg.get('sharepoint_sync_enabled'):
+        try:
+            from API.clients.sharepoint import SharepointClient
+
+            client = SharepointClient()
+            token = client.get_access_token()
+            if not token:
+                raise RuntimeError('empty access token')
+            library = client.get_document_library_by_name('AIMData')
+            if library:
+                logger.info(
+                    'SharePoint: OK (token obtained, AIMData library id=%s)',
+                    library.get('id'),
+                )
+            else:
+                logger.warning('SharePoint: token OK but AIMData document library not found')
+        except Exception as exc:
+            logger.warning('SharePoint: FAILED - %s', exc)
+    else:
+        logger.info('SharePoint: skipped (sharepoint_sync_enabled=false)')
+
+    # --- Databases ---
+    settings = reportlooprunner.settings or {}
+    databases = settings.get('databases', {}) if isinstance(settings, dict) else {}
+
+    postgis_cfg = databases.get('PostGIS') if isinstance(databases, dict) else None
+    if postgis_cfg:
+        try:
+            from lib.connectors.PostGISConnector import SinglePostGISConnector
+
+            connector = SinglePostGISConnector.get_connector()
+            conn = connector.pool.getconn()
+            try:
+                cur = conn.cursor()
+                cur.execute('SELECT 1')
+                cur.fetchone()
+                cur.close()
+            finally:
+                connector.pool.putconn(conn)
+            logger.info(
+                'PostGIS: OK (SELECT 1 succeeded on %s:%s/%s)',
+                postgis_cfg.get('host'),
+                postgis_cfg.get('port'),
+                postgis_cfg.get('database'),
+            )
+        except Exception as exc:
+            logger.warning('PostGIS: FAILED - %s', exc)
+    else:
+        logger.info('PostGIS: skipped (not configured)')
+
+    neo4j_cfg = databases.get('Neo4j') if isinstance(databases, dict) else None
+    if neo4j_cfg:
+        try:
+            from lib.connectors.Neo4JConnector import SingleNeo4JConnector
+
+            connector = SingleNeo4JConnector.get_connector()
+            with connector.driver.session(database=connector.db) as session:
+                session.run('RETURN 1 AS test').single()
+            logger.info(
+                'Neo4j: OK (RETURN 1 succeeded on %s/%s)',
+                neo4j_cfg.get('uri'),
+                neo4j_cfg.get('database'),
+            )
+        except Exception as exc:
+            logger.warning('Neo4j: FAILED - %s', exc)
+    else:
+        logger.info('Neo4j: skipped (not configured)')
+
+    arango_cfg = databases.get('ArangoDB') if isinstance(databases, dict) else None
+    if arango_cfg:
+        try:
+            from datasources.arango import SingleArangoConnector
+
+            db = SingleArangoConnector.get_db()
+            list(db.aql.execute('RETURN 1 AS test', max_runtime=10))
+            logger.info(
+                'ArangoDB: OK (RETURN 1 succeeded on %s:%s/%s)',
+                arango_cfg.get('host'),
+                arango_cfg.get('port'),
+                arango_cfg.get('database'),
+            )
+        except Exception as exc:
+            logger.warning('ArangoDB: FAILED - %s', exc)
+    else:
+        logger.info('ArangoDB: skipped (not configured)')
+
+    pipeline_state_cfg = cfg.get('pipeline_state', {})
+    if pipeline_state_cfg.get('enabled', True):
+        db_path = pipeline_state_cfg.get('db_path', '')
+        if db_path:
+            try:
+                from lib.connectors.pipeline_state import PipelineState
+
+                ps = PipelineState(db_path)
+                current = ps.get()
+                logger.info(
+                    'SQLite pipeline_state: OK (db_path=%s, current_state=%s)',
+                    db_path,
+                    current,
+                )
+            except Exception as exc:
+                logger.warning('SQLite pipeline_state: FAILED - %s', exc)
+        else:
+            logger.info('SQLite pipeline_state: skipped (db_path empty)')
+    else:
+        logger.info('SQLite pipeline_state: skipped (disabled)')
+
+    logger.info('=== Pre-flight connectivity tests complete ===')
+
+
 if __name__ == '__main__':
     settings_path = _default_settings_path()
     cfg = _load_runtime_config(settings_path)
@@ -126,6 +241,8 @@ if __name__ == '__main__':
     )
 
     reportlooprunner = ReportLoopRunner(settings_path=cfg['settings_path'], excel_output_dir=onedrive_path)
+
+    _run_preflight_tests(reportlooprunner, cfg)
 
     if cfg['sharepoint_sync_enabled']:
         pipeline_state = None
