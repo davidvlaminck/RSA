@@ -1,0 +1,45 @@
+/*
+   AQL Query: WVLichtmast met een rechtstreekste voedingrelatie (in/uit) met een Laagspanningsbord
+
+   Returns: Unique list of WVLichtmast en Laagspanningsborden, gesorteerd volgens de naam van het Laagspanningsbord
+*/
+LET lsbord_key = FIRST(
+  FOR at IN assettypes
+    FILTER at.short_uri == 'onderdeel#Laagspanningsbord'
+    LIMIT 1
+    RETURN at._key
+)
+LET wvlichtmast_key = FIRST(
+  FOR at IN assettypes
+    FILTER at.short_uri == 'onderdeel#WVLichtmast'
+    LIMIT 1
+    RETURN at._key
+)
+
+FOR rel IN voedt_relaties
+  LET bron_asset = DOCUMENT(rel._from)
+  LET doel_asset = DOCUMENT(rel._to)
+
+  FILTER bron_asset.assettype_key == lsbord_key
+  FILTER bron_asset.AIMDBStatus_isActief == true
+
+  FILTER doel_asset.assettype_key == wvlichtmast_key
+  FILTER doel_asset.AIMDBStatus_isActief == true
+
+  LET doel_asset_naam = doel_asset.AIMNaamObject_naam
+  LET bron_asset_naam = bron_asset.AIMNaamObject_naam
+
+  SORT doel_asset_naam asc, bron_asset_naam asc
+
+  RETURN {
+    "lsbord.typeURI": bron_asset.AIMObject_typeURI,
+    "lsbord.uuid": bron_asset._key,
+    "lsbord.naampad": bron_asset.NaampadObject_naampad,
+    "lsbord.naam": bron_asset_naam,
+    "lsbord.toestand": bron_asset.toestand,
+    "wvlichtmast.typeURI": doel_asset.AIMObject_typeURI,
+    "wvlichtmast.uuid": doel_asset._key,
+    "wvlichtmast.naampad": doel_asset.NaampadObject_naampad,
+    "wvlichtmast.naam": doel_asset_naam,
+    "wvlichtmast.toestand": doel_asset.toestand,
+  }
