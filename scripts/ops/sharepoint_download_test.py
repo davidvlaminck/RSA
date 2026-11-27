@@ -3,8 +3,11 @@
 Run from the repo root (RSA/):
     python -m scripts.ops.sharepoint_download_test
 """
+import sys
 import tempfile
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from API.clients.sharepoint import SharepointClient
 
