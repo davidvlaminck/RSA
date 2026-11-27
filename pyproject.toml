@@ -18,6 +18,8 @@ dependencies = [
   "google-auth==2.50.0",
   "google-auth-httplib2==0.1.0",
   "google-auth-oauthlib>=0.5.1",
+  "msal",
+  "requests",
 ]
 
 [project.optional-dependencies]
