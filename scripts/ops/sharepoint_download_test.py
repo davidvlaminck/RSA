@@ -15,18 +15,37 @@ from API.clients.sharepoint import SharepointClient
 def main() -> int:
     client = SharepointClient()
 
-    lib_id = client._get_default_document_library_id()
-    print(f"Default document library id: {lib_id}")
-
-    items = list(client._list_children("root", lib_id))
-    files = [i for i in items if "file" in i]
-    print(f"Found {len(files)} file(s) in root")
-
-    if not files:
-        print("No files found in root to download.")
+    print("=== Test access ===")
+    try:
+        token = client.get_access_token()
+        print(f"Token length: {len(token)} - Token OK")
+    except Exception as e:
+        print(f"Token error: {e}")
         return 1
 
-    target = files[0]
+    library = client.get_document_library_by_name("AIMData")
+    if not library:
+        print("AIMData document library not found")
+        return 1
+
+    lib_id = library["id"]
+    print(f"AIMData library id: {lib_id}")
+
+    def find_first_file(parent_id: str, depth: int = 0):
+        for item in client._list_children(parent_id, lib_id):
+            if "file" in item:
+                return item
+            if "folder" in item and depth < 3:
+                found = find_first_file(item["id"], depth + 1)
+                if found:
+                    return found
+        return None
+
+    target = find_first_file("root")
+    if not target:
+        print("No files found to download.")
+        return 1
+
     out_path = Path(tempfile.gettempdir()) / target["name"]
     print(f"Downloading '{target['name']}' -> {out_path}")
 
