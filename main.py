@@ -72,6 +72,7 @@ def _load_runtime_config(settings_path: str) -> dict:
         settings = json.load(fh)
 
     settings_dir = Path(settings_path).resolve().parent
+    rsa_root = Path(__file__).resolve().parent  # RSA repo root; config/ is a sibling, not a parent
     drive_cfg = settings.get('sharepoint_sync', {}) if isinstance(settings, dict) else {}
     output_cfg = settings.get('output', {}) if isinstance(settings, dict) else {}
     excel_cfg = output_cfg.get('excel', {}) if isinstance(output_cfg, dict) else {}
@@ -82,7 +83,7 @@ def _load_runtime_config(settings_path: str) -> dict:
 
     return {
         'settings_path': settings_path,
-        'local_folder': _resolve_path(local_folder_raw, settings_dir),
+        'local_folder': _resolve_path(local_folder_raw, rsa_root),
         'sharepoint_sync_enabled': bool(drive_cfg.get('enabled', True)),
         'sharepoint_sync_after': drive_cfg.get('sync_after', '01:00:00'),
         'sharepoint_folder': drive_cfg.get('sharepoint_folder', 'RSA'),
